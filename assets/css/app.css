@@ -680,6 +680,16 @@ body[data-mode="coop"] .bench__player[data-active="true"] {
 }
 .prio__label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .prio__repeat { flex: none; color: var(--text-mute); font-size: 10.5px; font-weight: 650; }
+/* The skill this step's level teaches — the reason the step exists. */
+.prio__unlock {
+  flex: 0 1 auto; min-width: 0;
+  padding: 0 5px;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  color: var(--accent);
+  font-size: 10.5px; font-weight: 650;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
 
 .prio__levelwrap { flex: none; display: grid; }
 .prio__level {
@@ -938,7 +948,39 @@ body[data-mode="coop"] .bench__player[data-active="true"] {
   background: var(--surface-2);
   font-size: 11.5px; font-weight: 600; color: var(--text-dim);
 }
-.detail dl { display: grid; grid-template-columns: auto 1fr; gap: var(--s2) var(--s3); margin: 0 0 var(--s4); }
+.detail__heading {
+  margin: var(--s4) 0 var(--s2);
+  font-size: 11px; font-weight: 700; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--text-mute);
+}
+.detail__note, .detail__pending { margin: var(--s1) 0 0; font-size: 11.5px; }
+
+/* What each planned level teaches. The level is the thing you plan, so it leads. */
+.learns { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s1); }
+.learn {
+  display: flex; align-items: baseline; gap: var(--s2);
+  padding: var(--s2);
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+}
+.learn__level {
+  flex: none; min-width: 34px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: var(--surface-3); color: var(--accent);
+  font-size: 11px; font-weight: 800; text-align: center;
+}
+.learn__body { font-size: 12.5px; line-height: 1.45; color: var(--text-dim); }
+.learn__body b { color: var(--text); font-weight: 650; }
+
+.rangefig { margin: 0; }
+.rangefig img {
+  display: block; width: 100%; max-width: 300px; height: auto;
+  border: 1px solid var(--line); border-radius: var(--r-sm);
+}
+.rangefig figcaption { margin-top: var(--s1); font-size: 11.5px; }
+
+.detail dl { display: grid; grid-template-columns: auto 1fr; gap: var(--s2) var(--s3); margin: var(--s4) 0; }
 .detail dt { font-size: 11px; font-weight: 650; letter-spacing: .06em; text-transform: uppercase; color: var(--text-mute); }
 .detail dd { margin: 0; font-size: 13px; max-width: 62ch; }
 .detail__line { display: flex; flex-wrap: wrap; gap: var(--s1); }

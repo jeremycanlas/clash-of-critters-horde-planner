@@ -43,6 +43,13 @@ ALPHA_FLOOR = 8       # ignore near-invisible antialiasing when finding the bbox
 MARKER = "coc-normalized"
 MARKER_VALUE = "1"
 
+# Attack-range diagrams are in-game screenshots, not artwork: opaque photographs
+# of a forest with a grid on it. Trimming and padding them makes no sense, but
+# shipping 114 lossless PNGs of foliage does even less — they land at roughly
+# 300 KB each as PNG and a tenth of that as JPEG, with no visible cost.
+RANGE_DIR = ROOT / "data/images/range"
+RANGE_QUALITY = 80
+
 
 def content_box(img):
     """Bounding box of visibly opaque pixels, or None if the image is empty."""
@@ -82,6 +89,23 @@ def normalize(path, canvas_size, content, force=False):
     return (scale, before, canvas.size)
 
 
+def shrink_range_diagrams():
+    """PNG screenshot in, JPEG out, original deleted. @return (files, KB before, KB after)"""
+    if not RANGE_DIR.is_dir():
+        return (0, 0, 0)
+
+    before = after = count = 0
+    for png in sorted(RANGE_DIR.glob("*.png")):
+        jpg = png.with_suffix(".jpg")
+        before += png.stat().st_size
+        with Image.open(png) as src:
+            src.convert("RGB").save(jpg, "JPEG", quality=RANGE_QUALITY, optimize=True)
+        png.unlink()
+        after += jpg.stat().st_size
+        count += 1
+    return (count, before // 1024, after // 1024)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--force", action="store_true",
@@ -111,6 +135,11 @@ def main():
                     upscaled.append((path.name, round(scale, 2)))
         print(f"  {directory.relative_to(ROOT).as_posix()}: {len(files)} files "
               f"-> {canvas_size}x{canvas_size}, artwork fits {content}px")
+
+    count, kb_before, kb_after = shrink_range_diagrams()
+    if count:
+        print(f"  data/images/range: {count} diagrams re-encoded to JPEG, "
+              f"{kb_before} KB -> {kb_after} KB")
 
     print(f"\nNormalised {done}, skipped {skipped} (already done)")
     if upscaled:

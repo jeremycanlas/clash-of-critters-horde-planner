@@ -12,6 +12,7 @@
  *   data/images/tatari/*.png  normal sprites
  *   data/images/glitter/*.png glitter sprites
  *   data/images/icons/*.png   type + role icons (Category:In-game Icons)
+ *   data/images/range/*.png   attack-range diagrams, where the wiki has one
  *
  * Cloudflare blocks plain HTML page views but leaves api.php and /images/ open,
  * so everything here goes through the MediaWiki API.
@@ -29,6 +30,7 @@ const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 ' +
 const ROOT = path.resolve(import.meta.dirname, '..');
 const THUMB_WIDTH = 200;
 const ICON_WIDTH = 128;
+const RANGE_WIDTH = 480;
 
 const ELEMENTS = ['Water', 'Fire', 'Grass', 'Lightning', 'Rock'];
 const ROLES = ['DPS', 'Guardian', 'Healer', 'Tank', 'Support', 'Specialist'];
@@ -188,6 +190,54 @@ function groupFamilies(list) {
   return runs.length;
 }
 
+// ---------------------------------------------------------------- horde skills
+
+/**
+ * The level-up skills a Tatari learns in Horde Invasion, from the mode's own
+ * page. Two things about how the wiki records them:
+ *
+ *   - they are learned at levels 3, 5 and 7, which is exactly what the level
+ *     plan is built around;
+ *   - they are shared across an evolution line, so the page lists only the base
+ *     form. The base skill differs per form and already comes from the roster.
+ *
+ * Keyed by family name, therefore, and applied to every member of the line.
+ */
+async function parseHordeSkills() {
+  const text = await wikitext('Zobo Horde Invasion');
+  const byFamily = new Map();
+
+  for (const row of tableRows(text, '!Level 3 Skill')) {
+    const c = splitCells(row);
+    if (c.length < 7) continue;
+    const linked = c[1].match(/\[\[([^\]|]+)/);
+    const family = squash(linked ? linked[1] : plain(c[1]));
+    if (!family) continue;
+    byFamily.set(family, {
+      level3: skillOf(c[4]),
+      level5: skillOf(c[5]),
+      level7: skillOf(c[6]),
+    });
+  }
+  return byFamily;
+}
+
+/**
+ * `'''Forked Bolt:''' Attacks have a higher chance...` -> {name, text}
+ *
+ * The colon lives inside the bold in most rows and outside it in a few, and a
+ * handful of skills have a colon in the name itself — "Technique: Veil" — so
+ * the name is whatever is emboldened, minus a trailing colon.
+ */
+function skillOf(cell) {
+  const named = cell.match(/'''\s*([\s\S]+?)\s*'''\s*:?\s*([\s\S]*)/);
+  if (!named) {
+    const text = plain(cell);
+    return text ? { name: null, text } : null;
+  }
+  return { name: squash(named[1]).replace(/:$/, ''), text: plain(named[2]) };
+}
+
 // ---------------------------------------------------------------- element pages
 
 /** Front/back row placement + the type effectiveness chart. */
@@ -289,6 +339,48 @@ async function fetchSprites(list, thumbs) {
 }
 
 /**
+ * Attack-range diagrams. These are in-game screenshots rather than schematics —
+ * the Tatari stands at the bottom and the tiles it can hit are lit up — so they
+ * are shown as pictures rather than turned into a grid overlay. Only about half
+ * the roster has one on the wiki; the rest simply go without.
+ *
+ * They are also enormous at source, up to 1.4 MB each, hence the thumbnail
+ * width. normalize_images.py re-encodes them to JPEG afterwards.
+ */
+async function fetchRangeImages(list) {
+  const dir = path.join(ROOT, 'data/images/range');
+  await mkdir(dir, { recursive: true });
+
+  const wanted = list.map((t) => `${t.name} Attack Range.png`);
+  const thumbs = await resolveThumbs(wanted, RANGE_WIDTH);
+
+  let done = 0, missing = 0;
+  const jobs = list.slice();
+  const worker = async () => {
+    while (jobs.length) {
+      const t = jobs.shift();
+      const url = thumbs.get(`${t.name} Attack Range.png`);
+      if (!url) { missing++; continue; }
+      // Downloaded as PNG, shipped as JPEG: normalize_images.py re-encodes them
+      // and deletes the original, so the recorded path is the one that survives.
+      const png = path.join(dir, `${t.slug}.png`);
+      const jpg = path.join(dir, `${t.slug}.jpg`);
+      try {
+        const have = await stat(jpg).catch(() => null) || await stat(png).catch(() => null);
+        if (!have || !have.size) await download(url, png);
+        done++;
+      } catch (err) {
+        missing++;
+        console.warn(`\n  ${t.name} range: ${err.message}`);
+      }
+      process.stdout.write(`\r  range diagrams ${done} ok, ${missing} without`);
+    }
+  };
+  await Promise.all(Array.from({ length: 6 }, worker));
+  console.log();
+}
+
+/**
  * The in-game type and role icons, saved under slugged names so the app can
  * build a path straight from a Tatari's type/role. Redownloads every time —
  * there are only eleven and the wiki's art gets touched up now and then.
@@ -334,6 +426,15 @@ async function main() {
   const families = groupFamilies(list);
   console.log(`  ${families} evolution families`);
 
+  console.log('Fetching Horde Invasion skills...');
+  const hordeSkills = await parseHordeSkills();
+  let skilled = 0;
+  for (const t of list) {
+    t.hordeSkills = hordeSkills.get(t.family) ?? null;
+    if (t.hordeSkills) skilled++;
+  }
+  console.log(`  ${hordeSkills.size} evolution lines documented, covering ${skilled}/${list.length} Tatari`);
+
   console.log('Fetching element pages...');
   const { battleRow, typeChart } = await parseElementPages();
   let rowHits = 0;
@@ -351,6 +452,8 @@ async function main() {
     await fetchSprites(list, thumbs);
     console.log('Downloading type/role icons...');
     await fetchIcons();
+    console.log('Downloading attack-range diagrams...');
+    await fetchRangeImages(list);
   } else {
     // keep the paths so the app still works against an existing image folder
     for (const t of list) {
@@ -358,6 +461,19 @@ async function main() {
       if (t.glitterSourceFile) t.glitterImage = `data/images/glitter/${t.slug}.png`;
     }
   }
+
+  // Only about half the roster has a range diagram, and the set grows as the
+  // wiki fills in — so the path is taken from what is actually on disk rather
+  // than from what this run happened to fetch.
+  let withRange = 0;
+  for (const t of list) {
+    const jpg = path.join(ROOT, 'data/images/range', `${t.slug}.jpg`);
+    if (await stat(jpg).catch(() => null)) {
+      t.rangeImage = `data/images/range/${t.slug}.jpg`;
+      withRange++;
+    }
+  }
+  console.log(`  attack-range diagrams on hand: ${withRange}/${list.length}`);
 
   const types = ELEMENTS.slice().sort();
   const roles = [...new Set(list.map((t) => t.role))].sort();
@@ -367,6 +483,7 @@ async function main() {
     family: t.family, familyId: t.familyId, stages: t.stages, rarity: t.rarity,
     evolutionLine: t.evolutionLine, battleRow: t.battleRow, previousRole: t.previousRole,
     etymology: t.etymology, skill: t.skill, description: t.description,
+    hordeSkills: t.hordeSkills ?? null, rangeImage: t.rangeImage ?? null,
     image: t.image ?? null, glitterImage: t.glitterImage ?? null, wikiUrl: t.wikiUrl,
   }));
 

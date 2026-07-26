@@ -6,6 +6,51 @@ import { $, artHTML, esc, typeIcon, roleIcon, toast } from './ui.js';
 
 const dialog = $('#detail');
 
+/**
+ * What this Tatari learns as it levels in Horde, which is the whole point of
+ * the level plan: 3, 5 and 7 are the levels that actually change how it fights.
+ * The wiki records these per evolution line rather than per form.
+ */
+function hordeSkills(t) {
+  if (!t.hordeSkills) {
+    return `<p class="hint detail__pending">The wiki has not documented the
+      ${esc(t.family)} line's Horde level-up skills yet.</p>`;
+  }
+  const rows = [3, 5, 7].map((level) => {
+    const skill = t.hordeSkills[`level${level}`];
+    if (!skill) return '';
+    return `
+      <li class="learn">
+        <span class="learn__level">Lv ${level}</span>
+        <span class="learn__body">
+          ${skill.name ? `<b>${esc(skill.name)}</b> ` : ''}${esc(skill.text)}
+        </span>
+      </li>`;
+  }).join('');
+
+  return `
+    <h3 class="detail__heading">Horde level-up skills</h3>
+    <ul class="learns">${rows}</ul>
+    <p class="hint detail__note">Shared by the whole ${esc(t.family)} line.</p>`;
+}
+
+/**
+ * The wiki documents range as an in-game screenshot with the reachable tiles lit
+ * up, so it is shown as one. Turning those into a grid overlay is not something
+ * the source supports: they are photographs at assorted zooms with UI on top.
+ */
+function rangeDiagram(t) {
+  if (!t.rangeImage) return '';
+  return `
+    <h3 class="detail__heading">Attack range</h3>
+    <figure class="rangefig">
+      <img src="${esc(t.rangeImage)}" alt="${esc(t.name)}'s attack range in game"
+           loading="lazy" decoding="async">
+      <figcaption class="hint">${esc(t.name)} stands at the bottom; the lit tiles
+        are what it can reach. Screenshot from the wiki.</figcaption>
+    </figure>`;
+}
+
 export function openDetail(slug) {
   const t = state.bySlug.get(slug);
   if (!t) return;
@@ -34,8 +79,11 @@ export function openDetail(slug) {
         </div>
       </div>
 
+      ${hordeSkills(t)}
+      ${rangeDiagram(t)}
+
       <dl>
-        ${t.skill ? `<dt>Skill</dt><dd>${esc(t.skill)}</dd>` : ''}
+        ${t.skill ? `<dt>Base skill</dt><dd>${esc(t.skill)}</dd>` : ''}
         <dt>Evolution</dt>
         <dd><div class="detail__line">${t.evolutionLine.map((n) => {
           const m = state.all.find((x) => x.name === n && x.familyId === t.familyId);

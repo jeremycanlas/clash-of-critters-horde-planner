@@ -47,11 +47,23 @@ included in this repo, so the app needs no network access to run.
 | `data/images/tatari/` | 215 sprites, 200×200 |
 | `data/images/glitter/` | 195 Glitter-form sprites, 200×200 |
 | `data/images/icons/` | the 5 type and 6 role icons, 64×64 |
+| `data/images/range/` | 114 attack-range diagrams from the wiki, 480px wide |
 
 Three unreleased Tatari, Kaiseroo, Saberheart and Chomperwraith have no art on
 the wiki yet and show as their name. The aliases file is the one thing not scraped:
 which animal a Tatari is based on isn't published anywhere, so those were inferred
 and some are probably wrong. Corrections welcome.
+
+Two things are only partly documented upstream, and the app says so rather than
+pretending otherwise:
+
+- **Horde level-up skills** cover 55 of the 62 evolution lines (190 of 218
+  Tatari). The mode's page lists them per line, since every form in a line learns
+  the same three; the base skill differs per form and comes from the roster.
+- **Attack range** exists for 114 of 218 Tatari, and only as in-game screenshots
+  with the reachable tiles lit up. They are shown as pictures for that reason —
+  they are photographs at assorted zooms with game UI on top, not data a range
+  overlay could be derived from.
 
 ### Refreshing it
 

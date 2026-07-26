@@ -190,6 +190,20 @@ function levelable() {
 
 const nameOf = (m) => state.bySlug.get(m.slug)?.name ?? m.slug;
 
+/**
+ * What a step actually buys. Levels 3, 5 and 7 teach a new Horde skill, so a
+ * step targeting one of them can say which — the reason to plan that level at
+ * all. Only when every member learns the same thing, which is the usual case
+ * within a line but not across one.
+ */
+function unlockedSkill(members, level) {
+  if (![3, 5, 7].includes(level)) return null;
+  const named = members.map((m) => state.bySlug.get(m.slug)?.hordeSkills?.[`level${level}`]);
+  if (named.some((s) => !s?.name)) return null;
+  const unique = [...new Set(named.map((s) => s.name))];
+  return unique.length === 1 ? unique[0] : null;
+}
+
 /** "Sealing", "Sealing and Frugagon", "Sealing, Frugagon and 2 more". */
 function summarize(members) {
   const names = members.map(nameOf);
@@ -262,6 +276,7 @@ export function renderPriority() {
     const single = members.length === 1 ? members[0] : null;
     const lead = state.bySlug.get(members[0].slug);
     const ordinal = single ? nthForStep(index) : 0;
+    const unlocks = unlockedSkill(members, step.level);
 
     const arts = members.map((m) => `
       <span class="prio__art" data-type="${state.bySlug.get(m.slug).type}">
@@ -282,6 +297,8 @@ export function renderPriority() {
           <span class="prio__label">${esc(summarize(members))}</span>
           ${ordinal > 1 ? `<span class="prio__repeat" title="${
             ordinal}${suffix(ordinal)} step for this Tatari">&times;${ordinal}</span>` : ''}
+          ${unlocks ? `<span class="prio__unlock" title="Learns ${esc(unlocks)} at level ${
+            step.level}">${esc(unlocks)}</span>` : ''}
         </span>
         <label class="prio__levelwrap">
           <span class="sr-only">Level for this step</span>
