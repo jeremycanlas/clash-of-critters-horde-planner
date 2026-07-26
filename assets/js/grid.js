@@ -12,6 +12,7 @@ import * as store from './store.js';
 import { $, artHTML, esc, roleIcon, typeIcon, toast } from './ui.js';
 import { draggable, dropZone } from './dnd.js';
 import { quickAddStep } from './priority.js';
+import { coveredFrom, coverage, hasRange } from './range.js';
 
 const grid = $('#grid');
 const benchHost = $('#bench');
@@ -57,11 +58,35 @@ export function buildGrid() {
     },
     // Only the valid state is signalled. An invalid target simply gets no
     // highlight - a red flash on every ineligible cell reads as an error.
-    onHover: (target, ok) => target.classList.toggle('is-over', ok),
+    // Alongside it, the tiles this Tatari would cover from here light up, so
+    // you can see what a placement buys before committing to it.
+    onHover: (target, ok, payload) => {
+      target.classList.toggle('is-over', ok);
+      if (ok) previewRange(Number(target.dataset.cell), payload?.slug);
+      else clearRangePreview();
+    },
     onDrop: (target, payload) => {
+      clearRangePreview();
       const result = store.place(payload.slug, Number(target.dataset.cell), payload.player);
       if (!result.ok) toast(result.reason, 'error');
     },
+  });
+
+  // A cancelled drag never reaches onDrop, so the preview is cleared here too.
+  window.addEventListener('pointerup', clearRangePreview);
+  window.addEventListener('pointercancel', clearRangePreview);
+
+  // Hovering a token isolates its own range, which is how you read one Tatari
+  // out of the coverage shading.
+  grid.addEventListener('pointerover', (e) => {
+    const cell = e.target.closest('.cell.is-filled');
+    if (!cell || document.body.classList.contains('is-dragging-active')) return;
+    const occ = store.formation.cells[Number(cell.dataset.cell)];
+    if (occ) previewRange(Number(cell.dataset.cell), occ.slug);
+  });
+  grid.addEventListener('pointerout', (e) => {
+    if (!e.target.closest('.cell')) return;
+    clearRangePreview();
   });
 
   grid.addEventListener('click', (e) => {
@@ -107,6 +132,64 @@ export function buildGrid() {
     if (tab) store.setActivePlayer(Number(tab.dataset.player));
   });
 }
+
+// ---------------------------------------------------------------- range
+
+/** Cells currently lit by a preview, so only those need clearing again. */
+let previewed = [];
+
+function clearRangePreview() {
+  for (const cell of previewed) cell.classList.remove('is-inrange');
+  previewed = [];
+}
+
+/**
+ * Lights the tiles `slug` would cover from `cell`. Silent for a Tatari whose
+ * range nobody has recorded — better nothing than a shape that is made up.
+ */
+function previewRange(cell, slug) {
+  clearRangePreview();
+  if (!slug || !hasRange(slug)) return;
+  for (const i of coveredFrom(cell, slug)) {
+    const el = grid.children[i];
+    if (!el) continue;
+    el.classList.add('is-inrange');
+    previewed.push(el);
+  }
+}
+
+/**
+ * How many of the Tatari on the field can hit each tile. The gaps are the point:
+ * a lane nothing covers is where the Zobos walk through.
+ */
+export function renderCoverage() {
+  const on = coverageOn.value;
+  grid.classList.toggle('shows-coverage', on);
+
+  const { counts, known, unknown } = on
+    ? coverage(store.allPlaced())
+    : { counts: [], known: 0, unknown: 0 };
+
+  for (const cell of grid.children) {
+    const n = counts[Number(cell.dataset.cell)] ?? 0;
+    if (on && n) cell.dataset.cover = Math.min(n, 4);
+    else delete cell.dataset.cover;
+  }
+
+  const note = $('#coverage-note');
+  note.hidden = !on;
+  if (!on) return;
+  const blind = counts.filter((n) => !n).length;
+  note.textContent = known
+    ? `${blind} of ${counts.length} tiles uncovered` +
+      (unknown
+        ? ` · ${unknown} on the field ${unknown === 1 ? 'has' : 'have'} no recorded range`
+        : '')
+    : 'None of the Tatari on the field have a recorded range yet.';
+}
+
+/** Whether the coverage view is on. Toggled from the formation panel. */
+export const coverageOn = { value: false };
 
 // ---------------------------------------------------------------- rendering
 
@@ -163,6 +246,7 @@ export function renderGrid() {
     cell.setAttribute('aria-label',
       `${where}: ${t.name}, ${who}${t.type} ${t.role}, tier ${t.tier}, ${plan}`);
   }
+  renderCoverage();
 }
 
 export function renderPlayerTabs() {

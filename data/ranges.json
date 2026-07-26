@@ -1,0 +1,35 @@
+{
+  "_readme": [
+    "Attack ranges as tiles, because the wiki only documents them as in-game screenshots.",
+    "",
+    "Each entry is a list of [column, row] offsets from the tile the Tatari stands on.",
+    "Column is positive to the right. Row is NEGATIVE towards the Zobos, because row 1",
+    "is the contact line at the top of the field and row 6 is nearest your base.",
+    "",
+    "So [0, 0] is the Tatari's own tile, [0, -1] is one tile ahead of it, and",
+    "[-1, -2] is two ahead and one to the left.",
+    "",
+    "Ranges are shared across an evolution line unless an entry says otherwise, the",
+    "same way the Horde level-up skills are — so key these by the line's base form",
+    "where you can, and by an individual slug only when that form differs.",
+    "",
+    "To add one: open the Tatari in the app, read the attack-range diagram in its",
+    "detail sheet (the Tatari stands at the bottom, lit tiles are what it reaches),",
+    "and write the offsets here. Set \"checked\" to the name of whoever confirmed it",
+    "in game, or leave it out if it is only read off the diagram.",
+    "",
+    "Anything not listed here simply shows no range, rather than a guess."
+  ],
+  "byLine": {
+    "zapup": {
+      "tiles": [[0, 0], [0, -1], [0, -2], [0, -3]],
+      "note": "straight up its own lane",
+      "from": "wiki diagram"
+    },
+    "rubblet": {
+      "tiles": [[-1, 0], [0, 0], [1, 0], [-1, -1], [0, -1], [1, -1], [0, -2]],
+      "note": "a 3-wide block around itself, plus one tile further ahead",
+      "from": "wiki diagram"
+    }
+  }
+}

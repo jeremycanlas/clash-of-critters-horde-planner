@@ -45,6 +45,7 @@
     <div class="panel__head">
       <h2 id="h-field">Formation</h2>
       <div class="panel__tools">
+        <label class="check" title="Shade each tile by how many of your Tatari can hit it"><input id="opt-coverage" type="checkbox"> Coverage</label>
         <label class="check"><input id="opt-glitter" type="checkbox"> Glitter art</label>
         <button id="btn-clear-field" class="btn btn--tiny btn--quiet" type="button">Clear field</button>
       </div>
@@ -60,6 +61,7 @@
       <div id="grid" class="grid" role="grid" aria-label="Formation grid, 6 columns by 6 rows"></div>
       <div class="field-frame__base">Your base</div>
     </div>
+    <p id="coverage-note" class="hint hint--coverage" hidden></p>
 
     <div id="bench" class="bench"></div>
     <div id="summary" class="summary"></div>

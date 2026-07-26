@@ -5,7 +5,10 @@ import * as store from './store.js';
 import {
   $, $$, glitterOn, toast, downloadJSON, readJSONFile, slugFilename, dragScrollVelocity,
 } from './ui.js';
-import { buildGrid, renderGrid, renderBench, renderPlayerTabs, renderSummary } from './grid.js';
+import {
+  buildGrid, renderGrid, renderBench, renderPlayerTabs, renderSummary,
+  renderCoverage, coverageOn,
+} from './grid.js';
 import { buildFilters, renderRoster } from './roster.js';
 import { buildPriority, renderPriority } from './priority.js';
 import { buildShare, openShare } from './share.js';
@@ -89,6 +92,11 @@ function nothingBrought(message) {
 
 function wireToolbar() {
   $('#formation-name').addEventListener('input', (e) => store.setName(e.target.value));
+
+  $('#opt-coverage').addEventListener('change', (e) => {
+    coverageOn.value = e.target.checked;
+    renderCoverage();
+  });
 
   $('#opt-glitter').addEventListener('change', (e) => {
     glitterOn.value = e.target.checked;

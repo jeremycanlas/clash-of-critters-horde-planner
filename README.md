@@ -44,6 +44,7 @@ included in this repo, so the app needs no network access to run.
 | `data/tatari.json` | 218 Tatari: type, role, tier, evolution line, rarity, skill, flavour text, etymology |
 | `data/meta.json` | type and role lists, the type-effectiveness chart, counts, grid size, level cap |
 | `data/aliases.json` | community nicknames and the real animal each line is based on, for search |
+| `data/ranges.json` | attack ranges as tile offsets, recorded by hand |
 | `data/images/tatari/` | 215 sprites, 200×200 |
 | `data/images/glitter/` | 195 Glitter-form sprites, 200×200 |
 | `data/images/icons/` | the 5 type and 6 role icons, 64×64 |
@@ -61,9 +62,17 @@ pretending otherwise:
   Tatari). The mode's page lists them per line, since every form in a line learns
   the same three; the base skill differs per form and comes from the roster.
 - **Attack range** exists for 114 of 218 Tatari, and only as in-game screenshots
-  with the reachable tiles lit up. They are shown as pictures for that reason —
-  they are photographs at assorted zooms with game UI on top, not data a range
-  overlay could be derived from.
+  with the reachable tiles lit up — photographs at assorted zooms with game UI on
+  top. Those are shown as pictures on the detail sheet.
+
+  The range *overlay* needs tiles rather than pictures, so `data/ranges.json`
+  records them by hand, keyed by evolution line. Dragging a Tatari lights the
+  tiles it would cover from wherever the pointer is, and the **Coverage** toggle
+  shades every tile by how many of your Tatari reach it. Only a couple of lines
+  are filled in so far; anything unrecorded shows no range rather than a guess,
+  because a wrong tile is worse than a missing one in a tool people position by.
+  Adding one is a few minutes with the diagram open — the file explains the
+  format, and contributions are welcome.
 
 ### Refreshing it
 
