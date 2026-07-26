@@ -56,7 +56,7 @@ export function buildCustom(callback) {
     const btn = e.target.closest('[data-remove]');
     if (!btn) return;
     const slug = btn.dataset.remove;
-    store.remove(slug);
+    for (const player of [1, 2]) store.removeFromBench(slug, player);
     setCustom(customList().filter((t) => t.slug !== slug).map(strip));
     renderList();
     onChanged();

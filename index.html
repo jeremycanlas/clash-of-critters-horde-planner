@@ -19,12 +19,17 @@
   <input id="formation-name" class="field field--name" type="text"
          placeholder="Name this formation" aria-label="Formation name" maxlength="60">
 
+  <div id="mode-switch" class="segmented" role="group" aria-label="Number of players">
+    <button class="segmented__btn" type="button" data-mode="solo" aria-pressed="true">Solo</button>
+    <button class="segmented__btn" type="button" data-mode="coop" aria-pressed="false">Co-op</button>
+  </div>
+
   <div class="topbar__actions">
-    <output id="deploy-count" class="counter" aria-live="polite">0 / 15</output>
-    <button id="btn-share"  class="btn" type="button">Share link</button>
+    <output id="deploy-count" class="counter" aria-live="polite"></output>
+    <button id="btn-share"  class="btn" type="button" title="Copy a link to this formation">Share</button>
     <button id="btn-export" class="btn" type="button">Export</button>
     <button id="btn-import" class="btn" type="button">Import</button>
-    <button id="btn-clear"  class="btn btn--quiet" type="button">Clear</button>
+    <button id="btn-clear"  class="btn btn--quiet" type="button">Clear all</button>
     <input id="import-file" type="file" accept=".json,application/json" hidden>
   </div>
 </header>
@@ -37,12 +42,14 @@
       <h2 id="h-field">Formation</h2>
       <div class="panel__tools">
         <label class="check"><input id="opt-glitter" type="checkbox"> Glitter art</label>
-        <button id="btn-compact" class="btn btn--tiny" type="button">Pack to back</button>
+        <button id="btn-clear-field" class="btn btn--tiny btn--quiet" type="button">Clear field</button>
       </div>
     </div>
 
-    <p class="hint">Enemies advance from the top. Drag Tatari in from the roster, drag them between
-      cells to rearrange, and double-click or press <kbd>Delete</kbd> to remove one.</p>
+    <div id="player-tabs" class="ptabs" role="group" aria-label="Player being planned" hidden></div>
+
+    <p class="hint">Zobos advance from the top. Drag Tatari in from the roster, drag them between
+      cells to rearrange, and double-click or press <kbd>Delete</kbd> to take one off the field.</p>
 
     <div class="field-frame">
       <div class="field-frame__enemy">Zobos spawn beyond this line</div>
@@ -50,6 +57,7 @@
       <div class="field-frame__base">Your base</div>
     </div>
 
+    <div id="bench" class="bench"></div>
     <div id="summary" class="summary"></div>
   </section>
 
@@ -58,6 +66,7 @@
     <div class="panel__head">
       <h2 id="h-priority">Level-up priority</h2>
       <span id="step-count" class="muted"></span>
+      <button id="btn-clear-plan" class="btn btn--tiny btn--quiet" type="button">Clear steps</button>
     </div>
     <p class="hint">Horde offers three choices each round. Add a step for every level-up
       you plan to take, in order — a Tatari can appear more than once on its way to
@@ -65,15 +74,19 @@
       is a valid plan. Drag to rearrange.</p>
 
     <form id="step-adder" class="step-adder" hidden>
-      <label class="step-adder__field">
-        <span class="sr-only">Tatari to level up</span>
-        <select name="slug" class="field field--select"></select>
-      </label>
-      <label class="step-adder__field step-adder__field--level">
-        <span class="sr-only">Target level</span>
-        <select name="level" class="field field--select"></select>
-      </label>
-      <button class="btn btn--primary btn--tiny" type="submit">Add step</button>
+      <div class="step-adder__row">
+        <div id="step-picker" class="step-picker" role="radiogroup"
+             aria-label="Tatari to level up"></div>
+      </div>
+      <div class="step-adder__row step-adder__row--go">
+        <output id="step-adder-name" class="step-adder__name"></output>
+        <label class="step-adder__level">
+          <span class="sr-only">Target level</span>
+          <select name="level" class="field field--select"></select>
+        </label>
+        <button class="btn btn--primary btn--tiny" type="submit">Add step</button>
+      </div>
+      <input type="hidden" name="slug">
     </form>
 
     <ol id="priority" class="priority" aria-label="Level-up steps in order"></ol>

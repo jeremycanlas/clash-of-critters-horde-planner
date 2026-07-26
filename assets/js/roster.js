@@ -68,7 +68,8 @@ export function buildFilters(onChange) {
     onChange();
   });
 
-  // Placing by click is the fast path; dragging is for arranging.
+  // Clicking toggles whether the active player brings this Tatari. Dragging is
+  // for putting it somewhere specific on the field.
   $('#roster').addEventListener('click', (e) => {
     if (e.target.closest('.card__info')) {
       openDetail(e.target.closest('.card').dataset.slug);
@@ -76,9 +77,7 @@ export function buildFilters(onChange) {
     }
     const card = e.target.closest('.card');
     if (!card) return;
-    const slug = card.dataset.slug;
-    if (store.cellOf(slug) !== null) { store.remove(slug); return; }
-    const result = store.autoPlace(slug);
+    const result = store.toggleBench(card.dataset.slug);
     if (!result.ok) toast(result.reason, 'error');
   });
 
@@ -104,43 +103,53 @@ export function resetFilters() {
   for (const chip of document.querySelectorAll('.chip')) chip.setAttribute('aria-pressed', 'false');
 }
 
-function visible() {
+function visible(player) {
   const list = state.all.filter((t) => {
     if (filters.types.size && !filters.types.has(t.type)) return false;
     if (filters.roles.size && !filters.roles.has(t.role)) return false;
     if (filters.tiers.size && !filters.tiers.has(t.tier)) return false;
     if (!matches(t, filters.query)) return false;
-    if (filters.hideBlocked && store.blockedReason(t) && store.cellOf(t.slug) === null) return false;
+    if (filters.hideBlocked && !store.onBench(t.slug, player)
+        && store.benchBlockedReason(t, player)) return false;
     return true;
   });
   return filters.sort === 'wiki' ? list : list.sort(SORTS[filters.sort]);
 }
 
 export function renderRoster() {
-  const list = visible();
+  const player = store.formation.activePlayer;
+  const list = visible(player);
   const host = $('#roster');
+  host.dataset.player = String(player);
 
   host.innerHTML = list.map((t) => {
-    const deployed = store.cellOf(t.slug) !== null;
-    const blocked = deployed ? null : store.blockedReason(t);
+    const benched = store.onBench(t.slug, player);
+    const placed = benched && store.isPlaced(t.slug, player);
 
-    // A full grid blocks everything at once; dimming all 200+ cards for that
-    // just makes the roster look broken. The 15/15 counter already says it, so
-    // only a per-Tatari reason (a sibling of the same line) is marked here.
-    const clash = deployed ? null : store.familyConflict(t);
-    const lock = clash ? `${clash.name} in use` : '';
+    // A full bench blocks everything at once; dimming all 200+ cards for that
+    // just makes the roster look broken. Only a per-Tatari reason is marked.
+    const clash = benched ? null : store.familyConflict(t, player);
+    const otherPlayer = store.isCoop()
+      ? store.players().filter((p) => p !== player && store.onBench(t.slug, p))
+      : [];
 
+    const state_ = placed ? 'on the field' : benched ? 'on the bench' : null;
     return `
-      <div class="card${deployed ? ' is-deployed' : ''}${clash ? ' is-blocked' : ''}"
+      <div class="card${benched ? ' is-benched' : ''}${placed ? ' is-deployed' : ''}${
+        clash ? ' is-blocked' : ''}"
            role="listitem" tabindex="0" data-slug="${esc(t.slug)}" data-type="${t.type}"
-           title="${esc(t.name)} — ${t.type} ${t.role}, T${t.tier}${blocked ? `\n${blocked}` : ''}">
+           title="${esc(t.name)} — ${t.type} ${t.role}, T${t.tier}${
+             state_ ? `\n${state_}` : ''}${clash ? `\n${clash.name} from the same line is brought` : ''}">
         <div class="card__art">
           ${artHTML(t)}
           <span class="card__tier">T${t.tier}</span>
           <span class="card__badges">${typeIcon(t.type)}${roleIcon(t.role)}</span>
+          ${otherPlayer.length
+            ? `<span class="card__other" data-player="${otherPlayer[0]}"
+                     title="P${otherPlayer[0]} is bringing this too">P${otherPlayer[0]}</span>` : ''}
         </div>
         <div class="card__name">${esc(t.name)}</div>
-        ${lock ? `<span class="card__lock">${esc(lock)}</span>` : ''}
+        ${clash ? `<span class="card__lock">${esc(clash.name)} in use</span>` : ''}
         <button class="card__info" type="button" tabindex="-1"
                 aria-label="Details for ${esc(t.name)}">i</button>
       </div>`;
@@ -153,12 +162,14 @@ export function renderRoster() {
       () => {
         const t = state.bySlug.get(slug);
         if (!t) return null;
-        if (store.cellOf(slug) === null && store.blockedReason(t)) return null;
-        return { slug, from: 'roster' };
+        const p = store.formation.activePlayer;
+        if (!store.onBench(slug, p) && store.placeBlockedReason(t, p)) return null;
+        return { slug, player: p, from: 'roster' };
       },
       () => {
         const t = state.bySlug.get(slug);
-        return `<span class="token" data-type="${t.type}">${artHTML(t, { lazy: false })}</span>`;
+        return `<span class="token" data-type="${t.type}" data-player="${
+          store.formation.activePlayer}">${artHTML(t, { lazy: false })}</span>`;
       }
     );
   }

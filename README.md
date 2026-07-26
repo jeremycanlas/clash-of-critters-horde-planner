@@ -33,17 +33,39 @@ community nicknames or the real animal a Tatari is based on ("capybara",
 back, or drag it where you want it. The `i` button opens skill, matchup and
 evolution details.
 
-**Field** — 6 columns × 5 rows with a hard 15-Tatari cap. Zobos spawn beyond the
-top edge and never stand on these tiles, so row 1 is the contact line. Only one member of an
-evolution line can be deployed at a time, so putting Frostnip down locks out
-Frostpaw, Frostique and Frostluna; the roster marks them *"Frostnip in use"*.
-Drag between cells to rearrange (dropping onto an occupied cell swaps them),
-double-click or press <kbd>Delete</kbd> to remove. Dragging works with mouse and
-touch, and the grid is fully keyboard-operable (arrows to move, <kbd>Enter</kbd>
-to pick up and drop).
+**Two layers, because Horde has two.** Your **bench** is the 15 Tatari you bring
+into a run. The **field** is where they actually stand — and you don't get all 15
+down, because the game offers you random choices. So the bench is what you commit
+to, and the field is what you're hoping for.
 
-The front two rows are tinted, and where the wiki records a front/back-row
-preference the summary flags anyone sitting on the wrong side of the field.
+Clicking a roster card brings a Tatari (bench only). Dragging it onto the field
+brings *and* places it in one go. Benched-but-unplaced Tatari sit in a strip under
+the grid; click one to place it, or drag it where you want.
+
+**Field** — 6 columns × 5 rows. Zobos spawn beyond the top edge and never stand on
+these tiles, so row 1 is the contact line. Drag between cells to rearrange
+(dropping onto an occupied cell swaps them), double-click or press <kbd>Delete</kbd>
+to take one off the field — it stays on the bench. Dragging works with mouse and
+touch, auto-scrolls when you near a viewport edge, and the grid is fully
+keyboard-operable (arrows to move, <kbd>Enter</kbd> to pick up and drop).
+
+**Solo or co-op** — the switch in the header sets the caps:
+
+| | Players | Bench each | Field each |
+| --- | --- | --- | --- |
+| Solo | 1 | 15 | 15 |
+| Co-op | 2 | 15 | 10 |
+
+In co-op both players share one field and every token is badged and ringed with its
+owner's colour — P1 blue, P2 pink. The tabs above the grid pick who you're drafting
+for and show both players' counts. Switching modes never silently loses work:
+dropping to solo reports what P2 was carrying, and tightening the field cap unplaces
+the excess onto the bench rather than deleting it.
+
+**One per evolution line, per player.** Bringing Frostnip locks Frostpaw, Frostique
+and Frostluna out of *that player's* bench — the roster marks them *"Frostnip in
+use"*. The other player is unaffected: two teammates can absolutely run the same
+Tatari, and the roster flags when they are with a small owner badge.
 
 **Level-up priority** — Horde offers three cards each round, and some of them
 level something already deployed. The plan is an ordered list of *steps*, each one
@@ -57,30 +79,44 @@ way to 7, so this is a legitimate plan:
 | 3 | Frugagon | 3 |
 | 4 | Sealing | 5 |
 
-Add steps with the picker at the top of the panel, or hit **+** on any Tatari in
-the formation. Repeated **Add step** walks the same Tatari up one level at a time;
-jump ahead manually and the next offer continues from there rather than back-filling
-the gap. Each row's level is editable in place, rows drag to reorder
-(<kbd>Ctrl</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd> by keyboard), and the same Tatari can't
-be planned at the same level twice. Grid tokens show the level each one is planned
-to *reach*, with the full step sequence in the tooltip.
+Pick the Tatari from a strip of its own sprites — you recognise the art faster than
+a name in a dropdown — then a level, then **Add step**. Or hit **+** on any Tatari on
+the field. Repeated **Add step** walks the same one up a level at a time; jump ahead
+manually and the next offer continues from there rather than back-filling the gap.
 
-**Sharing and export** — **Share link** puts the layout and the plan in one
-readable URL and copies it:
+Each row's level is editable in place, rows drag to reorder
+(<kbd>Ctrl</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd> by keyboard), and the same Tatari can't be
+planned at the same level twice. In co-op the plan covers both players and every step
+is badged with its owner. Grid tokens show the level each one is planned to *reach*,
+with the full step sequence in the tooltip.
+
+Three levels of clearing, so nothing is all-or-nothing: **Clear steps** in this panel,
+**Clear field** in the formation panel (benches kept), and **Clear all** in the header.
+
+**Sharing and export** — **Share link** puts the mode, both benches, the layout and
+the plan in one readable URL and copies it. `1.sealing@7` is player 1's Sealing in
+cell 7; `@-` means benched but not placed:
 
 ```
-#v3=sealing@0,cheerling@1,frugagon@2;sealing.3,cheerling.3,frugagon.3,sealing.5
+#v4=coop/1.stoodbeak@0,1.sealing@7,1.chefugu@-,2.stoodbeak@3;1.sealing.3,2.sealing.3
 ```
 
-**Export** writes JSON with each placement's cell/row/column and target level,
-plus the ordered `levelPlan`. **Import** reads it back. Work in progress is kept
-in `localStorage`, so a reload picks up where you left off.
+**Export** writes JSON with the rules in force, each player's bench (cell, row,
+column, whether it's on the field, target level), and the ordered `levelPlan`.
+**Import** reads it back, and still accepts v1–v3 files as a solo formation. Work in
+progress is kept in `localStorage`, so a reload picks up where you left off.
 
 **Your own Tatari** — *+ Add your own* registers a critter the wiki has not
 documented yet. Give several entries the same *evolution line* name and they
 become mutually exclusive like a real line. Custom Tatari are stored in your
-browser, and any that appear in a formation are bundled into its export, so the
-plan still opens on someone else's machine.
+browser, and any that appear on a bench are bundled into the formation's export, so
+the plan still opens on someone else's machine.
+
+### Not modelled
+
+`battleRow` (front/back preference) is in the data and shown on the detail sheet, but
+nothing warns you about it — the wiki only records it for 87 of 218 Tatari using
+pre-rework role names, and it isn't a rule players follow.
 
 ## Data
 
@@ -146,11 +182,11 @@ way.
 index.html
 assets/css/app.css
 assets/js/
-  app.js        boot and toolbar wiring
+  app.js        boot, toolbar, drag auto-scroll
   data.js       roster loading, custom Tatari, search index
-  store.js      formation state, deploy cap, family exclusion, share URLs, import/export
+  store.js      benches, field, caps, per-player line exclusion, share URLs, import/export
   dnd.js        pointer-based drag controller (mouse + touch)
-  grid.js       the 6x5 field
+  grid.js       the 6x5 field, bench strip, player tabs
   roster.js     picker, filters, search
   priority.js   the level-up step plan
   detail.js     per-Tatari sheet

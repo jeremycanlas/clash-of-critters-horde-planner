@@ -68,6 +68,27 @@ export function readJSONFile(input) {
   });
 }
 
+// ---------------------------------------------------------------- drag scroll
+
+/** Distance from a viewport edge at which a drag starts scrolling the page. */
+export const SCROLL_EDGE = 90;
+/** Scroll speed in px per frame when the pointer is right at the edge. */
+export const SCROLL_MAX = 22;
+
+/**
+ * Scroll speed for a drag at `clientY`: negative near the top, positive near the
+ * bottom, 0 in the middle. Ramps linearly from 0 at the threshold to SCROLL_MAX
+ * at the edge, so a slow approach nudges and a hard press at the edge flies.
+ */
+export function dragScrollVelocity(clientY, viewportHeight,
+  edge = SCROLL_EDGE, max = SCROLL_MAX) {
+  const ramp = (distance) => Math.ceil(((edge - Math.max(0, distance)) / edge) * max);
+  const fromBottom = viewportHeight - clientY;
+  if (clientY < edge) return -ramp(clientY);
+  if (fromBottom < edge) return ramp(fromBottom);
+  return 0;
+}
+
 export function slugFilename(name, fallback) {
   const base = String(name || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
   return `${base || fallback}.json`;

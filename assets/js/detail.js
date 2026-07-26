@@ -12,7 +12,10 @@ export function openDetail(slug) {
 
   const chart = state.meta.typeChart[t.type] ?? {};
   const aliases = state.mergedAliases?.[t.family] ?? [];
-  const deployedCell = store.cellOf(t.slug);
+  const player = store.formation.activePlayer;
+  const benched = store.onBench(t.slug, player);
+  const placed = store.isPlaced(t.slug, player);
+  const who = store.isCoop() ? ` for P${player}` : '';
 
   dialog.innerHTML = `
     <div class="detail" data-type="${t.type}">
@@ -37,7 +40,7 @@ export function openDetail(slug) {
         <dd><div class="detail__line">${t.evolutionLine.map((n) => {
           const m = state.all.find((x) => x.name === n && x.familyId === t.familyId);
           return `<span class="detail__step" aria-current="${n === t.name}"
-            data-deployed="${!!(m && store.cellOf(m.slug) !== null)}">${esc(n)}</span>`;
+            data-deployed="${!!(m && store.onBench(m.slug, player))}">${esc(n)}</span>`;
         }).join('')}</div></dd>
         <dt>Matchups</dt>
         <dd>Strong against <b>${esc(chart.strongAgainst ?? '—')}</b>,
@@ -50,21 +53,28 @@ export function openDetail(slug) {
       </dl>
 
       <div class="modal__actions">
-        ${deployedCell === null
-          ? '<button class="btn btn--primary" type="button" data-act="place">Add to formation</button>'
-          : '<button class="btn" type="button" data-act="remove">Remove from formation</button>'}
+        ${placed
+          ? `<button class="btn" type="button" data-act="unplace">Take off the field${who}</button>`
+          : `<button class="btn btn--primary" type="button" data-act="place">Place on the field${who}</button>`}
+        ${benched
+          ? `<button class="btn btn--quiet" type="button" data-act="unbench">Stop bringing${who}</button>`
+          : ''}
         ${t.wikiUrl ? `<a class="btn" href="${esc(t.wikiUrl)}" target="_blank" rel="noopener">Wiki page</a>` : ''}
         <button class="btn btn--quiet" type="button" data-close>Close</button>
       </div>
     </div>`;
 
   dialog.querySelector('[data-act="place"]')?.addEventListener('click', () => {
-    const result = store.autoPlace(t.slug);
+    const result = store.autoPlace(t.slug, player);
     if (!result.ok) toast(result.reason, 'error');
     else dialog.close();
   });
-  dialog.querySelector('[data-act="remove"]')?.addEventListener('click', () => {
-    store.remove(t.slug);
+  dialog.querySelector('[data-act="unplace"]')?.addEventListener('click', () => {
+    store.unplace(t.slug, player);
+    dialog.close();
+  });
+  dialog.querySelector('[data-act="unbench"]')?.addEventListener('click', () => {
+    store.removeFromBench(t.slug, player);
     dialog.close();
   });
 

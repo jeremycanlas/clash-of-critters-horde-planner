@@ -17,6 +17,11 @@
   --danger:      #f0654f;
   --ok:          #55c98a;
 
+  /* Player identity in co-op. Deliberately outside the elemental palette so a
+     P1 marker never reads as a Water badge. */
+  --p1: #4d9dff;
+  --p2: #ff5fa8;
+
   --water: #37a7e6;
   --fire: #e8453c;
   --grass: #57c14a;
@@ -59,6 +64,9 @@
     color-scheme: light;
   }
 }
+
+[data-player="1"] { --owner: var(--p1); }
+[data-player="2"] { --owner: var(--p2); }
 
 [data-type="Water"]     { --type-color: var(--water); }
 [data-type="Fire"]      { --type-color: var(--fire); }
@@ -126,8 +134,11 @@ kbd {
     padding: var(--s3) var(--s4);
   }
   .topbar__sub { display: none; }
-  .field--name { flex: 1 1 140px; }
-  .topbar__actions { flex: 1 1 100%; margin-left: 0; }
+  .topbar__title { flex: 0 0 auto; }
+  #mode-switch { margin-left: auto; }
+  /* Deterministic rows: title + mode, then name, then actions. */
+  .field--name { order: 1; flex: 1 1 100%; }
+  .topbar__actions { order: 2; flex: 1 1 100%; margin-left: 0; gap: var(--s1); }
   .topbar__actions .btn { padding: 7px var(--s2); }
 }
 
@@ -246,14 +257,13 @@ kbd {
 /* The Zobo half of the field. Hatched so it never reads as placeable. */
 .field-frame__enemy {
   display: flex; align-items: center; justify-content: center; gap: var(--s2);
-  min-height: 46px;
+  min-height: 42px;
   border-bottom: 1px solid var(--line-soft);
   background:
     repeating-linear-gradient(-45deg,
-      color-mix(in srgb, var(--danger) 13%, transparent) 0 6px,
+      color-mix(in srgb, var(--text-mute) 16%, transparent) 0 6px,
       transparent 6px 12px),
-    color-mix(in srgb, var(--danger) 7%, var(--surface-2));
-  color: color-mix(in srgb, var(--danger) 72%, var(--text-dim));
+    var(--surface-2);
   text-align: center;
 }
 .field-frame__enemy::after {
@@ -279,20 +289,11 @@ kbd {
   cursor: default;
   transition: background-color 140ms var(--ease-out), border-color 140ms var(--ease-out);
 }
-/* Front two rows read as the contact line. */
-.cell[data-row="0"], .cell[data-row="1"] {
-  border-style: solid;
-  background: color-mix(in srgb, var(--danger) 6%, var(--bg));
-}
+/* Only the valid drop target is signalled; an ineligible cell gets no feedback. */
 .cell.is-over {
   border-color: var(--accent);
   border-style: solid;
   background: color-mix(in srgb, var(--accent) 14%, var(--bg));
-}
-.cell.is-invalid {
-  border-color: var(--danger);
-  border-style: solid;
-  background: color-mix(in srgb, var(--danger) 14%, var(--bg));
 }
 .cell.is-filled { border-style: solid; border-color: var(--line-soft); cursor: grab; }
 .cell.is-filled:active { cursor: grabbing; }
@@ -348,6 +349,116 @@ kbd {
 .token__add:hover { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
 .token__role { position: absolute; top: 2px; right: 2px; pointer-events: none; }
 
+/* Owner marker. Only rendered in co-op, so solo tokens stay uncluttered. */
+.token__owner {
+  position: absolute; bottom: 1px; left: 2px;
+  padding: 0 3px;
+  border-radius: 3px;
+  background: var(--owner); color: #0e1118;
+  font-size: 8.5px; font-weight: 800; letter-spacing: .02em;
+  pointer-events: none;
+}
+body[data-mode="coop"] .token {
+  box-shadow: inset 0 0 0 2px var(--owner, var(--line));
+}
+
+/* ============================================================ player tabs */
+
+.ptabs { display: flex; gap: var(--s2); margin-bottom: var(--s3); }
+
+.ptab {
+  flex: 1 1 0;
+  display: flex; align-items: center; gap: var(--s2);
+  padding: var(--s2) var(--s3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  color: var(--text-dim);
+  font: inherit; text-align: left;
+  cursor: pointer;
+  transition: background-color 140ms var(--ease-out), border-color 140ms var(--ease-out),
+              color 140ms var(--ease-out);
+}
+.ptab:hover { background: var(--surface-3); }
+.ptab[data-active="true"] {
+  border-color: var(--owner);
+  background: color-mix(in srgb, var(--owner) 12%, var(--surface-2));
+  color: var(--text);
+}
+.ptab__who {
+  flex: none;
+  padding: 1px var(--s2);
+  border-radius: 3px;
+  background: var(--owner); color: #0e1118;
+  font-size: 11px; font-weight: 800;
+}
+.ptab__nums { display: grid; gap: 1px; font-size: 11px; line-height: 1.25; }
+.ptab__nums b { color: var(--text); font-weight: 700; }
+
+/* ============================================================ bench */
+
+.bench { margin-top: var(--s3); }
+.bench__head { display: flex; align-items: baseline; gap: var(--s2); margin-bottom: var(--s2); }
+.bench__count { color: var(--text-dim); font-size: 11.5px; }
+.bench__count b { color: var(--text); font-weight: 700; }
+.bench__empty { margin: 0; color: var(--text-mute); font-size: 12px; }
+
+.bench__strip { display: flex; flex-wrap: wrap; gap: var(--s1); }
+
+.benchchip {
+  position: relative;
+  width: 46px; height: 46px;
+  display: grid; place-items: center;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-sm);
+  background: color-mix(in srgb, var(--type-color) 14%, var(--surface-2));
+  cursor: grab;
+  transition: border-color 140ms var(--ease-out), transform 110ms var(--ease-out);
+}
+.benchchip img { width: 100%; height: 100%; object-fit: contain; }
+.benchchip:hover { border-color: var(--accent); transform: translateY(-2px); }
+.benchchip.is-dragging { opacity: .4; }
+.benchchip__x {
+  position: absolute; top: -4px; right: -4px;
+  width: 16px; height: 16px; padding: 0;
+  display: grid; place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface-3);
+  color: var(--text-mute);
+  font: inherit; font-size: 11px; line-height: 1;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 140ms var(--ease-out), color 140ms var(--ease-out);
+}
+.benchchip:hover .benchchip__x, .benchchip__x:focus-visible { opacity: 1; }
+.benchchip__x:hover { color: color-mix(in srgb, var(--danger) 85%, var(--text)); }
+
+/* ============================================================ segmented */
+
+.segmented {
+  display: inline-flex;
+  padding: 2px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--bg);
+}
+.segmented__btn {
+  padding: 4px var(--s3);
+  border: 0; border-radius: 4px;
+  background: transparent;
+  color: var(--text-dim);
+  font: inherit; font-size: 12.5px; font-weight: 600;
+  cursor: pointer;
+  transition: background-color 140ms var(--ease-out), color 140ms var(--ease-out);
+}
+.segmented__btn:hover { color: var(--text); }
+.segmented__btn[aria-pressed="true"] {
+  background: var(--surface-3);
+  color: var(--text);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
 /* ============================================================ badges */
 
 .badge {
@@ -366,11 +477,22 @@ kbd {
 
 /* ============================================================ summary */
 
-.summary { display: flex; flex-wrap: wrap; gap: var(--s3) var(--s4); margin-top: var(--s3); }
+.summary {
+  display: flex; flex-direction: column; gap: var(--s2);
+  margin-top: var(--s4); padding-top: var(--s3);
+  border-top: 1px solid var(--line-soft);
+}
+.summary__player { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s3) var(--s4); }
 .summary__group { display: flex; align-items: center; gap: var(--s2); }
 .summary__label {
   font-size: 10.5px; font-weight: 650; letter-spacing: .08em;
   text-transform: uppercase; color: var(--text-mute);
+}
+.summary__label[data-player] {
+  padding: 1px var(--s2);
+  border-radius: 3px;
+  background: var(--owner); color: #0e1118;
+  letter-spacing: .02em;
 }
 .tally {
   display: inline-flex; align-items: center; gap: 5px;
@@ -396,16 +518,59 @@ kbd {
 }
 
 .step-adder {
-  display: flex; align-items: center; gap: var(--s2);
+  display: grid; gap: var(--s2);
   margin-bottom: var(--s3);
   padding: var(--s2);
   border: 1px solid var(--line-soft);
   border-radius: var(--r-sm);
   background: var(--surface-2);
 }
-.step-adder__field { flex: 1 1 auto; min-width: 0; display: grid; }
-.step-adder__field select { width: 100%; }
-.step-adder__field--level { flex: 0 0 76px; }
+.step-adder__row--go { display: flex; align-items: center; gap: var(--s2); }
+.step-adder__name {
+  flex: 1 1 auto; min-width: 0;
+  font-size: 12.5px; font-weight: 600;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.step-adder__level { flex: 0 0 74px; display: grid; }
+.step-adder__level select { width: 100%; }
+
+/* Picking by sprite rather than by name - you recognise the art faster. */
+.step-picker {
+  display: flex; flex-wrap: wrap; gap: var(--s1);
+  max-height: 116px; overflow-y: auto;
+  scrollbar-width: thin;
+}
+.step-pick {
+  position: relative;
+  width: 38px; height: 38px; padding: 0;
+  display: grid; place-items: center;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-sm);
+  background: color-mix(in srgb, var(--type-color) 14%, var(--surface-3));
+  cursor: pointer;
+  transition: border-color 140ms var(--ease-out), transform 110ms var(--ease-out);
+}
+.step-pick img { width: 100%; height: 100%; object-fit: contain; }
+.step-pick:hover { transform: translateY(-2px); }
+.step-pick[aria-checked="true"] {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+.step-pick:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+.step-pick__owner {
+  position: absolute; bottom: -1px; left: 1px;
+  padding: 0 2px;
+  border-radius: 2px;
+  background: var(--owner); color: #0e1118;
+  font-size: 8px; font-weight: 800;
+}
+.step-pick__done {
+  position: absolute; top: -1px; right: 1px;
+  padding: 0 2px;
+  border-radius: 2px;
+  background: var(--accent); color: var(--accent-ink);
+  font-size: 8px; font-weight: 800;
+}
 
 .sr-only {
   position: absolute; width: 1px; height: 1px;
@@ -440,9 +605,17 @@ kbd {
   min-width: 0; flex: 1 1 auto;
   display: flex; align-items: baseline; gap: 5px;
   font-size: 13px; font-weight: 550;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  overflow: hidden;
 }
+.prio__label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .prio__repeat { flex: none; color: var(--text-mute); font-size: 10.5px; font-weight: 650; }
+.prio__owner {
+  flex: none;
+  padding: 0 4px;
+  border-radius: 3px;
+  background: var(--owner); color: #0e1118;
+  font-size: 9.5px; font-weight: 800;
+}
 
 .prio__levelwrap { flex: none; display: grid; }
 .prio__level {
@@ -582,13 +755,23 @@ kbd {
 .card:hover .card__info, .card__info:focus-visible { opacity: 1; }
 .card__info:hover { color: var(--text); }
 
-.card.is-deployed { border-color: var(--ok); }
+/* Brought but not placed, versus actually standing on the field. */
+.card.is-benched { border-color: color-mix(in srgb, var(--ok) 55%, var(--line)); }
 .card.is-deployed::after {
   content: "";
   position: absolute; inset: 0;
   border-radius: var(--r-md);
-  box-shadow: inset 0 0 0 1px var(--ok);
+  box-shadow: inset 0 0 0 2px var(--ok);
   pointer-events: none;
+}
+
+/* The other player is bringing this one too - allowed, worth knowing. */
+.card__other {
+  position: absolute; bottom: 2px; left: 2px;
+  padding: 0 3px;
+  border-radius: 3px;
+  background: var(--owner); color: #0e1118;
+  font-size: 8.5px; font-weight: 800;
 }
 .card.is-blocked { opacity: .42; cursor: not-allowed; }
 .card.is-blocked:hover { transform: none; background: var(--surface-2); }

@@ -1,10 +1,12 @@
-﻿/**
+/**
  * The level-up plan: an ordered list of "take this Tatari to level N" steps.
  *
  * Horde offers three cards each round and any of them may be a level-up for
- * something already deployed, so the useful artefact is a running sequence you
- * read top-down mid-run. A Tatari appears once per level it should hit, so a
+ * something already on the field, so the useful artefact is a running sequence
+ * you read top-down mid-run. A Tatari appears once per level it should hit, so a
  * plan legitimately reads: Sealing 3, Cheerling 3, Frugagon 3, Sealing 5.
+ *
+ * In co-op the plan covers both players, and every step is badged with its owner.
  */
 
 import { state } from './data.js';
@@ -14,6 +16,10 @@ import { draggable, dropZone } from './dnd.js';
 
 const host = $('#priority');
 const adder = $('#step-adder');
+const picker = $('#step-picker');
+
+/** `player:slug` of the Tatari selected in the adder. */
+let chosen = null;
 
 export function buildPriority() {
   dropZone({
@@ -24,7 +30,7 @@ export function buildPriority() {
     onDrop: (target, payload) => store.moveStep(payload.index, Number(target.dataset.index)),
   });
 
-  // Level select and remove button, delegated so re-renders need no rebinding.
+  // Delegated so re-renders need no rebinding.
   host.addEventListener('change', (e) => {
     const select = e.target.closest('.prio__level');
     if (!select) return;
@@ -49,37 +55,47 @@ export function buildPriority() {
     requestAnimationFrame(() => host.querySelector(`[data-index="${from + delta}"]`)?.focus());
   });
 
-  adder.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const slug = adder.elements.slug.value;
-    const level = Number(adder.elements.level.value);
-    if (!slug) { toast('Pick a Tatari first'); return; }
-    const result = store.addStep(slug, level);
-    if (!result.ok) { toast(result.reason, 'error'); return; }
-    // Keep the same Tatari selected and advance to its next unplanned level, so
-    // laying out 1-2-3-4 for one critter is four clicks of Add.
-    renderAdder(slug);
+  picker.addEventListener('click', (e) => {
+    const opt = e.target.closest('.step-pick');
+    if (!opt || opt.disabled) return;
+    chosen = opt.dataset.key;
+    renderAdder();
   });
 
-  adder.elements.slug.addEventListener('change', (e) => renderAdder(e.target.value));
+  adder.addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (!chosen) { toast('Pick a Tatari first'); return; }
+    const [player, slug] = splitKey(chosen);
+    const result = store.addStep(slug, Number(adder.elements.level.value), player);
+    if (!result.ok) toast(result.reason, 'error');
+    // `chosen` is left alone, so repeated Add walks the same Tatari up a level
+    // at a time - renderAdder advances the offered level.
+  });
 }
 
-/** Adds a step for `slug` at its next unplanned level. Used by the grid tokens. */
-export function quickAddStep(slug) {
-  const level = store.suggestedLevel(slug);
+const makeKey = (slug, player) => `${player}:${slug}`;
+const splitKey = (key) => { const i = key.indexOf(':'); return [Number(key.slice(0, i)), key.slice(i + 1)]; };
+
+/** Adds a step at the next sensible level. Used by the + on grid tokens. */
+export function quickAddStep(slug, player) {
+  const level = store.suggestedLevel(slug, player);
+  const name = state.bySlug.get(slug)?.name ?? slug;
   if (level === null) {
-    toast(`${state.bySlug.get(slug)?.name ?? slug} is already planned to level ${store.MAX_LEVEL}`);
+    toast(`${name} is already planned to level ${store.MAX_LEVEL}`);
     return;
   }
-  const result = store.addStep(slug, level);
+  const result = store.addStep(slug, level, player);
   if (!result.ok) toast(result.reason, 'error');
-  else toast(`${state.bySlug.get(slug).name} to level ${level}`, 'ok');
+  else {
+    chosen = makeKey(slug, player);
+    toast(`${name} to level ${level}`, 'ok');
+  }
 }
 
 // ---------------------------------------------------------------- rendering
 
-function levelOptions(slug, selected) {
-  const taken = new Set(store.plannedLevels(slug));
+function levelOptions(slug, player, selected) {
+  const taken = new Set(store.plannedLevels(slug, player));
   taken.delete(selected);
   return Array.from({ length: store.MAX_LEVEL }, (_, i) => i + 1)
     .map((level) => `<option value="${level}"${level === selected ? ' selected' : ''}${
@@ -87,54 +103,78 @@ function levelOptions(slug, selected) {
     .join('');
 }
 
-export function renderAdder(keepSlug) {
-  const deployed = store.deployedSlugs();
-  const slugSelect = adder.elements.slug;
+/** Everything on the field, in cell order, across both players. */
+function levelable() {
+  return store.allPlaced().map(({ slug, player }) => ({
+    key: makeKey(slug, player), slug, player,
+    tatari: state.bySlug.get(slug),
+    next: store.suggestedLevel(slug, player),
+  })).filter((x) => x.tatari);
+}
+
+export function renderAdder() {
+  const options = levelable();
+  adder.hidden = options.length === 0;
+  if (!options.length) { picker.innerHTML = ''; return; }
+
+  if (!options.some((o) => o.key === chosen)) {
+    chosen = (options.find((o) => o.next !== null) ?? options[0]).key;
+  }
+  const current = options.find((o) => o.key === chosen);
+
+  picker.innerHTML = options.map(({ key, tatari, player, next }) => `
+    <button class="step-pick" type="button" role="radio" data-key="${esc(key)}"
+            data-type="${tatari.type}" data-player="${player}"
+            aria-checked="${key === chosen}" ${next === null ? 'disabled' : ''}
+            title="${esc(tatari.name)}${store.isCoop() ? ` (P${player})` : ''}${
+              next === null ? ' — planned to level 7 already' : ''}">
+      ${artHTML(tatari)}
+      ${store.isCoop() ? `<span class="step-pick__owner" data-player="${player}">${player}</span>` : ''}
+      ${next === null ? '<span class="step-pick__done">7</span>' : ''}
+    </button>`).join('');
+
+  adder.elements.slug.value = current.slug;
+  $('#step-adder-name').textContent = store.isCoop()
+    ? `${current.tatari.name} · P${current.player}`
+    : current.tatari.name;
+
   const levelSelect = adder.elements.level;
-
-  adder.hidden = deployed.length === 0;
-  if (!deployed.length) return;
-
-  const wanted = deployed.includes(keepSlug) ? keepSlug
-    : deployed.includes(slugSelect.value) ? slugSelect.value
-      : deployed.find((s) => store.suggestedLevel(s) !== null) ?? deployed[0];
-
-  slugSelect.innerHTML = deployed.map((slug) => {
-    const t = state.bySlug.get(slug);
-    const done = store.suggestedLevel(slug) === null;
-    return `<option value="${esc(slug)}"${slug === wanted ? ' selected' : ''}${
-      done ? ' disabled' : ''}>${esc(t?.name ?? slug)}${done ? ' (maxed)' : ''}</option>`;
-  }).join('');
-
-  const next = store.suggestedLevel(wanted);
-  levelSelect.innerHTML = levelOptions(wanted, next ?? store.MAX_LEVEL);
-  levelSelect.disabled = next === null;
-  adder.querySelector('[type="submit"]').disabled = next === null;
+  levelSelect.innerHTML = levelOptions(current.slug, current.player,
+    current.next ?? store.MAX_LEVEL);
+  levelSelect.disabled = current.next === null;
+  adder.querySelector('[type="submit"]').disabled = current.next === null;
 }
 
 export function renderPriority() {
-  const total = formationSteps();
+  const total = store.formation.plan.length;
 
   host.innerHTML = store.formation.plan.map((step, i) => {
     const t = state.bySlug.get(step.slug);
     if (!t) return '';
-    const cell = store.cellOf(step.slug);
-    const ordinal = nthForSlug(i);
+    const cell = store.cellOf(step.slug, step.player);
+    const ordinal = nthForStep(i);
+    const who = store.isCoop() ? ` for player ${step.player}` : '';
     return `
-      <li class="prio" data-index="${i}" data-type="${t.type}" tabindex="0"
-          aria-label="Step ${i + 1} of ${total}: ${esc(t.name)} to level ${step.level}">
+      <li class="prio" data-index="${i}" data-type="${t.type}" data-player="${step.player}"
+          tabindex="0"
+          aria-label="Step ${i + 1} of ${total}: ${esc(t.name)}${who} to level ${step.level}">
         <span class="prio__rank">${i + 1}</span>
         <span class="prio__art">${artHTML(t)}</span>
-        <span class="prio__name">${esc(t.name)}${
-          ordinal > 1 ? `<span class="prio__repeat" title="${
-            ordinal}${suffix(ordinal)} step for this Tatari">&times;${ordinal}</span>` : ''}</span>
+        <span class="prio__name">
+          ${store.isCoop() ? `<span class="prio__owner" data-player="${step.player}">P${step.player}</span>` : ''}
+          <span class="prio__label">${esc(t.name)}</span>
+          ${ordinal > 1 ? `<span class="prio__repeat" title="${
+            ordinal}${suffix(ordinal)} step for this Tatari">&times;${ordinal}</span>` : ''}
+        </span>
         <label class="prio__levelwrap">
           <span class="sr-only">Level for ${esc(t.name)}</span>
-          <select class="prio__level field field--select">${levelOptions(step.slug, step.level)}</select>
+          <select class="prio__level field field--select">${
+            levelOptions(step.slug, step.player, step.level)}</select>
         </label>
         <span class="prio__meta">
           ${typeIcon(t.type)}${roleIcon(t.role)}
-          <span class="prio__cell">R${store.cellRow(cell) + 1}C${store.cellCol(cell) + 1}</span>
+          <span class="prio__cell">${cell === null ? '—'
+            : `R${store.cellRow(cell) + 1}C${store.cellCol(cell) + 1}`}</span>
         </span>
         <button class="prio__drop" type="button" data-drop-step
                 aria-label="Remove step ${i + 1}">&times;</button>
@@ -152,25 +192,25 @@ export function renderPriority() {
         const t = state.bySlug.get(step.slug);
         return `<span class="prio prio--ghost" data-type="${t.type}">
           <span class="prio__art">${artHTML(t, { lazy: false })}</span>
-          <span class="prio__name">${esc(t.name)}</span>
+          <span class="prio__label">${esc(t.name)}</span>
           <span class="prio__levelchip">Lv ${step.level}</span></span>`;
       }
     );
   }
 
-  $('#step-count').textContent = total
-    ? `${total} step${total === 1 ? '' : 's'}`
-    : '';
+  $('#step-count').textContent = total ? `${total} step${total === 1 ? '' : 's'}` : '';
+  $('#btn-clear-plan').disabled = total === 0;
   renderAdder();
 }
 
-const formationSteps = () => store.formation.plan.length;
-
-/** How many times this Tatari has appeared up to and including `index`. */
-function nthForSlug(index) {
-  const { slug } = store.formation.plan[index];
+/** How many times this (Tatari, player) has appeared up to and including `index`. */
+function nthForStep(index) {
+  const { slug, player } = store.formation.plan[index];
   let n = 0;
-  for (let i = 0; i <= index; i++) if (store.formation.plan[i].slug === slug) n++;
+  for (let i = 0; i <= index; i++) {
+    const s = store.formation.plan[i];
+    if (s.slug === slug && s.player === player) n++;
+  }
   return n;
 }
 
