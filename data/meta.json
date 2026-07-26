@@ -62,8 +62,8 @@
     }
   },
   "hordeGrid": {
-    "columns": 5,
-    "rows": 6,
+    "columns": 6,
+    "rows": 5,
     "maxDeployed": 15
   }
 }

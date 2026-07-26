@@ -347,7 +347,8 @@ async function main() {
       },
     },
     types, roles, typeChart,
-    hordeGrid: { columns: 5, rows: 6, maxDeployed: 15 },
+    // Your half of the Horde field. Zobos spawn beyond row 0 and never stand here.
+    hordeGrid: { columns: 6, rows: 5, maxDeployed: 15 },
   };
   await writeFile(path.join(ROOT, 'data/meta.json'), JSON.stringify(meta, null, 2) + '\n');
 

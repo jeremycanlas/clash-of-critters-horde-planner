@@ -242,16 +242,29 @@ kbd {
   font-size: 10.5px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
   color: var(--text-mute);
 }
+
+/* The Zobo half of the field. Hatched so it never reads as placeable. */
 .field-frame__enemy {
+  display: flex; align-items: center; justify-content: center; gap: var(--s2);
+  min-height: 46px;
   border-bottom: 1px solid var(--line-soft);
-  background: color-mix(in srgb, var(--danger) 9%, var(--surface-2));
-  color: color-mix(in srgb, var(--danger) 70%, var(--text-dim));
+  background:
+    repeating-linear-gradient(-45deg,
+      color-mix(in srgb, var(--danger) 13%, transparent) 0 6px,
+      transparent 6px 12px),
+    color-mix(in srgb, var(--danger) 7%, var(--surface-2));
+  color: color-mix(in srgb, var(--danger) 72%, var(--text-dim));
+  text-align: center;
+}
+.field-frame__enemy::after {
+  content: "▼";
+  font-size: 9px; letter-spacing: 0;
 }
 .field-frame__base { border-top: 1px solid var(--line-soft); text-align: right; }
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   gap: var(--s1);
   padding: var(--s2);
 }

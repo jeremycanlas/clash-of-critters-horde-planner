@@ -1,7 +1,8 @@
 # Horde Drafter — Clash of Critters
 
-A static, no-build tool for planning a Horde Invasion formation: drag Tatari onto a
-5 × 6 field, cap out at 15, and keep a ranked level-up order to read mid-run.
+A static, no-build tool for planning a Horde Invasion formation: drag Tatari onto
+your half of the field — 6 tiles across, 5 deep — cap out at 15, and keep a ranked
+level-up order to read mid-run.
 
 Everything is plain HTML, CSS and ES modules, so the repo root is publishable to
 GitHub Pages as-is — no bundler, no dependencies at runtime.
@@ -32,7 +33,8 @@ community nicknames or the real animal a Tatari is based on ("capybara",
 back, or drag it where you want it. The `i` button opens skill, matchup and
 evolution details.
 
-**Field** — 5 columns × 6 rows with a hard 15-Tatari cap. Only one member of an
+**Field** — 6 columns × 5 rows with a hard 15-Tatari cap. Zobos spawn beyond the
+top edge and never stand on these tiles, so row 1 is the contact line. Only one member of an
 evolution line can be deployed at a time, so putting Frostnip down locks out
 Frostpaw, Frostique and Frostluna; the roster marks them *"Frostnip in use"*.
 Drag between cells to rearrange (dropping onto an occupied cell swaps them),
@@ -114,7 +116,7 @@ assets/js/
   data.js       roster loading, custom Tatari, search index
   store.js      formation state, deploy cap, family exclusion, share URLs, import/export
   dnd.js        pointer-based drag controller (mouse + touch)
-  grid.js       the 5x6 field
+  grid.js       the 6x5 field
   roster.js     picker, filters, search
   priority.js   level-up order
   detail.js     per-Tatari sheet

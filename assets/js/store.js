@@ -9,12 +9,19 @@
 
 import { state } from './data.js';
 
-export const COLS = 5;
-export const ROWS = 6;
+/**
+ * Your half of the Horde field: 6 tiles across, 5 deep. Row 0 is the contact
+ * line; the Zobos come in from beyond it and never occupy these cells.
+ */
+export const COLS = 6;
+export const ROWS = 5;
 export const CELLS = COLS * ROWS;
 export const MAX_DEPLOYED = 15;
 
-const SAVE_KEY = 'coc.formation.v1';
+// v2: cell indices are COLS-relative, so they changed meaning when the grid
+// went from 5x6 to 6x5. Stale v1 state is dropped rather than mis-restored.
+const SAVE_KEY = 'coc.formation.v2';
+const HASH_VERSION = 'v2';
 
 /** @type {{cells: (string|null)[], priority: string[], name: string}} */
 export const formation = {
@@ -200,19 +207,19 @@ function applyCells(cells, priority) {
 // ---------------------------------------------------------------- share links
 
 /**
- * `#v1=slug@cell,slug@cell,...` - array order is the level-up priority, so one
+ * `#v2=slug@cell,slug@cell,...` - array order is the level-up priority, so one
  * short readable token carries both the layout and the plan.
  */
 export function shareUrl() {
   const tokens = formation.priority.map((slug) => `${slug}@${cellOf(slug)}`);
   const url = new URL(location.href);
-  url.hash = tokens.length ? `v1=${tokens.join(',')}` : '';
+  url.hash = tokens.length ? `${HASH_VERSION}=${tokens.join(',')}` : '';
   return url.toString();
 }
 
 /** @returns {{unknown: string[]}|null} null when the hash held no formation */
 export function fromHash() {
-  const m = location.hash.match(/v1=([^&]+)/);
+  const m = location.hash.match(new RegExp(`${HASH_VERSION}=([^&]+)`));
   if (!m) return null;
 
   const cells = Array(CELLS).fill(null);
@@ -237,7 +244,7 @@ export function fromHash() {
 export function toJSON() {
   return {
     format: 'clash-of-critters-formation',
-    version: 1,
+    version: 2,
     name: formation.name || 'Untitled formation',
     grid: { columns: COLS, rows: ROWS, maxDeployed: MAX_DEPLOYED },
     placements: formation.priority.map((slug, i) => {
@@ -273,12 +280,17 @@ export function fromJSON(data) {
   const sorted = [...placements].sort(
     (a, b) => (a.levelPriority ?? 1e9) - (b.levelPriority ?? 1e9));
 
+  // A flat cell index only means anything relative to the grid width it was
+  // written for, so a file from a differently-shaped grid is read by row/column.
+  const sameShape = (data.grid?.columns ?? COLS) === COLS;
+
   for (const p of sorted) {
     const slug = typeof p === 'string' ? p : p.slug;
     if (!slug) continue;
     if (!state.bySlug.has(slug)) { unknown.push(slug); continue; }
-    let cell = Number.isInteger(p.cell) ? p.cell
-      : Number.isInteger(p.row) && Number.isInteger(p.column) ? p.row * COLS + p.column
+    let cell = Number.isInteger(p.row) && Number.isInteger(p.column) && p.column < COLS
+      ? p.row * COLS + p.column
+      : sameShape && Number.isInteger(p.cell) ? p.cell
         : null;
     if (cell === null || cell < 0 || cell >= CELLS || cells[cell]) {
       cell = cells.findLastIndex((c) => c === null);

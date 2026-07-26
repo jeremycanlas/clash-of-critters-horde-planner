@@ -1,4 +1,4 @@
-/** The 5x6 battlefield: rendering, drop targets, keyboard placement. */
+/** Your half of the battlefield (6 wide, 5 deep): rendering, drops, keyboard. */
 
 import { state } from './data.js';
 import * as store from './store.js';
