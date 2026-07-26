@@ -6,15 +6,15 @@ Plan your Horde Invasion formation before a run: drag and drop Tatari into the b
 
 ## Use it
 
-**Online:** 
+**Online:** <https://jeremycanlas.github.io/clash-of-critters-horde-planner/>
 
 **On your own machine:** the app is plain HTML, CSS and JavaScript with no build
 step, but browsers block data loading on `file://`, so serve the folder rather
 than double-clicking `index.html`:
 
 ```bash
-git clone https://github.com/YOUR-USERNAME/clash-of-critters-tool.git
-cd clash-of-critters-tool
+git clone https://github.com/jeremycanlas/clash-of-critters-horde-planner.git
+cd clash-of-critters-horde-planner
 npx --yes http-server . -p 8123 -c-1
 ```
 
