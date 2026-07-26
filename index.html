@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Horde Drafter — Clash of Critters</title>
+<meta name="description" content="Plan your 15-Tatari Horde Invasion formation for Clash of Critters: drag-and-drop grid, type and role filters, and a level-up priority plan.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='19' font-size='20'>🐾</text></svg>">
+<link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar__title">
+    <h1>Horde Drafter</h1>
+    <span class="topbar__sub">Clash&nbsp;of&nbsp;Critters</span>
+  </div>
+
+  <input id="formation-name" class="field field--name" type="text"
+         placeholder="Name this formation" aria-label="Formation name" maxlength="60">
+
+  <div class="topbar__actions">
+    <output id="deploy-count" class="counter" aria-live="polite">0 / 15</output>
+    <button id="btn-share"  class="btn" type="button">Share link</button>
+    <button id="btn-export" class="btn" type="button">Export</button>
+    <button id="btn-import" class="btn" type="button">Import</button>
+    <button id="btn-clear"  class="btn btn--quiet" type="button">Clear</button>
+    <input id="import-file" type="file" accept=".json,application/json" hidden>
+  </div>
+</header>
+
+<main class="layout">
+
+  <!-- ------------------------------------------------ battlefield -->
+  <section class="panel panel--field" aria-labelledby="h-field">
+    <div class="panel__head">
+      <h2 id="h-field">Formation</h2>
+      <div class="panel__tools">
+        <label class="check"><input id="opt-glitter" type="checkbox"> Glitter art</label>
+        <button id="btn-compact" class="btn btn--tiny" type="button">Pack to back</button>
+      </div>
+    </div>
+
+    <p class="hint">Enemies advance from the top. Drag Tatari in from the roster, drag them between
+      cells to rearrange, and double-click or press <kbd>Delete</kbd> to remove one.</p>
+
+    <div class="field-frame">
+      <div class="field-frame__enemy">Zobos advance from here</div>
+      <div id="grid" class="grid" role="grid" aria-label="Formation grid, 5 columns by 6 rows"></div>
+      <div class="field-frame__base">Your base</div>
+    </div>
+
+    <div id="summary" class="summary"></div>
+  </section>
+
+  <!-- ------------------------------------------------ priority -->
+  <section class="panel panel--priority" aria-labelledby="h-priority">
+    <div class="panel__head">
+      <h2 id="h-priority">Level-up priority</h2>
+      <button id="btn-priority-auto" class="btn btn--tiny" type="button"
+              title="Order by role: Tank and Guardian first, then Healer, Support, DPS, Specialist">Suggest order</button>
+    </div>
+    <p class="hint">Horde offers three choices each round. This is the order you want to
+      pour levels into — drag to rearrange, top of the list first.</p>
+    <ol id="priority" class="priority" aria-label="Level-up priority order"></ol>
+  </section>
+
+  <!-- ------------------------------------------------ roster -->
+  <section class="panel panel--roster" aria-labelledby="h-roster">
+    <div class="panel__head">
+      <h2 id="h-roster">Roster <span id="roster-count" class="muted"></span></h2>
+      <button id="btn-add-custom" class="btn btn--tiny" type="button">+ Add your own</button>
+    </div>
+
+    <div class="filters">
+      <input id="search" class="field" type="search" autocomplete="off"
+             placeholder="Search name, animal, nickname or skill…" aria-label="Search Tatari">
+
+      <div class="filters__row">
+        <div id="filter-types" class="chips" role="group" aria-label="Filter by type"></div>
+        <div id="filter-roles" class="chips" role="group" aria-label="Filter by role"></div>
+      </div>
+
+      <div class="filters__row filters__row--meta">
+        <div id="filter-tiers" class="chips chips--text" role="group" aria-label="Filter by tier"></div>
+        <label class="check"><input id="opt-hide-blocked" type="checkbox"> Hide unavailable</label>
+        <label class="sortby">Sort
+          <select id="sort" class="field field--select">
+            <option value="wiki">Wiki order</option>
+            <option value="name">Name</option>
+            <option value="type">Type</option>
+            <option value="role">Role</option>
+            <option value="tier">Tier</option>
+          </select>
+        </label>
+        <button id="btn-reset-filters" class="btn btn--tiny btn--quiet" type="button">Reset</button>
+      </div>
+    </div>
+
+    <div id="roster" class="roster" role="list"></div>
+  </section>
+</main>
+
+<footer class="foot">
+  <span>Data and sprites from the
+    <a href="https://clashofcritters.wiki.gg/wiki/Tatari" target="_blank" rel="noopener">Clash of Critters Wiki</a>.
+    Fan-made, unofficial.</span>
+  <span id="foot-meta" class="muted"></span>
+</footer>
+
+<!-- ------------------------------------------------ detail popover -->
+<dialog id="detail" class="modal modal--detail"></dialog>
+
+<!-- ------------------------------------------------ custom Tatari editor -->
+<dialog id="custom" class="modal">
+  <form id="custom-form" method="dialog">
+    <h2>Your own Tatari</h2>
+    <p class="hint">Anything you add is stored in this browser and travels with your
+      exported formation, so you can plan around Tatari the wiki has not caught up with.</p>
+
+    <div class="form-grid">
+      <label>Name<input name="name" class="field" required maxlength="40" placeholder="Zapzilla"></label>
+      <label>Type
+        <select name="type" class="field field--select">
+          <option>Water</option><option>Fire</option><option>Grass</option>
+          <option>Lightning</option><option>Rock</option>
+        </select>
+      </label>
+      <label>Role
+        <select name="role" class="field field--select">
+          <option>DPS</option><option>Guardian</option><option>Tank</option>
+          <option>Healer</option><option>Support</option><option>Specialist</option>
+        </select>
+      </label>
+      <label>Tier<input name="tier" class="field" type="number" min="1" max="4" value="1"></label>
+      <label>Evolution line
+        <input name="family" class="field" maxlength="40"
+               placeholder="Leave blank to stand alone">
+        <small class="hint">Share a line name with other entries and only one of them can be deployed.</small>
+      </label>
+      <label>Battle row
+        <select name="battleRow" class="field field--select">
+          <option value="">Unspecified</option>
+          <option value="front">Front</option>
+          <option value="back">Back</option>
+        </select>
+      </label>
+      <label class="span-2">Skill<input name="skill" class="field" maxlength="200"></label>
+      <label class="span-2">Sprite URL or data URI
+        <input name="image" class="field" placeholder="Optional">
+      </label>
+    </div>
+
+    <div class="modal__actions">
+      <button class="btn btn--primary" value="save" type="submit">Add Tatari</button>
+      <button class="btn btn--quiet" value="cancel" type="button" data-close>Cancel</button>
+    </div>
+  </form>
+
+  <div class="custom-list">
+    <h3>Added so far <span id="custom-count" class="muted"></span></h3>
+    <ul id="custom-list"></ul>
+    <div class="modal__actions">
+      <button id="btn-export-custom" class="btn btn--tiny" type="button">Export my Tatari</button>
+      <button id="btn-import-custom" class="btn btn--tiny" type="button">Import Tatari file</button>
+      <input id="import-custom-file" type="file" accept=".json,application/json" hidden>
+    </div>
+  </div>
+</dialog>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script type="module" src="assets/js/app.js"></script>
+</body>
+</html>

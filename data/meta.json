@@ -1,0 +1,69 @@
+{
+  "source": "https://clashofcritters.wiki.gg/wiki/Tatari",
+  "scrapedAt": "2026-07-26",
+  "counts": {
+    "tatari": 218,
+    "families": 62,
+    "byType": {
+      "Fire": 46,
+      "Grass": 46,
+      "Lightning": 42,
+      "Rock": 42,
+      "Water": 42
+    },
+    "byRole": {
+      "DPS": 86,
+      "Guardian": 45,
+      "Healer": 20,
+      "Specialist": 19,
+      "Support": 27,
+      "Tank": 21
+    },
+    "byRarity": {
+      "Common": 20,
+      "Rare": 198
+    }
+  },
+  "types": [
+    "Fire",
+    "Grass",
+    "Lightning",
+    "Rock",
+    "Water"
+  ],
+  "roles": [
+    "DPS",
+    "Guardian",
+    "Healer",
+    "Specialist",
+    "Support",
+    "Tank"
+  ],
+  "typeChart": {
+    "Water": {
+      "weakTo": "Lightning",
+      "strongAgainst": "Fire"
+    },
+    "Fire": {
+      "weakTo": "Water",
+      "strongAgainst": "Grass"
+    },
+    "Grass": {
+      "weakTo": "Fire",
+      "strongAgainst": "Rock"
+    },
+    "Lightning": {
+      "weakTo": "Rock",
+      "strongAgainst": "Water"
+    },
+    "Rock": {
+      "weakTo": "Grass",
+      "strongAgainst": "Lightning"
+    }
+  },
+  "hordeGrid": {
+    "columns": 5,
+    "rows": 6,
+    "maxDeployed": 15
+  }
+}
