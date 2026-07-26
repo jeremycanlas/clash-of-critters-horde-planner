@@ -40,14 +40,14 @@ export const state = {
 
 // ---------------------------------------------------------------- local extras
 
-export function loadCustom() {
+function loadCustom() {
   try {
     const raw = JSON.parse(localStorage.getItem(CUSTOM_KEY) || '[]');
     return Array.isArray(raw) ? raw : [];
   } catch { return []; }
 }
 
-export function saveCustom(list) {
+function saveCustom(list) {
   localStorage.setItem(CUSTOM_KEY, JSON.stringify(list));
 }
 
@@ -55,12 +55,6 @@ function loadLocalAliases() {
   try { return JSON.parse(localStorage.getItem(ALIAS_KEY) || '{}') || {}; }
   catch { return {}; }
 }
-
-export function saveLocalAliases(map) {
-  localStorage.setItem(ALIAS_KEY, JSON.stringify(map));
-}
-
-export function localAliases() { return loadLocalAliases(); }
 
 // ---------------------------------------------------------------- normalising
 

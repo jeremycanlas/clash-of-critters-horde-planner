@@ -8,7 +8,8 @@ import {
 import { buildGrid, renderGrid, renderBench, renderPlayerTabs, renderSummary } from './grid.js';
 import { buildFilters, renderRoster } from './roster.js';
 import { buildPriority, renderPriority } from './priority.js';
-import { buildCustom, importTatari } from './custom.js';
+import { buildShare, openShare } from './share.js';
+import { importTatari } from './custom.js';
 
 function renderAll() {
   renderPlayerTabs();
@@ -17,25 +18,12 @@ function renderAll() {
   renderPriority();
   renderRoster();
   renderSummary();
-  renderCounter();
 
   for (const btn of $$('#mode-switch .segmented__btn')) {
     btn.setAttribute('aria-pressed', String(btn.dataset.mode === store.formation.mode));
   }
   document.body.dataset.mode = store.formation.mode;
   document.body.dataset.activePlayer = String(store.formation.activePlayer);
-}
-
-/** In co-op the per-player tabs carry the detail, so the chip stays a bare total. */
-function renderCounter() {
-  const counter = $('#deploy-count');
-  const onField = store.allPlaced().length;
-  const cap = store.fieldCap() * store.playerCount();
-  counter.textContent = `${onField} / ${cap}`;
-  counter.title = store.isCoop()
-    ? `${onField} on the field across both players, ${store.fieldCap()} each`
-    : `${onField} of ${cap} on the field`;
-  counter.dataset.full = String(onField >= cap);
 }
 
 async function main() {
@@ -52,19 +40,19 @@ async function main() {
 
   buildGrid();
   buildPriority();
+  buildShare();
   buildFilters(() => renderRoster());
-  buildCustom(renderAll);
 
   store.subscribe(renderAll);
 
-  const restored = store.restore();
+  // A shared link wins over whatever was on screen last time.
   const hash = store.fromHash();
+  if (!hash) store.restore();
   renderAll();
 
   if (hash?.unknown.length) {
     toast(`Skipped ${hash.unknown.length} unknown Tatari from that link`, 'error');
   }
-  void restored;
 
   $('#formation-name').value = store.formation.name;
   $('#foot-meta').textContent =
@@ -72,6 +60,13 @@ async function main() {
 
   wireToolbar();
   wireDragAutoScroll();
+}
+
+/** Guards the toolbar actions that have nothing to work with yet. */
+function nothingBrought(message) {
+  if (store.benchOf(1).length || store.benchOf(2).length) return false;
+  toast(message);
+  return true;
 }
 
 function wireToolbar() {
@@ -100,10 +95,16 @@ function wireToolbar() {
     toast('Field cleared — benches kept');
   });
 
+  // In co-op each player has their own plan and their own tab, so this clears
+  // the one on screen rather than both at once.
   $('#btn-clear-plan').addEventListener('click', () => {
-    if (!store.formation.plan.length) return;
-    store.clearPlan();
-    toast('Level-up steps cleared');
+    const player = store.isCoop() ? store.formation.activePlayer : null;
+    const n = player === null ? store.formation.plan.length : store.planFor(player).length;
+    if (!n) return;
+    store.clearPlan(player);
+    toast(player === null
+      ? 'Level-up steps cleared'
+      : `P${player}'s level-up steps cleared`);
   });
 
   $('#btn-clear').addEventListener('click', () => {
@@ -115,54 +116,93 @@ function wireToolbar() {
   });
 
   $('#btn-share').addEventListener('click', async () => {
-    if (!store.benchOf(1).length && !store.benchOf(2).length) {
-      toast('Bring some Tatari first');
-      return;
-    }
-    const url = store.shareUrl();
-    history.replaceState(null, '', url);
-    try {
-      await navigator.clipboard.writeText(url);
-      toast('Share link copied', 'ok');
-    } catch {
-      toast('Link is in the address bar — copy it from there');
-    }
+    if (nothingBrought('Bring some Tatari first')) return;
+    await openShare();
   });
 
-  $('#btn-export').addEventListener('click', () => {
-    if (!store.benchOf(1).length && !store.benchOf(2).length) {
-      toast('Nothing to export yet');
-      return;
-    }
+  $('#btn-save').addEventListener('click', () => {
+    if (nothingBrought('Nothing to save yet')) return;
     downloadJSON(slugFilename(store.formation.name, 'horde-formation'), store.toJSON());
+    toast('Formation saved', 'ok');
   });
 
-  $('#btn-import').addEventListener('click', () => $('#import-file').click());
   $('#import-file').addEventListener('change', async (e) => {
+    const input = e.target;
     try {
-      const data = await readJSONFile(e.target);
-
-      // A formation may carry its own custom Tatari; register them first so the
-      // placements that reference them resolve.
-      const addedCustom = importTatari(data);
-
-      const result = store.fromJSON(data);
-      if (!result.ok) { toast(result.reason, 'error'); return; }
-
-      $('#formation-name').value = store.formation.name;
-      renderAll();
-
-      const bits = [`Loaded ${store.allPlaced().length} on the field`];
-      if (addedCustom) bits.push(`${addedCustom} custom`);
-      if (result.unknown.length) bits.push(`${result.unknown.length} unrecognised`);
-      toast(bits.join(' · '), result.unknown.length ? 'error' : 'ok');
+      loadFormation(await readJSONFile(input));
     } catch (err) {
       toast(err.message, 'error');
+    } finally {
+      input.value = '';        // so re-picking the same file fires change again
     }
   });
+
+  wireFileDrop();
 
   window.addEventListener('hashchange', () => {
     if (store.fromHash()) renderAll();
+  });
+}
+
+function loadFormation(data) {
+  // A formation may carry its own custom Tatari; register them first so the
+  // placements that reference them resolve.
+  const addedCustom = importTatari(data);
+
+  const result = store.fromJSON(data);
+  if (!result.ok) { toast(result.reason, 'error'); return; }
+
+  $('#formation-name').value = store.formation.name;
+  renderAll();
+
+  const bits = [`Loaded ${store.allPlaced().length} on the field`];
+  if (addedCustom) bits.push(`${addedCustom} custom`);
+  if (result.unknown.length) bits.push(`${result.unknown.length} unrecognised`);
+  toast(bits.join(' · '), result.unknown.length ? 'error' : 'ok');
+}
+
+/**
+ * Dropping a .json straight onto the page, which sidesteps the OS file picker
+ * entirely - useful when the shell dialog is slow or misbehaving.
+ */
+function wireFileDrop() {
+  const hint = $('#drop-hint');
+  let depth = 0;
+
+  const carriesFile = (e) => [...(e.dataTransfer?.types ?? [])].includes('Files');
+
+  window.addEventListener('dragenter', (e) => {
+    if (!carriesFile(e)) return;
+    e.preventDefault();
+    depth++;
+    hint.hidden = false;
+  });
+
+  window.addEventListener('dragover', (e) => {
+    if (carriesFile(e)) e.preventDefault();      // required or the drop never fires
+  });
+
+  window.addEventListener('dragleave', () => {
+    if (--depth <= 0) { depth = 0; hint.hidden = true; }
+  });
+
+  window.addEventListener('drop', async (e) => {
+    if (!carriesFile(e)) return;
+    e.preventDefault();
+    depth = 0;
+    hint.hidden = true;
+
+    const file = e.dataTransfer.files?.[0];
+    if (!file) return;
+    if (!/\.json$/i.test(file.name)) {
+      toast(`${file.name} is not a .json file`, 'error');
+      return;
+    }
+    try {
+      loadFormation(JSON.parse(await file.text()));
+    } catch {
+      toast(`${file.name} is not valid JSON`, 'error');
+    }
   });
 }
 

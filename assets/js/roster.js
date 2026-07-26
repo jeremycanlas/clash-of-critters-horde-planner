@@ -4,7 +4,7 @@ import { state, matches } from './data.js';
 import * as store from './store.js';
 import { TYPES, ROLES } from './icons.js';
 import { $, artHTML, esc, typeIcon, roleIcon, toast } from './ui.js';
-import { draggable } from './dnd.js';
+import { draggable, dropZone } from './dnd.js';
 import { openDetail } from './detail.js';
 
 const TIERS = [1, 2, 3, 4];
@@ -15,18 +15,48 @@ export const filters = {
   roles: new Set(),
   tiers: new Set(),
   hideBlocked: false,
-  sort: 'wiki',
+  sort: 'default',
 };
 
+// 'default' is the wiki's own order, which runs family by family - the most
+// useful reading order there is, so it sorts by not sorting.
 const SORTS = {
-  wiki: () => 0,
+  default: () => 0,
   name: (a, b) => a.name.localeCompare(b.name),
   type: (a, b) => a.type.localeCompare(b.type) || a.name.localeCompare(b.name),
   role: (a, b) => a.role.localeCompare(b.role) || a.name.localeCompare(b.name),
   tier: (a, b) => a.tier - b.tier || a.name.localeCompare(b.name),
 };
 
+/**
+ * The roster is where a Tatari came from, so dragging one back to it puts it
+ * back: off the field if it was on the field, off the bench entirely if it was
+ * waiting on the bench.
+ */
+function buildRosterDropZone() {
+  const nameOf = (slug) => state.bySlug.get(slug)?.name ?? slug;
+
+  dropZone({
+    selector: '.panel--roster',
+    accepts: (target, payload) =>
+      (payload.from === 'field' || payload.from === 'bench') && !!payload.slug,
+    onHover: (target, ok) => target.classList.toggle('is-returning', ok),
+    onDrop: (target, payload) => {
+      const who = store.isCoop() ? ` (P${payload.player})` : '';
+      if (payload.from === 'field') {
+        store.unplace(payload.slug, payload.player);
+        toast(`${nameOf(payload.slug)}${who} off the field — still on the bench`);
+      } else {
+        store.removeFromBench(payload.slug, payload.player);
+        toast(`Stopped bringing ${nameOf(payload.slug)}${who}`);
+      }
+    },
+  });
+}
+
 export function buildFilters(onChange) {
+  buildRosterDropZone();
+
   const chips = (host, values, set, kind, label) => {
     host.innerHTML = values.map((v) => `
       <button class="chip chip--${kind}" type="button" data-value="${esc(v)}"
@@ -96,9 +126,9 @@ export function resetFilters() {
   filters.roles.clear();
   filters.tiers.clear();
   filters.hideBlocked = false;
-  filters.sort = 'wiki';
+  filters.sort = 'default';
   $('#search').value = '';
-  $('#sort').value = 'wiki';
+  $('#sort').value = 'default';
   $('#opt-hide-blocked').checked = false;
   for (const chip of document.querySelectorAll('.chip')) chip.setAttribute('aria-pressed', 'false');
 }
@@ -109,11 +139,13 @@ function visible(player) {
     if (filters.roles.size && !filters.roles.has(t.role)) return false;
     if (filters.tiers.size && !filters.tiers.has(t.tier)) return false;
     if (!matches(t, filters.query)) return false;
-    if (filters.hideBlocked && !store.onBench(t.slug, player)
-        && store.benchBlockedReason(t, player)) return false;
+    // Only a per-Tatari reason hides a card. A full bench blocks every Tatari
+    // at once, and collapsing the roster to the 15 already brought reads as the
+    // filter being broken - the same call the card dimming makes below.
+    if (filters.hideBlocked && store.familyConflict(t, player)) return false;
     return true;
   });
-  return filters.sort === 'wiki' ? list : list.sort(SORTS[filters.sort]);
+  return filters.sort === 'default' ? list : list.sort(SORTS[filters.sort]);
 }
 
 export function renderRoster() {
@@ -140,10 +172,10 @@ export function renderRoster() {
            role="listitem" tabindex="0" data-slug="${esc(t.slug)}" data-type="${t.type}"
            title="${esc(t.name)} — ${t.type} ${t.role}, T${t.tier}${
              state_ ? `\n${state_}` : ''}${clash ? `\n${clash.name} from the same line is brought` : ''}">
-        <div class="card__art">
-          ${artHTML(t)}
+        <div class="card__art">${artHTML(t)}</div>
+        <div class="card__meta">
           <span class="card__tier">T${t.tier}</span>
-          <span class="card__badges">${typeIcon(t.type)}${roleIcon(t.role)}</span>
+          ${typeIcon(t.type)}${roleIcon(t.role)}
           ${otherPlayer.length
             ? `<span class="card__other" data-player="${otherPlayer[0]}"
                      title="P${otherPlayer[0]} is bringing this too">P${otherPlayer[0]}</span>` : ''}

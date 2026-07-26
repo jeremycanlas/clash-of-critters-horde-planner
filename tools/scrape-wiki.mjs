@@ -4,12 +4,14 @@
  *
  *   node tools/scrape-wiki.mjs            # data + images
  *   node tools/scrape-wiki.mjs --no-images
+ *   node tools/scrape-wiki.mjs --icons-only   # just the type/role icons
  *
  * Writes:
  *   data/tatari.json          full roster
  *   data/meta.json            types, roles, type chart, counts
  *   data/images/tatari/*.png  normal sprites
  *   data/images/glitter/*.png glitter sprites
+ *   data/images/icons/*.png   type + role icons (Category:In-game Icons)
  *
  * Cloudflare blocks plain HTML page views but leaves api.php and /images/ open,
  * so everything here goes through the MediaWiki API.
@@ -26,8 +28,10 @@ const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 ' +
            '(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
 const ROOT = path.resolve(import.meta.dirname, '..');
 const THUMB_WIDTH = 200;
+const ICON_WIDTH = 128;
 
 const ELEMENTS = ['Water', 'Fire', 'Grass', 'Lightning', 'Rock'];
+const ROLES = ['DPS', 'Guardian', 'Healer', 'Tank', 'Support', 'Specialist'];
 const ROLE_CANON = {
   dps: 'DPS', guardian: 'Guardian', healer: 'Healer',
   tank: 'Tank', support: 'Support', specialist: 'Specialist',
@@ -215,7 +219,7 @@ async function parseElementPages() {
 // ---------------------------------------------------------------- images
 
 /** Resolves File: titles to thumbnail URLs, 50 at a time. */
-async function resolveThumbs(files) {
+async function resolveThumbs(files, width = THUMB_WIDTH) {
   const urls = new Map();
   const titles = [...new Set(files)];
 
@@ -226,7 +230,7 @@ async function resolveThumbs(files) {
       titles: batch.map((f) => `File:${f}`).join('|'),
       prop: 'imageinfo',
       iiprop: 'url',
-      iiurlwidth: String(THUMB_WIDTH),
+      iiurlwidth: String(width),
     });
     for (const page of j.query.pages) {
       const info = page.imageinfo?.[0];
@@ -284,10 +288,44 @@ async function fetchSprites(list, thumbs) {
   console.log();
 }
 
+/**
+ * The in-game type and role icons, saved under slugged names so the app can
+ * build a path straight from a Tatari's type/role. Redownloads every time —
+ * there are only eleven and the wiki's art gets touched up now and then.
+ */
+async function fetchIcons() {
+  const dir = path.join(ROOT, 'data/images/icons');
+  await mkdir(dir, { recursive: true });
+
+  const names = [...ELEMENTS, ...ROLES];
+  const thumbs = await resolveThumbs(names.map((n) => `${n}.png`), ICON_WIDTH);
+
+  let done = 0;
+  const missing = [];
+  for (const name of names) {
+    const url = thumbs.get(`${name}.png`);
+    if (!url) { missing.push(name); continue; }
+    try {
+      await download(url, path.join(dir, `${name.toLowerCase()}.png`));
+      done++;
+    } catch (err) {
+      missing.push(name);
+      console.warn(`\n  ${name}: ${err.message}`);
+    }
+  }
+  console.log(`  icons: ${done}/${names.length}${missing.length ? `, missing ${missing.join(', ')}` : ''}`);
+}
+
 // ---------------------------------------------------------------- main
 
 async function main() {
   const withImages = !process.argv.includes('--no-images');
+
+  if (process.argv.includes('--icons-only')) {
+    console.log('Downloading type/role icons...');
+    await fetchIcons();
+    return;
+  }
 
   console.log('Fetching Tatari list...');
   const list = parseRoster(await wikitext('Tatari'));
@@ -311,6 +349,8 @@ async function main() {
     const thumbs = await resolveThumbs(files);
     console.log('Downloading sprites...');
     await fetchSprites(list, thumbs);
+    console.log('Downloading type/role icons...');
+    await fetchIcons();
   } else {
     // keep the paths so the app still works against an existing image folder
     for (const t of list) {
@@ -348,7 +388,7 @@ async function main() {
     },
     types, roles, typeChart,
     // Your half of the Horde field. Zobos spawn beyond row 0 and never stand here.
-    hordeGrid: { columns: 6, rows: 5, maxDeployed: 15, maxLevel: 7 },
+    hordeGrid: { columns: 6, rows: 6, maxDeployed: 15, maxLevel: 7 },
   };
   await writeFile(path.join(ROOT, 'data/meta.json'), JSON.stringify(meta, null, 2) + '\n');
 

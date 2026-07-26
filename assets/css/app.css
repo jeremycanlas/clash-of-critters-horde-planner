@@ -78,6 +78,10 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 
+/* Author `display` rules outrank the UA's [hidden] rule, so state this once and
+   loudly - otherwise every `el.hidden = true` on a flex/grid element is a no-op. */
+[hidden] { display: none !important; }
+
 html { -webkit-text-size-adjust: 100%; }
 
 body {
@@ -109,6 +113,16 @@ kbd {
   outline-offset: 2px;
   border-radius: var(--r-sm);
 }
+
+/* The draggable surfaces. Selecting a sprite is never the intent, and the flash
+   of highlight when you double-click a token to take it off the field reads as
+   a glitch. -webkit-user-drag stops the browser's own image drag on top of
+   ours; the dragstart guard in dnd.js covers the browsers that ignore it. */
+.card, .cell, .benchchip, .prio, .token, .drag-ghost {
+  user-select: none;
+  -webkit-user-select: none;
+}
+img { -webkit-user-drag: none; }
 
 /* ============================================================ topbar */
 
@@ -142,25 +156,19 @@ kbd {
   .topbar__actions .btn { padding: 7px var(--s2); }
 }
 
-.counter {
-  padding: var(--s1) var(--s3);
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: var(--surface-2);
-  font-size: 12.5px; font-weight: 600; color: var(--text-dim);
-}
-.counter[data-full="true"] { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
-
 /* ============================================================ controls */
 
 .btn {
   --btn-bg: var(--surface-2);
+  /* Normalised so a <label class="btn"> sits on the same line as real buttons. */
+  display: inline-flex; align-items: center; justify-content: center;
   padding: 7px var(--s3);
   border: 1px solid var(--line);
   border-radius: var(--r-sm);
   background: var(--btn-bg);
   color: var(--text);
   font: inherit; font-size: 13px; font-weight: 550;
+  white-space: nowrap;
   cursor: pointer;
   transition: background-color 140ms var(--ease-out), border-color 140ms var(--ease-out),
               transform 90ms var(--ease-out);
@@ -192,6 +200,7 @@ kbd {
 .field:focus-visible { border-color: var(--accent); outline-offset: 1px; }
 .field--name { flex: 0 1 240px; min-width: 120px; }
 .field--select { padding-right: var(--s2); }
+.field--tiny { padding: 4px var(--s2); font-size: 12px; }
 
 .check {
   display: inline-flex; align-items: center; gap: 6px;
@@ -216,6 +225,13 @@ kbd {
 .panel--field    { grid-area: field; }
 .panel--priority { grid-area: priority; }
 .panel--roster   { grid-area: roster; position: sticky; top: 74px; }
+
+/* Dragging a Tatari back to where it came from takes it off the field, or off
+   the bench. Marked in the danger colour because it is a removal. */
+.panel--roster.is-returning {
+  border-color: color-mix(in srgb, var(--danger) 60%, var(--line));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--danger) 30%, transparent);
+}
 
 @media (max-width: 1000px) {
   .layout {
@@ -306,13 +322,14 @@ kbd {
   border-radius: var(--r-sm);
   background: color-mix(in srgb, var(--type-color, var(--line)) 16%, var(--surface-2));
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--type-color, var(--line)) 45%, transparent);
-  overflow: hidden;
 }
 /* Sprites are pre-normalised to a 200x200 box with their own padding baked in
    (tools/normalize_images.py), so they fill their container rather than being
-   inset again here. */
+   inset again here. The clip lives on the sprite rather than on the token: a
+   token-wide `overflow: hidden` also takes a bite out of every corner badge. */
 .token img {
   width: 100%; height: 100%; object-fit: contain;
+  border-radius: inherit;
   pointer-events: none;
 }
 .token__fallback {
@@ -397,8 +414,21 @@ body[data-mode="coop"] .token {
 
 /* ============================================================ bench */
 
-.bench { margin-top: var(--s3); }
-.bench__head { display: flex; align-items: baseline; gap: var(--s2); margin-bottom: var(--s2); }
+.bench { display: grid; gap: var(--s3); margin-top: var(--s3); }
+.bench__player { display: grid; gap: var(--s2); }
+body[data-mode="coop"] .bench__player {
+  padding: var(--s2);
+  border: 1px solid var(--line-soft);
+  border-left: 3px solid var(--owner);
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+}
+body[data-mode="coop"] .bench__player[data-active="true"] {
+  border-color: color-mix(in srgb, var(--owner) 45%, var(--line));
+  border-left-color: var(--owner);
+}
+.bench__head { display: flex; align-items: baseline; gap: var(--s2); }
+.bench__head .btn { margin-left: auto; }
 .bench__count { color: var(--text-dim); font-size: 11.5px; }
 .bench__count b { color: var(--text); font-weight: 700; }
 .bench__empty { margin: 0; color: var(--text-mute); font-size: 12px; }
@@ -419,7 +449,7 @@ body[data-mode="coop"] .token {
 .benchchip:hover { border-color: var(--accent); transform: translateY(-2px); }
 .benchchip.is-dragging { opacity: .4; }
 .benchchip__x {
-  position: absolute; top: -4px; right: -4px;
+  position: absolute; top: 1px; right: 1px;
   width: 16px; height: 16px; padding: 0;
   display: grid; place-items: center;
   border: 1px solid var(--line);
@@ -433,6 +463,14 @@ body[data-mode="coop"] .token {
 }
 .benchchip:hover .benchchip__x, .benchchip__x:focus-visible { opacity: 1; }
 .benchchip__x:hover { color: color-mix(in srgb, var(--danger) 85%, var(--text)); }
+.benchchip__owner {
+  position: absolute; bottom: 1px; left: 1px;
+  padding: 0 3px;
+  border-radius: 2px;
+  background: var(--owner); color: #0e1118;
+  font-size: 8.5px; font-weight: 800;
+  pointer-events: none;
+}
 
 /* ============================================================ segmented */
 
@@ -461,19 +499,14 @@ body[data-mode="coop"] .token {
 
 /* ============================================================ badges */
 
-.badge {
-  display: inline-grid; place-items: center;
-  width: 16px; height: 16px;
-  border-radius: 999px;
-}
-.badge svg { width: 11px; height: 11px; }
-.badge--type { background: var(--type-color); color: #fff; }
-[data-type="Lightning"].badge--type, [data-type="Rock"].badge--type { color: #241a00; }
-.badge--role { background: var(--surface-3); color: var(--text-dim); box-shadow: inset 0 0 0 1px var(--line); }
+/* The type and role icons are the game's own art, and each already carries its
+   disc or plate. So these wrappers only reserve a box and keep every icon the
+   same apparent size — they draw no background or ring of their own. */
 
-.icon { display: inline-grid; place-items: center; }
-.icon svg { width: 13px; height: 13px; }
-.icon--type { color: var(--type-color); }
+.badge, .icon { display: inline-grid; place-items: center; flex: none; }
+.badge { width: 17px; height: 17px; }
+.icon { width: 15px; height: 15px; }
+.icon__art { display: block; width: 100%; height: 100%; object-fit: contain; }
 
 /* ============================================================ summary */
 
@@ -483,7 +516,9 @@ body[data-mode="coop"] .token {
   border-top: 1px solid var(--line-soft);
 }
 .summary__player { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s3) var(--s4); }
-.summary__group { display: flex; align-items: center; gap: var(--s2); }
+/* Six role tallies do not fit a narrow panel on one line, and a flex item that
+   cannot wrap runs straight out through the panel border instead. */
+.summary__group { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s1) var(--s2); min-width: 0; }
 .summary__label {
   font-size: 10.5px; font-weight: 650; letter-spacing: .08em;
   text-transform: uppercase; color: var(--text-mute);
@@ -525,14 +560,20 @@ body[data-mode="coop"] .token {
   border-radius: var(--r-sm);
   background: var(--surface-2);
 }
+/* Grid items refuse to go below their min-content width by default, and the
+   selection line's min-content is a whole list of Tatari names on one line -
+   which pushes the whole adder out through the panel. */
+.step-adder__row { min-width: 0; }
 .step-adder__row--go { display: flex; align-items: center; gap: var(--s2); }
 .step-adder__name {
   flex: 1 1 auto; min-width: 0;
   font-size: 12.5px; font-weight: 600;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.step-adder__level { flex: 0 0 74px; display: grid; }
+.step-adder__level { flex: 0 0 88px; display: grid; }
 .step-adder__level select { width: 100%; }
+.step-adder__note { display: grid; }
+.step-adder__note input { width: 100%; }
 
 /* Picking by sprite rather than by name - you recognise the art faster. */
 .step-picker {
@@ -552,20 +593,12 @@ body[data-mode="coop"] .token {
 }
 .step-pick img { width: 100%; height: 100%; object-fit: contain; }
 .step-pick:hover { transform: translateY(-2px); }
-.step-pick[aria-checked="true"] {
+.step-pick[aria-pressed="true"] {
   border-color: var(--accent);
   box-shadow: inset 0 0 0 1px var(--accent);
 }
-.step-pick:disabled { opacity: .4; cursor: not-allowed; transform: none; }
-.step-pick__owner {
-  position: absolute; bottom: -1px; left: 1px;
-  padding: 0 2px;
-  border-radius: 2px;
-  background: var(--owner); color: #0e1118;
-  font-size: 8px; font-weight: 800;
-}
 .step-pick__done {
-  position: absolute; top: -1px; right: 1px;
+  position: absolute; top: 1px; right: 1px;
   padding: 0 2px;
   border-radius: 2px;
   background: var(--accent); color: var(--accent-ink);
@@ -579,7 +612,12 @@ body[data-mode="coop"] .token {
 }
 
 .prio {
-  display: flex; align-items: center; gap: var(--s2);
+  /* Past the rank column, so wrapped lines start under the sprites. */
+  --prio-indent: 26px;
+  display: flex; align-items: center; flex-wrap: wrap;
+  /* Tight between lines: the names and the note are continuations of the row
+     above them, not separate entries. */
+  gap: 3px 6px;
   padding: 5px var(--s2) 5px 5px;
   border: 1px solid var(--line-soft);
   border-radius: var(--r-sm);
@@ -594,28 +632,54 @@ body[data-mode="coop"] .token {
   flex: none; width: 20px; text-align: center;
   font-size: 12px; font-weight: 700; color: var(--text-mute);
 }
+.prio__arts { flex: 0 1 auto; display: flex; flex-wrap: wrap; align-items: center; gap: 2px; }
 .prio__art {
+  position: relative;
   flex: none; width: 30px; height: 30px;
   display: grid; place-items: center;
   border-radius: var(--r-sm);
   background: color-mix(in srgb, var(--type-color, var(--line)) 16%, var(--surface-3));
 }
 .prio__art img { width: 100%; height: 100%; object-fit: contain; }
+
+/* A step naming several Tatari shows them all, so each one gives up some size,
+   and the row it cannot fit them all on gives the names a line of their own. */
+.prio--group .prio__art { width: 24px; height: 24px; }
+.prio--group .prio__name {
+  order: 1; flex: 1 1 100%;
+  margin-left: var(--prio-indent);
+  color: var(--text-dim); font-size: 11.5px;
+}
+
+/* Each member of a group can leave on its own; a lone Tatari uses the row's
+   own remove button instead. */
+.prio__artx {
+  position: absolute; inset: 0;
+  display: grid; place-items: center;
+  padding: 0;
+  border: 0; border-radius: var(--r-sm);
+  background: color-mix(in srgb, var(--bg) 74%, transparent);
+  color: color-mix(in srgb, var(--danger) 85%, var(--text));
+  font: inherit; font-size: 13px; font-weight: 700; line-height: 1;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 120ms var(--ease-out);
+}
+.prio__art:hover .prio__artx, .prio__artx:focus-visible { opacity: 1; }
+/* Nothing flexible is left on a group's first line, so the level and the
+   actions are pushed to the far end themselves. */
+.prio--group .prio__levelwrap { margin-left: auto; }
+/* Basis 0, not auto: a flex line wraps before it shrinks, so a name sized to
+   its own text pushes the remove button onto a second line the moment the
+   Tatari is called something long. */
 .prio__name {
-  min-width: 0; flex: 1 1 auto;
+  min-width: 0; flex: 1 1 0;
   display: flex; align-items: baseline; gap: 5px;
   font-size: 13px; font-weight: 550;
   overflow: hidden;
 }
 .prio__label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .prio__repeat { flex: none; color: var(--text-mute); font-size: 10.5px; font-weight: 650; }
-.prio__owner {
-  flex: none;
-  padding: 0 4px;
-  border-radius: 3px;
-  background: var(--owner); color: #0e1118;
-  font-size: 9.5px; font-weight: 800;
-}
 
 .prio__levelwrap { flex: none; display: grid; }
 .prio__level {
@@ -624,9 +688,6 @@ body[data-mode="coop"] .token {
   background: var(--surface-3);
   border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
 }
-
-.prio__meta { flex: none; display: flex; align-items: center; gap: 5px; }
-.prio__cell { color: var(--text-mute); font-size: 11px; }
 
 .prio__drop {
   flex: none;
@@ -644,9 +705,46 @@ body[data-mode="coop"] .token {
   color: color-mix(in srgb, var(--danger) 85%, var(--text));
 }
 
-.prio__grip {
-  flex: none; min-width: 12px;
-  color: var(--text-mute); font-size: 13px; line-height: 1; text-align: center;
+.prio__notebtn {
+  flex: none;
+  width: 18px; height: 18px; padding: 0;
+  display: grid; place-items: center;
+  border: 1px solid transparent; border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--text-mute);
+  font: inherit; font-size: 11px; line-height: 1;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 140ms var(--ease-out), color 140ms var(--ease-out);
+}
+.prio:hover .prio__notebtn, .prio:focus-within .prio__notebtn,
+.prio.has-note .prio__notebtn { opacity: 1; }
+.prio__notebtn:hover { color: var(--text); }
+.prio.has-note .prio__notebtn, .prio.is-noting .prio__notebtn { color: var(--accent); }
+
+/* The note takes a line of its own, and only when there is one to read or the
+   step has been opened for editing - an empty field under every step would be
+   more furniture than the plan is worth. */
+.prio__note {
+  display: none;
+  order: 2; flex: 1 1 100%;
+  width: auto;
+  margin-left: var(--prio-indent);
+  padding: 1px 5px;
+  border: 0; border-left: 2px solid color-mix(in srgb, var(--type-color, var(--line)) 50%, transparent);
+  border-radius: 0;
+  background: transparent;
+  color: var(--text-dim);
+  font: inherit; font-size: 11.5px; font-style: italic; line-height: 1.4;
+}
+.prio.has-note .prio__note, .prio.is-noting .prio__note { display: block; }
+.prio__note::placeholder { color: var(--text-mute); font-style: normal; }
+.prio__note:hover { border-left-color: var(--text-mute); }
+.prio__note:focus-visible {
+  outline-offset: 0;
+  border-left-color: var(--accent);
+  color: var(--text);
+  font-style: normal;
 }
 
 .prio--ghost .prio__levelchip {
@@ -702,7 +800,7 @@ body[data-mode="coop"] .token {
 
 .card {
   position: relative;
-  display: grid; grid-template-rows: 1fr auto;
+  display: grid; grid-template-rows: 1fr auto auto;
   padding: var(--s1);
   border: 1px solid var(--line-soft);
   border-radius: var(--r-md);
@@ -729,18 +827,25 @@ body[data-mode="coop"] .token {
   background: color-mix(in srgb, var(--type-color) 13%, transparent);
 }
 .card__art img { width: 100%; height: 100%; object-fit: contain; }
+
+/* Tier, type and role sit under the sprite rather than on it. Measured across
+   all 215 sprites, every in-art spot big enough for two badges is covered by
+   artwork 23-31% of the time on average and more than a quarter covered on
+   between a third and two thirds of the roster - there is no corner that is
+   reliably empty, so the only uniform answer is to stay off the art. */
+.card__meta {
+  display: flex; align-items: center; justify-content: center; gap: var(--s1);
+  padding-top: 4px;
+  line-height: 1;
+}
+.card__tier { font-size: 9px; font-weight: 700; color: var(--text-mute); }
 .card__name {
-  padding-top: 3px;
+  padding-top: 2px;
   font-size: 11px; font-weight: 550; line-height: 1.25;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.card__tier {
-  position: absolute; top: 2px; left: 3px;
-  font-size: 9px; font-weight: 700; color: var(--text-mute);
-}
-.card__badges { position: absolute; top: 2px; right: 2px; display: grid; gap: 2px; }
 .card__info {
-  position: absolute; bottom: 2px; right: 2px;
+  position: absolute; top: 2px; right: 2px;
   width: 17px; height: 17px; padding: 0;
   display: grid; place-items: center;
   border: 1px solid var(--line);
@@ -767,7 +872,6 @@ body[data-mode="coop"] .token {
 
 /* The other player is bringing this one too - allowed, worth knowing. */
 .card__other {
-  position: absolute; bottom: 2px; left: 2px;
   padding: 0 3px;
   border-radius: 3px;
   background: var(--owner); color: #0e1118;
@@ -798,25 +902,23 @@ body[data-mode="coop"] .token {
 }
 .modal::backdrop { background: rgb(6 8 12 / .62); }
 .modal h2 { margin-bottom: var(--s2); font-size: 17px; }
-.modal__actions { display: flex; gap: var(--s2); margin-top: var(--s4); }
+.modal__actions { display: flex; flex-wrap: wrap; gap: var(--s2); margin-top: var(--s4); }
 
-.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s3); }
-.form-grid label { display: grid; gap: 4px; font-size: 12px; font-weight: 600; color: var(--text-dim); }
-.form-grid .span-2 { grid-column: 1 / -1; }
-.form-grid .hint { margin: 0; font-weight: 450; }
-
-.custom-list { margin-top: var(--s5); padding-top: var(--s4); border-top: 1px solid var(--line); }
-.custom-list ul { list-style: none; margin: var(--s2) 0 0; padding: 0; display: grid; gap: var(--s1); }
-.custom-list li {
-  display: flex; align-items: center; gap: var(--s2);
-  padding: var(--s1) var(--s2);
-  border: 1px solid var(--line-soft); border-radius: var(--r-sm);
-  background: var(--surface-2); font-size: 13px;
+/* share sheet */
+.modal--share { width: min(760px, calc(100vw - 2 * var(--s4))); overflow-y: auto; }
+.share__preview {
+  display: grid; place-items: center;
+  min-height: 120px;
+  margin: var(--s3) 0;
+  padding: var(--s2);
+  border: 1px solid var(--line-soft); border-radius: var(--r-md);
+  background: var(--bg);
 }
-.custom-list li .btn { margin-left: auto; }
-.custom-list ul:empty::after {
-  content: "None yet."; color: var(--text-mute); font-size: 12.5px;
-}
+.share__preview .hint { margin: 0; color: var(--text-mute); }
+/* The card is drawn at twice its logical size, so it only ever scales down. */
+.share__preview img { display: block; width: 100%; height: auto; border-radius: var(--r-sm); }
+.share__name { display: grid; gap: 5px; }
+.share__name input { width: 100%; }
 
 /* detail sheet */
 .detail__head { display: flex; align-items: center; gap: var(--s3); margin-bottom: var(--s3); }
@@ -877,6 +979,26 @@ body.is-dragging-active {
   border-color: var(--accent);
   border-style: solid;
   background: color-mix(in srgb, var(--accent) 12%, var(--bg));
+}
+
+/* ============================================================ file drop */
+
+.drophint {
+  position: fixed; z-index: var(--z-modal);
+  inset: var(--s4);
+  display: grid; place-items: center;
+  border: 2px dashed var(--accent);
+  border-radius: var(--r-lg);
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  color: var(--text);
+  font-size: 16px; font-weight: 600;
+  pointer-events: none;
+}
+.drophint code {
+  padding: 1px 5px;
+  border-radius: var(--r-sm);
+  background: var(--surface-3);
+  font-size: 14px;
 }
 
 /* ============================================================ toast */

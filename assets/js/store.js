@@ -20,9 +20,9 @@
 
 import { state } from './data.js';
 
-/** Your half of the Horde field: 6 tiles across, 5 deep. Zobos spawn beyond row 0. */
+/** Your half of the Horde field: 6 tiles across, 6 deep. Zobos spawn beyond row 0. */
 export const COLS = 6;
-export const ROWS = 5;
+export const ROWS = 6;
 export const CELLS = COLS * ROWS;
 
 /** Tatari cap out at level 7. */
@@ -35,12 +35,15 @@ export const MODES = {
 
 // v4: occupants gained a player, and the bench layer is new. Earlier saves have
 // no player information, so they are read as solo.
+// v5: a plan step names one or more Tatari and can carry a note. The save key is
+// deliberately left at v4 - apply() reads both step shapes, so an existing plan
+// survives the upgrade rather than being thrown away.
 const SAVE_KEY = 'coc.formation.v4';
-const HASH_VERSION = 'v4';
+const HASH_VERSION = 'v5';
 
 /**
  * @typedef {{slug: string, player: number}} Occupant
- * @typedef {{slug: string, player: number, level: number}} Step
+ * @typedef {{members: Occupant[], level: number|null, note: string}} Step
  */
 
 /**
@@ -157,7 +160,7 @@ export function familyConflict(tatari, player) {
 }
 
 /** Why `tatari` cannot join this player's bench, or null if it can. */
-export function benchBlockedReason(tatari, player = formation.activePlayer) {
+function benchBlockedReason(tatari, player = formation.activePlayer) {
   if (onBench(tatari.slug, player)) return null;
   const clash = familyConflict(tatari, player);
   if (clash) return `${clash.name} from the same line is already on P${player}'s bench`;
@@ -292,49 +295,163 @@ export function setName(name) {
 
 // ---------------------------------------------------------------- level plan
 
-const sameStep = (s, slug, player) => s.slug === slug && s.player === player;
+/**
+ * A step is an instruction, not a single action. One Tatari is the common case,
+ * but a step can name several - the three tanks, say - and carry a note for the
+ * part no level number can express: "max one of these first".
+ *
+ * Its level is what the step is about, and it applies to whichever member the
+ * game actually offers you a card for. It may be null when the note carries the
+ * whole intent.
+ */
+
+export const MAX_NOTE = 140;
+
+const sameMember = (m, slug, player) => m.slug === slug && m.player === player;
+const hasMember = (step, slug, player) => step.members.some((m) => sameMember(m, slug, player));
+const memberKey = (m) => `${m.player}:${m.slug}`;
+
+/** Drops anything unusable and any repeat, so a step never lists one Tatari twice. */
+function normalizeMembers(members) {
+  const seen = new Set();
+  return (Array.isArray(members) ? members : []).reduce((list, m) => {
+    const slug = typeof m === 'string' ? m : m?.slug;
+    if (typeof slug !== 'string' || !slug) return list;
+    const member = { slug, player: Number(m?.player) || 1 };
+    if (!seen.has(memberKey(member))) { seen.add(memberKey(member)); list.push(member); }
+    return list;
+  }, []);
+}
+
+/** @returns {number|null} the level, or undefined when it is not a usable one. */
+function normalizeLevel(level) {
+  if (level === null || level === undefined || level === '') return null;
+  const n = Number(level);
+  return Number.isInteger(n) && n >= 1 && n <= MAX_LEVEL ? n : undefined;
+}
+
+const trimNote = (note) => (typeof note === 'string' ? note.trim().slice(0, MAX_NOTE) : '');
+
+/**
+ * Reads a step in the current shape, in the older one Tatari per step shape,
+ * and in the shape exported files use.
+ */
+function toStep(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+  const members = normalizeMembers(
+    Array.isArray(raw.members) ? raw.members
+      : Array.isArray(raw.tatari) ? raw.tatari
+        : [{ slug: raw.slug, player: raw.player }]
+  );
+  if (!members.length) return null;
+  return { members, level: normalizeLevel(raw.level) ?? null, note: trimNote(raw.note) };
+}
 
 function dropSteps(slug, player) {
-  formation.plan = formation.plan.filter((s) => !sameStep(s, slug, player));
-}
-
-export function plannedLevels(slug, player = formation.activePlayer) {
-  return formation.plan.filter((s) => sameStep(s, slug, player))
-    .map((s) => s.level).sort((a, b) => a - b);
-}
-
-export function topLevel(slug, player = formation.activePlayer) {
-  const levels = plannedLevels(slug, player);
-  return levels.length ? levels[levels.length - 1] : null;
+  formation.plan = formation.plan
+    .map((s) => ({ ...s, members: s.members.filter((m) => !sameMember(m, slug, player)) }))
+    .filter((s) => s.members.length);
 }
 
 /**
- * The level to offer next, or null once all MAX_LEVEL are planned. Prefers one
- * above the current top so repeated adds walk 1-2-3-4; falls back to the lowest
- * unplanned level, which fills the gaps left by a plan like "3, then 5".
+ * Whose step this is. Every member of a step belongs to one player - the adder
+ * only ever offers one player's Tatari - so the first member speaks for it.
  */
-export function suggestedLevel(slug, player = formation.activePlayer) {
-  const taken = new Set(plannedLevels(slug, player));
-  const top = topLevel(slug, player);
-  if (top !== null && top < MAX_LEVEL && !taken.has(top + 1)) return top + 1;
-  for (let level = 1; level <= MAX_LEVEL; level++) if (!taken.has(level)) return level;
-  return null;
+export const stepPlayer = (step) => step.members[0]?.player ?? 1;
+
+/** One player's steps, each with the index it holds in the whole plan. */
+export function planFor(player) {
+  return formation.plan
+    .map((step, index) => ({ step, index }))
+    .filter(({ step }) => stepPlayer(step) === player);
 }
 
-/** @returns {{ok: true, index: number} | {ok: false, reason: string}} */
-export function addStep(slug, level, player = formation.activePlayer) {
-  const tatari = state.bySlug.get(slug);
-  if (!tatari) return { ok: false, reason: 'Unknown Tatari' };
-  if (cellOf(slug, player) === null) {
-    return { ok: false, reason: `${tatari.name} is not on the field for P${player}` };
+/** Levels this Tatari is planned to reach. Steps with no level do not name one. */
+export function plannedLevels(slug, player = formation.activePlayer) {
+  return formation.plan
+    .filter((s) => s.level !== null && hasMember(s, slug, player))
+    .map((s) => s.level).sort((a, b) => a - b);
+}
+
+/**
+ * The highest level this Tatari is already planned to reach, or null for none.
+ *
+ * The highest is the only one that matters: levelling to 7 passes through
+ * everything below it, so a step for level 3 adds nothing to a plan that
+ * already takes the same Tatari to 7. Group steps count - being one of the
+ * three tanks a step takes to 7 is still being taken to 7.
+ *
+ * @param {number} [ignoreIndex] a step to leave out, when editing that step
+ */
+export function topLevel(slug, player = formation.activePlayer, ignoreIndex = -1) {
+  let top = null;
+  formation.plan.forEach((s, i) => {
+    if (i === ignoreIndex || s.level === null || !hasMember(s, slug, player)) return;
+    if (top === null || s.level > top) top = s.level;
+  });
+  return top;
+}
+
+/** The level to offer next, or null once this Tatari is already planned to MAX_LEVEL. */
+export function suggestedLevel(slug, player = formation.activePlayer) {
+  const top = topLevel(slug, player);
+  if (top === null) return 1;
+  return top < MAX_LEVEL ? top + 1 : null;
+}
+
+/**
+ * A one-Tatari step that asks for a level it is already planned to pass through
+ * is a mistake worth refusing. A group step is an instruction about several of
+ * them ("max one of these"), and repeating it is how you say "now the next one".
+ */
+function alreadyPlanned(members, level, ignoreIndex = -1) {
+  if (members.length !== 1) return false;
+  const [m] = members;
+  if (level === null) {
+    return formation.plan.some((s, i) => i !== ignoreIndex && s.members.length === 1
+      && s.level === null && sameMember(s.members[0], m.slug, m.player));
   }
-  if (!Number.isInteger(level) || level < 1 || level > MAX_LEVEL) {
-    return { ok: false, reason: `Level must be 1 to ${MAX_LEVEL}` };
+  const top = topLevel(m.slug, m.player, ignoreIndex);
+  return top !== null && level <= top;
+}
+
+function plannedReason(member, level, ignoreIndex = -1) {
+  const name = state.bySlug.get(member.slug)?.name ?? member.slug;
+  if (level === null) return `${name} is already a step`;
+  const top = topLevel(member.slug, member.player, ignoreIndex);
+  return top === level
+    ? `${name} is already planned to level ${level}`
+    : `${name} is already planned to level ${top}, which passes through ${level}`;
+}
+
+/**
+ * @param {{slug: string, player: number}[]} members
+ * @param {number|null} level  null when the note carries the intent instead
+ * @returns {{ok: true, index: number} | {ok: false, reason: string}}
+ */
+export function addStep(members, level = null, note = '') {
+  const list = normalizeMembers(members);
+  if (!list.length) return { ok: false, reason: 'Pick at least one Tatari' };
+
+  for (const m of list) {
+    const tatari = state.bySlug.get(m.slug);
+    if (!tatari) return { ok: false, reason: 'Unknown Tatari' };
+    if (cellOf(m.slug, m.player) === null) {
+      return {
+        ok: false,
+        reason: `${tatari.name} is not on the field${isCoop() ? ` for P${m.player}` : ''}`,
+      };
+    }
   }
-  if (plannedLevels(slug, player).includes(level)) {
-    return { ok: false, reason: `${tatari.name} level ${level} is already planned` };
+
+  const lvl = normalizeLevel(level);
+  if (lvl === undefined) return { ok: false, reason: `Level must be 1 to ${MAX_LEVEL}` };
+
+  if (alreadyPlanned(list, lvl)) {
+    return { ok: false, reason: plannedReason(list[0], lvl) };
   }
-  formation.plan.push({ slug, player, level });
+
+  formation.plan.push({ members: list, level: lvl, note: trimNote(note) });
   emit();
   return { ok: true, index: formation.plan.length - 1 };
 }
@@ -345,22 +462,37 @@ export function removeStep(index) {
   emit();
 }
 
+/** Takes one Tatari out of a step. A step with nobody left goes with it. */
+export function removeStepMember(index, slug, player) {
+  const step = formation.plan[index];
+  if (!step) return;
+  step.members = step.members.filter((m) => !sameMember(m, slug, player));
+  if (!step.members.length) formation.plan.splice(index, 1);
+  emit();
+}
+
 /** @returns {{ok: true} | {ok: false, reason: string}} */
 export function setStepLevel(index, level) {
   const step = formation.plan[index];
   if (!step) return { ok: false, reason: 'No such step' };
-  if (!Number.isInteger(level) || level < 1 || level > MAX_LEVEL) {
-    return { ok: false, reason: `Level must be 1 to ${MAX_LEVEL}` };
+  const lvl = normalizeLevel(level);
+  if (lvl === undefined) return { ok: false, reason: `Level must be 1 to ${MAX_LEVEL}` };
+  if (alreadyPlanned(step.members, lvl, index)) {
+    return { ok: false, reason: plannedReason(step.members[0], lvl, index) };
   }
-  const clash = formation.plan.some((s, i) =>
-    i !== index && sameStep(s, step.slug, step.player) && s.level === level);
-  if (clash) {
-    const name = state.bySlug.get(step.slug)?.name ?? step.slug;
-    return { ok: false, reason: `${name} level ${level} is already planned` };
-  }
-  step.level = level;
+  step.level = lvl;
   emit();
   return { ok: true };
+}
+
+/** The free-text half of a step: what to do with the Tatari it names. */
+export function setStepNote(index, note) {
+  const step = formation.plan[index];
+  if (!step) return;
+  const next = trimNote(note);
+  if (next === step.note) return;
+  step.note = next;
+  emit();
 }
 
 export function moveStep(from, to) {
@@ -370,8 +502,11 @@ export function moveStep(from, to) {
   emit();
 }
 
-export function clearPlan() {
-  formation.plan = [];
+/** Clears one player's steps, or the whole plan when no player is named. */
+export function clearPlan(player = null) {
+  formation.plan = player === null
+    ? []
+    : formation.plan.filter((s) => stepPlayer(s) !== player);
   emit();
 }
 
@@ -407,14 +542,19 @@ function reconcile() {
     return occ;
   });
 
-  const seenSteps = new Set();
-  formation.plan = formation.plan.filter((s) => {
-    const key = `${s.player}:${s.slug}:${s.level}`;
-    if (seenSteps.has(key)) return false;
-    if (!active.includes(s.player)) return false;
-    if (!Number.isInteger(s.level) || s.level < 1 || s.level > MAX_LEVEL) return false;
-    if (cellOf(s.slug, s.player) === null) return false;
-    seenSteps.add(key);
+  // Only one-Tatari steps are deduplicated - see alreadyPlanned().
+  const seenSingles = new Set();
+  formation.plan = formation.plan.map((s) => ({
+    members: normalizeMembers(s.members)
+      .filter((m) => active.includes(m.player) && cellOf(m.slug, m.player) !== null),
+    level: normalizeLevel(s.level) ?? null,
+    note: trimNote(s.note),
+  })).filter((s) => {
+    if (!s.members.length) return false;
+    if (s.members.length > 1) return true;
+    const key = `${memberKey(s.members[0])}:${s.level}`;
+    if (seenSingles.has(key)) return false;
+    seenSingles.add(key);
     return true;
   });
 }
@@ -430,8 +570,8 @@ function persist() {
   } catch { /* private browsing, quota - not worth interrupting the user */ }
 }
 
+/** The formation left in localStorage. A shared link takes priority over it. */
 export function restore() {
-  if (fromHash()) return true;
   try {
     const saved = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null');
     if (!saved || !Array.isArray(saved.cells)) return false;
@@ -458,9 +598,7 @@ function apply({ mode: m, cells, bench, plan, name }) {
     if (!formation.bench[player].includes(slug)) formation.bench[player].push(slug);
     formation.cells[i] = { slug, player };
   });
-  formation.plan = (Array.isArray(plan) ? plan : [])
-    .filter((s) => s && typeof s.slug === 'string')
-    .map((s) => ({ slug: s.slug, player: Number(s.player) || 1, level: Number(s.level) }));
+  formation.plan = (Array.isArray(plan) ? plan : []).map(toStep).filter(Boolean);
   if (typeof name === 'string') formation.name = name;
   emit();
 }
@@ -468,9 +606,13 @@ function apply({ mode: m, cells, bench, plan, name }) {
 // ---------------------------------------------------------------- share links
 
 /**
- * `#v4=<mode>/<layout>;<plan>` where layout is `player.slug@cell,...` and plan is
- * `player.slug.level,...` in the order the level-ups should be taken. Benched but
- * unplaced Tatari ride along as `player.slug@-`.
+ * `#v5=<mode>/<layout>;<plan>` where layout is `player.slug@cell,...` and plan is
+ * `player.slug+player.slug.level$note,...` in the order the level-ups should be
+ * taken. Benched but unplaced Tatari ride along as `player.slug@-`, a step with
+ * no level writes `-`, and a step with no note leaves off the `$` entirely.
+ *
+ * v4 links wrote one Tatari and no note per step, which this grammar contains,
+ * so they are still read.
  */
 export function shareUrl() {
   const tokens = [];
@@ -478,15 +620,31 @@ export function shareUrl() {
     for (const { slug, cell } of placedFor(player)) tokens.push(`${player}.${slug}@${cell}`);
     for (const slug of unplacedBench(player)) tokens.push(`${player}.${slug}@-`);
   }
-  const plan = formation.plan.map((s) => `${s.player}.${s.slug}.${s.level}`).join(',');
+  const plan = formation.plan.map((s) => {
+    const body = `${s.members.map((m) => `${m.player}.${m.slug}`).join('+')}.${s.level ?? '-'}`;
+    return s.note ? `${body}$${encodeNote(s.note)}` : body;
+  }).join(',');
   const url = new URL(location.href);
   url.hash = tokens.length ? `${HASH_VERSION}=${formation.mode}/${tokens.join(',')};${plan}` : '';
   return url.toString();
 }
 
+/**
+ * Notes are free text, and fromHash() decodes the whole fragment in one go
+ * before splitting it. Encoding twice means that after that first pass a note
+ * still holds none of the separators this grammar uses - `,` `+` `.` and `$`
+ * all survive as escapes until the note itself is decoded.
+ */
+const encodeNote = (note) => encodeURIComponent(encodeURIComponent(note));
+
+/** A hand-edited link can hold a stray `%`, which decodeURIComponent throws on. */
+function safeDecode(text) {
+  try { return decodeURIComponent(text); } catch { return text; }
+}
+
 /** @returns {{unknown: string[]}|null} null when the hash held no formation */
 export function fromHash() {
-  const m = location.hash.match(new RegExp(`${HASH_VERSION}=([^&]+)`));
+  const m = location.hash.match(/(?:v5|v4)=([^&]+)/);
   if (!m) return null;
 
   const raw = decodeURIComponent(m[1]);
@@ -518,12 +676,19 @@ export function fromHash() {
   const plan = [];
   for (const token of planPart.split(',')) {
     if (!token) continue;
-    const parts = token.split('.');
-    if (parts.length < 3) continue;
+    const [body, rawNote] = token.split('$');
+    const dot = body.lastIndexOf('.');
+    if (dot === -1) continue;
+    const members = body.slice(0, dot).split('+').map((one) => {
+      const at = one.indexOf('.');
+      return at === -1 ? null : { player: Number(one.slice(0, at)) || 1, slug: one.slice(at + 1) };
+    }).filter((m) => m?.slug);
+    if (!members.length) continue;
+    const level = body.slice(dot + 1);
     plan.push({
-      player: Number(parts[0]) || 1,
-      slug: parts.slice(1, -1).join('.'),
-      level: Number(parts[parts.length - 1]),
+      members,
+      level: level === '-' ? null : Number(level),
+      note: rawNote ? safeDecode(rawNote) : '',
     });
   }
 
@@ -544,7 +709,7 @@ export function toJSON() {
 
   return {
     format: 'clash-of-critters-formation',
-    version: 4,
+    version: 5,
     name: formation.name || 'Untitled formation',
     mode: formation.mode,
     rules: {
@@ -562,10 +727,24 @@ export function toJSON() {
         targetLevel: topLevel(slug, player),
       })),
     })),
-    /** Ordered level-ups: step 1 is the first one you take. */
+    /**
+     * Ordered level-ups: step 1 is the first one you take. A step names one or
+     * more Tatari and an optional note; `level` is null when the note carries
+     * the intent on its own. One-Tatari steps also repeat their slug at the top
+     * level, which is where v4 files carried it.
+     */
     levelPlan: formation.plan.map((s, i) => ({
-      step: i + 1, player: s.player, slug: s.slug,
-      name: state.bySlug.get(s.slug)?.name ?? s.slug, level: s.level,
+      step: i + 1,
+      level: s.level,
+      note: s.note || null,
+      tatari: s.members.map((m) => ({
+        player: m.player, slug: m.slug, name: state.bySlug.get(m.slug)?.name ?? m.slug,
+      })),
+      ...(s.members.length === 1 ? {
+        player: s.members[0].player,
+        slug: s.members[0].slug,
+        name: state.bySlug.get(s.members[0].slug)?.name ?? s.members[0].slug,
+      } : {}),
     })),
     customTatari: state.all
       .filter((t) => t.custom && [1, 2].some((p) => onBench(t.slug, p)))
@@ -575,7 +754,7 @@ export function toJSON() {
 }
 
 /**
- * Reads v4 files, and v1-v3 ones as a solo formation. Unknown slugs are reported
+ * Reads v5 and v4 files, and v1-v3 ones as a solo formation. Unknown slugs are reported
  * rather than swallowed - usually it means custom Tatari were not bundled along.
  * @returns {{ok: true, unknown: string[]} | {ok: false, reason: string}}
  */
@@ -624,7 +803,6 @@ export function fromJSON(data) {
   // to reconstruct - those import as a layout with an empty plan.
   const plan = Array.isArray(data.levelPlan)
     ? [...data.levelPlan].sort((a, b) => (a.step ?? 1e9) - (b.step ?? 1e9))
-      .map((s) => ({ slug: s.slug, player: Number(s.player) || 1, level: Number(s.level) }))
     : [];
 
   apply({

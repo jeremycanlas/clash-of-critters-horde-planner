@@ -51,9 +51,8 @@ export function draggable(el, getPayload, getGhostHTML) {
  * @param {(target: HTMLElement, payload: any) => void} spec.onDrop
  * @param {(target: HTMLElement|null, ok: boolean) => void} [spec.onHover]
  */
-let zones = [];
+const zones = [];
 export function dropZone(spec) { zones.push(spec); }
-export function clearDropZones() { zones = []; }
 
 // ---------------------------------------------------------------- internals
 
@@ -142,6 +141,17 @@ function finish() {
 }
 
 export function cancelDrag() { disarm(); finish(); }
+
+/**
+ * Nothing in this app is a native drag source - every drag is pointer-driven.
+ * Left alone, the browser starts its own drag of the sprite under the cursor
+ * and hands it over as an image file, so the page's own "drop a formation
+ * .json here" hint fires in the middle of dragging a Tatari to the field.
+ * Text selections elsewhere (the formation name, say) keep working.
+ */
+document.addEventListener('dragstart', (e) => {
+  if (e.target.closest?.('img, .card, .benchchip, .cell, .prio, .token')) e.preventDefault();
+});
 
 window.addEventListener('pointermove', onMove, { passive: false });
 window.addEventListener('pointerup', onUp);

@@ -1,5 +1,5 @@
 /**
- * The shared field (6 wide, 5 deep), the bench strip beneath it, and the player
+ * The shared field (6 wide, 6 deep), the bench strip beneath it, and the player
  * tabs above it.
  *
  * In co-op both players' tokens sit on the same field, so every occupant carries
@@ -78,8 +78,19 @@ export function buildGrid() {
 
   grid.addEventListener('keydown', onKeydown);
 
-  // Bench strip: drag a benched Tatari onto the field, or drop it to unbench.
   benchHost.addEventListener('click', (e) => {
+    const clear = e.target.closest('[data-clear-bench]');
+    if (clear) {
+      const player = Number(clear.dataset.clearBench);
+      const n = store.benchOf(player).length;
+      if (!n) return;
+      store.clearBench(player);
+      toast(store.isCoop()
+        ? `Cleared P${player}'s bench (${n} Tatari)`
+        : `Cleared the bench (${n} Tatari)`);
+      return;
+    }
+
     const chip = e.target.closest('.benchchip');
     if (!chip) return;
     const { slug, player } = chip.dataset;
@@ -175,43 +186,59 @@ export function renderPlayerTabs() {
   }).join('');
 }
 
+/**
+ * Every player's bench, not just the active one, so a co-op planner can drag
+ * either teammate's Tatari straight onto the field.
+ */
 export function renderBench() {
-  const player = store.formation.activePlayer;
-  const waiting = store.unplacedBench(player);
-  const bench = store.benchOf(player);
+  const coop = store.isCoop();
 
-  if (!bench.length) {
-    benchHost.innerHTML =
-      `<p class="bench__empty">Nothing on ${store.isCoop() ? `P${player}'s` : 'the'} bench yet
-       — click a Tatari in the roster to bring it, or drag it straight onto the field.</p>`;
-    return;
-  }
+  benchHost.innerHTML = store.players().map((player) => {
+    const bench = store.benchOf(player);
+    const waiting = store.unplacedBench(player);
+    const active = player === store.formation.activePlayer;
 
-  benchHost.innerHTML = `
-    <div class="bench__head">
-      <span class="summary__label">${store.isCoop() ? `P${player} bench` : 'Bench'}</span>
-      <span class="bench__count"><b>${bench.length}</b>/${store.benchCap()} brought,
-        <b>${bench.length - waiting.length}</b>/${store.fieldCap()} on the field</span>
-    </div>
-    ${waiting.length ? `<div class="bench__strip">${waiting.map((slug) => {
+    const chips = waiting.map((slug) => {
       const t = state.bySlug.get(slug);
       return `
         <span class="benchchip" data-slug="${esc(slug)}" data-player="${player}"
               data-type="${t.type}" tabindex="0" role="button"
-              title="${esc(t.name)} — click to place on the field">
+              title="${esc(t.name)} — drag onto the field, or click to drop it in the back">
           ${artHTML(t)}
+          ${coop ? `<span class="benchchip__owner" data-player="${player}">${player}</span>` : ''}
           <button class="benchchip__x" type="button" data-unbench
-                  aria-label="Stop bringing ${esc(t.name)}">&times;</button>
+                  aria-label="Stop bringing ${esc(t.name)}${coop ? ` for P${player}` : ''}">&times;</button>
         </span>`;
-    }).join('')}</div>`
-      : '<p class="bench__empty">Every Tatari on this bench is on the field.</p>'}`;
+    }).join('');
+
+    const body = !bench.length
+      ? `<p class="bench__empty">${
+        coop ? `` : ''}</p>`
+      : waiting.length
+        ? `<div class="bench__strip">${chips}</div>`
+        : '<p class="bench__empty">Everything brought is on the field.</p>';
+
+    return `
+      <div class="bench__player" data-player="${player}" data-active="${active}">
+        <div class="bench__head">
+          <span class="summary__label"${coop ? ` data-player="${player}"` : ''}>${
+            coop ? `P${player} bench` : 'Bench'}</span>
+          <span class="bench__count"><b>${bench.length}</b>/${store.benchCap()} on the bench,
+            <b>${bench.length - waiting.length}</b>/${store.fieldCap()} on the field</span>
+          <button class="btn btn--tiny btn--quiet" type="button" data-clear-bench="${player}"
+                  ${bench.length ? '' : 'disabled'}>Clear bench</button>
+        </div>
+        ${body}
+      </div>`;
+  }).join('');
 
   for (const chip of benchHost.querySelectorAll('.benchchip')) {
-    const { slug, player: p } = chip.dataset;
+    const slug = chip.dataset.slug;
+    const player = Number(chip.dataset.player);
     draggable(
       chip,
-      () => ({ slug, player: Number(p), from: 'bench' }),
-      () => tokenGhost(state.bySlug.get(slug), Number(p))
+      () => ({ slug, player, from: 'bench' }),
+      () => tokenGhost(state.bySlug.get(slug), player)
     );
   }
 }
@@ -280,7 +307,7 @@ export function renderSummary() {
   const total = groups.reduce((n, g) => n + g.list.length, 0);
   if (!total) {
     $('#summary').innerHTML =
-      '<p class="summary__note">Nothing on the field yet — bring some Tatari and place them.</p>';
+      '<p class="summary__note">No Tatari on the field yet. Click a Tatari in the roster to get started.</p>';
     return;
   }
 
@@ -297,13 +324,7 @@ export function renderSummary() {
         tally(list, 'type', state.meta.types)}</div>
       <div class="summary__group"><span class="summary__label">Roles</span>${
         tally(list, 'role', state.meta.roles)}</div>
-    </div>`).join('') + groups.map(({ player, list }) => {
-    if (!list.length) return '';
-    const label = player ? `P${player}: ` : '';
-    return `<p class="summary__note">${label}<b>${list.length}</b> on the field — <b>${
-      new Set(list.map((t) => t.type)).size}</b> of 5 types, <b>${
-      new Set(list.map((t) => t.role)).size}</b> of 6 roles.</p>`;
-  }).join('');
+    </div>`).join('')
 }
 
 function fieldTatari(player) {

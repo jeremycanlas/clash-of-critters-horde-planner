@@ -25,12 +25,16 @@
   </div>
 
   <div class="topbar__actions">
-    <output id="deploy-count" class="counter" aria-live="polite"></output>
-    <button id="btn-share"  class="btn" type="button" title="Copy a link to this formation">Share</button>
-    <button id="btn-export" class="btn" type="button">Export</button>
-    <button id="btn-import" class="btn" type="button">Import</button>
+    <button id="btn-share" class="btn" type="button"
+            title="Share this formation as a picture or a link">Share</button>
+    <button id="btn-save"  class="btn" type="button"
+            title="Download this formation as a file you can open again">Save</button>
+    <!-- A real label, so the file picker opens on the browser's own activation
+         rather than a synthetic .click(). Files can also just be dropped on the page. -->
+    <label class="btn" for="import-file" title="Open a saved .json formation, or drop one on the page">Import
+      <input id="import-file" class="sr-only" type="file" accept=".json">
+    </label>
     <button id="btn-clear"  class="btn btn--quiet" type="button">Clear all</button>
-    <input id="import-file" type="file" accept=".json,application/json" hidden>
   </div>
 </header>
 
@@ -53,7 +57,7 @@
 
     <div class="field-frame">
       <div class="field-frame__enemy">Zobos spawn beyond this line</div>
-      <div id="grid" class="grid" role="grid" aria-label="Formation grid, 6 columns by 5 rows"></div>
+      <div id="grid" class="grid" role="grid" aria-label="Formation grid, 6 columns by 6 rows"></div>
       <div class="field-frame__base">Your base</div>
     </div>
 
@@ -68,15 +72,13 @@
       <span id="step-count" class="muted"></span>
       <button id="btn-clear-plan" class="btn btn--tiny btn--quiet" type="button">Clear steps</button>
     </div>
-    <p class="hint">Horde offers three choices each round. Add a step for every level-up
-      you plan to take, in order — a Tatari can appear more than once on its way to
-      level 7, so <em>Sealing&nbsp;3, Cheerling&nbsp;3, Frugagon&nbsp;3, Sealing&nbsp;5</em>
-      is a valid plan. Drag to rearrange.</p>
+
+    <div id="plan-tabs" class="ptabs" role="group" aria-label="Whose plan to show" hidden></div>
 
     <form id="step-adder" class="step-adder" hidden>
       <div class="step-adder__row">
-        <div id="step-picker" class="step-picker" role="radiogroup"
-             aria-label="Tatari to level up"></div>
+        <div id="step-picker" class="step-picker" role="group"
+             aria-label="Tatari for this step — pick one or several"></div>
       </div>
       <div class="step-adder__row step-adder__row--go">
         <output id="step-adder-name" class="step-adder__name"></output>
@@ -86,7 +88,13 @@
         </label>
         <button class="btn btn--primary btn--tiny" type="submit">Add step</button>
       </div>
-      <input type="hidden" name="slug">
+      <div class="step-adder__row">
+        <label class="step-adder__note">
+          <span class="sr-only">Note for this step</span>
+          <input name="note" class="field field--tiny" type="text" maxlength="140"
+                 autocomplete="off" placeholder="Optional note, e.g. max one of these first">
+        </label>
+      </div>
     </form>
 
     <ol id="priority" class="priority" aria-label="Level-up steps in order"></ol>
@@ -96,7 +104,6 @@
   <section class="panel panel--roster" aria-labelledby="h-roster">
     <div class="panel__head">
       <h2 id="h-roster">Roster <span id="roster-count" class="muted"></span></h2>
-      <button id="btn-add-custom" class="btn btn--tiny" type="button">+ Add your own</button>
     </div>
 
     <div class="filters">
@@ -110,10 +117,11 @@
 
       <div class="filters__row filters__row--meta">
         <div id="filter-tiers" class="chips chips--text" role="group" aria-label="Filter by tier"></div>
-        <label class="check"><input id="opt-hide-blocked" type="checkbox"> Hide unavailable</label>
+        <label class="check" title="Hide Tatari locked out by an evolution line you are already bringing">
+          <input id="opt-hide-blocked" type="checkbox"> Hide unavailable</label>
         <label class="sortby">Sort
           <select id="sort" class="field field--select">
-            <option value="wiki">Wiki order</option>
+            <option value="default">Default</option>
             <option value="name">Name</option>
             <option value="type">Type</option>
             <option value="role">Role</option>
@@ -138,62 +146,30 @@
 <!-- ------------------------------------------------ detail popover -->
 <dialog id="detail" class="modal modal--detail"></dialog>
 
-<!-- ------------------------------------------------ custom Tatari editor -->
-<dialog id="custom" class="modal">
-  <form id="custom-form" method="dialog">
-    <h2>Your own Tatari</h2>
-    <p class="hint">Anything you add is stored in this browser and travels with your
-      exported formation, so you can plan around Tatari the wiki has not caught up with.</p>
+<dialog id="share" class="modal modal--share">
+  <h2>Share this formation</h2>
+  <p class="hint">A picture of the field, both benches and the level-up plan.</p>
 
-    <div class="form-grid">
-      <label>Name<input name="name" class="field" required maxlength="40" placeholder="Zapzilla"></label>
-      <label>Type
-        <select name="type" class="field field--select">
-          <option>Water</option><option>Fire</option><option>Grass</option>
-          <option>Lightning</option><option>Rock</option>
-        </select>
-      </label>
-      <label>Role
-        <select name="role" class="field field--select">
-          <option>DPS</option><option>Guardian</option><option>Tank</option>
-          <option>Healer</option><option>Support</option><option>Specialist</option>
-        </select>
-      </label>
-      <label>Tier<input name="tier" class="field" type="number" min="1" max="4" value="1"></label>
-      <label>Evolution line
-        <input name="family" class="field" maxlength="40"
-               placeholder="Leave blank to stand alone">
-        <small class="hint">Share a line name with other entries and only one of them can be deployed.</small>
-      </label>
-      <label>Battle row
-        <select name="battleRow" class="field field--select">
-          <option value="">Unspecified</option>
-          <option value="front">Front</option>
-          <option value="back">Back</option>
-        </select>
-      </label>
-      <label class="span-2">Skill<input name="skill" class="field" maxlength="200"></label>
-      <label class="span-2">Sprite URL or data URI
-        <input name="image" class="field" placeholder="Optional">
-      </label>
-    </div>
+  <div class="share__preview">
+    <img id="share-preview" alt="The formation drawn as a shareable card" hidden>
+    <p id="share-drawing" class="hint">Drawing the card…</p>
+  </div>
 
-    <div class="modal__actions">
-      <button class="btn btn--primary" value="save" type="submit">Add Tatari</button>
-      <button class="btn btn--quiet" value="cancel" type="button" data-close>Cancel</button>
-    </div>
-  </form>
+  <label class="share__name">
+    <span class="summary__label">Your name — optional, shown on the card</span>
+    <input id="share-name" class="field" type="text" maxlength="32" autocomplete="off"
+           placeholder="Leave empty to skip">
+  </label>
 
-  <div class="custom-list">
-    <h3>Added so far <span id="custom-count" class="muted"></span></h3>
-    <ul id="custom-list"></ul>
-    <div class="modal__actions">
-      <button id="btn-export-custom" class="btn btn--tiny" type="button">Export my Tatari</button>
-      <button id="btn-import-custom" class="btn btn--tiny" type="button">Import Tatari file</button>
-      <input id="import-custom-file" type="file" accept=".json,application/json" hidden>
-    </div>
+  <div class="modal__actions">
+    <button id="share-download" class="btn btn--primary" type="button">Download PNG</button>
+    <button id="share-copy-image" class="btn" type="button">Copy image</button>
+    <button id="share-copy-link" class="btn" type="button">Copy link</button>
+    <button id="share-close" class="btn btn--quiet" type="button">Close</button>
   </div>
 </dialog>
+
+<div id="drop-hint" class="drophint" hidden>Drop a formation <code>.json</code> to load it</div>
 
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 

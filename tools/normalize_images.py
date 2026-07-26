@@ -28,10 +28,17 @@ except ImportError:
     sys.exit("Pillow is required:  python -m pip install Pillow")
 
 ROOT = Path(__file__).resolve().parent.parent
-DIRS = [ROOT / "data/images/tatari", ROOT / "data/images/glitter"]
 
-CANVAS = 200          # output is CANVAS x CANVAS
-CONTENT = 176         # longest side of the artwork inside it -> 12px padding
+# (directory, canvas, content) — content is the longest side of the artwork
+# inside the canvas, so canvas - content is the padding it keeps.
+PROFILES = [
+    (ROOT / "data/images/tatari", 200, 176),
+    (ROOT / "data/images/glitter", 200, 176),
+    # Type and role icons are already self-contained badges: they arrive at
+    # assorted sizes but want no padding of their own, only a common box.
+    (ROOT / "data/images/icons", 64, 64),
+]
+
 ALPHA_FLOOR = 8       # ignore near-invisible antialiasing when finding the bbox
 MARKER = "coc-normalized"
 MARKER_VALUE = "1"
@@ -45,7 +52,7 @@ def content_box(img):
     return mask.getbbox()
 
 
-def normalize(path, force=False):
+def normalize(path, canvas_size, content, force=False):
     """
     @return one of 'skipped', 'empty', or a (scale, before, after) tuple
     """
@@ -60,14 +67,14 @@ def normalize(path, force=False):
         return "empty"
 
     art = img.crop(box)
-    scale = CONTENT / max(art.size)
+    scale = content / max(art.size)
     art = art.resize(
         (max(1, round(art.width * scale)), max(1, round(art.height * scale))),
         Image.LANCZOS,
     )
 
-    canvas = Image.new("RGBA", (CANVAS, CANVAS), (0, 0, 0, 0))
-    canvas.paste(art, ((CANVAS - art.width) // 2, (CANVAS - art.height) // 2))
+    canvas = Image.new("RGBA", (canvas_size, canvas_size), (0, 0, 0, 0))
+    canvas.paste(art, ((canvas_size - art.width) // 2, (canvas_size - art.height) // 2))
 
     meta = PngImagePlugin.PngInfo()
     meta.add_text(MARKER, MARKER_VALUE)
@@ -85,13 +92,13 @@ def main():
     upscaled = []
     empty = []
 
-    for directory in DIRS:
+    for directory, canvas_size, content in PROFILES:
         if not directory.is_dir():
             print(f"  no such directory: {directory}")
             continue
         files = sorted(directory.glob("*.png"))
         for path in files:
-            result = normalize(path, args.force)
+            result = normalize(path, canvas_size, content, args.force)
             if result == "skipped":
                 skipped += 1
             elif result == "empty":
@@ -102,10 +109,10 @@ def main():
                 # Sprites that had to be enlarged are the only quality risk.
                 if scale > 1.15:
                     upscaled.append((path.name, round(scale, 2)))
-        print(f"  {directory.relative_to(ROOT).as_posix()}: {len(files)} files")
+        print(f"  {directory.relative_to(ROOT).as_posix()}: {len(files)} files "
+              f"-> {canvas_size}x{canvas_size}, artwork fits {content}px")
 
     print(f"\nNormalised {done}, skipped {skipped} (already done)")
-    print(f"  canvas {CANVAS}x{CANVAS}, artwork fits {CONTENT}px")
     if upscaled:
         print(f"  enlarged more than 1.15x ({len(upscaled)}): " +
               ", ".join(f"{n} {s}x" for n, s in sorted(upscaled, key=lambda x: -x[1])[:12]))

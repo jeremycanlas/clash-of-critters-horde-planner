@@ -43,14 +43,42 @@ export function toast(message, kind = 'info') {
 
 // ---------------------------------------------------------------- files
 
-export function downloadJSON(filename, data) {
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+export function downloadBlob(filename, blob) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
   a.download = filename;
   a.click();
   URL.revokeObjectURL(url);
+}
+
+export function downloadJSON(filename, data) {
+  downloadBlob(filename, new Blob([JSON.stringify(data, null, 2)],
+    { type: 'application/json;charset=utf-8' }));
+}
+
+/**
+ * The async clipboard needs a focused document and a permission the browser may
+ * refuse, so a copy that matters falls back to the old selection trick before
+ * giving up and telling the user where to find the text.
+ */
+export async function copyText(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch { /* fall through */ }
+
+  const field = document.createElement('textarea');
+  field.value = text;
+  field.setAttribute('readonly', '');
+  field.style.cssText = 'position:fixed;top:0;left:-9999px;opacity:0';
+  document.body.append(field);
+  field.select();
+  field.setSelectionRange(0, text.length);
+  let ok = false;
+  try { ok = document.execCommand('copy'); } catch { ok = false; }
+  field.remove();
+  return ok;
 }
 
 export function readJSONFile(input) {
@@ -71,9 +99,9 @@ export function readJSONFile(input) {
 // ---------------------------------------------------------------- drag scroll
 
 /** Distance from a viewport edge at which a drag starts scrolling the page. */
-export const SCROLL_EDGE = 90;
+const SCROLL_EDGE = 90;
 /** Scroll speed in px per frame when the pointer is right at the edge. */
-export const SCROLL_MAX = 22;
+const SCROLL_MAX = 22;
 
 /**
  * Scroll speed for a drag at `clientY`: negative near the top, positive near the
@@ -89,7 +117,7 @@ export function dragScrollVelocity(clientY, viewportHeight,
   return 0;
 }
 
-export function slugFilename(name, fallback) {
+export function slugFilename(name, fallback, extension = 'json') {
   const base = String(name || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-  return `${base || fallback}.json`;
+  return `${base || fallback}.${extension}`;
 }
