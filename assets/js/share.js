@@ -9,6 +9,7 @@
 import * as store from './store.js';
 import { $, toast, copyText, downloadBlob, slugFilename } from './ui.js';
 import { drawCard, canvasBlob } from './card.js';
+import { track } from './analytics.js';
 
 const NAME_KEY = 'coc.sharename';
 
@@ -37,6 +38,7 @@ export function buildShare() {
     if (!cardBlob) return;
     downloadBlob(slugFilename(store.formation.name, 'horde-formation', 'png'), cardBlob);
     toast('Card downloaded', 'ok');
+    track('card-downloaded');
   });
 
   $('#share-copy-image').addEventListener('click', async () => {
@@ -44,6 +46,7 @@ export function buildShare() {
     try {
       await navigator.clipboard.write([new ClipboardItem({ 'image/png': cardBlob })]);
       toast('Card copied — paste it anywhere', 'ok');
+      track('card-copied');
     } catch {
       toast('This browser will not let a page copy an image — use Download instead', 'error');
     }
@@ -55,6 +58,7 @@ export function buildShare() {
     toast(await copyText(url)
       ? 'Share link copied'
       : 'Link is in the address bar — copy it from there', 'ok');
+    track('link-copied');
   });
 
   $('#share-close').addEventListener('click', () => dialog.close());

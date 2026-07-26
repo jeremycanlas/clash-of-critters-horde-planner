@@ -9,6 +9,7 @@ import { buildGrid, renderGrid, renderBench, renderPlayerTabs, renderSummary } f
 import { buildFilters, renderRoster } from './roster.js';
 import { buildPriority, renderPriority } from './priority.js';
 import { buildShare, openShare } from './share.js';
+import { buildAnalytics, track } from './analytics.js';
 import { importTatari } from './custom.js';
 
 function renderAll() {
@@ -41,9 +42,11 @@ async function main() {
   buildGrid();
   buildPriority();
   buildShare();
+  buildAnalytics();
   buildFilters(() => renderRoster());
 
   store.subscribe(renderAll);
+  countFirstUse();
 
   // A shared link wins over whatever was on screen last time.
   const hash = store.fromHash();
@@ -60,6 +63,21 @@ async function main() {
 
   wireToolbar();
   wireDragAutoScroll();
+}
+
+/**
+ * Counts once per visit, the first time there is anything on the field —
+ * whether that is a Tatari placed now or a formation restored from last time.
+ * Page views alone cannot tell someone who used the tool from someone who
+ * looked at it and left.
+ */
+function countFirstUse() {
+  if (store.allPlaced().length) { track('used'); return; }
+  const stop = store.subscribe(() => {
+    if (!store.allPlaced().length) return;
+    track('used');
+    stop();
+  });
 }
 
 /** Guards the toolbar actions that have nothing to work with yet. */
@@ -124,6 +142,7 @@ function wireToolbar() {
     if (nothingBrought('Nothing to save yet')) return;
     downloadJSON(slugFilename(store.formation.name, 'horde-formation'), store.toJSON());
     toast('Formation saved', 'ok');
+    track('formation-saved');
   });
 
   $('#import-file').addEventListener('change', async (e) => {

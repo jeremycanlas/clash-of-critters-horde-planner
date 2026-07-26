@@ -21,8 +21,17 @@ npx --yes http-server . -p 8123 -c-1
 Then open <http://localhost:8123>. Any static server works — `python -m http.server`
 if you'd rather not use Node.
 
-Nothing is uploaded anywhere. Your formation lives in your browser, and a reload
-picks up where you left off.
+## Privacy
+
+Your formation never leaves your browser. It lives in `localStorage`, so a reload
+picks up where you left off, and it is never sent anywhere — not the layout, not
+the level-up plan, not the name you sign a shared card with.
+
+The published site does count how many people visit and how often the Share and
+Save buttons get used, through [GoatCounter](https://www.goatcounter.com). It sets
+no cookies, records no personal data, and only ever receives a fixed label such as
+`card-downloaded` — never anything about what you were planning. It is switched off
+everywhere except the published site, so a clone or a fork counts nothing.
 
 ## Where the data comes from
 
@@ -74,6 +83,7 @@ assets/js/
   detail.js     the per-Tatari sheet
   custom.js     registers custom Tatari found in an imported file
   icons.js      type and role icon markup
+  analytics.js  anonymous visit counts, published site only
 data/           the scraped roster, images and aliases
 tools/          the wiki scraper and the image normalizer
 ```
