@@ -62,7 +62,7 @@ function disarm() {
 }
 
 function begin(x, y) {
-  const { el, payload, getGhostHTML } = armed;
+  const { el, payload, getGhostHTML, pointerId, touch } = armed;
   disarm();
 
   const ghost = document.createElement('div');
@@ -73,7 +73,15 @@ function begin(x, y) {
   el.classList.add('is-dragging');
   document.body.classList.add('is-dragging-active');
 
-  active = { payload, ghost, source: el, hovered: null };
+  // Capture keeps the moves coming to this element once the finger leaves it,
+  // which is most of a drag on a phone.
+  try { el.setPointerCapture(pointerId); } catch { /* pointer already gone */ }
+
+  // A short buzz is the only signal a touch user gets that the press became a
+  // drag. Not supported everywhere, and no matter where it is not.
+  if (touch) navigator.vibrate?.(8);
+
+  active = { payload, ghost, source: el, hovered: null, pointerId };
   moveGhost(x, y);
 }
 
@@ -136,6 +144,7 @@ function finish() {
   if (active.hovered) active.hovered.zone.onHover?.(active.hovered.target, false, active.payload);
   active.ghost.remove();
   active.source.classList.remove('is-dragging');
+  try { active.source.releasePointerCapture(active.pointerId); } catch { /* already released */ }
   document.body.classList.remove('is-dragging-active');
   active = null;
 }

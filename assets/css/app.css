@@ -458,10 +458,10 @@ body[data-mode="coop"] .bench__player[data-active="true"] {
   color: var(--text-mute);
   font: inherit; font-size: 11px; line-height: 1;
   cursor: pointer;
-  opacity: 0;
+  opacity: 0; pointer-events: none;
   transition: opacity 140ms var(--ease-out), color 140ms var(--ease-out);
 }
-.benchchip:hover .benchchip__x, .benchchip__x:focus-visible { opacity: 1; }
+.benchchip:hover .benchchip__x, .benchchip__x:focus-visible { opacity: 1; pointer-events: auto; }
 .benchchip__x:hover { color: color-mix(in srgb, var(--danger) 85%, var(--text)); }
 .benchchip__owner {
   position: absolute; bottom: 1px; left: 1px;
@@ -662,10 +662,10 @@ body[data-mode="coop"] .bench__player[data-active="true"] {
   color: color-mix(in srgb, var(--danger) 85%, var(--text));
   font: inherit; font-size: 13px; font-weight: 700; line-height: 1;
   cursor: pointer;
-  opacity: 0;
+  opacity: 0; pointer-events: none;
   transition: opacity 120ms var(--ease-out);
 }
-.prio__art:hover .prio__artx, .prio__artx:focus-visible { opacity: 1; }
+.prio__art:hover .prio__artx, .prio__artx:focus-visible { opacity: 1; pointer-events: auto; }
 /* Nothing flexible is left on a group's first line, so the level and the
    actions are pushed to the far end themselves. */
 .prio--group .prio__levelwrap { margin-left: auto; }
@@ -714,11 +714,11 @@ body[data-mode="coop"] .bench__player[data-active="true"] {
   color: var(--text-mute);
   font: inherit; font-size: 11px; line-height: 1;
   cursor: pointer;
-  opacity: 0;
+  opacity: 0; pointer-events: none;
   transition: opacity 140ms var(--ease-out), color 140ms var(--ease-out);
 }
 .prio:hover .prio__notebtn, .prio:focus-within .prio__notebtn,
-.prio.has-note .prio__notebtn { opacity: 1; }
+.prio.has-note .prio__notebtn { opacity: 1; pointer-events: auto; }
 .prio__notebtn:hover { color: var(--text); }
 .prio.has-note .prio__notebtn, .prio.is-noting .prio__notebtn { color: var(--accent); }
 
@@ -854,10 +854,10 @@ body[data-mode="coop"] .bench__player[data-active="true"] {
   color: var(--text-mute);
   font-size: 10px; font-weight: 700;
   cursor: pointer;
-  opacity: 0;
+  opacity: 0; pointer-events: none;
   transition: opacity 140ms var(--ease-out), color 140ms var(--ease-out);
 }
-.card:hover .card__info, .card__info:focus-visible { opacity: 1; }
+.card:hover .card__info, .card__info:focus-visible { opacity: 1; pointer-events: auto; }
 .card__info:hover { color: var(--text); }
 
 /* Brought but not placed, versus actually standing on the field. */
@@ -1029,6 +1029,45 @@ body.is-dragging-active {
   color: var(--text-dim); font-size: 12px;
 }
 .foot span:last-child { margin-left: auto; }
+
+/* ============================================================ touch */
+
+/*
+ * There is no hover on a touch screen, so every control that waits for one is
+ * invisible there — and an invisible button that still takes taps is worse than
+ * no button: tapping the corner of a bench chip silently unbenched the Tatari
+ * instead of placing it. They are all visible here, and big enough to hit.
+ */
+@media (hover: none) {
+  .card__info, .benchchip__x, .prio__notebtn, .prio__artx {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .card__info { width: 24px; height: 24px; font-size: 12px; }
+  .benchchip__x { width: 22px; height: 22px; font-size: 13px; }
+  .prio__notebtn, .prio__drop { width: 26px; height: 26px; }
+
+  /* A full-cover scrim on every group member would bury the sprites, so on
+     touch the remove control is a corner badge — kept inside the tile so it
+     cannot be mistaken for the sprite sitting next to it. */
+  .prio--group .prio__art { width: 30px; height: 30px; }
+  .prio__artx {
+    inset: 0 0 auto auto;
+    width: 16px; height: 16px;
+    border-radius: 0 var(--r-sm) 0 var(--r-sm);
+    background: color-mix(in srgb, var(--bg) 82%, transparent);
+    font-size: 11px;
+  }
+
+  /*
+   * Dragging is pointer-driven, so the browser must not read a drag that starts
+   * on a token or a bench chip as a scroll and take the gesture away mid-move.
+   * Empty cells keep the default, so the page can still be scrolled by starting
+   * on the field's blank space.
+   */
+  .cell.is-filled, .benchchip { touch-action: none; }
+}
 
 /* ============================================================ motion */
 
