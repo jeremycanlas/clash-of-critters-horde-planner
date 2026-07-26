@@ -19,7 +19,10 @@ const ROLE_WEIGHT = { Tank: 0, Guardian: 1, Healer: 2, Support: 3, DPS: 4, Speci
 export function buildPriority() {
   dropZone({
     selector: '.prio',
-    accepts: (target, payload) => payload.from === 'priority' && target.dataset.slug !== payload.slug,
+    // Grid tokens can be dropped here too — same set of Tatari, so it just
+    // reorders rather than placing anything new.
+    accepts: (target, payload) =>
+      store.cellOf(payload.slug) !== null && target.dataset.slug !== payload.slug,
     onHover: (target, ok) => target.classList.toggle('is-over', ok),
     onDrop: (target, payload) => {
       const to = store.formation.priority.indexOf(target.dataset.slug);

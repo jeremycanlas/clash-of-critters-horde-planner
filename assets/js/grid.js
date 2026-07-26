@@ -38,7 +38,9 @@ export function buildGrid() {
   dropZone({
     selector: '.cell',
     accepts: (target, payload) => {
-      if (payload.from === 'grid') return true;        // moves and swaps are always fine
+      // Anything already deployed is just being moved or swapped, whether it was
+      // picked up from the field or from the priority list.
+      if (store.cellOf(payload.slug) !== null) return true;
       const t = state.bySlug.get(payload.slug);
       return !!t && !store.blockedReason(t);
     },
