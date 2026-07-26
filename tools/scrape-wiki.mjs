@@ -238,6 +238,40 @@ function skillOf(cell) {
   return { name: squash(named[1]).replace(/:$/, ''), text: plain(named[2]) };
 }
 
+// ---------------------------------------------------------------- skill types
+
+/**
+ * What a Tatari's skill actually does — Heal, Slow, Stun, ATK Boost and so on.
+ *
+ * The wiki tags these in the infobox with {{st|...}}, which files the page into
+ * `Category:Skill Type: X`, so the categories are both the vocabulary and the
+ * membership list. Far tidier than reading it out of prose.
+ *
+ * These describe the base skill. The Horde level-up skills bring their own
+ * effects, which are only in their text.
+ */
+async function parseSkillTypes() {
+  const cats = (await api({
+    action: 'query', list: 'allcategories', acprefix: 'Skill Type', aclimit: 100,
+  })).query.allcategories.map((c) => c.category);
+
+  const byName = new Map();
+  for (const cat of cats) {
+    const type = cat.replace(/^Skill Type:\s*/, '');
+    const members = (await api({
+      action: 'query', list: 'categorymembers',
+      cmtitle: `Category:${cat}`, cmlimit: 500, cmnamespace: 0,
+    })).query.categorymembers;
+
+    for (const m of members) {
+      if (!byName.has(m.title)) byName.set(m.title, []);
+      byName.get(m.title).push(type);
+    }
+  }
+  for (const list of byName.values()) list.sort();
+  return byName;
+}
+
 // ---------------------------------------------------------------- element pages
 
 /** Front/back row placement + the type effectiveness chart. */
@@ -435,6 +469,15 @@ async function main() {
   }
   console.log(`  ${hordeSkills.size} evolution lines documented, covering ${skilled}/${list.length} Tatari`);
 
+  console.log('Fetching skill types...');
+  const skillTypes = await parseSkillTypes();
+  let typed = 0;
+  for (const t of list) {
+    t.skillTypes = skillTypes.get(t.name) ?? [];
+    if (t.skillTypes.length) typed++;
+  }
+  console.log(`  ${new Set([...skillTypes.values()].flat()).size} distinct types, on ${typed}/${list.length} Tatari`);
+
   console.log('Fetching element pages...');
   const { battleRow, typeChart } = await parseElementPages();
   let rowHits = 0;
@@ -484,6 +527,7 @@ async function main() {
     evolutionLine: t.evolutionLine, battleRow: t.battleRow, previousRole: t.previousRole,
     etymology: t.etymology, skill: t.skill, description: t.description,
     hordeSkills: t.hordeSkills ?? null, rangeImage: t.rangeImage ?? null,
+    skillTypes: t.skillTypes ?? [],
     image: t.image ?? null, glitterImage: t.glitterImage ?? null, wikiUrl: t.wikiUrl,
   }));
 

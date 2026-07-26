@@ -55,6 +55,12 @@ the wiki yet and show as their name. The aliases file is the one thing not scrap
 which animal a Tatari is based on isn't published anywhere, so those were inferred
 and some are probably wrong. Corrections welcome.
 
+The summary under the field also tallies what your formation brings besides
+damage — heals, buffs and debuffs — from the skill types the wiki tags each
+Tatari with. Hovering a tally names who provides it. That covers 203 of 218
+Tatari, and describes the base skill; anything gained at level 3, 5 or 7 is in
+the level-up skill text rather than counted here.
+
 Two things are only partly documented upstream, and the app says so rather than
 pretending otherwise:
 

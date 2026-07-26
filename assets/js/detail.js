@@ -3,6 +3,7 @@
 import { state } from './data.js';
 import * as store from './store.js';
 import { $, artHTML, esc, typeIcon, roleIcon, toast } from './ui.js';
+import { groupOf } from './effects.js';
 
 const dialog = $('#detail');
 
@@ -83,7 +84,10 @@ export function openDetail(slug) {
       ${rangeDiagram(t)}
 
       <dl>
-        ${t.skill ? `<dt>Base skill</dt><dd>${esc(t.skill)}</dd>` : ''}
+        ${t.skill ? `<dt>Base skill</dt><dd>${esc(t.skill)}
+          ${t.skillTypes?.length ? `<div class="detail__effects">${t.skillTypes.map((x) =>
+            `<span class="tally tally--effect" data-effect="${groupOf(x)}">${esc(x)}</span>`
+          ).join('')}</div>` : ''}</dd>` : ''}
         <dt>Evolution</dt>
         <dd><div class="detail__line">${t.evolutionLine.map((n) => {
           const m = state.all.find((x) => x.name === n && x.familyId === t.familyId);

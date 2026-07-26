@@ -13,6 +13,7 @@ import { $, artHTML, esc, roleIcon, typeIcon, toast } from './ui.js';
 import { draggable, dropZone } from './dnd.js';
 import { quickAddStep } from './priority.js';
 import { coveredFrom, coverage, hasRange } from './range.js';
+import { effectsOf, GROUP_LABELS } from './effects.js';
 
 const grid = $('#grid');
 const benchHost = $('#bench');
@@ -408,7 +409,29 @@ export function renderSummary() {
         tally(list, 'type', state.meta.types)}</div>
       <div class="summary__group"><span class="summary__label">Roles</span>${
         tally(list, 'role', state.meta.roles)}</div>
-    </div>`).join('')
+    </div>
+    ${effectRows(list)}`).join('')
+}
+
+/**
+ * What this half of the field brings besides damage: who heals, what it buffs,
+ * what it inflicts. Grouped rather than listed flat, because "do we have a heal
+ * and a slow" is the question, not "how many skills mention Fragile".
+ */
+function effectRows(list) {
+  const found = effectsOf(list);
+  const rows = ['heal', 'buff', 'debuff'].filter((g) => found[g].length).map((g) => `
+    <div class="summary__group">
+      <span class="summary__label">${GROUP_LABELS[g]}</span>
+      ${found[g].map((e) => `<span class="tally tally--effect" data-effect="${g}"
+        title="${esc(e.names.join(', '))}">${esc(e.type)}<b>${e.count}</b></span>`).join('')}
+    </div>`).join('');
+
+  if (!rows) {
+    return `<p class="summary__note">Nothing on the field has a tagged heal, buff or debuff${
+      found.untagged ? ` — ${found.untagged} of them are untagged on the wiki` : ''}.</p>`;
+  }
+  return `<div class="summary__player summary__player--effects">${rows}</div>`;
 }
 
 function fieldTatari(player) {

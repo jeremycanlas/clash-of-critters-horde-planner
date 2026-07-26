@@ -33,6 +33,9 @@
    }
   },
   "rangeImage": "data/images/range/zapup.jpg",
+  "skillTypes": [
+   "Chain"
+  ],
   "image": "data/images/tatari/zapup.png",
   "glitterImage": null,
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zapup"
@@ -71,6 +74,9 @@
    }
   },
   "rangeImage": "data/images/range/zapooch.jpg",
+  "skillTypes": [
+   "Chain"
+  ],
   "image": "data/images/tatari/zapooch.png",
   "glitterImage": null,
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zapooch"
@@ -109,6 +115,7 @@
    }
   },
   "rangeImage": "data/images/range/clucky.jpg",
+  "skillTypes": [],
   "image": "data/images/tatari/clucky.png",
   "glitterImage": null,
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Clucky"
@@ -147,6 +154,9 @@
    }
   },
   "rangeImage": "data/images/range/cluckeroo.jpg",
+  "skillTypes": [
+   "Heal"
+  ],
   "image": "data/images/tatari/cluckeroo.png",
   "glitterImage": null,
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Cluckeroo"
@@ -185,6 +195,10 @@
    }
   },
   "rangeImage": "data/images/range/cindermunk.jpg",
+  "skillTypes": [
+   "AoE",
+   "Planting"
+  ],
   "image": "data/images/tatari/cindermunk.png",
   "glitterImage": null,
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Cindermunk"
@@ -223,6 +237,10 @@
    }
   },
   "rangeImage": "data/images/range/embertail.jpg",
+  "skillTypes": [
+   "AoE",
+   "Planting"
+  ],
   "image": "data/images/tatari/embertail.png",
   "glitterImage": null,
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Embertail"
@@ -261,6 +279,9 @@
    }
   },
   "rangeImage": "data/images/range/shellshy.jpg",
+  "skillTypes": [
+   "AoE"
+  ],
   "image": "data/images/tatari/shellshy.png",
   "glitterImage": null,
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Shellshy"
@@ -299,6 +320,10 @@
    }
   },
   "rangeImage": "data/images/range/boldclaw.jpg",
+  "skillTypes": [
+   "AoE",
+   "Slow"
+  ],
   "image": "data/images/tatari/boldclaw.png",
   "glitterImage": null,
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Boldclaw"
@@ -337,6 +362,7 @@
    }
   },
   "rangeImage": "data/images/range/capywata.jpg",
+  "skillTypes": [],
   "image": "data/images/tatari/capywata.png",
   "glitterImage": null,
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Capywata"
@@ -375,6 +401,9 @@
    }
   },
   "rangeImage": "data/images/range/capypapa.jpg",
+  "skillTypes": [
+   "Heal"
+  ],
   "image": "data/images/tatari/capypapa.png",
   "glitterImage": null,
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Capypapa"
@@ -413,6 +442,7 @@
    }
   },
   "rangeImage": "data/images/range/sparkrow.jpg",
+  "skillTypes": [],
   "image": "data/images/tatari/sparkrow.png",
   "glitterImage": null,
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Sparkrow"
@@ -451,6 +481,7 @@
    }
   },
   "rangeImage": "data/images/range/scorchwing.jpg",
+  "skillTypes": [],
   "image": "data/images/tatari/scorchwing.png",
   "glitterImage": null,
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Scorchwing"
@@ -489,6 +520,9 @@
    }
   },
   "rangeImage": "data/images/range/solpear.jpg",
+  "skillTypes": [
+   "AoE"
+  ],
   "image": "data/images/tatari/solpear.png",
   "glitterImage": null,
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Solpear"
@@ -527,6 +561,9 @@
    }
   },
   "rangeImage": "data/images/range/pearpair.jpg",
+  "skillTypes": [
+   "AoE"
+  ],
   "image": "data/images/tatari/pearpair.png",
   "glitterImage": null,
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Pearpair"
@@ -565,6 +602,7 @@
    }
   },
   "rangeImage": "data/images/range/mudrump.jpg",
+  "skillTypes": [],
   "image": "data/images/tatari/mudrump.png",
   "glitterImage": null,
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Mudrump"
@@ -603,6 +641,9 @@
    }
   },
   "rangeImage": "data/images/range/rockhog.jpg",
+  "skillTypes": [
+   "Slow"
+  ],
   "image": "data/images/tatari/rockhog.png",
   "glitterImage": null,
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Rockhog"
@@ -641,6 +682,7 @@
    }
   },
   "rangeImage": "data/images/range/wobbler.jpg",
+  "skillTypes": [],
   "image": "data/images/tatari/wobbler.png",
   "glitterImage": null,
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Wobbler"
@@ -679,6 +721,9 @@
    }
   },
   "rangeImage": "data/images/range/boltskipper.jpg",
+  "skillTypes": [
+   "Bind"
+  ],
   "image": "data/images/tatari/boltskipper.png",
   "glitterImage": null,
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Boltskipper"
@@ -717,6 +762,10 @@
    }
   },
   "rangeImage": "data/images/range/dozy.jpg",
+  "skillTypes": [
+   "AoE",
+   "Self Heal"
+  ],
   "image": "data/images/tatari/dozy.png",
   "glitterImage": null,
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Dozy"
@@ -755,6 +804,10 @@
    }
   },
   "rangeImage": "data/images/range/snoozebo.jpg",
+  "skillTypes": [
+   "Pierce",
+   "Self Heal"
+  ],
   "image": "data/images/tatari/snoozebo.png",
   "glitterImage": null,
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Snoozebo"
@@ -795,6 +848,9 @@
    }
   },
   "rangeImage": "data/images/range/frostnip.jpg",
+  "skillTypes": [
+   "Slow"
+  ],
   "image": "data/images/tatari/frostnip.png",
   "glitterImage": "data/images/glitter/frostnip.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Frostnip"
@@ -835,6 +891,10 @@
    }
   },
   "rangeImage": "data/images/range/frostpaw.jpg",
+  "skillTypes": [
+   "Slow",
+   "Split"
+  ],
   "image": "data/images/tatari/frostpaw.png",
   "glitterImage": "data/images/glitter/frostpaw.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Frostpaw"
@@ -875,6 +935,11 @@
    }
   },
   "rangeImage": "data/images/range/frostique.jpg",
+  "skillTypes": [
+   "Pierce",
+   "Slow",
+   "Split"
+  ],
   "image": "data/images/tatari/frostique.png",
   "glitterImage": "data/images/glitter/frostique.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Frostique"
@@ -915,6 +980,12 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "Heal",
+   "Pierce",
+   "Slow",
+   "Split"
+  ],
   "image": "data/images/tatari/frostluna.png",
   "glitterImage": "data/images/glitter/frostluna.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Frostluna"
@@ -955,6 +1026,9 @@
    }
   },
   "rangeImage": "data/images/range/pyropup.jpg",
+  "skillTypes": [
+   "AoE"
+  ],
   "image": "data/images/tatari/pyropup.png",
   "glitterImage": "data/images/glitter/pyropup.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Pyropup"
@@ -995,6 +1069,9 @@
    }
   },
   "rangeImage": "data/images/range/pyrohound.jpg",
+  "skillTypes": [
+   "AoE"
+  ],
   "image": "data/images/tatari/pyrohound.png",
   "glitterImage": "data/images/glitter/pyrohound.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Pyrohound"
@@ -1035,6 +1112,10 @@
    }
   },
   "rangeImage": "data/images/range/hellhound.jpg",
+  "skillTypes": [
+   "AoE",
+   "Weaken"
+  ],
   "image": "data/images/tatari/hellhound.png",
   "glitterImage": "data/images/glitter/hellhound.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Hellhound"
@@ -1075,6 +1156,11 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "ATK Boost",
+   "AoE",
+   "Weaken"
+  ],
   "image": "data/images/tatari/pyrodaemon.png",
   "glitterImage": "data/images/glitter/pyrodaemon.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Pyrodaemon"
@@ -1115,6 +1201,9 @@
    }
   },
   "rangeImage": "data/images/range/frugling.jpg",
+  "skillTypes": [
+   "AoE"
+  ],
   "image": "data/images/tatari/frugling.png",
   "glitterImage": "data/images/glitter/frugling.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Frugling"
@@ -1155,6 +1244,9 @@
    }
   },
   "rangeImage": "data/images/range/frugatoad.jpg",
+  "skillTypes": [
+   "AoE"
+  ],
   "image": "data/images/tatari/frugatoad.png",
   "glitterImage": "data/images/glitter/frugatoad.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Frugatoad"
@@ -1195,6 +1287,10 @@
    }
   },
   "rangeImage": "data/images/range/frugagon.jpg",
+  "skillTypes": [
+   "AoE",
+   "Slow"
+  ],
   "image": "data/images/tatari/frugagon.png",
   "glitterImage": "data/images/glitter/frugagon.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Frugagon"
@@ -1235,6 +1331,11 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "AoE",
+   "HP Boost",
+   "Slow"
+  ],
   "image": "data/images/tatari/frugantuan.png",
   "glitterImage": "data/images/glitter/frugantuan.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Frugantuan"
@@ -1275,6 +1376,9 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "AoE"
+  ],
   "image": "data/images/tatari/rubblet.png",
   "glitterImage": "data/images/glitter/rubblet.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Rubblet"
@@ -1315,6 +1419,9 @@
    }
   },
   "rangeImage": "data/images/range/cobbledon.jpg",
+  "skillTypes": [
+   "AoE"
+  ],
   "image": "data/images/tatari/cobbledon.png",
   "glitterImage": "data/images/glitter/cobbledon.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Cobbledon"
@@ -1355,6 +1462,9 @@
    }
   },
   "rangeImage": "data/images/range/rockzilla.jpg",
+  "skillTypes": [
+   "AoE"
+  ],
   "image": "data/images/tatari/rockzilla.png",
   "glitterImage": "data/images/glitter/rockzilla.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Rockzilla"
@@ -1395,6 +1505,10 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "AoE",
+   "DMG Reduction"
+  ],
   "image": "data/images/tatari/meteorax.png",
   "glitterImage": "data/images/glitter/meteorax.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Meteorax"
@@ -1435,6 +1549,10 @@
    }
   },
   "rangeImage": "data/images/range/zappur.jpg",
+  "skillTypes": [
+   "AoE",
+   "Knockback"
+  ],
   "image": "data/images/tatari/zappur.png",
   "glitterImage": "data/images/glitter/zappur.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zappur"
@@ -1475,6 +1593,10 @@
    }
   },
   "rangeImage": "data/images/range/electroar.jpg",
+  "skillTypes": [
+   "AoE",
+   "Knockback"
+  ],
   "image": "data/images/tatari/electroar.png",
   "glitterImage": "data/images/glitter/electroar.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Electroar"
@@ -1515,6 +1637,11 @@
    }
   },
   "rangeImage": "data/images/range/blitzmane.jpg",
+  "skillTypes": [
+   "AoE",
+   "DMG Boost",
+   "Knockback"
+  ],
   "image": "data/images/tatari/blitzmane.png",
   "glitterImage": "data/images/glitter/blitzmane.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Blitzmane"
@@ -1555,6 +1682,11 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "AoE",
+   "DMG Boost",
+   "Knockback"
+  ],
   "image": "data/images/tatari/stormlion.png",
   "glitterImage": "data/images/glitter/stormlion.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Stormlion"
@@ -1595,6 +1727,9 @@
    }
   },
   "rangeImage": "data/images/range/sealing.jpg",
+  "skillTypes": [
+   "Chain"
+  ],
   "image": "data/images/tatari/sealing.png",
   "glitterImage": "data/images/glitter/sealing.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Sealing"
@@ -1635,6 +1770,10 @@
    }
   },
   "rangeImage": "data/images/range/sealoon.jpg",
+  "skillTypes": [
+   "Chain",
+   "Weaken"
+  ],
   "image": "data/images/tatari/sealoon.png",
   "glitterImage": "data/images/glitter/sealoon.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Sealoon"
@@ -1675,6 +1814,10 @@
    }
   },
   "rangeImage": "data/images/range/seaswirl.jpg",
+  "skillTypes": [
+   "Chain",
+   "Weaken"
+  ],
   "image": "data/images/tatari/seaswirl.png",
   "glitterImage": "data/images/glitter/seaswirl.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Seaswirl"
@@ -1715,6 +1858,10 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "Chain",
+   "Weaken"
+  ],
   "image": "data/images/tatari/sealord.png",
   "glitterImage": "data/images/glitter/sealord.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Sealord"
@@ -1755,6 +1902,10 @@
    }
   },
   "rangeImage": "data/images/range/blueflick.jpg",
+  "skillTypes": [
+   "AoE",
+   "Burn"
+  ],
   "image": "data/images/tatari/blueflick.png",
   "glitterImage": "data/images/glitter/blueflick.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Blueflick"
@@ -1795,6 +1946,10 @@
    }
   },
   "rangeImage": "data/images/range/ignisnap.jpg",
+  "skillTypes": [
+   "AoE",
+   "Burn"
+  ],
   "image": "data/images/tatari/ignisnap.png",
   "glitterImage": "data/images/glitter/ignisnap.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Ignisnap"
@@ -1835,6 +1990,10 @@
    }
   },
   "rangeImage": "data/images/range/azurion.jpg",
+  "skillTypes": [
+   "AoE",
+   "Burn"
+  ],
   "image": "data/images/tatari/azurion.png",
   "glitterImage": "data/images/glitter/azurion.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Azurion"
@@ -1875,6 +2034,11 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "ATK Boost",
+   "AoE",
+   "Burn"
+  ],
   "image": "data/images/tatari/newflamander.png",
   "glitterImage": "data/images/glitter/newflamander.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Newflamander"
@@ -1915,6 +2079,9 @@
    }
   },
   "rangeImage": "data/images/range/manteeny.jpg",
+  "skillTypes": [
+   "AoE"
+  ],
   "image": "data/images/tatari/manteeny.png",
   "glitterImage": "data/images/glitter/manteeny.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Manteeny"
@@ -1955,6 +2122,9 @@
    }
   },
   "rangeImage": "data/images/range/stalkerix.jpg",
+  "skillTypes": [
+   "AoE"
+  ],
   "image": "data/images/tatari/stalkerix.png",
   "glitterImage": "data/images/glitter/stalkerix.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Stalkerix"
@@ -1995,6 +2165,10 @@
    }
   },
   "rangeImage": "data/images/range/serrabloom.jpg",
+  "skillTypes": [
+   "AoE",
+   "Fragile"
+  ],
   "image": "data/images/tatari/serrabloom.png",
   "glitterImage": "data/images/glitter/serrabloom.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Serrabloom"
@@ -2035,6 +2209,9 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "AoE"
+  ],
   "image": "data/images/tatari/orchitoria.png",
   "glitterImage": "data/images/glitter/orchitoria.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Orchitoria"
@@ -2075,6 +2252,9 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "Pierce"
+  ],
   "image": "data/images/tatari/gibber.png",
   "glitterImage": "data/images/glitter/gibber.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Gibber"
@@ -2115,6 +2295,10 @@
    }
   },
   "rangeImage": "data/images/range/turtuff.jpg",
+  "skillTypes": [
+   "Pierce",
+   "Shield"
+  ],
   "image": "data/images/tatari/turtuff.png",
   "glitterImage": "data/images/glitter/turtuff.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Turtuff"
@@ -2155,6 +2339,10 @@
    }
   },
   "rangeImage": "data/images/range/rockshell.jpg",
+  "skillTypes": [
+   "Pierce",
+   "Shield"
+  ],
   "image": "data/images/tatari/rockshell.png",
   "glitterImage": "data/images/glitter/rockshell.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Rockshell"
@@ -2195,6 +2383,10 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "Pierce",
+   "Shield"
+  ],
   "image": "data/images/tatari/terraton.png",
   "glitterImage": "data/images/glitter/terraton.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Terraton"
@@ -2235,6 +2427,10 @@
    }
   },
   "rangeImage": "data/images/range/voltfawn.jpg",
+  "skillTypes": [
+   "Paralyze",
+   "Pierce"
+  ],
   "image": "data/images/tatari/voltfawn.png",
   "glitterImage": "data/images/glitter/voltfawn.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Voltfawn"
@@ -2275,6 +2471,10 @@
    }
   },
   "rangeImage": "data/images/range/sparkdoe.jpg",
+  "skillTypes": [
+   "Paralyze",
+   "Pierce"
+  ],
   "image": "data/images/tatari/sparkdoe.png",
   "glitterImage": "data/images/glitter/sparkdoe.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Sparkdoe"
@@ -2315,6 +2515,10 @@
    }
   },
   "rangeImage": "data/images/range/zapantler.jpg",
+  "skillTypes": [
+   "Paralyze",
+   "Pierce"
+  ],
   "image": "data/images/tatari/zapantler.png",
   "glitterImage": "data/images/glitter/zapantler.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zapantler"
@@ -2355,6 +2559,10 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "Paralyze",
+   "Pierce"
+  ],
   "image": "data/images/tatari/magnedart.png",
   "glitterImage": "data/images/glitter/magnedart.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Magnedart"
@@ -2395,6 +2603,10 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "AoE",
+   "Slow"
+  ],
   "image": "data/images/tatari/droppit.png",
   "glitterImage": "data/images/glitter/droppit.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Droppit"
@@ -2435,6 +2647,11 @@
    }
   },
   "rangeImage": "data/images/range/bubbit.jpg",
+  "skillTypes": [
+   "AoE",
+   "Fragile",
+   "Slow"
+  ],
   "image": "data/images/tatari/bubbit.png",
   "glitterImage": "data/images/glitter/bubbit.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Bubbit"
@@ -2475,6 +2692,11 @@
    }
   },
   "rangeImage": "data/images/range/tideon.jpg",
+  "skillTypes": [
+   "AoE",
+   "Fragile",
+   "Slow"
+  ],
   "image": "data/images/tatari/tideon.png",
   "glitterImage": "data/images/glitter/tideon.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Tideon"
@@ -2515,6 +2737,12 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "AoE",
+   "Fragile",
+   "Heal",
+   "Slow"
+  ],
   "image": "data/images/tatari/haplysia.png",
   "glitterImage": "data/images/glitter/haplysia.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Haplysia"
@@ -2555,6 +2783,7 @@
    }
   },
   "rangeImage": "data/images/range/sparkit.jpg",
+  "skillTypes": [],
   "image": "data/images/tatari/sparkit.png",
   "glitterImage": "data/images/glitter/sparkit.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Sparkit"
@@ -2595,6 +2824,7 @@
    }
   },
   "rangeImage": "data/images/range/firefox.jpg",
+  "skillTypes": [],
   "image": "data/images/tatari/firefox.png",
   "glitterImage": "data/images/glitter/firefox.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Firefox"
@@ -2635,6 +2865,9 @@
    }
   },
   "rangeImage": "data/images/range/flarevix.jpg",
+  "skillTypes": [
+   "Split"
+  ],
   "image": "data/images/tatari/flarevix.png",
   "glitterImage": "data/images/glitter/flarevix.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Flarevix"
@@ -2675,6 +2908,10 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "ATK Boost",
+   "Split"
+  ],
   "image": "data/images/tatari/phantifox.png",
   "glitterImage": "data/images/glitter/phantifox.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Phantifox"
@@ -2715,6 +2952,10 @@
    }
   },
   "rangeImage": "data/images/range/goonbug.jpg",
+  "skillTypes": [
+   "AoE",
+   "Invincible"
+  ],
   "image": "data/images/tatari/goonbug.png",
   "glitterImage": "data/images/glitter/goonbug.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Goonbug"
@@ -2755,6 +2996,11 @@
    }
   },
   "rangeImage": "data/images/range/capobeetle.jpg",
+  "skillTypes": [
+   "AoE",
+   "Fragile",
+   "Invincible"
+  ],
   "image": "data/images/tatari/capobeetle.png",
   "glitterImage": "data/images/glitter/capobeetle.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Capobeetle"
@@ -2795,6 +3041,12 @@
    }
   },
   "rangeImage": "data/images/range/donscarab.jpg",
+  "skillTypes": [
+   "AoE",
+   "Fragile",
+   "Invincible",
+   "Knockback"
+  ],
   "image": "data/images/tatari/donscarab.png",
   "glitterImage": "data/images/glitter/donscarab.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Donscarab"
@@ -2835,6 +3087,13 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "AoE",
+   "Fragile",
+   "HP Boost",
+   "Invincible",
+   "Knockback"
+  ],
   "image": "data/images/tatari/beetleknight.png",
   "glitterImage": "data/images/glitter/beetleknight.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Beetleknight"
@@ -2875,6 +3134,10 @@
    }
   },
   "rangeImage": "data/images/range/punchimp.jpg",
+  "skillTypes": [
+   "AoE",
+   "Summon"
+  ],
   "image": "data/images/tatari/punchimp.png",
   "glitterImage": "data/images/glitter/punchimp.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Punchimp"
@@ -2915,6 +3178,10 @@
    }
   },
   "rangeImage": "data/images/range/rockfu.jpg",
+  "skillTypes": [
+   "AoE",
+   "Summon"
+  ],
   "image": "data/images/tatari/rockfu.png",
   "glitterImage": "data/images/glitter/rockfu.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Rockfu"
@@ -2955,6 +3222,9 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "AoE"
+  ],
   "image": "data/images/tatari/rockwu.png",
   "glitterImage": "data/images/glitter/rockwu.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Rockwu"
@@ -2995,6 +3265,10 @@
    }
   },
   "rangeImage": "data/images/range/rockong.jpg",
+  "skillTypes": [
+   "AoE",
+   "Summon"
+  ],
   "image": "data/images/tatari/rockong.png",
   "glitterImage": "data/images/glitter/rockong.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Rockong"
@@ -3035,6 +3309,9 @@
    }
   },
   "rangeImage": "data/images/range/voltkit.jpg",
+  "skillTypes": [
+   "AoE"
+  ],
   "image": "data/images/tatari/voltkit.png",
   "glitterImage": "data/images/glitter/voltkit.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Voltkit"
@@ -3075,6 +3352,10 @@
    }
   },
   "rangeImage": "data/images/range/voltling.jpg",
+  "skillTypes": [
+   "AoE",
+   "Paralyze"
+  ],
   "image": "data/images/tatari/voltling.png",
   "glitterImage": "data/images/glitter/voltling.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Voltling"
@@ -3115,6 +3396,11 @@
    }
   },
   "rangeImage": "data/images/range/voltverine.jpg",
+  "skillTypes": [
+   "AoE",
+   "Invincible",
+   "Paralyze"
+  ],
   "image": "data/images/tatari/voltverine.png",
   "glitterImage": "data/images/glitter/voltverine.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Voltverine"
@@ -3155,6 +3441,11 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "AoE",
+   "Invincible",
+   "Paralyze"
+  ],
   "image": "data/images/tatari/voltreaver.png",
   "glitterImage": "data/images/glitter/voltreaver.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Voltreaver"
@@ -3195,6 +3486,10 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "AoE",
+   "Shield"
+  ],
   "image": "data/images/tatari/waddledo.png",
   "glitterImage": "data/images/glitter/waddledo.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Waddledo"
@@ -3235,6 +3530,10 @@
    }
   },
   "rangeImage": "data/images/range/swaystroll.jpg",
+  "skillTypes": [
+   "AoE",
+   "Shield"
+  ],
   "image": "data/images/tatari/swaystroll.png",
   "glitterImage": "data/images/glitter/swaystroll.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Swaystroll"
@@ -3275,6 +3574,10 @@
    }
   },
   "rangeImage": "data/images/range/stoodbeak.jpg",
+  "skillTypes": [
+   "AoE",
+   "Shield"
+  ],
   "image": "data/images/tatari/stoodbeak.png",
   "glitterImage": "data/images/glitter/stoodbeak.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Stoodbeak"
@@ -3315,6 +3618,11 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "AoE",
+   "Heal",
+   "Shield"
+  ],
   "image": "data/images/tatari/glideflip.png",
   "glitterImage": "data/images/glitter/glideflip.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Glideflip"
@@ -3355,6 +3663,9 @@
    }
   },
   "rangeImage": "data/images/range/zapuni.jpg",
+  "skillTypes": [
+   "Splash"
+  ],
   "image": "data/images/tatari/zapuni.png",
   "glitterImage": "data/images/glitter/zapuni.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zapuni"
@@ -3395,6 +3706,9 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "Splash"
+  ],
   "image": "data/images/tatari/surgehoof.png",
   "glitterImage": "data/images/glitter/surgehoof.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Surgehoof"
@@ -3435,6 +3749,10 @@
    }
   },
   "rangeImage": "data/images/range/voltmare.jpg",
+  "skillTypes": [
+   "DMG Boost",
+   "Splash"
+  ],
   "image": "data/images/tatari/voltmare.png",
   "glitterImage": "data/images/glitter/voltmare.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Voltmare"
@@ -3475,6 +3793,11 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "ATK Speed Boost",
+   "DMG Boost (Solo)",
+   "Splash"
+  ],
   "image": "data/images/tatari/boltallion.png",
   "glitterImage": "data/images/glitter/boltallion.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Boltallion"
@@ -3515,6 +3838,9 @@
    }
   },
   "rangeImage": "data/images/range/gopher.jpg",
+  "skillTypes": [
+   "DMG Reduction"
+  ],
   "image": "data/images/tatari/gopher.png",
   "glitterImage": "data/images/glitter/gopher.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Gopher"
@@ -3555,6 +3881,9 @@
    }
   },
   "rangeImage": "data/images/range/watchroo.jpg",
+  "skillTypes": [
+   "DMG Reduction"
+  ],
   "image": "data/images/tatari/watchroo.png",
   "glitterImage": "data/images/glitter/watchroo.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Watchroo"
@@ -3595,6 +3924,10 @@
    }
   },
   "rangeImage": "data/images/range/bastogard.jpg",
+  "skillTypes": [
+   "Blind",
+   "DMG Reduction"
+  ],
   "image": "data/images/tatari/bastogard.png",
   "glitterImage": "data/images/glitter/bastogard.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Bastogard"
@@ -3635,6 +3968,10 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "Blind",
+   "DMG Reduction"
+  ],
   "image": "data/images/tatari/cratzar.png",
   "glitterImage": "data/images/glitter/cratzar.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Cratzar"
@@ -3675,6 +4012,10 @@
    }
   },
   "rangeImage": "data/images/range/ashlarva.jpg",
+  "skillTypes": [
+   "AoE",
+   "Heal"
+  ],
   "image": "data/images/tatari/ashlarva.png",
   "glitterImage": "data/images/glitter/ashlarva.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Ashlarva"
@@ -3715,6 +4056,11 @@
    }
   },
   "rangeImage": "data/images/range/firecoil.jpg",
+  "skillTypes": [
+   "ATK Boost",
+   "AoE",
+   "Heal"
+  ],
   "image": "data/images/tatari/firecoil.png",
   "glitterImage": "data/images/glitter/firecoil.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Firecoil"
@@ -3755,6 +4101,11 @@
    }
   },
   "rangeImage": "data/images/range/charflutter.jpg",
+  "skillTypes": [
+   "ATK Boost",
+   "AoE",
+   "Heal"
+  ],
   "image": "data/images/tatari/charflutter.png",
   "glitterImage": "data/images/glitter/charflutter.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Charflutter"
@@ -3795,6 +4146,11 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "ATK Boost",
+   "AoE",
+   "Heal"
+  ],
   "image": "data/images/tatari/chrysolaria.png",
   "glitterImage": "data/images/glitter/chrysolaria.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Chrysolaria"
@@ -3835,6 +4191,10 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "Planting",
+   "Slow"
+  ],
   "image": "data/images/tatari/pandaroo.png",
   "glitterImage": "data/images/glitter/pandaroo.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Pandaroo"
@@ -3875,6 +4235,10 @@
    }
   },
   "rangeImage": "data/images/range/pandaroot.jpg",
+  "skillTypes": [
+   "Planting",
+   "Slow"
+  ],
   "image": "data/images/tatari/pandaroot.png",
   "glitterImage": "data/images/glitter/pandaroot.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Pandaroot"
@@ -3915,6 +4279,10 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "Planting",
+   "Slow"
+  ],
   "image": "data/images/tatari/pandarrior.png",
   "glitterImage": "data/images/glitter/pandarrior.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Pandarrior"
@@ -3955,6 +4323,10 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "Planting",
+   "Slow"
+  ],
   "image": "data/images/tatari/pandagrand.png",
   "glitterImage": "data/images/glitter/pandagrand.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Pandagrand"
@@ -3995,6 +4367,9 @@
    }
   },
   "rangeImage": "data/images/range/cribbler.jpg",
+  "skillTypes": [
+   "AoE"
+  ],
   "image": "data/images/tatari/cribbler.png",
   "glitterImage": "data/images/glitter/cribbler.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Cribbler"
@@ -4035,6 +4410,10 @@
    }
   },
   "rangeImage": "data/images/range/clawzor.jpg",
+  "skillTypes": [
+   "AoE",
+   "Shredded"
+  ],
   "image": "data/images/tatari/clawzor.png",
   "glitterImage": "data/images/glitter/clawzor.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Clawzor"
@@ -4075,6 +4454,10 @@
    }
   },
   "rangeImage": "data/images/range/dreadclaw.jpg",
+  "skillTypes": [
+   "AoE",
+   "Shredded"
+  ],
   "image": "data/images/tatari/dreadclaw.png",
   "glitterImage": "data/images/glitter/dreadclaw.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Dreadclaw"
@@ -4115,6 +4498,10 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "AoE",
+   "Shredded"
+  ],
   "image": "data/images/tatari/cribking.png",
   "glitterImage": "data/images/glitter/cribking.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Cribking"
@@ -4155,6 +4542,7 @@
    }
   },
   "rangeImage": "data/images/range/shrimpyro.jpg",
+  "skillTypes": [],
   "image": "data/images/tatari/shrimpyro.png",
   "glitterImage": "data/images/glitter/shrimpyro.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Shrimpyro"
@@ -4195,6 +4583,9 @@
    }
   },
   "rangeImage": "data/images/range/pyroprawn.jpg",
+  "skillTypes": [
+   "Burn"
+  ],
   "image": "data/images/tatari/pyroprawn.png",
   "glitterImage": "data/images/glitter/pyroprawn.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Pyroprawn"
@@ -4235,6 +4626,9 @@
    }
   },
   "rangeImage": "data/images/range/pyroclobster.jpg",
+  "skillTypes": [
+   "Burn"
+  ],
   "image": "data/images/tatari/pyroclobster.png",
   "glitterImage": "data/images/glitter/pyroclobster.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Pyroclobster"
@@ -4275,6 +4669,9 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "Burn"
+  ],
   "image": "data/images/tatari/pyroviathan.png",
   "glitterImage": "data/images/glitter/pyroviathan.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Pyroviathan"
@@ -4315,6 +4712,10 @@
    }
   },
   "rangeImage": "data/images/range/buddi.jpg",
+  "skillTypes": [
+   "ATK Boost",
+   "Heal"
+  ],
   "image": "data/images/tatari/buddi.png",
   "glitterImage": "data/images/glitter/buddi.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Buddi"
@@ -4355,6 +4756,11 @@
    }
   },
   "rangeImage": "data/images/range/sunfleur.jpg",
+  "skillTypes": [
+   "ATK Boost",
+   "DEF Boost",
+   "Heal"
+  ],
   "image": "data/images/tatari/sunfleur.png",
   "glitterImage": "data/images/glitter/sunfleur.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Sunfleur"
@@ -4395,6 +4801,11 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "ATK Boost",
+   "DEF Boost",
+   "Heal"
+  ],
   "image": "data/images/tatari/solaflora.png",
   "glitterImage": "data/images/glitter/solaflora.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Solaflora"
@@ -4435,6 +4846,11 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "ATK Boost",
+   "DEF Boost",
+   "Heal"
+  ],
   "image": "data/images/tatari/heliabloom.png",
   "glitterImage": "data/images/glitter/heliabloom.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Heliabloom"
@@ -4475,6 +4891,9 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "AoE"
+  ],
   "image": "data/images/tatari/joeyo.png",
   "glitterImage": "data/images/glitter/joeyo.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Joeyo"
@@ -4515,6 +4934,10 @@
    }
   },
   "rangeImage": "data/images/range/puncharoo.jpg",
+  "skillTypes": [
+   "AoE",
+   "Fragile"
+  ],
   "image": "data/images/tatari/puncharoo.png",
   "glitterImage": "data/images/glitter/puncharoo.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Puncharoo"
@@ -4555,6 +4978,10 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "AoE",
+   "Fragile"
+  ],
   "image": "data/images/tatari/kangachamp.png",
   "glitterImage": "data/images/glitter/kangachamp.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Kangachamp"
@@ -4595,6 +5022,7 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [],
   "image": null,
   "glitterImage": null,
   "wikiUrl": null
@@ -4634,6 +5062,11 @@
    }
   },
   "rangeImage": "data/images/range/sparkeet.jpg",
+  "skillTypes": [
+   "ATK Boost",
+   "Chain",
+   "DMG Reduction"
+  ],
   "image": "data/images/tatari/sparkeet.png",
   "glitterImage": "data/images/glitter/sparkeet.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Sparkeet"
@@ -4673,6 +5106,11 @@
    }
   },
   "rangeImage": "data/images/range/buzzbeak.jpg",
+  "skillTypes": [
+   "ATK Boost",
+   "Chain",
+   "DMG Reduction"
+  ],
   "image": "data/images/tatari/buzzbeak.png",
   "glitterImage": "data/images/glitter/buzzbeak.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Buzzbeak"
@@ -4712,6 +5150,11 @@
    }
   },
   "rangeImage": "data/images/range/toucanzam.jpg",
+  "skillTypes": [
+   "ATK Boost",
+   "Chain",
+   "DMG Reduction"
+  ],
   "image": "data/images/tatari/toucanzam.png",
   "glitterImage": "data/images/glitter/toucanzam.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Toucanzam"
@@ -4752,6 +5195,10 @@
    }
   },
   "rangeImage": "data/images/range/sackling.jpg",
+  "skillTypes": [
+   "AoE",
+   "Shield"
+  ],
   "image": "data/images/tatari/sackling.png",
   "glitterImage": "data/images/glitter/sackling.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Sackling"
@@ -4792,6 +5239,11 @@
    }
   },
   "rangeImage": "data/images/range/jarachnid.jpg",
+  "skillTypes": [
+   "AoE",
+   "Shield",
+   "Stun"
+  ],
   "image": "data/images/tatari/jarachnid.png",
   "glitterImage": "data/images/glitter/jarachnid.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Jarachnid"
@@ -4832,6 +5284,11 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "AoE",
+   "Shield",
+   "Stun"
+  ],
   "image": "data/images/tatari/terracrawler.png",
   "glitterImage": "data/images/glitter/terracrawler.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Terracrawler"
@@ -4872,6 +5329,11 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "AoE",
+   "Shield",
+   "Stun"
+  ],
   "image": "data/images/tatari/weaverfang.png",
   "glitterImage": "data/images/glitter/weaverfang.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Weaverfang"
@@ -4912,6 +5374,10 @@
    }
   },
   "rangeImage": "data/images/range/skinklet.jpg",
+  "skillTypes": [
+   "AoE",
+   "Invisible"
+  ],
   "image": "data/images/tatari/skinklet.png",
   "glitterImage": "data/images/glitter/skinklet.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Skinklet"
@@ -4952,6 +5418,10 @@
    }
   },
   "rangeImage": "data/images/range/skinkoon.jpg",
+  "skillTypes": [
+   "AoE",
+   "Invisible"
+  ],
   "image": "data/images/tatari/skinkoon.png",
   "glitterImage": "data/images/glitter/skinkoon.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Skinkoon"
@@ -4992,6 +5462,10 @@
    }
   },
   "rangeImage": "data/images/range/ninjaguana.jpg",
+  "skillTypes": [
+   "AoE",
+   "Invisible"
+  ],
   "image": "data/images/tatari/ninjaguana.png",
   "glitterImage": "data/images/glitter/ninjaguana.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Ninjaguana"
@@ -5032,6 +5506,10 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "AoE",
+   "Invisible"
+  ],
   "image": "data/images/tatari/hychroma.png",
   "glitterImage": "data/images/glitter/hychroma.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Hychroma"
@@ -5072,6 +5550,11 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "AoE",
+   "Heal",
+   "Shield"
+  ],
   "image": "data/images/tatari/souphog.png",
   "glitterImage": "data/images/glitter/souphog.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Souphog"
@@ -5112,6 +5595,11 @@
    }
   },
   "rangeImage": "data/images/range/grillhog.jpg",
+  "skillTypes": [
+   "AoE",
+   "Heal",
+   "Shield"
+  ],
   "image": "data/images/tatari/grillhog.png",
   "glitterImage": "data/images/glitter/grillhog.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Grillhog"
@@ -5152,6 +5640,11 @@
    }
   },
   "rangeImage": "data/images/range/hothog.jpg",
+  "skillTypes": [
+   "AoE",
+   "Heal",
+   "Shield"
+  ],
   "image": "data/images/tatari/hothog.png",
   "glitterImage": "data/images/glitter/hothog.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Hothog"
@@ -5192,6 +5685,11 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "AoE",
+   "Heal",
+   "Shield"
+  ],
   "image": "data/images/tatari/searhog.png",
   "glitterImage": "data/images/glitter/searhog.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Searhog"
@@ -5232,6 +5730,9 @@
    }
   },
   "rangeImage": "data/images/range/shardsnail.jpg",
+  "skillTypes": [
+   "Summon"
+  ],
   "image": "data/images/tatari/shardsnail.png",
   "glitterImage": "data/images/glitter/shardsnail.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Shardsnail"
@@ -5272,6 +5773,10 @@
    }
   },
   "rangeImage": "data/images/range/gemsnail.jpg",
+  "skillTypes": [
+   "AoE",
+   "Summon"
+  ],
   "image": "data/images/tatari/gemsnail.png",
   "glitterImage": "data/images/glitter/gemsnail.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Gemsnail"
@@ -5312,6 +5817,10 @@
    }
   },
   "rangeImage": "data/images/range/jewelsnail.jpg",
+  "skillTypes": [
+   "AoE",
+   "Summon"
+  ],
   "image": "data/images/tatari/jewelsnail.png",
   "glitterImage": "data/images/glitter/jewelsnail.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Jewelsnail"
@@ -5352,6 +5861,10 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "AoE",
+   "Summon"
+  ],
   "image": "data/images/tatari/crystalsnail.png",
   "glitterImage": "data/images/glitter/crystalsnail.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Crystalsnail"
@@ -5392,6 +5905,12 @@
    }
   },
   "rangeImage": "data/images/range/cheerling.jpg",
+  "skillTypes": [
+   "ATK Boost",
+   "AoE",
+   "DEF Boost",
+   "Heal"
+  ],
   "image": "data/images/tatari/cheerling.png",
   "glitterImage": "data/images/glitter/cheerling.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Cheerling"
@@ -5432,6 +5951,12 @@
    }
   },
   "rangeImage": "data/images/range/cheerlet.jpg",
+  "skillTypes": [
+   "ATK Boost",
+   "AoE",
+   "DEF Boost",
+   "Heal"
+  ],
   "image": "data/images/tatari/cheerlet.png",
   "glitterImage": "data/images/glitter/cheerlet.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Cheerlet"
@@ -5472,6 +5997,13 @@
    }
   },
   "rangeImage": "data/images/range/cheerspring.jpg",
+  "skillTypes": [
+   "ATK Boost",
+   "AoE",
+   "DEF Boost",
+   "Heal",
+   "Invincible"
+  ],
   "image": "data/images/tatari/cheerspring.png",
   "glitterImage": "data/images/glitter/cheerspring.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Cheerspring"
@@ -5512,6 +6044,13 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "ATK Boost",
+   "AoE",
+   "DEF Boost",
+   "Heal",
+   "Invincible"
+  ],
   "image": "data/images/tatari/cheerstella.png",
   "glitterImage": "data/images/glitter/cheerstella.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Cheerstella"
@@ -5551,6 +6090,9 @@
    }
   },
   "rangeImage": "data/images/range/cactobud.jpg",
+  "skillTypes": [
+   "Sting"
+  ],
   "image": "data/images/tatari/cactobud.png",
   "glitterImage": "data/images/glitter/cactobud.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Cactobud"
@@ -5590,6 +6132,10 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "AoE",
+   "Sting"
+  ],
   "image": "data/images/tatari/cactobloom.png",
   "glitterImage": "data/images/glitter/cactobloom.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Cactobloom"
@@ -5629,6 +6175,10 @@
    }
   },
   "rangeImage": "data/images/range/cactoczar.jpg",
+  "skillTypes": [
+   "AoE",
+   "Sting"
+  ],
   "image": "data/images/tatari/cactoczar.png",
   "glitterImage": "data/images/glitter/cactoczar.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Cactoczar"
@@ -5669,6 +6219,10 @@
    }
   },
   "rangeImage": "data/images/range/lullelly.jpg",
+  "skillTypes": [
+   "AoE",
+   "Heal"
+  ],
   "image": "data/images/tatari/lullelly.png",
   "glitterImage": "data/images/glitter/lullelly.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Lullelly"
@@ -5709,6 +6263,10 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "AoE",
+   "Heal"
+  ],
   "image": "data/images/tatari/yawnelly.png",
   "glitterImage": "data/images/glitter/yawnelly.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Yawnelly"
@@ -5749,6 +6307,11 @@
    }
   },
   "rangeImage": "data/images/range/souverelle.jpg",
+  "skillTypes": [
+   "AoE",
+   "Buff",
+   "Heal"
+  ],
   "image": "data/images/tatari/souverelle.png",
   "glitterImage": "data/images/glitter/souverelle.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Souverelle"
@@ -5789,6 +6352,11 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "AoE",
+   "Buff",
+   "Heal"
+  ],
   "image": "data/images/tatari/somnrayna.png",
   "glitterImage": "data/images/glitter/somnrayna.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Somnrayna"
@@ -5829,6 +6397,10 @@
    }
   },
   "rangeImage": "data/images/range/tindercub.jpg",
+  "skillTypes": [
+   "AoE",
+   "Heal"
+  ],
   "image": "data/images/tatari/tindercub.png",
   "glitterImage": "data/images/glitter/tindercub.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Tindercub"
@@ -5869,6 +6441,10 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "AoE",
+   "Heal"
+  ],
   "image": "data/images/tatari/kitjitsu.png",
   "glitterImage": "data/images/glitter/kitjitsu.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Kitjitsu"
@@ -5909,6 +6485,11 @@
    }
   },
   "rangeImage": "data/images/range/taiglow.jpg",
+  "skillTypes": [
+   "AoE",
+   "Burn",
+   "Heal"
+  ],
   "image": "data/images/tatari/taiglow.png",
   "glitterImage": "data/images/glitter/taiglow.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Taiglow"
@@ -5949,6 +6530,7 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [],
   "image": null,
   "glitterImage": null,
   "wikiUrl": null
@@ -5989,6 +6571,9 @@
    }
   },
   "rangeImage": "data/images/range/humbug.jpg",
+  "skillTypes": [
+   "AoE"
+  ],
   "image": "data/images/tatari/humbug.png",
   "glitterImage": "data/images/glitter/humbug.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Humbug"
@@ -6029,6 +6614,10 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "AoE",
+   "Slow"
+  ],
   "image": "data/images/tatari/humbleetle.png",
   "glitterImage": "data/images/glitter/humbleetle.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Humbleetle"
@@ -6069,6 +6658,10 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "AoE",
+   "Slow"
+  ],
   "image": "data/images/tatari/zenscarab.png",
   "glitterImage": "data/images/glitter/zenscarab.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zenscarab"
@@ -6109,6 +6702,10 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "AoE",
+   "Slow"
+  ],
   "image": "data/images/tatari/hierotyrus.png",
   "glitterImage": "data/images/glitter/hierotyrus.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Hierotyrus"
@@ -6149,6 +6746,9 @@
    }
   },
   "rangeImage": "data/images/range/fluffle.jpg",
+  "skillTypes": [
+   "AoE"
+  ],
   "image": "data/images/tatari/fluffle.png",
   "glitterImage": "data/images/glitter/fluffle.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Fluffle"
@@ -6189,6 +6789,10 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "AoE",
+   "Paralyze"
+  ],
   "image": "data/images/tatari/nimbuzzy.png",
   "glitterImage": "data/images/glitter/nimbuzzy.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Nimbuzzy"
@@ -6229,6 +6833,10 @@
    }
   },
   "rangeImage": "data/images/range/galewether.jpg",
+  "skillTypes": [
+   "AoE",
+   "Paralyze"
+  ],
   "image": "data/images/tatari/galewether.png",
   "glitterImage": "data/images/glitter/galewether.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Galewether"
@@ -6269,6 +6877,10 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "AoE",
+   "Paralyze"
+  ],
   "image": "data/images/tatari/cosmoram.png",
   "glitterImage": "data/images/glitter/cosmoram.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Cosmoram"
@@ -6309,6 +6921,11 @@
    }
   },
   "rangeImage": "data/images/range/funglet.jpg",
+  "skillTypes": [
+   "ATK Boost",
+   "ATK Speed Boost",
+   "AoE"
+  ],
   "image": "data/images/tatari/funglet.png",
   "glitterImage": "data/images/glitter/funglet.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Funglet"
@@ -6349,6 +6966,11 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "ATK Boost",
+   "ATK Speed Boost",
+   "AoE"
+  ],
   "image": "data/images/tatari/trippet.png",
   "glitterImage": "data/images/glitter/trippet.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Trippet"
@@ -6389,6 +7011,12 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "ATK Speed Boost",
+   "AoE",
+   "DMG Reduction",
+   "Fragile"
+  ],
   "image": "data/images/tatari/hyphoria.png",
   "glitterImage": "data/images/glitter/hyphoria.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Hyphoria"
@@ -6429,6 +7057,12 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "ATK Speed Boost",
+   "AoE",
+   "DMG Reduction",
+   "Fragile"
+  ],
   "image": "data/images/tatari/ecstamira.png",
   "glitterImage": "data/images/glitter/ecstamira.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Ecstamira"
@@ -6468,6 +7102,9 @@
    }
   },
   "rangeImage": "data/images/range/dewgrub.jpg",
+  "skillTypes": [
+   "Slow"
+  ],
   "image": "data/images/tatari/dewgrub.png",
   "glitterImage": "data/images/glitter/dewgrub.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Dewgrub"
@@ -6507,6 +7144,9 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "Slow"
+  ],
   "image": "data/images/tatari/ripplewing.png",
   "glitterImage": "data/images/glitter/ripplewing.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Ripplewing"
@@ -6546,6 +7186,9 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "Slow"
+  ],
   "image": "data/images/tatari/waveflutter.png",
   "glitterImage": "data/images/glitter/waveflutter.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Waveflutter"
@@ -6585,6 +7228,9 @@
    }
   },
   "rangeImage": "data/images/range/fumekit.jpg",
+  "skillTypes": [
+   "AoE"
+  ],
   "image": "data/images/tatari/fumekit.png",
   "glitterImage": "data/images/glitter/fumekit.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Fumekit"
@@ -6624,6 +7270,9 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "AoE"
+  ],
   "image": "data/images/tatari/sulfunk.png",
   "glitterImage": "data/images/glitter/sulfunk.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Sulfunk"
@@ -6663,6 +7312,9 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "AoE"
+  ],
   "image": "data/images/tatari/magmusk.png",
   "glitterImage": "data/images/glitter/magmusk.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Magmusk"
@@ -6702,6 +7354,9 @@
    }
   },
   "rangeImage": "data/images/range/taptail.jpg",
+  "skillTypes": [
+   "AoE"
+  ],
   "image": "data/images/tatari/taptail.png",
   "glitterImage": "data/images/glitter/taptail.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Taptail"
@@ -6741,6 +7396,10 @@
    }
   },
   "rangeImage": "data/images/range/rattlecoil.jpg",
+  "skillTypes": [
+   "AoE",
+   "Stun"
+  ],
   "image": "data/images/tatari/rattlecoil.png",
   "glitterImage": "data/images/glitter/rattlecoil.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Rattlecoil"
@@ -6780,6 +7439,11 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "AoE",
+   "Pierce",
+   "Stun"
+  ],
   "image": "data/images/tatari/clangnaga.png",
   "glitterImage": "data/images/glitter/clangnaga.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Clangnaga"
@@ -6819,6 +7483,9 @@
    }
   },
   "rangeImage": "data/images/range/kittazap.jpg",
+  "skillTypes": [
+   "AoE"
+  ],
   "image": "data/images/tatari/kittazap.png",
   "glitterImage": "data/images/glitter/kittazap.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Kittazap"
@@ -6858,6 +7525,9 @@
    }
   },
   "rangeImage": "data/images/range/nekowatt.jpg",
+  "skillTypes": [
+   "AoE"
+  ],
   "image": "data/images/tatari/nekowatt.png",
   "glitterImage": "data/images/glitter/nekowatt.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Nekowatt"
@@ -6897,6 +7567,10 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "AoE",
+   "DEF Boost"
+  ],
   "image": "data/images/tatari/voltazar.png",
   "glitterImage": "data/images/glitter/voltazar.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Voltazar"
@@ -6936,6 +7610,10 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "AoE",
+   "Slow"
+  ],
   "image": "data/images/tatari/lollama.png",
   "glitterImage": "data/images/glitter/lollama.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Lollama"
@@ -6975,6 +7653,10 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "AoE",
+   "Blind"
+  ],
   "image": "data/images/tatari/slobberlama.png",
   "glitterImage": "data/images/glitter/slobberlama.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Slobberlama"
@@ -7014,6 +7696,11 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "AoE",
+   "Blind",
+   "Slow"
+  ],
   "image": "data/images/tatari/ptooielama.png",
   "glitterImage": "data/images/glitter/ptooielama.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Ptooielama"
@@ -7053,6 +7740,10 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "AoE",
+   "Summon"
+  ],
   "image": "data/images/tatari/dumbopus.png",
   "glitterImage": "data/images/glitter/dumbopus.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Dumbopus"
@@ -7092,6 +7783,10 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "AoE",
+   "Summon"
+  ],
   "image": "data/images/tatari/dazopus.png",
   "glitterImage": "data/images/glitter/dazopus.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Dazopus"
@@ -7131,6 +7826,10 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "AoE",
+   "Summon"
+  ],
   "image": "data/images/tatari/fishopus.png",
   "glitterImage": "data/images/glitter/fishopus.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Fishopus"
@@ -7170,6 +7869,9 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "Chain"
+  ],
   "image": "data/images/tatari/flameow.png",
   "glitterImage": "data/images/glitter/flameow.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Flameow"
@@ -7209,6 +7911,9 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "Chain"
+  ],
   "image": "data/images/tatari/nekoflare.png",
   "glitterImage": "data/images/glitter/nekoflare.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Nekoflare"
@@ -7248,6 +7953,10 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "ATK Boost",
+   "Chain"
+  ],
   "image": "data/images/tatari/silversear.png",
   "glitterImage": "data/images/glitter/silversear.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Silversear"
@@ -7287,6 +7996,11 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "AoE",
+   "Knockback",
+   "Shredded"
+  ],
   "image": "data/images/tatari/drilleroo.png",
   "glitterImage": "data/images/glitter/drilleroo.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Drilleroo"
@@ -7326,6 +8040,12 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "AoE",
+   "Knockback",
+   "Shredded",
+   "Stun"
+  ],
   "image": "data/images/tatari/cragolin.png",
   "glitterImage": "data/images/glitter/cragolin.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Cragolin"
@@ -7365,6 +8085,12 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "AoE",
+   "Knockback",
+   "Shredded",
+   "Stun"
+  ],
   "image": "data/images/tatari/borelord.png",
   "glitterImage": "data/images/glitter/borelord.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Borelord"
@@ -7405,6 +8131,7 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [],
   "image": "data/images/tatari/zaplet.png",
   "glitterImage": "data/images/glitter/zaplet.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zaplet"
@@ -7445,6 +8172,9 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "Fragile"
+  ],
   "image": "data/images/tatari/synthhog.png",
   "glitterImage": "data/images/glitter/synthhog.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Synthhog"
@@ -7485,6 +8215,9 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "Fragile"
+  ],
   "image": "data/images/tatari/sonarbat.png",
   "glitterImage": "data/images/glitter/sonarbat.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Sonarbat"
@@ -7525,6 +8258,9 @@
    }
   },
   "rangeImage": null,
+  "skillTypes": [
+   "Fragile"
+  ],
   "image": "data/images/tatari/umbraveil.png",
   "glitterImage": "data/images/glitter/umbraveil.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Umbraveil"
@@ -7552,6 +8288,9 @@
   "description": "Those bulging, unblinking eyes give off an eerie sense of knowing, as if resigned to fateful gloom from the shadows. But don't be deceived, for Maskfry is always checking if your scent is worthy of the Dagon.",
   "hordeSkills": null,
   "rangeImage": null,
+  "skillTypes": [
+   "AoE"
+  ],
   "image": "data/images/tatari/maskfry.png",
   "glitterImage": "data/images/glitter/maskfry.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Maskfry"
@@ -7579,6 +8318,9 @@
   "description": "Bones of blasphemy now bulge from Ospisces's back, who's developed an aversion to freshwater. At night, wet, guttural murmurs fill the air, as if repeated from an ancient chant. You might find strange, sprawling doodles in the bathtub, along with what looks like a ritual sacrifice of your slippers to a mysterious being.",
   "hordeSkills": null,
   "rangeImage": null,
+  "skillTypes": [
+   "AoE"
+  ],
   "image": "data/images/tatari/ospisces.png",
   "glitterImage": "data/images/glitter/ospisces.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Ospisces"
@@ -7606,6 +8348,10 @@
   "description": "There's no turning back now. Armorjaw has outgrown the basin, quietly charting a course toward Devil's Reef. When an attempt to reach out is given, only a cold, distant stare is returned, as if quietly questioning your allegiance to humanity.",
   "hordeSkills": null,
   "rangeImage": null,
+  "skillTypes": [
+   "AoE",
+   "Stun"
+  ],
   "image": "data/images/tatari/armorjaw.png",
   "glitterImage": "data/images/glitter/armorjaw.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Armorjaw"
@@ -7633,6 +8379,10 @@
   "description": "Dagondeep is the living tide, a presence that haunts dreams with quiet terror. An ancient body encased in layered scales of armor, each movement echoes the tremors of R'lyeh. Now, the webbed hand beckons: Come, master. There is no need to breathe beneath the sea... and the rent is far cheaper.",
   "hordeSkills": null,
   "rangeImage": null,
+  "skillTypes": [
+   "AoE",
+   "Stun"
+  ],
   "image": "data/images/tatari/dagondeep.png",
   "glitterImage": "data/images/glitter/dagondeep.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Dagondeep"
@@ -7660,6 +8410,10 @@
   "description": "Hootlet believes in time magic and the tail pendulum is a most cherished treasure. Now watch and listen closely... er, was that time magic or sleep magic?",
   "hordeSkills": null,
   "rangeImage": null,
+  "skillTypes": [
+   "AoE",
+   "Slow"
+  ],
   "image": "data/images/tatari/hootlet.png",
   "glitterImage": "data/images/glitter/hootlet.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Hootlet"
@@ -7687,6 +8441,11 @@
   "description": "Tikowl loves answering all kinds of questions, including \"Why do humans hunt and return empty-handed?\" and \"Who should settle Tatari disputes, trainers or Tatari?\" Er, beats me anyhow.",
   "hordeSkills": null,
   "rangeImage": null,
+  "skillTypes": [
+   "AoE",
+   "Slow",
+   "Stun"
+  ],
   "image": "data/images/tatari/tikowl.png",
   "glitterImage": "data/images/glitter/tikowl.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Tikowl"
@@ -7714,6 +8473,11 @@
   "description": "Chronerva claims to be able to freeze time. Just look at Souverelle who falls still as soon as the chanting starts. Now thats a powerful, intelligent Tatari if you ask me!",
   "hordeSkills": null,
   "rangeImage": null,
+  "skillTypes": [
+   "AoE",
+   "Slow",
+   "Stun"
+  ],
   "image": "data/images/tatari/chronerva.png",
   "glitterImage": "data/images/glitter/chronerva.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Chronerva"
@@ -7741,6 +8505,11 @@
   "description": "Time is a cycle that nudges the hands of fate. When the pendulum swings back, we'll be reunited with those we've lost.",
   "hordeSkills": null,
   "rangeImage": null,
+  "skillTypes": [
+   "AoE",
+   "Slow",
+   "Stun"
+  ],
   "image": "data/images/tatari/hypnostrix.png",
   "glitterImage": "data/images/glitter/hypnostrix.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Hypnostrix"
@@ -7768,6 +8537,10 @@
   "description": "Mud is not dirty. It is the most natural sunscreen around, not that anyone who neglects proper skincare would understand.",
   "hordeSkills": null,
   "rangeImage": null,
+  "skillTypes": [
+   "AoE",
+   "Heal"
+  ],
   "image": "data/images/tatari/momopo.png",
   "glitterImage": "data/images/glitter/momopo.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Momopo"
@@ -7795,6 +8568,11 @@
   "description": "Don't assume Lulupo is always eating and soaking in the tub. Aerobics are a regular part of the routine for staying in shape. Eat more, move more. Simple as that.",
   "hordeSkills": null,
   "rangeImage": null,
+  "skillTypes": [
+   "AoE",
+   "Heal",
+   "Shield"
+  ],
   "image": "data/images/tatari/lulupo.png",
   "glitterImage": "data/images/glitter/lulupo.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Lulupo"
@@ -7822,6 +8600,11 @@
   "description": "A skirt made of beautiful flower petals is perfect for the most mesmerizing dance. Feeling a little spellbound? Perfectly understandable.",
   "hordeSkills": null,
   "rangeImage": null,
+  "skillTypes": [
+   "AoE",
+   "Heal",
+   "Shield"
+  ],
   "image": "data/images/tatari/lilypo.png",
   "glitterImage": "data/images/glitter/lilypo.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Lilypo"
@@ -7849,6 +8632,11 @@
   "description": "Whether the world turns to ruins or a giant heap of trash, it's still a one-of-a-kind film set for Gemmapo. After all, a bleak backdrop is perfect for making the colors pop. Oh, here comes the breeze. Hold down that skirt, and stay fabulous.",
   "hordeSkills": null,
   "rangeImage": null,
+  "skillTypes": [
+   "AoE",
+   "Heal",
+   "Shield"
+  ],
   "image": "data/images/tatari/gemmapo.png",
   "glitterImage": "data/images/glitter/gemmapo.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Gemmapo"
@@ -7876,6 +8664,10 @@
   "description": "When emotions get out of control, Blowfin turns into a ball. Hates it when Cactobud is up to no good.",
   "hordeSkills": null,
   "rangeImage": null,
+  "skillTypes": [
+   "AoE",
+   "Heal"
+  ],
   "image": "data/images/tatari/blowfin.png",
   "glitterImage": "data/images/glitter/blowfin.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Blowfin"
@@ -7903,6 +8695,11 @@
   "description": "This aspiring master chef is ready to put on the signature headband and take a slice at those Zobos. Though, Puffbelly is a bit fixated on cutting everything to the right size.",
   "hordeSkills": null,
   "rangeImage": null,
+  "skillTypes": [
+   "ATK Boost",
+   "AoE",
+   "Heal"
+  ],
   "image": "data/images/tatari/puffbelly.png",
   "glitterImage": "data/images/glitter/puffbelly.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Puffbelly"
@@ -7930,6 +8727,11 @@
   "description": "According to humans and Zobos alike, Chefugu smells real good. But careful not to give into temptation -- a single bite could have you writhing on the ground from toxins.",
   "hordeSkills": null,
   "rangeImage": null,
+  "skillTypes": [
+   "ATK Boost",
+   "AoE",
+   "Heal"
+  ],
   "image": "data/images/tatari/chefugu.png",
   "glitterImage": "data/images/glitter/chefugu.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Chefugu"
@@ -7957,6 +8759,11 @@
   "description": "Ahoy captain! Conquering the deepest seas for the freshest ingredients, Pyromaki has taken the culinary world by storm with the ultimate feast!",
   "hordeSkills": null,
   "rangeImage": null,
+  "skillTypes": [
+   "ATK Boost",
+   "AoE",
+   "Heal"
+  ],
   "image": "data/images/tatari/pyromaki.png",
   "glitterImage": "data/images/glitter/pyromaki.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Pyromaki"
@@ -7984,6 +8791,10 @@
   "description": "A go-to source of ambient lighting for romantic confessions often sought out by humans. Glowfly finds the whole thing unbearably mushy, but sees it through most of the time anyway.",
   "hordeSkills": null,
   "rangeImage": null,
+  "skillTypes": [
+   "AoE",
+   "Shield"
+  ],
   "image": "data/images/tatari/glowfly.png",
   "glitterImage": "data/images/glitter/glowfly.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Glowfly"
@@ -8011,6 +8822,11 @@
   "description": "A performer who takes every moment seriously. Phosflare refuses to fight without a personal soundtrack and custom lighting. Currently researching how to get vibrant shimmer effects from the color black.",
   "hordeSkills": null,
   "rangeImage": null,
+  "skillTypes": [
+   "AoE",
+   "Paralyze",
+   "Shield"
+  ],
   "image": "data/images/tatari/phosflare.png",
   "glitterImage": "data/images/glitter/phosflare.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Phosflare"
@@ -8038,6 +8854,11 @@
   "description": "No trick of the light can deceive Glimmerwing. Appears to have little patience for humans and Tatari who get lost, but offers directions all night anyway.",
   "hordeSkills": null,
   "rangeImage": null,
+  "skillTypes": [
+   "AoE",
+   "Paralyze",
+   "Shield"
+  ],
   "image": "data/images/tatari/glimmerwing.png",
   "glitterImage": "data/images/glitter/glimmerwing.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Glimmerwing"
@@ -8065,6 +8886,11 @@
   "description": "Guardian of the long night, who paints galaxies of brilliant stardust that outshine the sun. Though, if your party",
   "hordeSkills": null,
   "rangeImage": null,
+  "skillTypes": [
+   "AoE",
+   "Paralyze",
+   "Shield"
+  ],
   "image": "data/images/tatari/luminastra.png",
   "glitterImage": "data/images/glitter/luminastra.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Luminastra"
@@ -8092,6 +8918,10 @@
   "description": "Enjoys drifting in the hot springs at the foot of a volcano. Sometimes gets pushed along by the sizzling bubbles before realizing the surroundings have changed.",
   "hordeSkills": null,
   "rangeImage": null,
+  "skillTypes": [
+   "AoE",
+   "Burn"
+  ],
   "image": "data/images/tatari/poakie.png",
   "glitterImage": "data/images/glitter/poakie.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Poakie"
@@ -8119,6 +8949,10 @@
   "description": "Loves to press close to the ground, silently sensing distant vibrations as well as changes in temperature and humidity. Whether it's the best resting sot in camp or the newest Zobo hideout, Sizzribb can always tell beforehand, although it'll take some time to actually get moving.",
   "hordeSkills": null,
   "rangeImage": null,
+  "skillTypes": [
+   "AoE",
+   "Burn"
+  ],
   "image": "data/images/tatari/sizzribb.png",
   "glitterImage": "data/images/glitter/sizzribb.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Sizzribb"
@@ -8146,6 +8980,10 @@
   "description": "\"Lickflickers learn about the world by putting things in their mouths, so keep a close eye on your food, gloves, and valuables-especially anything sensitive to heat.\"-Tatari Observation Diary",
   "hordeSkills": null,
   "rangeImage": null,
+  "skillTypes": [
+   "AoE",
+   "Burn"
+  ],
   "image": "data/images/tatari/lickflicker.png",
   "glitterImage": "data/images/glitter/lickflicker.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Lickflicker"
@@ -8173,6 +9011,10 @@
   "description": "Ignitoad's breath is like a slow, churning current of volcanic heat, scorching the earth beneath. The flames that devour Ignitoad's enemies don't come from rage, however, but rather an attempt to keep the ambient temperature just right.",
   "hordeSkills": null,
   "rangeImage": null,
+  "skillTypes": [
+   "AoE",
+   "Burn"
+  ],
   "image": "data/images/tatari/ignitoad.png",
   "glitterImage": "data/images/glitter/ignitoad.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Ignitoad"
@@ -8200,6 +9042,10 @@
   "description": "A mysterious little sprout that prefers to stay hidden in dark, secluded corners. Doesn't know how to say no and often gets dragged out by Buddi for a sunbath.",
   "hordeSkills": null,
   "rangeImage": null,
+  "skillTypes": [
+   "AoE",
+   "Burn"
+  ],
   "image": "data/images/tatari/budboo.png",
   "glitterImage": "data/images/glitter/budboo.png",
   "wikiUrl": null
@@ -8227,6 +9073,7 @@
   "description": "Snapshade was supposed to be temporary decor when the party ran out of flowers, but ended up sticking around. Oof! Do plants usually try to trip every Tatari passing by?",
   "hordeSkills": null,
   "rangeImage": null,
+  "skillTypes": [],
   "image": "data/images/tatari/snapshade.png",
   "glitterImage": "data/images/glitter/snapshade.png",
   "wikiUrl": null
@@ -8254,6 +9101,7 @@
   "description": "Thornwisp loves to cast a menacing shadow, taking pleasure in watching Tatari get scared and scatter. But on cold nights, Thornwisp will secretly extend branches to shield sleeping Tatari from the wind.",
   "hordeSkills": null,
   "rangeImage": null,
+  "skillTypes": [],
   "image": "data/images/tatari/thornwisp.png",
   "glitterImage": "data/images/glitter/thornwisp.png",
   "wikiUrl": null
@@ -8281,6 +9129,7 @@
   "description": "Chomperwraith's massive flower crown finally sprouted, looking like a movie supervillain. Zobos fear the gaping maw, but fellow Tatari find the shadow it casts to be the safest place of all.",
   "hordeSkills": null,
   "rangeImage": null,
+  "skillTypes": [],
   "image": null,
   "glitterImage": null,
   "wikiUrl": null
