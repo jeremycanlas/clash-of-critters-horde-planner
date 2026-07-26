@@ -307,9 +307,11 @@ kbd {
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--type-color, var(--line)) 45%, transparent);
   overflow: hidden;
 }
+/* Sprites are pre-normalised to a 200x200 box with their own padding baked in
+   (tools/normalize_images.py), so they fill their container rather than being
+   inset again here. */
 .token img {
-  width: 88%; height: 88%; object-fit: contain;
-  image-rendering: -webkit-optimize-contrast;
+  width: 100%; height: 100%; object-fit: contain;
   pointer-events: none;
 }
 .token__fallback {
@@ -323,12 +325,27 @@ kbd {
 }
 .token__rank {
   position: absolute; bottom: 1px; right: 3px;
-  min-width: 13px; padding: 0 2px;
+  min-width: 13px; padding: 0 3px;
   border-radius: 3px;
   background: var(--accent); color: var(--accent-ink);
   font-size: 9px; font-weight: 700; text-align: center;
   pointer-events: none;
 }
+
+/* Only offered while a Tatari has no planned level-ups. */
+.token__add {
+  position: absolute; bottom: 1px; right: 2px;
+  width: 15px; height: 15px; padding: 0;
+  display: grid; place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--surface-3);
+  color: var(--text-dim);
+  font: inherit; font-size: 11px; font-weight: 700; line-height: 1;
+  cursor: pointer;
+  transition: background-color 140ms var(--ease-out), color 140ms var(--ease-out);
+}
+.token__add:hover { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
 .token__role { position: absolute; top: 2px; right: 2px; pointer-events: none; }
 
 /* ============================================================ badges */
@@ -374,8 +391,26 @@ kbd {
   max-height: min(46vh, 440px); overflow-y: auto; scrollbar-width: thin;
 }
 .priority:empty::after {
-  content: "Place Tatari on the grid and they show up here.";
+  content: "No level-ups planned yet. Add a step above, or hit + on a Tatari in the formation.";
   display: block; padding: var(--s4) 0; color: var(--text-mute); font-size: 12.5px;
+}
+
+.step-adder {
+  display: flex; align-items: center; gap: var(--s2);
+  margin-bottom: var(--s3);
+  padding: var(--s2);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+}
+.step-adder__field { flex: 1 1 auto; min-width: 0; display: grid; }
+.step-adder__field select { width: 100%; }
+.step-adder__field--level { flex: 0 0 76px; }
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px;
+  margin: -1px; padding: 0; overflow: hidden;
+  clip-path: inset(50%); white-space: nowrap;
 }
 
 .prio {
@@ -400,11 +435,53 @@ kbd {
   border-radius: var(--r-sm);
   background: color-mix(in srgb, var(--type-color, var(--line)) 16%, var(--surface-3));
 }
-.prio__art img { width: 26px; height: 26px; object-fit: contain; }
-.prio__name { font-size: 13px; font-weight: 550; }
-.prio__meta { margin-left: auto; display: flex; align-items: center; gap: 5px; }
+.prio__art img { width: 100%; height: 100%; object-fit: contain; }
+.prio__name {
+  min-width: 0; flex: 1 1 auto;
+  display: flex; align-items: baseline; gap: 5px;
+  font-size: 13px; font-weight: 550;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.prio__repeat { flex: none; color: var(--text-mute); font-size: 10.5px; font-weight: 650; }
+
+.prio__levelwrap { flex: none; display: grid; }
+.prio__level {
+  padding: 3px var(--s1) 3px 5px;
+  font-size: 11.5px; font-weight: 650;
+  background: var(--surface-3);
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+}
+
+.prio__meta { flex: none; display: flex; align-items: center; gap: 5px; }
 .prio__cell { color: var(--text-mute); font-size: 11px; }
-.prio__grip { flex: none; color: var(--text-mute); font-size: 13px; letter-spacing: -2px; }
+
+.prio__drop {
+  flex: none;
+  width: 18px; height: 18px; padding: 0;
+  display: grid; place-items: center;
+  border: 1px solid transparent; border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--text-mute);
+  font: inherit; font-size: 14px; line-height: 1;
+  cursor: pointer;
+  transition: background-color 140ms var(--ease-out), color 140ms var(--ease-out);
+}
+.prio__drop:hover {
+  background: color-mix(in srgb, var(--danger) 16%, transparent);
+  color: color-mix(in srgb, var(--danger) 85%, var(--text));
+}
+
+.prio__grip {
+  flex: none; min-width: 12px;
+  color: var(--text-mute); font-size: 13px; line-height: 1; text-align: center;
+}
+
+.prio--ghost .prio__levelchip {
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: var(--accent); color: var(--accent-ink);
+  font-size: 10.5px; font-weight: 700;
+}
 
 /* ============================================================ roster */
 
@@ -478,7 +555,7 @@ kbd {
   border-radius: var(--r-sm);
   background: color-mix(in srgb, var(--type-color) 13%, transparent);
 }
-.card__art img { width: 92%; height: 92%; object-fit: contain; }
+.card__art img { width: 100%; height: 100%; object-fit: contain; }
 .card__name {
   padding-top: 3px;
   font-size: 11px; font-weight: 550; line-height: 1.25;
@@ -566,7 +643,7 @@ kbd {
   border-radius: var(--r-md);
   background: color-mix(in srgb, var(--type-color) 14%, var(--surface-2));
 }
-.detail__art img { width: 84px; height: 84px; object-fit: contain; }
+.detail__art img { width: 100%; height: 100%; object-fit: contain; }
 .detail__title { display: grid; gap: 4px; }
 .detail__tags { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); }
 .tag {

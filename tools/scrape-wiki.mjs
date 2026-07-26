@@ -348,7 +348,7 @@ async function main() {
     },
     types, roles, typeChart,
     // Your half of the Horde field. Zobos spawn beyond row 0 and never stand here.
-    hordeGrid: { columns: 6, rows: 5, maxDeployed: 15 },
+    hordeGrid: { columns: 6, rows: 5, maxDeployed: 15, maxLevel: 7 },
   };
   await writeFile(path.join(ROOT, 'data/meta.json'), JSON.stringify(meta, null, 2) + '\n');
 
@@ -360,6 +360,12 @@ async function main() {
   console.log('\nWrote data/tatari.json and data/meta.json');
   console.log(`  images: ${imgs[0]} normal, ${imgs[1]} glitter`);
   console.log(`  missing sprites: ${ordered.filter((t) => !t.image).map((t) => t.name).join(', ') || 'none'}`);
+
+  if (withImages) {
+    // Wiki thumbnails share a width, not a box, so raw downloads vary wildly in
+    // apparent size. Normalising is a separate step and safe to re-run.
+    console.log('\nNext: python tools/normalize_images.py');
+  }
 }
 
 main().catch((err) => { console.error(err); process.exit(1); });

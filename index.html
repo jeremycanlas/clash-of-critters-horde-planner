@@ -57,12 +57,26 @@
   <section class="panel panel--priority" aria-labelledby="h-priority">
     <div class="panel__head">
       <h2 id="h-priority">Level-up priority</h2>
-      <button id="btn-priority-auto" class="btn btn--tiny" type="button"
-              title="Order by role: Tank and Guardian first, then Healer, Support, DPS, Specialist">Suggest order</button>
+      <span id="step-count" class="muted"></span>
     </div>
-    <p class="hint">Horde offers three choices each round. This is the order you want to
-      pour levels into — drag to rearrange, top of the list first.</p>
-    <ol id="priority" class="priority" aria-label="Level-up priority order"></ol>
+    <p class="hint">Horde offers three choices each round. Add a step for every level-up
+      you plan to take, in order — a Tatari can appear more than once on its way to
+      level 7, so <em>Sealing&nbsp;3, Cheerling&nbsp;3, Frugagon&nbsp;3, Sealing&nbsp;5</em>
+      is a valid plan. Drag to rearrange.</p>
+
+    <form id="step-adder" class="step-adder" hidden>
+      <label class="step-adder__field">
+        <span class="sr-only">Tatari to level up</span>
+        <select name="slug" class="field field--select"></select>
+      </label>
+      <label class="step-adder__field step-adder__field--level">
+        <span class="sr-only">Target level</span>
+        <select name="level" class="field field--select"></select>
+      </label>
+      <button class="btn btn--primary btn--tiny" type="submit">Add step</button>
+    </form>
+
+    <ol id="priority" class="priority" aria-label="Level-up steps in order"></ol>
   </section>
 
   <!-- ------------------------------------------------ roster -->

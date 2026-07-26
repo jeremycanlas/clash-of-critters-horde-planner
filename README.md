@@ -46,16 +46,35 @@ The front two rows are tinted, and where the wiki records a front/back-row
 preference the summary flags anyone sitting on the wrong side of the field.
 
 **Level-up priority** — Horde offers three cards each round, and some of them
-level something already deployed. The ordered list is the plan for that: drag to
-rearrange, or hit **Suggest order** for a front-line-first pass (Tank → Guardian
-→ Healer → Support → DPS → Specialist, then by how far forward each one sits).
-The rank shows on each grid token so you can read it at a glance.
+level something already deployed. The plan is an ordered list of *steps*, each one
+"take this Tatari to level N". A Tatari appears once per level it should hit on its
+way to 7, so this is a legitimate plan:
 
-**Sharing and export** — **Share link** puts the whole formation in the URL
-(`#v1=frostnip@27,pyropup@12,…`, in priority order) and copies it. **Export**
-writes a JSON file with each placement's cell, row, column and level priority.
-**Import** reads it back. Work in progress is kept in `localStorage`, so a
-reload picks up where you left off.
+| Step | Tatari | Level |
+| --- | --- | --- |
+| 1 | Sealing | 3 |
+| 2 | Cheerling | 3 |
+| 3 | Frugagon | 3 |
+| 4 | Sealing | 5 |
+
+Add steps with the picker at the top of the panel, or hit **+** on any Tatari in
+the formation. Repeated **Add step** walks the same Tatari up one level at a time;
+jump ahead manually and the next offer continues from there rather than back-filling
+the gap. Each row's level is editable in place, rows drag to reorder
+(<kbd>Ctrl</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd> by keyboard), and the same Tatari can't
+be planned at the same level twice. Grid tokens show the level each one is planned
+to *reach*, with the full step sequence in the tooltip.
+
+**Sharing and export** — **Share link** puts the layout and the plan in one
+readable URL and copies it:
+
+```
+#v3=sealing@0,cheerling@1,frugagon@2;sealing.3,cheerling.3,frugagon.3,sealing.5
+```
+
+**Export** writes JSON with each placement's cell/row/column and target level,
+plus the ordered `levelPlan`. **Import** reads it back. Work in progress is kept
+in `localStorage`, so a reload picks up where you left off.
 
 **Your own Tatari** — *+ Add your own* registers a critter the wiki has not
 documented yet. Give several entries the same *evolution line* name and they
@@ -68,20 +87,35 @@ plan still opens on someone else's machine.
 | File | Contents |
 | --- | --- |
 | `data/tatari.json` | 218 Tatari: type, role, tier, evolution line, rarity, skill, flavour text, wiki etymology, sprite paths |
-| `data/meta.json` | type/role lists, the type-effectiveness chart, counts, grid dimensions |
+| `data/meta.json` | type/role lists, the type-effectiveness chart, counts, grid dimensions and level cap |
 | `data/aliases.json` | community nicknames and real-animal search terms, per evolution line |
-| `data/images/tatari/` | 215 normal sprites (200 px) |
-| `data/images/glitter/` | 195 Glitter-form sprites |
+| `data/images/tatari/` | 215 normal sprites, 200×200 |
+| `data/images/glitter/` | 195 Glitter-form sprites, 200×200 |
 
 ### Refreshing from the wiki
 
 ```bash
-node tools/scrape-wiki.mjs
+node tools/scrape-wiki.mjs && python tools/normalize_images.py
 ```
 
-Re-reads <https://clashofcritters.wiki.gg/wiki/Tatari> plus the five element
-pages, rewrites both JSON files, and downloads any sprite it does not already
-have. Add `--no-images` to skip the download pass.
+The scraper re-reads <https://clashofcritters.wiki.gg/wiki/Tatari> plus the five
+element pages, rewrites both JSON files, and downloads any sprite it does not
+already have (`--no-images` skips that pass).
+
+The normalizer then fixes framing. The wiki serves thumbnails at a fixed *width*,
+not a fixed box, so raw downloads range from 200×160 to 200×281 — Sealing rendered
+40% taller than Pearpair, while Blitzmane's art ran flush to all four edges with no
+padding at all. For each sprite the normalizer trims the transparent border, scales
+the artwork so its longest side is 176 px, and centres it on a 200×200 transparent
+square. Same box, same padding, same apparent size for everyone; the CSS can then
+just let sprites fill their container.
+
+Processed files are tagged in PNG metadata, so re-running is a no-op (`--force`
+overrides). It needs Pillow: `python -m pip install Pillow`.
+
+A dozen sprites have to be enlarged slightly because the wiki's original is small —
+Budboo's source is only 148 px — so those are marginally softer. The script lists
+them.
 
 Two things worth knowing about the scrape:
 
@@ -118,12 +152,14 @@ assets/js/
   dnd.js        pointer-based drag controller (mouse + touch)
   grid.js       the 6x5 field
   roster.js     picker, filters, search
-  priority.js   level-up order
+  priority.js   the level-up step plan
   detail.js     per-Tatari sheet
   custom.js     "add your own" editor
   icons.js      inline SVG type and role icons
 data/
-tools/scrape-wiki.mjs
+tools/
+  scrape-wiki.mjs      pull data + sprites from the wiki
+  normalize_images.py  trim and re-frame sprites to a common box
 ```
 
 Type and role icons are hand-drawn SVG rather than wiki rips, so they stay sharp

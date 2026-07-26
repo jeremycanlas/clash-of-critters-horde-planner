@@ -64,6 +64,7 @@
   "hordeGrid": {
     "columns": 6,
     "rows": 5,
-    "maxDeployed": 15
+    "maxDeployed": 15,
+    "maxLevel": 7
   }
 }

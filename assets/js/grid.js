@@ -4,6 +4,7 @@ import { state } from './data.js';
 import * as store from './store.js';
 import { $, artHTML, esc, roleIcon, typeIcon, toast } from './ui.js';
 import { draggable, dropZone } from './dnd.js';
+import { quickAddStep } from './priority.js';
 
 const grid = $('#grid');
 
@@ -38,9 +39,10 @@ export function buildGrid() {
   dropZone({
     selector: '.cell',
     accepts: (target, payload) => {
-      // Anything already deployed is just being moved or swapped, whether it was
-      // picked up from the field or from the priority list.
-      if (store.cellOf(payload.slug) !== null) return true;
+      // Anything already deployed is just being moved or swapped. Plan steps
+      // carry an index rather than a slug and are not placements, so they fall
+      // through and are rejected.
+      if (payload.slug && store.cellOf(payload.slug) !== null) return true;
       const t = state.bySlug.get(payload.slug);
       return !!t && !store.blockedReason(t);
     },
@@ -52,6 +54,13 @@ export function buildGrid() {
       const result = store.place(payload.slug, Number(target.dataset.cell));
       if (!result.ok) toast(result.reason, 'error');
     },
+  });
+
+  grid.addEventListener('click', (e) => {
+    const add = e.target.closest('[data-add-step]');
+    if (!add) return;
+    const slug = store.formation.cells[Number(add.closest('.cell').dataset.cell)];
+    if (slug) quickAddStep(slug);
   });
 
   grid.addEventListener('dblclick', (e) => {
@@ -80,17 +89,25 @@ export function renderGrid() {
       continue;
     }
 
-    const rank = store.formation.priority.indexOf(slug) + 1;
+    // The badge is the level this Tatari is planned to reach - the strategic
+    // question at a glance. Step order is read from the plan panel.
+    const levels = store.plannedLevels(slug);
+    const target = levels.length ? levels[levels.length - 1] : null;
+    const plan = levels.length ? `planned to level ${levels.join(', then ')}` : 'no level-ups planned';
+
     cell.dataset.type = t.type;
     cell.innerHTML = `
       <span class="token" data-type="${t.type}">
         ${artHTML(t)}
         <span class="token__tier">T${t.tier}</span>
         <span class="token__role">${roleIcon(t.role)}</span>
-        ${rank ? `<span class="token__rank" title="Level-up priority ${rank}">${rank}</span>` : ''}
+        ${target
+          ? `<span class="token__rank" title="${t.name} ${plan}">L${target}</span>`
+          : '<button class="token__add" type="button" data-add-step ' +
+            `aria-label="Plan a level-up for ${esc(t.name)}" title="Plan a level-up">+</button>`}
       </span>`;
     cell.setAttribute('aria-label',
-      `${where}: ${t.name}, ${t.type} ${t.role}, tier ${t.tier}, level-up priority ${rank}`);
+      `${where}: ${t.name}, ${t.type} ${t.role}, tier ${t.tier}, ${plan}`);
   }
 }
 
