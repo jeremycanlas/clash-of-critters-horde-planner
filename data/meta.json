@@ -61,6 +61,27 @@
       "strongAgainst": "Lightning"
     }
   },
+  "skillTypeInfo": {
+    "AoE": "The AoE (Area of Effect) attack inflicts damages to multiple enemies in the range at once. This skill type usually comes with wider attack range or/and longer attack distance, but also with slower attack speed.",
+    "ATK Boost": "The Skills with ATK Boost effect can buff the ATK stat of the affected ally(s).",
+    "Burn": "The Skills with Burn effect inflict Fire type damage over time.",
+    "Chain": "The Chain attack inflicts damages to multiple enemies as the strike bounces to another nearby enemy across lanes multiple times.",
+    "Damage Boost": "The Skills with Damage Boost effect can buff the final damage of the affected ally(s).",
+    "DEF Boost": "The Skills with DEF Boost effect can buff the Defense stat of the affected ally(s).",
+    "DMG Boost": "The Skills with Damage Boost effect can buff the final damage of the affected ally(s).",
+    "Fragile": "The Skills with Fragile effect are known to reduce the target's DEF.",
+    "Heal": "The Skills with Heal effects can recover HP for the user or allies.",
+    "Invincible": "The Skills with Invincible effect grant the user to take no damages from enemies' attacks.",
+    "Knockback": "The Skills with Knockback effect can push out the target(s).",
+    "Paralyze": "The Skills with Paralyze effect inflict Lightning type damage over time and delay the target's movement.",
+    "Pierce": "The Pierce attack fires a projectile that can go through the target multiple times on hit, dealing damages to multiple targets similar to AoE.",
+    "Planting": "The Skills with Planting type summon object(s) with special effect(s) on the board.",
+    "Self Heal": "The Skills with Self Heal effects recover the user itself.",
+    "Slow": "The Skills with Slow effects can lower the movement speed of affected targets.",
+    "Split": "The Split attack fires a projectile that splits into multiple projectiles on hit.",
+    "Summon": "Skills with Summon effects summon another targetable unit under certain conditions.",
+    "Weaken": "The Skills with Weaken effect reduces the target's damage."
+  },
   "hordeGrid": {
     "columns": 6,
     "rows": 6,

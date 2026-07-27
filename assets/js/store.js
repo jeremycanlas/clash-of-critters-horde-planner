@@ -39,7 +39,7 @@ export const MODES = {
 // deliberately left at v4 - apply() reads both step shapes, so an existing plan
 // survives the upgrade rather than being thrown away.
 const SAVE_KEY = 'coc.formation.v4';
-const HASH_VERSION = 'v5';
+const HASH_VERSION = 'v6';
 
 /**
  * @typedef {{slug: string, player: number}} Occupant
@@ -48,7 +48,7 @@ const HASH_VERSION = 'v5';
 
 /**
  * @type {{mode: keyof MODES, cells: (Occupant|null)[], bench: Record<number, string[]>,
- *         plan: Step[], name: string, activePlayer: number}}
+ *         plan: Step[], name: string, lf: string, activePlayer: number}}
  */
 export const formation = {
   mode: 'solo',
@@ -56,6 +56,23 @@ export const formation = {
   bench: { 1: [], 2: [] },
   plan: [],
   name: '',
+  /*
+   * Co-op "looking for": what this player still wants a teammate to bring.
+   * It is drawn on the field itself rather than only in the share sheet,
+   * because people post a screenshot of the grid far more often than they use
+   * the download button, and the ask has to survive being cropped out.
+   */
+  /**
+   * Two independent lines, because "I have these, looking for those" is one
+   * sentence and people were having to pick half of it. Either, neither or
+   * both can carry Tatari and a free-text note; only the filled ones are drawn.
+   */
+  lines: {
+    lf: { wants: [], note: '' },
+    have: { wants: [], note: '' },
+  },
+  /** Which of the two the editor is pointed at. */
+  lfMode: 'lf',
   activePlayer: 1,
 };
 
@@ -285,6 +302,53 @@ export function clearAll() {
   formation.cells = Array(CELLS).fill(null);
   formation.bench = { 1: [], 2: [] };
   formation.plan = [];
+  emit();
+}
+
+/** How long an LF line can be before it stops fitting under the field. */
+export const LF_MAX = 60;
+
+/** Sprites past this stop fitting on the field strip, and on the card. */
+export const LF_WANTS_MAX = 6;
+
+/** Point the editor at one of the two lines. */
+export function setLfMode(next) {
+  if (next !== 'lf' && next !== 'have') return;
+  if (formation.lfMode === next) return;
+  formation.lfMode = next;
+  for (const fn of listeners) fn();
+}
+
+export const LF_LABELS = { lf: 'LF:', have: 'HAVE:' };
+export const lfLine = (side = formation.lfMode) => formation.lines[side];
+/** The lines with anything on them, in reading order. */
+export const filledLines = () => ['have', 'lf']
+  .map((side) => ({ side, ...formation.lines[side] }))
+  .filter((l) => l.wants.length || l.note.trim());
+
+/** Name a Tatari on a line, or take it off again. Ignores anything unknown. */
+export function toggleWant(slug, side = formation.lfMode) {
+  if (!state.bySlug.has(slug)) return { ok: false, reason: 'Unknown Tatari' };
+  const line = formation.lines[side];
+  if (!line) return { ok: false, reason: 'Unknown line' };
+  const at = line.wants.indexOf(slug);
+  if (at !== -1) line.wants.splice(at, 1);
+  else {
+    if (line.wants.length >= LF_WANTS_MAX) {
+      return { ok: false, reason: `${LF_LABELS[side]} holds ${LF_WANTS_MAX} at a time` };
+    }
+    line.wants.push(slug);
+  }
+  emit();
+  return { ok: true };
+}
+
+/** What this player wants a teammate to bring. Shown on the field in co-op. */
+export function setLF(text, side = formation.lfMode) {
+  const line = formation.lines[side];
+  const next = String(text ?? '').slice(0, LF_MAX);
+  if (!line || next === line.note) return;
+  line.note = next;
   emit();
 }
 
@@ -565,7 +629,8 @@ function persist() {
   try {
     localStorage.setItem(SAVE_KEY, JSON.stringify({
       mode: formation.mode, cells: formation.cells, bench: formation.bench,
-      plan: formation.plan, name: formation.name,
+      plan: formation.plan, name: formation.name, lf: formation.lf,
+      lines: formation.lines, lfMode: formation.lfMode,
     }));
   } catch { /* private browsing, quota - not worth interrupting the user */ }
 }
@@ -581,7 +646,7 @@ export function restore() {
 }
 
 /** Loads a raw state blob, letting reconcile() enforce every invariant. */
-function apply({ mode: m, cells, bench, plan, name }) {
+function apply({ mode: m, cells, bench, plan, name, lf, lfWants, lfMode, lines }) {
   formation.mode = MODES[m] ? m : 'solo';
   formation.bench = {
     1: Array.isArray(bench?.[1]) ? [...bench[1]] : [],
@@ -600,6 +665,23 @@ function apply({ mode: m, cells, bench, plan, name }) {
   });
   formation.plan = (Array.isArray(plan) ? plan : []).map(toStep).filter(Boolean);
   if (typeof name === 'string') formation.name = name;
+  if (lfMode === 'lf' || lfMode === 'have') formation.lfMode = lfMode;
+
+  const cleanLine = (raw) => ({
+    wants: (Array.isArray(raw?.wants) ? raw.wants : [])
+      .filter((slug) => typeof slug === 'string' && state.bySlug.has(slug))
+      .slice(0, LF_WANTS_MAX),
+    note: typeof raw?.note === 'string' ? raw.note.slice(0, LF_MAX) : '',
+  });
+
+  if (lines) {
+    formation.lines = { lf: cleanLine(lines.lf), have: cleanLine(lines.have) };
+  } else if (lf !== undefined || lfWants !== undefined) {
+    // One line was all there used to be, and lfMode said which one it was.
+    const side = formation.lfMode;
+    formation.lines = { lf: cleanLine(null), have: cleanLine(null) };
+    formation.lines[side] = cleanLine({ wants: lfWants, note: lf });
+  }
   emit();
 }
 
@@ -611,8 +693,11 @@ function apply({ mode: m, cells, bench, plan, name }) {
  * taken. Benched but unplaced Tatari ride along as `player.slug@-`, a step with
  * no level writes `-`, and a step with no note leaves off the `$` entirely.
  *
- * v4 links wrote one Tatari and no note per step, which this grammar contains,
- * so they are still read.
+ * A third segment carries what is not a placement — `n=<name>~lf=<note>~w=<slug+slug>`
+ * — so a shared link arrives with the formation's name and its co-op ask intact.
+ *
+ * v4 links wrote one Tatari and no note per step, and v5 had no third segment.
+ * Both are contained by this grammar, so they are still read.
  */
 export function shareUrl() {
   const tokens = [];
@@ -624,8 +709,20 @@ export function shareUrl() {
     const body = `${s.members.map((m) => `${m.player}.${m.slug}`).join('+')}.${s.level ?? '-'}`;
     return s.note ? `${body}$${encodeNote(s.note)}` : body;
   }).join(',');
+  // Third segment: everything about the formation that is not a placement.
+  // `~` separates the fields rather than `&`, because the fragment is matched
+  // up to the first `&` so that other hash params can sit alongside it.
+  const meta = [];
+  if (formation.name.trim()) meta.push(`n=${encodeNote(formation.name.trim())}`);
+  if (formation.lines.lf.note.trim()) meta.push(`lf=${encodeNote(formation.lines.lf.note.trim())}`);
+  if (formation.lines.lf.wants.length) meta.push(`w=${formation.lines.lf.wants.join('+')}`);
+  if (formation.lines.have.note.trim()) meta.push(`hn=${encodeNote(formation.lines.have.note.trim())}`);
+  if (formation.lines.have.wants.length) meta.push(`hw=${formation.lines.have.wants.join('+')}`);
+
   const url = new URL(location.href);
-  url.hash = tokens.length ? `${HASH_VERSION}=${formation.mode}/${tokens.join(',')};${plan}` : '';
+  url.hash = tokens.length
+    ? `${HASH_VERSION}=${formation.mode}/${tokens.join(',')};${plan};${meta.join('~')}`
+    : '';
   return url.toString();
 }
 
@@ -644,13 +741,13 @@ function safeDecode(text) {
 
 /** @returns {{unknown: string[]}|null} null when the hash held no formation */
 export function fromHash() {
-  const m = location.hash.match(/(?:v5|v4)=([^&]+)/);
+  const m = location.hash.match(/(?:v6|v5|v4)=([^&]+)/);
   if (!m) return null;
 
   const raw = decodeURIComponent(m[1]);
   const slash = raw.indexOf('/');
   const modeName = slash === -1 ? 'solo' : raw.slice(0, slash);
-  const [layoutPart = '', planPart = ''] = raw.slice(slash + 1).split(';');
+  const [layoutPart = '', planPart = '', metaPart = ''] = raw.slice(slash + 1).split(';');
 
   const cells = Array(CELLS).fill(null);
   const bench = { 1: [], 2: [] };
@@ -692,7 +789,37 @@ export function fromHash() {
     });
   }
 
-  apply({ mode: modeName, cells, bench, plan });
+  // v4 and v5 links carry no meta segment, so these stay as they are.
+  let name;
+  let lf;
+  let lfWants;
+  let lfMode;
+  let haveNote;
+  let haveWants;
+  for (const field of metaPart.split('~')) {
+    const eq = field.indexOf('=');
+    if (eq === -1) continue;
+    const key = field.slice(0, eq);
+    const value = field.slice(eq + 1);
+    if (key === 'n') name = safeDecode(value);
+    else if (key === 'lf') lf = safeDecode(value);
+    else if (key === 'w') lfWants = value.split('+').filter(Boolean);
+    else if (key === 'hn') haveNote = safeDecode(value);
+    else if (key === 'hw') haveWants = value.split('+').filter(Boolean);
+    // v6 links written before the two lines existed said which side they meant.
+    else if (key === 'm') lfMode = value;
+  }
+
+  // A link from before the split carries one line plus the side it was on;
+  // apply() folds that into the right half on its own.
+  const lines = (haveNote !== undefined || haveWants !== undefined)
+    ? {
+      lf: { wants: lfWants ?? [], note: lf ?? '' },
+      have: { wants: haveWants ?? [], note: haveNote ?? '' },
+    }
+    : undefined;
+
+  apply({ mode: modeName, cells, bench, plan, name, lf, lfWants, lfMode, lines });
   return { unknown };
 }
 
@@ -712,6 +839,14 @@ export function toJSON() {
     version: 5,
     name: formation.name || 'Untitled formation',
     mode: formation.mode,
+    lookingFor: ['lf', 'have'].reduce((out, side) => {
+      const line = formation.lines[side];
+      out[side] = {
+        note: line.note || null,
+        tatari: line.wants.map((slug) => ({ slug, name: state.bySlug.get(slug)?.name ?? slug })),
+      };
+      return out;
+    }, {}),
     rules: {
       columns: COLS, rows: ROWS, players: playerCount(),
       benchPerPlayer: benchCap(), fieldPerPlayer: fieldCap(), maxLevel: MAX_LEVEL,
@@ -809,6 +944,24 @@ export function fromJSON(data) {
     mode: MODES[data.mode] ? data.mode : 'solo',
     cells, bench, plan,
     name: typeof data.name === 'string' ? data.name : formation.name,
+    // The old shape was a bare string plus a separate list and a mode.
+    lf: typeof data.lookingFor === 'string' ? data.lookingFor : undefined,
+    lfWants: Array.isArray(data.lookingForTatari)
+      ? data.lookingForTatari.map((w) => (typeof w === 'string' ? w : w?.slug)).filter(Boolean)
+      : undefined,
+    lfMode: data.lookingForMode,
+    lines: data.lookingFor && typeof data.lookingFor === 'object'
+      ? {
+        lf: {
+          wants: (data.lookingFor.lf?.tatari ?? []).map((w) => w?.slug ?? w),
+          note: data.lookingFor.lf?.note ?? '',
+        },
+        have: {
+          wants: (data.lookingFor.have?.tatari ?? []).map((w) => w?.slug ?? w),
+          note: data.lookingFor.have?.note ?? '',
+        },
+      }
+      : undefined,
   });
   return { ok: true, unknown };
 }

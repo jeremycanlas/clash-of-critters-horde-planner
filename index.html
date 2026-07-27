@@ -13,8 +13,17 @@
 <header class="topbar">
   <div class="topbar__title">
     <h1>Horde Drafter</h1>
+    <span id="app-version" class="ver-pill"></span>
     <span class="topbar__sub">Clash&nbsp;of&nbsp;Critters</span>
   </div>
+
+  <!-- Sits in the header, not on the field: visible the moment the page opens,
+       but never inside a screenshot of the grid. -->
+  <span class="byline" title="Created by jacc6475 on Discord">
+    <img class="byline__avatar" src="assets/img/jacc6475.jpg" width="26" height="26"
+         alt="" decoding="async">
+    <span class="byline__text">by <b>jacc6475</b></span>
+  </span>
 
   <input id="formation-name" class="field field--name" type="text"
          placeholder="Name this formation" aria-label="Formation name" maxlength="60">
@@ -38,37 +47,85 @@
   </div>
 </header>
 
+<!-- Narrow screens stack the three panels into one long page, so this is the way
+     back up. Plain anchors: it must work before any script runs. Hidden on
+     desktop, where all three are on screen at once. -->
+<nav class="secnav" aria-label="Jump to a section">
+  <a href="#sec-field">Formation</a>
+  <a href="#sec-roster">Roster</a>
+  <a href="#sec-priority">Plan</a>
+</nav>
+
 <main class="layout">
 
   <!-- ------------------------------------------------ battlefield -->
-  <section class="panel panel--field" aria-labelledby="h-field">
+  <section id="sec-field" class="panel panel--field" aria-labelledby="h-field">
     <div class="panel__head">
       <h2 id="h-field">Formation</h2>
       <div class="panel__tools">
-        <label class="check" title="Shade each tile by how many of your Tatari can hit it"><input id="opt-coverage" type="checkbox"> Coverage</label>
-        <label class="check"><input id="opt-glitter" type="checkbox"> Glitter art</label>
+        <label class="check"
+               title="Light the tiles a Tatari can hit, and shade the field by how many cover each tile. Only 72 of the 218 Tatari have a recorded range so far, so the picture is incomplete.">
+          <input id="opt-ranges" type="checkbox"> Ranges <span class="wip">WIP</span></label>
+        <label class="check"><input id="opt-glitter" type="checkbox"> <span class="check__text">Glitter art</span></label>
         <button id="btn-clear-field" class="btn btn--tiny btn--quiet" type="button">Clear field</button>
       </div>
     </div>
 
     <div id="player-tabs" class="ptabs" role="group" aria-label="Player being planned" hidden></div>
 
-    <p class="hint">Zobos advance from the top. Drag Tatari in from the roster, drag them between
+    <!-- Two hints, one shown. Telling a phone to double-click and press Delete
+         describes a keyboard nobody holding it has. -->
+    <p class="hint hint--pointer">Zobos advance from the top. Drag Tatari in from the roster, drag them between
       cells to rearrange, and double-click or press <kbd>Delete</kbd> to take one off the field.</p>
+    <p class="hint hint--touch">Zobos advance from the top. Tap a Tatari in the roster to bring it, then tap it
+      on the bench to drop it into the first free cell. Hold a token to drag it somewhere else, and
+      double-tap to take it off.</p>
+
+    <!-- Co-op only. Sits inside the frame so a screenshot of the grid carries
+         the ask with it, which is how these actually get shared. -->
+    <div id="lf-field" class="lf-input" hidden>
+      <!-- Two lines, one editor. The pair picks which you are adding to; both
+           are drawn on the field, so you can say what you have AND what you
+           still want without two sets of controls competing for the row. -->
+      <div id="lf-mode" class="lf-mode" role="group" aria-label="Which line to edit">
+        <button class="lf-mode__btn" type="button" data-side="lf" aria-pressed="true">LF</button>
+        <button class="lf-mode__btn" type="button" data-side="have" aria-pressed="false">HAVE</button>
+      </div>
+      <div id="lf-wants" class="lf-wants"></div>
+
+      <!-- A listbox rather than a <datalist>: the native one cannot draw the
+           sprite, and the sprite is what makes a Tatari recognisable at a
+           glance. Same search as the roster, so aliases like "toucan" work. -->
+      <div class="lf-search">
+        <input id="lf-pick" class="field field--tiny" type="text" autocomplete="off"
+               role="combobox" aria-expanded="false" aria-controls="lf-suggest"
+               aria-autocomplete="list" placeholder="Add a Tatari…"
+               aria-label="Search the roster by name, animal or nickname">
+        <ul id="lf-suggest" class="lf-suggest" role="listbox" hidden
+            aria-label="Matching Tatari"></ul>
+      </div>
+
+      <input id="lf" class="field field--tiny lf-input__note" type="text" maxlength="60"
+             autocomplete="off" placeholder="…or anything else, e.g. a healer"
+             aria-label="Anything else to put on the line">
+    </div>
 
     <div class="field-frame">
       <div class="field-frame__enemy">Zobos spawn beyond this line</div>
       <div id="grid" class="grid" role="grid" aria-label="Formation grid, 6 columns by 6 rows"></div>
-      <div class="field-frame__base">Your base</div>
+      <p id="field-lf" class="field-frame__lf" hidden></p>
+      <div class="field-frame__base">
+        <span id="field-url" class="field-frame__url"></span>
+        <span>Your base</span>
+      </div>
     </div>
-    <p id="coverage-note" class="hint hint--coverage" hidden></p>
 
     <div id="bench" class="bench"></div>
     <div id="summary" class="summary"></div>
   </section>
 
   <!-- ------------------------------------------------ priority -->
-  <section class="panel panel--priority" aria-labelledby="h-priority">
+  <section id="sec-priority" class="panel panel--priority" aria-labelledby="h-priority">
     <div class="panel__head">
       <h2 id="h-priority">Level-up priority</h2>
       <span id="step-count" class="muted"></span>
@@ -103,7 +160,7 @@
   </section>
 
   <!-- ------------------------------------------------ roster -->
-  <section class="panel panel--roster" aria-labelledby="h-roster">
+  <section id="sec-roster" class="panel panel--roster" aria-labelledby="h-roster">
     <div class="panel__head">
       <h2 id="h-roster">Roster <span id="roster-count" class="muted"></span></h2>
     </div>
@@ -115,6 +172,11 @@
       <div class="filters__row">
         <div id="filter-types" class="chips" role="group" aria-label="Filter by type"></div>
         <div id="filter-roles" class="chips" role="group" aria-label="Filter by role"></div>
+      </div>
+
+      <div class="filters__row">
+        <div id="filter-effects" class="chips chips--text" role="group"
+             aria-label="Filter by what they bring besides damage"></div>
       </div>
 
       <div class="filters__row filters__row--meta">
@@ -145,6 +207,14 @@
   <span class="muted">Your formation stays in your browser. Anonymous visit and
     button counts only — no cookies, no accounts, nothing about what you plan.</span>
   <span id="foot-meta" class="muted"></span>
+  <span class="foot__by">
+    <img class="foot__avatar" src="assets/img/jacc6475.jpg" width="34" height="34"
+         alt="" decoding="async">
+    <span class="foot__byline">
+      Created by <b>jacc6475</b>
+      <span class="muted">on Discord</span>
+    </span>
+  </span>
 </footer>
 
 <!-- ------------------------------------------------ detail popover -->

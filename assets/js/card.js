@@ -10,7 +10,7 @@
 
 import { state } from './data.js';
 import * as store from './store.js';
-import { artOf } from './ui.js';
+import { artOf, APP_VERSION, APP_AUTHOR, SITE_URL } from './ui.js';
 
 /** Logical width. The bitmap is SCALE times this, so text stays crisp. */
 const W = 1080;
@@ -47,6 +47,7 @@ function palette() {
     dim: read('--text-dim', '#a3aab9'),
     mute: read('--text-mute', '#6f7788'),
     accent: read('--accent', '#ffc93c'),
+    ok: read('--ok', '#55c98a'),
     accentInk: read('--accent-ink', '#2a2005'),
     p1: read('--p1', '#4d9dff'),
     p2: read('--p2', '#ff5fa8'),
@@ -244,7 +245,70 @@ function drawField(ctx, colours, sprites, x, y) {
   ctx.fillText('YOUR BASE', x + GRID_W, bottom + 16);
   ctx.letterSpacing = '0px';
   ctx.textAlign = 'left';
-  return bottom + 24;
+
+  // Both co-op lines, banded under the field so they survive a crop to just
+  // the grid — the same reason they are drawn inside the frame in the app.
+  const lines = coop ? store.filledLines() : [];
+  if (!lines.length) return bottom + 24;
+
+  const H = 40;
+  let band = bottom + 26;
+  for (const line of lines) {
+    const ink = line.side === 'have' ? colours.ok : colours.accent;
+    const label = store.LF_LABELS[line.side];
+    const named = line.wants.map((slug) => state.bySlug.get(slug)).filter(Boolean);
+    const note = line.note.trim();
+
+    const done = tint(ctx, ink, 0.14);
+    roundRect(ctx, x, band, GRID_W, H, 8);
+    ctx.fill();
+    done();
+
+    // Measured first so the whole run can be centred in the band.
+    const SP = 30;
+    const GAP = 8;
+    ctx.font = font(15, 800);
+    const labelW = ctx.measureText(label).width;
+    ctx.font = font(13, 700);
+    const chipWs = named.map((t) => SP + 4 + ctx.measureText(t.name).width + 10);
+    const noteW = note ? ctx.measureText(note).width + GAP : 0;
+    const runW = Math.min(
+      labelW + GAP + chipWs.reduce((n, w) => n + w + GAP, 0) + noteW,
+      GRID_W - 20
+    );
+
+    let at = x + (GRID_W - runW) / 2;
+    const mid = band + H / 2;
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.font = font(15, 800);
+    ctx.fillStyle = ink;
+    ctx.fillText(label, at, mid);
+    at += labelW + GAP;
+
+    ctx.font = font(13, 700);
+    named.forEach((t, i) => {
+      const w = chipWs[i];
+      const chip = tint(ctx, colours.bg, 0.5);
+      roundRect(ctx, at, mid - 15, w, 30, 15);
+      ctx.fill();
+      chip();
+
+      const sprite = sprites.get(t.slug);
+      if (sprite) ctx.drawImage(sprite, at + 2, mid - 14, SP - 4, 28);
+      ctx.fillStyle = ink;
+      ctx.fillText(t.name, at + SP, mid + 1);
+      at += w + GAP;
+    });
+
+    if (note) {
+      ctx.fillStyle = colours.text;
+      ctx.fillText(fitText(ctx, note, x + GRID_W - 10 - at), at, mid + 1);
+    }
+    ctx.textBaseline = 'alphabetic';
+    band += H + 8;
+  }
+  return band;
 }
 
 /** The sprites on one step, and the width they take. */
@@ -401,6 +465,9 @@ export async function drawCard({ username = '' } = {}) {
   const slugs = [
     ...store.formation.cells.filter(Boolean).map((o) => o.slug),
     ...store.players().flatMap((p) => store.benchOf(p)),
+    // Asked-for Tatari are on nobody's bench by definition, so they need
+    // fetching too or the LF band draws empty chips.
+    ...store.filledLines().flatMap((l) => l.wants),
   ];
   const sprites = await loadSprites(slugs);
 
@@ -435,7 +502,10 @@ export async function drawCard({ username = '' } = {}) {
   };
 
   const headerH = 96;
-  const fieldH = 42 + store.ROWS * CELL + (store.ROWS - 1) * CELL_GAP + 24;
+  // The LF band only exists in co-op, and only once something is being asked
+  // for; drawField returns past it, so the measure has to agree.
+  const lfH = coop ? store.filledLines().length * 48 : 0;
+  const fieldH = 42 + store.ROWS * CELL + (store.ROWS - 1) * CELL_GAP + 24 + lfH;
   const bodyH = Math.max(fieldH, planHeight());
   const height = PAD + headerH + bodyH + 20 + benchHeight() + 40 + PAD;
 
@@ -498,7 +568,8 @@ export async function drawCard({ username = '' } = {}) {
   // Footer
   ctx.font = font(12.5);
   ctx.fillStyle = colours.mute;
-  ctx.fillText('Horde Drafter · data from the Clash of Critters Wiki', PAD, height - PAD - 4);
+  ctx.fillText(`Horde Drafter v${APP_VERSION} · by ${APP_AUTHOR} on Discord · ${SITE_URL}`,
+    PAD, height - PAD - 4);
 
   return canvas;
 }

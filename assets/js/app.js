@@ -4,10 +4,11 @@ import { load, state } from './data.js';
 import * as store from './store.js';
 import {
   $, $$, glitterOn, toast, downloadJSON, readJSONFile, slugFilename, dragScrollVelocity,
+  APP_VERSION, SITE_URL,
 } from './ui.js';
 import {
   buildGrid, renderGrid, renderBench, renderPlayerTabs, renderSummary,
-  renderCoverage, coverageOn,
+  renderRanges, rangesOn, renderLfSuggestions,
 } from './grid.js';
 import { buildFilters, renderRoster } from './roster.js';
 import { buildPriority, renderPriority } from './priority.js';
@@ -63,6 +64,10 @@ async function main() {
   $('#formation-name').value = store.formation.name;
   $('#foot-meta').textContent =
     `${state.meta.counts.tatari} Tatari · ${state.meta.counts.families} evolution lines · wiki data ${state.meta.scrapedAt}`;
+  // The name is in the markup so it shows without JS; only the version is
+  // filled in, from the one constant that also stamps the share card.
+  $('#app-version').textContent = `v${APP_VERSION}`;
+  $('#field-url').textContent = SITE_URL;
 
   wireToolbar();
   wireDragAutoScroll();
@@ -90,12 +95,97 @@ function nothingBrought(message) {
   return true;
 }
 
+/**
+ * The LF picker: the roster's search, drawn with sprites, driven by both a
+ * pointer and a keyboard. `highlight` is an index into the visible list, or -1
+ * for "nothing chosen yet", which is what typing resets it to.
+ */
+function wireLfSearch() {
+  const input = $('#lf-pick');
+  const list = $('#lf-suggest');
+  let highlight = -1;
+  let count = 0;
+
+  const paint = () => {
+    [...list.children].forEach((li, i) => {
+      const on = i === highlight;
+      li.setAttribute('aria-selected', String(on));
+      li.classList.toggle('is-on', on);
+    });
+    input.setAttribute('aria-activedescendant', highlight >= 0 ? `lf-opt-${highlight}` : '');
+  };
+
+  const close = () => {
+    list.hidden = true;
+    input.setAttribute('aria-expanded', 'false');
+    highlight = -1;
+    count = 0;
+  };
+
+  const take = (i) => {
+    const li = list.children[i];
+    if (!li) return;
+    const result = store.toggleWant(li.dataset.slug);
+    if (!result.ok) toast(result.reason, 'error');
+    input.value = '';
+    close();
+  };
+
+  input.addEventListener('input', () => {
+    count = renderLfSuggestions(input.value);
+    highlight = -1;
+    paint();
+  });
+
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') { close(); return; }
+    if (!count) return;
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      highlight = e.key === 'ArrowDown'
+        ? (highlight + 1) % count
+        : (highlight - 1 + count) % count;
+      paint();
+    } else if (e.key === 'Enter') {
+      // With nothing highlighted, Enter takes the top match — the usual
+      // shortcut when you have typed enough to know what you meant.
+      e.preventDefault();
+      take(highlight === -1 ? 0 : highlight);
+    }
+  });
+
+  // mousedown, not click: blur would otherwise close the list first and the
+  // click would land on nothing.
+  list.addEventListener('mousedown', (e) => {
+    const li = e.target.closest('li');
+    if (!li) return;
+    e.preventDefault();
+    take([...list.children].indexOf(li));
+  });
+
+  input.addEventListener('blur', () => setTimeout(close, 120));
+}
+
 function wireToolbar() {
   $('#formation-name').addEventListener('input', (e) => store.setName(e.target.value));
 
-  $('#opt-coverage').addEventListener('change', (e) => {
-    coverageOn.value = e.target.checked;
-    renderCoverage();
+  $('#lf').addEventListener('input', (e) => store.setLF(e.target.value));
+
+  $('#lf-mode').addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-side]');
+    if (btn) store.setLfMode(btn.dataset.side);
+  });
+
+  $('#lf-wants').addEventListener('click', (e) => {
+    const drop = e.target.closest('[data-drop-want]');
+    if (drop) store.toggleWant(drop.dataset.dropWant);
+  });
+
+  wireLfSearch();
+
+  $('#opt-ranges').addEventListener('change', (e) => {
+    rangesOn.value = e.target.checked;
+    renderRanges();
   });
 
   $('#opt-glitter').addEventListener('change', (e) => {

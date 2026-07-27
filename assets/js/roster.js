@@ -6,14 +6,23 @@ import { TYPES, ROLES } from './icons.js';
 import { $, artHTML, esc, typeIcon, roleIcon, toast } from './ui.js';
 import { draggable, dropZone } from './dnd.js';
 import { openDetail } from './detail.js';
+import { effectGroupsOf, bringsEffect } from './effects.js';
 
 const TIERS = [1, 2, 3, 4];
+
+/** The three effect groups, as filter chips and as markers on each card. */
+const EFFECTS = [
+  { key: 'heal', glyph: '+', label: 'Heals' },
+  { key: 'buff', glyph: '▲', label: 'Buffs' },
+  { key: 'debuff', glyph: '▼', label: 'Debuffs' },
+];
 
 export const filters = {
   query: '',
   types: new Set(),
   roles: new Set(),
   tiers: new Set(),
+  effects: new Set(),
   hideBlocked: false,
   sort: 'default',
 };
@@ -64,7 +73,10 @@ export function buildFilters(onChange) {
               aria-pressed="false" title="${esc(label(v))}">
         ${kind === 'type' ? typeIcon(v, { badge: false })
           : kind === 'role' ? roleIcon(v, { badge: false })
-            : `T${v}`}
+            : kind === 'effect'
+              ? `${EFFECTS.find((e) => e.key === v).glyph}<span>${
+                EFFECTS.find((e) => e.key === v).label}</span>`
+              : `T${v}`}
       </button>`).join('');
 
     host.addEventListener('click', (e) => {
@@ -80,6 +92,8 @@ export function buildFilters(onChange) {
   chips($('#filter-types'), TYPES, filters.types, 'type', (v) => `${v} type`);
   chips($('#filter-roles'), ROLES, filters.roles, 'role', (v) => `${v} role`);
   chips($('#filter-tiers'), TIERS, filters.tiers, 'tier', (v) => `Tier ${v}`);
+  chips($('#filter-effects'), EFFECTS.map((e) => e.key), filters.effects, 'effect',
+    (v) => `${EFFECTS.find((e) => e.key === v).label} — from the base skill or a level-up`);
 
   $('#search').addEventListener('input', (e) => {
     filters.query = e.target.value;
@@ -120,11 +134,35 @@ export function buildFilters(onChange) {
   });
 }
 
+/**
+ * The heal / buff / debuff markers on a card.
+ *
+ * A solid mark is something the Tatari has from the start. A hollow one with a
+ * level number only arrives once you have levelled it that far, and a solid one
+ * carrying a level number means it has the effect already and gains more later.
+ * That distinction is the whole reason these are here rather than a plain dot:
+ * "brings a heal" and "could bring a heal at 5" are different picks.
+ */
+function effectMarks(t) {
+  const groups = effectGroupsOf(t);
+  const marks = EFFECTS.map(({ key, glyph, label }) => {
+    const g = groups[key];
+    if (!g.base && g.level === null) return '';
+    const title = g.base
+      ? `${label} from the start${g.level !== null ? `, and more at level ${g.level}` : ''}`
+      : `${label} only once levelled to ${g.level}`;
+    return `<span class="card__fx" data-fx="${key}" data-base="${g.base}" title="${esc(title)}"
+      >${glyph}${g.level !== null ? `<b>${g.level}</b>` : ''}</span>`;
+  }).filter(Boolean).join('');
+  return marks ? `<span class="card__fxrow">${marks}</span>` : '';
+}
+
 export function resetFilters() {
   filters.query = '';
   filters.types.clear();
   filters.roles.clear();
   filters.tiers.clear();
+  filters.effects.clear();
   filters.hideBlocked = false;
   filters.sort = 'default';
   $('#search').value = '';
@@ -138,6 +176,11 @@ function visible(player) {
     if (filters.types.size && !filters.types.has(t.type)) return false;
     if (filters.roles.size && !filters.roles.has(t.role)) return false;
     if (filters.tiers.size && !filters.tiers.has(t.tier)) return false;
+    // Every chosen effect, not any: picking Heals and Buffs together asks for
+    // one Tatari that does both, which is the question worth asking of a
+    // 15-slot bench. The type and role chips still read as "any".
+    if (filters.effects.size
+      && ![...filters.effects].every((group) => bringsEffect(t, group))) return false;
     if (!matches(t, filters.query)) return false;
     // Only a per-Tatari reason hides a card. A full bench blocks every Tatari
     // at once, and collapsing the roster to the 15 already brought reads as the
@@ -172,7 +215,7 @@ export function renderRoster() {
            role="listitem" tabindex="0" data-slug="${esc(t.slug)}" data-type="${t.type}"
            title="${esc(t.name)} — ${t.type} ${t.role}, T${t.tier}${
              state_ ? `\n${state_}` : ''}${clash ? `\n${clash.name} from the same line is brought` : ''}">
-        <div class="card__art">${artHTML(t)}</div>
+        <div class="card__art">${artHTML(t)}${effectMarks(t)}</div>
         <div class="card__meta">
           <span class="card__tier">T${t.tier}</span>
           ${typeIcon(t.type)}${roleIcon(t.role)}

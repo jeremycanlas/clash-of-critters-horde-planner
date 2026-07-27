@@ -249,6 +249,11 @@ function skillOf(cell) {
  *
  * These describe the base skill. The Horde level-up skills bring their own
  * effects, which are only in their text.
+ *
+ * Each category page also carries a one-line definition of the effect — "The
+ * Skills with ATK Boost effect can buff the ATK stat of the affected ally(s)"
+ * — which is the only place the game's vocabulary is actually explained, so it
+ * comes back too. Not every category has a page, and those simply have none.
  */
 async function parseSkillTypes() {
   const cats = (await api({
@@ -256,6 +261,7 @@ async function parseSkillTypes() {
   })).query.allcategories.map((c) => c.category);
 
   const byName = new Map();
+  const describes = {};
   for (const cat of cats) {
     const type = cat.replace(/^Skill Type:\s*/, '');
     const members = (await api({
@@ -267,9 +273,38 @@ async function parseSkillTypes() {
       if (!byName.has(m.title)) byName.set(m.title, []);
       byName.get(m.title).push(type);
     }
+
+    const blurb = await categoryBlurb(`Category:${cat}`);
+    if (blurb) describes[type] = blurb;
   }
   for (const list of byName.values()) list.sort();
-  return byName;
+  return { byName, describes };
+}
+
+/**
+ * The prose at the top of a category page, with the housekeeping stripped: the
+ * {{stub}} marker, the parent category link, and any leftover templates.
+ *
+ * Redirects are followed — `Skill Type: DMG Boost` points at `Damage Boost`,
+ * and both tags are in live use. Pages whose text is still a "known to TBA"
+ * placeholder count as undescribed, because printing that in the app would be
+ * worse than printing nothing.
+ */
+async function categoryBlurb(title) {
+  const j = await api({
+    action: 'query', titles: title, prop: 'revisions',
+    rvprop: 'content', rvslots: 'main', redirects: 1,
+  });
+  const page = j.query.pages?.[0];
+  const raw = page?.revisions?.[0]?.slots?.main?.content;
+  if (!raw) return null;                       // no page written for this one yet
+
+  const body = raw
+    .replace(/\[\[Category:[^\]]*\]\]/gi, '')
+    .replace(/\{\{[^}]*\}\}/g, '');
+  const text = plain(body);
+  if (!text || /\bTBA\b/i.test(text)) return null;
+  return text;
 }
 
 // ---------------------------------------------------------------- element pages
@@ -470,13 +505,14 @@ async function main() {
   console.log(`  ${hordeSkills.size} evolution lines documented, covering ${skilled}/${list.length} Tatari`);
 
   console.log('Fetching skill types...');
-  const skillTypes = await parseSkillTypes();
+  const { byName: skillTypes, describes: skillTypeInfo } = await parseSkillTypes();
   let typed = 0;
   for (const t of list) {
     t.skillTypes = skillTypes.get(t.name) ?? [];
     if (t.skillTypes.length) typed++;
   }
   console.log(`  ${new Set([...skillTypes.values()].flat()).size} distinct types, on ${typed}/${list.length} Tatari`);
+  console.log(`  ${Object.keys(skillTypeInfo).length} of them carry a description on the wiki`);
 
   console.log('Fetching element pages...');
   const { battleRow, typeChart } = await parseElementPages();
@@ -548,6 +584,9 @@ async function main() {
       },
     },
     types, roles, typeChart,
+    /* What each skill type does, in the wiki's own words. Keyed by the same
+       tag names that land in each Tatari's skillTypes. */
+    skillTypeInfo,
     // Your half of the Horde field. Zobos spawn beyond row 0 and never stand here.
     hordeGrid: { columns: 6, rows: 6, maxDeployed: 15, maxLevel: 7 },
   };

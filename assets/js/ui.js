@@ -27,6 +27,22 @@ export function artHTML(t, { lazy = true } = {}) {
   return `<img src="${esc(src)}" alt="${esc(t.name)}"${lazy ? ' loading="lazy" decoding="async"' : ''}>`;
 }
 
+/**
+ * One source of truth for the version, used by the page footer and stamped on
+ * the share card — so a posted picture says which build drew it, which matters
+ * while the attack-range data is still being filled in.
+ */
+export const APP_VERSION = '1.1.0';
+export const APP_AUTHOR = 'jacc6475';
+
+/**
+ * Drawn on the field frame, because a screenshot of the grid is how these get
+ * passed around and the picture should carry the way back here. Without the
+ * scheme and trailing slash: it has to fit on one line beside "Your base" on a
+ * 320px phone, and nobody types "https://" anyway.
+ */
+export const SITE_URL = 'jeremycanlas.github.io/clash-of-critters-horde-planner';
+
 export { typeIcon, roleIcon };
 
 // ---------------------------------------------------------------- toast

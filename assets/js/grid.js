@@ -7,13 +7,13 @@
  * active player's 15 that has not landed yet.
  */
 
-import { state } from './data.js';
+import { state, matches } from './data.js';
 import * as store from './store.js';
 import { $, artHTML, esc, roleIcon, typeIcon, toast } from './ui.js';
 import { draggable, dropZone } from './dnd.js';
 import { quickAddStep } from './priority.js';
 import { coveredFrom, coverage, hasRange } from './range.js';
-import { effectsOf, GROUP_LABELS } from './effects.js';
+import { effectsOf, GROUP_LABELS, helpFor } from './effects.js';
 
 const grid = $('#grid');
 const benchHost = $('#bench');
@@ -132,6 +132,27 @@ export function buildGrid() {
     const tab = e.target.closest('.ptab');
     if (tab) store.setActivePlayer(Number(tab.dataset.player));
   });
+
+  $('#summary').addEventListener('click', (e) => {
+    const info = e.target.closest('[data-help]');
+    if (info) {
+      helpOpen = helpOpen === info.dataset.help ? null : info.dataset.help;
+      renderSummary();
+      return;
+    }
+    const pick = e.target.closest('[data-pick]');
+    if (!pick) return;
+    const player = store.isCoop()
+      ? Number(pick.closest('.summary__player--effects')
+          .previousElementSibling?.querySelector('[data-player]')?.dataset.player) || null
+      : null;
+    const next = { player, group: pick.dataset.group, type: pick.dataset.pick };
+    const same = openEffect?.player === next.player
+      && openEffect.group === next.group && openEffect.type === next.type;
+    openEffect = same ? null : next;
+    helpOpen = null;
+    renderSummary();
+  });
 }
 
 // ---------------------------------------------------------------- range
@@ -150,6 +171,7 @@ function clearRangePreview() {
  */
 function previewRange(cell, slug) {
   clearRangePreview();
+  if (!rangesOn.value) return;
   if (!slug || !hasRange(slug)) return;
   for (const i of coveredFrom(cell, slug)) {
     const el = grid.children[i];
@@ -163,34 +185,28 @@ function previewRange(cell, slug) {
  * How many of the Tatari on the field can hit each tile. The gaps are the point:
  * a lane nothing covers is where the Zobos walk through.
  */
-export function renderCoverage() {
-  const on = coverageOn.value;
+export function renderRanges() {
+  const on = rangesOn.value;
   grid.classList.toggle('shows-coverage', on);
+  if (!on) clearRangePreview();
 
-  const { counts, known, unknown } = on
+  const { counts } = on
     ? coverage(store.allPlaced())
-    : { counts: [], known: 0, unknown: 0 };
+    : { counts: [] };
 
   for (const cell of grid.children) {
     const n = counts[Number(cell.dataset.cell)] ?? 0;
     if (on && n) cell.dataset.cover = Math.min(n, 4);
     else delete cell.dataset.cover;
   }
-
-  const note = $('#coverage-note');
-  note.hidden = !on;
-  if (!on) return;
-  const blind = counts.filter((n) => !n).length;
-  note.textContent = known
-    ? `${blind} of ${counts.length} tiles uncovered` +
-      (unknown
-        ? ` · ${unknown} on the field ${unknown === 1 ? 'has' : 'have'} no recorded range`
-        : '')
-    : 'None of the Tatari on the field have a recorded range yet.';
 }
 
-/** Whether the coverage view is on. Toggled from the formation panel. */
-export const coverageOn = { value: false };
+/**
+ * Whether the range overlays are on. Off by default, and labelled WIP in the
+ * UI, because the tile patterns are read off in-game screenshots by hand and
+ * only some of the roster has been done — see data/ranges.json.
+ */
+export const rangesOn = { value: false };
 
 // ---------------------------------------------------------------- rendering
 
@@ -247,12 +263,98 @@ export function renderGrid() {
     cell.setAttribute('aria-label',
       `${where}: ${t.name}, ${who}${t.type} ${t.role}, tier ${t.tier}, ${plan}`);
   }
-  renderCoverage();
+  renderRanges();
 }
+
+/**
+ * The "looking for" line: the editable field above, and the copy of it drawn
+ * inside the frame so it survives a screenshot of the grid.
+ *
+ * Co-op only, because it is an ask aimed at the other player.
+ */
+export function renderLF() {
+  const coop = store.isCoop();
+  const side = store.formation.lfMode;
+  const line = store.lfLine(side);
+
+  $('#lf-field').hidden = !coop;
+
+  // The pair carries a count, so the line you are not editing still shows that
+  // it has something on it — otherwise the other half is invisible.
+  for (const btn of $('#lf-mode').children) {
+    const its = store.lfLine(btn.dataset.side);
+    const n = its.wants.length + (its.note.trim() ? 1 : 0);
+    btn.setAttribute('aria-pressed', String(btn.dataset.side === side));
+    btn.innerHTML = `${store.LF_LABELS[btn.dataset.side].replace(':', '')}${
+      n ? `<span class="lf-mode__n">${n}</span>` : ''}`;
+  }
+
+  const note = $('#lf');
+  if (note.value !== line.note) note.value = line.note;
+  note.placeholder = side === 'have'
+    ? '…or anything else you bring'
+    : '…or anything else, e.g. a healer';
+  $('#lf-pick').placeholder = side === 'have' ? 'Add a Tatari you have…' : 'Add a Tatari…';
+
+  const chips = line.wants.map((slug) => state.bySlug.get(slug)).filter(Boolean);
+  $('#lf-wants').innerHTML = chips.map((t) => `
+    <span class="want" data-slug="${esc(t.slug)}" data-type="${esc(t.type)}">
+      ${artHTML(t)}<span class="want__name">${esc(t.name)}</span>
+      <button class="want__x" type="button" data-drop-want="${esc(t.slug)}"
+        aria-label="Take ${esc(t.name)} off this line">×</button>
+    </span>`).join('');
+
+  // On the field, both lines are drawn — that is the whole point of splitting
+  // them — with HAVE first, because it reads as the offer before the ask.
+  const filled = store.filledLines();
+  const shown = $('#field-lf');
+  shown.hidden = !coop || !filled.length;
+  shown.innerHTML = filled.map((l) => {
+    const named = l.wants.map((slug) => state.bySlug.get(slug)).filter(Boolean);
+    return `<span class="field-lf__line" data-mode="${l.side}">
+      <span class="field-lf__tag">${esc(store.LF_LABELS[l.side])}</span>${
+      named.map((t) => `<span class="field-lf__want" data-type="${esc(t.type)}">${
+        artHTML(t)}<span>${esc(t.name)}</span></span>`).join('')
+    }${l.note.trim() ? `<span class="field-lf__note">${esc(l.note.trim())}</span>` : ''}
+    </span>`;
+  }).join('');
+}
+
+/**
+ * The roster's own search, narrowed to a short list and drawn with sprites.
+ * Reusing `matches` means an alias like "toucan" or "panda" finds the Tatari
+ * here exactly as it does in the roster, which is where people learn it.
+ */
+export function renderLfSuggestions(query) {
+  const box = $('#lf-suggest');
+  const q = query.trim();
+  const already = store.lfLine().wants;
+  const hits = q
+    ? state.all.filter((t) => matches(t, q) && !already.includes(t.slug))
+      .slice(0, LF_SUGGESTIONS)
+    : [];
+
+  box.innerHTML = hits.map((t, i) => `
+    <li role="option" id="lf-opt-${i}" aria-selected="false"
+        data-slug="${esc(t.slug)}" data-type="${esc(t.type)}">
+      ${artHTML(t)}
+      <span class="lf-suggest__name">${esc(t.name)}</span>
+      <span class="lf-suggest__meta">${typeIcon(t.type)}${roleIcon(t.role)}T${t.tier}</span>
+    </li>`).join('');
+
+  const open = hits.length > 0;
+  box.hidden = !open;
+  $('#lf-pick').setAttribute('aria-expanded', String(open));
+  return hits.length;
+}
+
+/** Long enough to be useful, short enough not to cover the field on a phone. */
+const LF_SUGGESTIONS = 7;
 
 export function renderPlayerTabs() {
   const coop = store.isCoop();
   tabsHost.hidden = !coop;
+  renderLF();
   if (!coop) return;
 
   tabsHost.innerHTML = store.players().map((player) => {
@@ -410,29 +512,121 @@ export function renderSummary() {
       <div class="summary__group"><span class="summary__label">Roles</span>${
         tally(list, 'role', state.meta.roles)}</div>
     </div>
-    ${effectRows(list)}`).join('')
+    ${effectRows(list, player)}`).join('')
 }
 
 /**
  * What this half of the field brings besides damage: who heals, what it buffs,
  * what it inflicts. Grouped rather than listed flat, because "do we have a heal
  * and a slow" is the question, not "how many skills mention Fragile".
+ *
+ * Each one opens to name who brings it. That was a tooltip, which meant it did
+ * not exist on a phone — and "who is my only healer" is exactly the question
+ * you ask while rearranging the field with your thumb.
  */
-function effectRows(list) {
+function effectRows(list, player) {
   const found = effectsOf(list);
   const rows = ['heal', 'buff', 'debuff'].filter((g) => found[g].length).map((g) => `
     <div class="summary__group">
       <span class="summary__label">${GROUP_LABELS[g]}</span>
-      ${found[g].map((e) => `<span class="tally tally--effect" data-effect="${g}"
-        title="${esc(e.names.join(', '))}">${esc(e.type)}<b>${e.count}</b></span>`).join('')}
+      ${found[g].map((e) => effectTally(g, e, player)).join('')}
     </div>`).join('');
 
   if (!rows) {
-    return `<p class="summary__note">Nothing on the field has a tagged heal, buff or debuff${
+    return `<p class="summary__note">Nothing on the field has a heal, buff or debuff${
       found.untagged ? ` — ${found.untagged} of them are untagged on the wiki` : ''}.</p>`;
   }
-  return `<div class="summary__player summary__player--effects">${rows}</div>`;
+
+  /*
+   * The sources go in a slot of their own, always present and always the same
+   * height, rather than opening inside the row of tallies. Expanding in place
+   * re-wrapped the row and shoved every other effect sideways, so reading the
+   * second one meant hunting for where it had moved to.
+   */
+  const chosen = openEffect?.player === player
+    ? found[openEffect.group]?.find((e) => e.type === openEffect.type)
+    : null;
+
+  return `<div class="summary__player summary__player--effects">${rows}</div>
+    <div class="effect__panel" data-empty="${!chosen}">${
+      chosen ? effectSourceList(chosen) : 'Tap an effect to see who brings it.'}</div>`;
 }
+
+/**
+ * Who brings the selected effect, and what levelling it costs.
+ *
+ * Sprites rather than names alone: you picked these Tatari by their art, and
+ * that is how you recognise them again. The info toggle explains the effect
+ * itself, since the wiki tags skills with these words but never says what any
+ * of them do.
+ */
+function effectSourceList(e) {
+  const help = helpFor(e.type);
+  return `<div class="effect__panelhead">
+      <b>${esc(e.type)}</b>
+      <button class="fx-info" type="button" data-help="${esc(e.type)}"
+        aria-expanded="${helpOpen === e.type}"
+        aria-label="What does ${esc(e.type)} do?">i</button>
+    </div>
+    ${helpOpen === e.type
+    ? `<p class="effect__help"${help ? '' : ' data-missing="true"'}>${
+      help
+        ? `${esc(help)}<span class="effect__helpnote">From the wiki's ${esc(e.type)} category.</span>`
+        : `The wiki does not describe ${esc(e.type)} yet.<span class="effect__helpnote">Its category page is empty or still says TBA.</span>`
+    }</p>`
+    : ''}
+    <ul class="effect__who">${
+  e.sources.map((s) => {
+    const t = state.bySlug.get(slugOfName(s.name));
+    return `<li>${t ? `<span class="who__art">${artHTML(t)}</span>` : ''}${esc(s.name)}${
+      s.level === null
+        ? ' <span class="who__lv">from the start</span>'
+        : ` <span class="who__lv">at level ${s.level}${
+          s.skillName ? ` · ${esc(s.skillName)}` : ''}</span>`
+    }</li>`;
+  }).join('')}</ul>`;
+}
+
+/** Sources carry the display name, and the sprite needs the slug behind it. */
+function slugOfName(name) {
+  return state.all.find((t) => t.name === name)?.slug ?? '';
+}
+
+/** Which effect's plain-words description is showing, if any. */
+let helpOpen = null;
+
+/**
+ * One effect, openable to show its sources.
+ *
+ * The level badge is the point of the whole thing: an effect that only arrives
+ * with a level-5 skill is not something the formation has, it is something the
+ * formation could have, and those read very differently when you are deciding
+ * whether you still need a healer.
+ */
+function effectTally(group, e, player) {
+  const only = e.fromLevel && !e.fromBase;
+  const badge = e.fromLevel
+    ? `<span class="tally__lv" title="${only
+        ? `Only from a level-up skill — needs levelling to ${e.minLevel}`
+        : `Also gained from a level-up skill, from level ${e.minLevel}`}">${
+        only ? '' : '+'}L${e.minLevel}</span>`
+    : '';
+
+  const on = openEffect?.player === player
+    && openEffect.group === group && openEffect.type === e.type;
+
+  return `<button class="tally tally--effect" type="button" data-effect="${group}"
+    data-only-level="${only}" data-pick="${esc(e.type)}" data-group="${group}"
+    aria-pressed="${on}">${esc(e.type)}<b>${e.count}</b>${badge}</button>`;
+}
+
+/**
+ * Which effect's sources are showing. Kept out here because renderSummary()
+ * rewrites the whole block on every change to the field, and losing your place
+ * every time you moved a token would make it useless.
+ * @type {null | {player: number|null, group: string, type: string}}
+ */
+let openEffect = null;
 
 function fieldTatari(player) {
   return store.placedFor(player).map(({ slug }) => state.bySlug.get(slug)).filter(Boolean);

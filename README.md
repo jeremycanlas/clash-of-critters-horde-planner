@@ -21,6 +21,27 @@ npx --yes http-server . -p 8123 -c-1
 Then open <http://localhost:8123>. Any static server works — `python -m http.server`
 if you'd rather not use Node.
 
+Co-op has two lines for talking to a teammate: **LF** ("looking for", amber) and
+**HAVE** ("I am bringing these", green). Either, neither or both can be filled —
+"I have these, looking for those" is one sentence, so making it a choice between
+the two was the wrong shape.
+
+They share one editor rather than taking two rows of controls: a small pair of
+buttons picks which line you are adding to, and each carries a count so the one
+you are not looking at still shows it has something on it. Both are drawn on the
+field, HAVE above LF.
+
+Name Tatari on them and they appear as sprites — the art reads faster than the
+name, and reads the same in any language — with a free text box beside it for
+anything that is not one particular Tatari ("a healer"). The picker runs the
+roster's own search, so aliases work the same way there: "monkey" finds Punchimp
+and Rockfu, "panda" finds the Pandaroot line. It is a listbox rather than a
+native `<datalist>` for one reason — a datalist cannot draw the sprite.
+
+The line is drawn inside the field frame, not just in the share sheet, because
+formations get posted as a screenshot of the grid far more often than through
+the download button, and the ask has to survive being cropped.
+
 ## Privacy
 
 Your formation never leaves your browser. It lives in `localStorage`, so a reload
@@ -42,9 +63,9 @@ included in this repo, so the app needs no network access to run.
 | File | Contents |
 | --- | --- |
 | `data/tatari.json` | 218 Tatari: type, role, tier, evolution line, rarity, skill, flavour text, etymology |
-| `data/meta.json` | type and role lists, the type-effectiveness chart, counts, grid size, level cap |
+| `data/meta.json` | type and role lists, the type-effectiveness chart, what each skill type does, counts, grid size, level cap |
 | `data/aliases.json` | community nicknames and the real animal each line is based on, for search |
-| `data/ranges.json` | attack ranges as tile offsets, recorded by hand |
+| `data/ranges.json` | attack ranges as tile offsets, measured off the diagrams and checked by eye |
 | `data/images/tatari/` | 215 sprites, 200×200 |
 | `data/images/glitter/` | 195 Glitter-form sprites, 200×200 |
 | `data/images/icons/` | the 5 type and 6 role icons, 64×64 |
@@ -56,10 +77,45 @@ which animal a Tatari is based on isn't published anywhere, so those were inferr
 and some are probably wrong. Corrections welcome.
 
 The summary under the field also tallies what your formation brings besides
-damage — heals, buffs and debuffs — from the skill types the wiki tags each
-Tatari with. Hovering a tally names who provides it. That covers 203 of 218
-Tatari, and describes the base skill; anything gained at level 3, 5 or 7 is in
-the level-up skill text rather than counted here.
+damage — heals, buffs and debuffs — and tapping a tally names exactly who brings
+it — with their sprites, since that is how you recognise a Tatari you picked by
+its art — in a panel of its own below the row. Each effect carries an **i**
+button explaining what it does, in the wiki's own words: every tag has a
+`Category:Skill Type: X` page whose opening line defines the effect, and the
+scraper collects those into `meta.json`. 19 of the 32 tags are described that
+way; the rest either have no category page yet (Shield, Stun) or still read
+"known to TBA" (Bind, Blind), and those say so rather than being guessed at.
+The same text is the tooltip on the skill-type chips in a Tatari's detail sheet.
+
+The panel sits below the row. That panel is a fixed size and always
+present: opening the names inside the row re-wrapped it and shoved every other
+effect sideways, so reading a second one meant hunting for where it had gone.
+
+The roster can also be filtered by what a Tatari brings — heals, buffs, debuffs.
+These *intersect*: picking Heals and Buffs asks for one Tatari that does both,
+which is the question worth asking of a 15-slot bench. (The type and role chips
+still read as "any", since nothing is both Fire and Water.) Each
+card carries a small marker per group: **solid** means it has the effect from
+the start, **hollow with a level** means it only arrives once you have levelled
+that far, and **solid with a level** means it has one now and gains another
+later. "Brings a heal" and "could bring a heal at 5" are different picks.
+
+Two sources feed those markers and the field tallies, and the difference shows:
+
+- The **base skill** is tagged by the wiki itself, covering 203 of 218 Tatari.
+  You get these for free.
+- The **Horde level-up skills** at 3, 5 and 7 are only free text upstream, with
+  no tags, so the same vocabulary is matched against the wording. These are
+  marked with the level they arrive at — `L5` when that is the *only* way to get
+  the effect, drawn as a dashed outline because the formation does not have it
+  yet, and `+L5` when a level-up adds to something you already have. The source
+  list names the Tatari, the level and the skill, so "Shellshy at 5 · Bubble
+  Shield" tells you what levelling actually buys.
+
+Matching wording is inference, not data, so it is deliberately cautious: a
+leading `When ...,` clause names what sets a skill off rather than what it does,
+and is not counted — Clucky's "When Weakened allies are nearby, provides
+continuous healing" is a heal, not a Weaken.
 
 Two things are only partly documented upstream, and the app says so rather than
 pretending otherwise:
@@ -72,13 +128,22 @@ pretending otherwise:
   top. Those are shown as pictures on the detail sheet.
 
   The range *overlay* needs tiles rather than pictures, so `data/ranges.json`
-  records them by hand, keyed by evolution line. Dragging a Tatari lights the
-  tiles it would cover from wherever the pointer is, and the **Coverage** toggle
-  shades every tile by how many of your Tatari reach it. Only a couple of lines
-  are filled in so far; anything unrecorded shows no range rather than a guess,
-  because a wrong tile is worse than a missing one in a tool people position by.
-  Adding one is a few minutes with the diagram open — the file explains the
-  format, and contributions are welcome.
+  records them as offsets, keyed by the individual form — range is per-form, and
+  evolving can change the shape and not just the reach. 72 of 218 are recorded.
+
+  It sits behind the **Ranges (WIP)** toggle on the formation panel, off by
+  default, because two thirds of the roster is still blank and a coverage map
+  missing most of your Tatari misleads more than it helps. With it on, dragging
+  or hovering a Tatari lights the tiles it would cover, and the field shades by
+  how many of your Tatari reach each tile. Anything unrecorded shows no range
+  rather than a guess, because a wrong tile is worse than a missing one in a
+  tool people position by.
+
+  `tools/read-range-diagrams.py` measures the tiles off a screenshot, which is
+  most of the work; it cannot reliably tell which tile the Tatari is standing
+  on, so its `sheets` output is meant to be checked by eye before anything is
+  written to the data. `docs/ranges-todo.md` lists what is still missing and
+  why. Contributions are welcome.
 
 ### Refreshing it
 
@@ -112,7 +177,7 @@ assets/js/
   icons.js      type and role icon markup
   analytics.js  anonymous visit counts, published site only
 data/           the scraped roster, images and aliases
-tools/          the wiki scraper and the image normalizer
+tools/          the wiki scraper, the image normalizer, and the range-diagram reader
 ```
 
 ## Deploying your own copy
