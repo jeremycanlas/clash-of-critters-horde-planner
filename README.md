@@ -186,6 +186,27 @@ Fork or clone the repo, then in **Settings → Pages** set *Source* to **Deploy 
 a branch**, branch `main`, folder `/ (root)`. That's all — there's no build step,
 and `.nojekyll` is already committed so Pages serves the files as they are.
 
+## Changelog
+
+### 1.1.0
+
+#### Changes:
+- Polished mobile UI
+- Added Horde Level-Up skills (suggested by u/Nikky-Nami) and Attack Range (if available) on Tatari Information
+- Added Toggle for Tatari range indicators (WIP) (suggested by @lem77)
+  - Added a read-range-diagram tool for measuring Tatari ranges from images
+- Added Buff/Debuff/Heal tracker on the formation panel (suggested by @lem77)
+  - Includes if a Buff/Debuff/Heal comes from a specific horde level-up or not
+- Added a Buff/Debuff/Heal filter for the Roster
+- Added an optional Looking For (LF) on the coop formation panel if you're looking for specific Tatari(s) for a coop partner
+- Also added an optional Have (H) on the coop formation panel
+
+#### Bug Fixes:
+- Fixed the issue where fielded Tataris will disappear on the screen on mobile view. (Reported by u/R2DKK)
+
+### 1.0.0
+- Initial release
+
 ## Credits
 
 Data and art from the [Clash of Critters Wiki](https://clashofcritters.wiki.gg).
