@@ -10,7 +10,7 @@
 
 import { state } from './data.js';
 import * as store from './store.js';
-import { artOf, APP_VERSION, APP_AUTHOR } from './ui.js';
+import { artOf } from './ui.js';
 import { effectsOf, GROUP_LABELS } from './effects.js';
 
 /** Logical width. The bitmap is SCALE times this, so text stays crisp. */
@@ -666,9 +666,12 @@ export async function drawCard({ username = '', full = false } = {}) {
     : 0;
 
   const bodyH = full ? Math.max(fieldH, planHeight()) : fieldH;
+  // The trailing 12 is breathing room under the last row, not a reserved band:
+  // nothing is drawn below the content, so anything more reads as a crop gone
+  // wrong rather than as margin.
   const height = PAD + headerH + bodyH
     + (full ? 20 + benchHeight() : 0)
-    + effectsH + 40 + PAD;
+    + effectsH + 12 + PAD;
 
   const canvas = document.createElement('canvas');
   canvas.width = w * SCALE;
@@ -733,13 +736,6 @@ export async function drawCard({ username = '', full = false } = {}) {
     fill(ctx, colours.line, PAD, y, w - PAD * 2, 1);
     y = drawEffects(ctx, colours, PAD, y + 11, w - PAD * 2, fielded);
   }
-
-  // Footer
-  ctx.font = font(12.5);
-  ctx.fillStyle = colours.mute;
-  ctx.fillText(fitText(ctx,
-    `Horde Drafter v${APP_VERSION} · by ${APP_AUTHOR} on Discord`,
-    w - PAD * 2), PAD, height - PAD - 4);
 
   return canvas;
 }
