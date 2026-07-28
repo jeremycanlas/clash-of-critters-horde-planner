@@ -81,7 +81,45 @@
  * range screenshots — the picture the contributor is copying from is open
  * beside them, and matching it means they never have to translate.
  */
+/*
+ * Thirteen rows of squares is tall. Narrowing the frame shrinks the cells with
+ * it, so the whole board — the reachable ground and the field under it — fits on
+ * screen at once. Seeing the shape entire is the point of drawing it.
+ */
+/* width:100% is load-bearing: auto inline margins on a grid item turn off
+   stretch, so without it the frame collapses to its content and the cap never
+   applies. */
+.contribute .field-frame { width: 100%; max-width: 340px; margin-inline: auto; }
+
 .contribute .cell { cursor: pointer; }
+
+/*
+ * Beyond the line. Hatched with the same stripes as the strip below it, so the
+ * two read as one band of ground that is not yours, and the tiles are outlined
+ * faintly rather than dashed: you can reach them, you can never stand on them.
+ * The distinction matters because a range recorded from the wrong side of the
+ * line is a range recorded against the wrong origin.
+ */
+.contribute .grid--enemy {
+  gap: var(--s1);
+  padding: var(--s2) var(--s2) 0;
+  background:
+    repeating-linear-gradient(-45deg,
+      color-mix(in srgb, var(--text-mute) 16%, transparent) 0 6px,
+      transparent 6px 12px),
+    var(--surface-2);
+}
+.contribute .cell--enemy {
+  border-style: solid;
+  border-color: color-mix(in srgb, var(--line) 65%, transparent);
+  background: color-mix(in srgb, var(--bg) 45%, transparent);
+}
+.contribute .cell--enemy.is-placing:hover {
+  /* Nothing stands here, so hovering must not look like an invitation. */
+  border-color: color-mix(in srgb, var(--line) 65%, transparent);
+  background: color-mix(in srgb, var(--bg) 45%, transparent);
+  cursor: not-allowed;
+}
 .contribute .cell.is-covered {
   border-style: solid;
   border-color: var(--accent);

@@ -53,7 +53,15 @@
 
     <p id="grid-hint" class="hint"></p>
 
+    <!--
+      Two grids, one frame. The upper one is the ground beyond the line, which
+      Tatari can reach into but never stand on; the lower one is the 6x6 they
+      actually occupy. Recorded ranges already reach seven rows past the line,
+      which a 6x6 on its own simply cannot express.
+    -->
     <div class="field-frame">
+      <div id="enemy" class="grid grid--enemy" role="grid"
+           aria-label="Beyond the line, 6 columns by 7 rows — reachable, not standable"></div>
       <div class="field-frame__enemy">Zobos spawn beyond this line</div>
       <div id="grid" class="grid" role="grid" aria-label="Field, 6 columns by 6 rows"></div>
       <div class="field-frame__base"><span>Your base</span></div>
