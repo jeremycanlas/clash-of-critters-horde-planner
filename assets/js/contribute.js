@@ -98,6 +98,7 @@ async function main() {
   // range that reaches a long way forward has room to be drawn.
   picked.origin = { col: Math.floor(COLS / 2), row: ROWS - 1 };
 
+  restoreQueue();
   buildGrid();
   buildKinds();
   // The drafter's roster, whole: its search, filters, cards and detail sheet.
@@ -115,11 +116,13 @@ function wire() {
   $('#kinds').addEventListener('click', (e) => {
     const chip = e.target.closest('[data-kind]');
     if (!chip) return;
-    picked.kind = chip.dataset.kind;
-    // Each reach is its own recording, and carrying tiles across from the last
-    // one is a good way to file a heal range that is really an attack range.
-    picked.tiles.clear();
-    prefillFromData();
+    if (chip.dataset.kind === picked.kind) return;
+    // Each reach is its own edit, so the one in progress is put away rather
+    // than carried across — a heal range that is really an attack range is
+    // exactly the mistake this avoids.
+    saveCurrent();
+    if (picked.slug) loadInto(picked.slug, chip.dataset.kind);
+    else picked.kind = chip.dataset.kind;
     // Coverage is per reach: switching to Heals should show a roster of red,
     // because none of it is recorded yet.
     refreshRoster();
@@ -146,6 +149,8 @@ function wire() {
     const k = key(col - picked.origin.col, row - picked.origin.row);
     if (picked.tiles.has(k)) picked.tiles.delete(k);
     else picked.tiles.add(k);
+    saveCurrent();
+    refreshRoster();
     renderAll();
   });
 
@@ -157,13 +162,54 @@ function wire() {
 
   $('#btn-clear').addEventListener('click', () => {
     picked.tiles.clear();
+    // The note describes the tiles. Starting the shape over while keeping a
+    // prefilled "7 tiles, 3 wide and 3 deep" is how a wrong description gets
+    // filed alongside a right range.
+    $('#note').value = '';
+    saveCurrent();
+    refreshRoster();
     renderAll();
   });
 
   for (const id of ['#from', '#note']) {
-    $(id).addEventListener('input', renderOutput);
-    $(id).addEventListener('change', renderOutput);
+    const sync = () => { saveCurrent(); renderQueue(); renderOutput(); };
+    $(id).addEventListener('input', sync);
+    $(id).addEventListener('change', sync);
   }
+
+  // The queue: clicking an entry returns to it, the × drops it.
+  $('#queue').addEventListener('click', (e) => {
+    const drop = e.target.closest('[data-drop]');
+    if (drop) {
+      queue.delete(queueKey(drop.dataset.drop, drop.dataset.kind));
+      persistQueue();
+      // Dropping the one being edited leaves the grid holding tiles that are no
+      // longer queued, so it is cleared to match.
+      if (drop.dataset.drop === picked.slug && drop.dataset.kind === picked.kind) {
+        picked.tiles.clear();
+      }
+      refreshRoster();
+      renderAll();
+      return;
+    }
+    const open = e.target.closest('[data-open]');
+    if (!open) return;
+    saveCurrent();
+    loadInto(open.dataset.open, open.dataset.kind);
+    refreshRoster();
+    renderAll();
+  });
+
+  $('#btn-queue-clear').addEventListener('click', () => {
+    const n = queue.size;
+    if (!n) return;
+    queue.clear();
+    persistQueue();
+    picked.tiles.clear();
+    refreshRoster();
+    renderAll();
+    toast(`Queue cleared — ${n} edit${n === 1 ? '' : 's'} dropped`);
+  });
 
   $('#btn-copy').addEventListener('click', async () => {
     toast(await copyText(entryText()) ? 'Entry copied' : 'Could not copy — select it and copy by hand',
@@ -171,7 +217,10 @@ function wire() {
   });
 
   $('#btn-download').addEventListener('click', () => {
-    const name = `${picked.kind}-range-${picked.slug ?? 'tatari'}.json`;
+    const n = queue.size;
+    const name = n === 1
+      ? `range-${[...queue.values()][0].kind}-${[...queue.values()][0].slug}.json`
+      : `ranges-${n}-entries.json`;
     const blob = new Blob([entryText()], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -183,10 +232,125 @@ function wire() {
   });
 }
 
+// ---------------------------------------------------------------- the queue
+
+/**
+ * Everything recorded this session, keyed by Tatari and reach.
+ *
+ * Reading ranges is slow and repetitive, and doing one at a time meant one
+ * issue at a time. An edit joins the queue the moment it has a tile on it and
+ * is handed straight back if you return to that Tatari, so leaving one to check
+ * another and coming back is not a loss.
+ *
+ * Keyed by reach as well as slug: a Tatari's attack range and its heal range
+ * are two entries in two different files, and one would otherwise silently
+ * overwrite the other.
+ *
+ * @type {Map<string, {slug: string, kind: string, tiles: string[], note: string,
+ *   from: string, origin: {col: number, row: number}}>}
+ */
+const queue = new Map();
+
+const QUEUE_KEY = 'coc.rangequeue.v1';
+const queueKey = (slug, kind) => `${kind}\n${slug}`;
+
+/** Writes the edit in progress, or drops it once its last tile is taken off. */
+function saveCurrent() {
+  if (!picked.slug) return;
+  const k = queueKey(picked.slug, picked.kind);
+
+  if (!picked.tiles.size) queue.delete(k);
+  else {
+    queue.set(k, {
+      slug: picked.slug,
+      kind: picked.kind,
+      tiles: [...picked.tiles],
+      note: $('#note').value.trim(),
+      from: $('#from').value,
+      origin: { ...picked.origin },
+    });
+  }
+  persistQueue();
+}
+
+/** Picks up a queued edit, or starts one from whatever is already on file. */
+function loadInto(slug, kind) {
+  picked.slug = slug;
+  picked.kind = kind;
+  picked.tiles.clear();
+
+  const held = queue.get(queueKey(slug, kind));
+  if (held) {
+    for (const t of held.tiles) picked.tiles.add(t);
+    $('#note').value = held.note;
+    $('#from').value = held.from;
+    picked.origin = { ...held.origin };
+    return;
+  }
+  $('#note').value = '';
+  prefillFromData();
+}
+
+function persistQueue() {
+  try { localStorage.setItem(QUEUE_KEY, JSON.stringify([...queue.values()])); }
+  catch { /* private mode; the queue just will not outlive the tab */ }
+}
+
+/**
+ * Reading a dozen ranges is an evening's work, and a stray reload should not
+ * cost it.
+ */
+function restoreQueue() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(QUEUE_KEY) || '[]');
+    if (!Array.isArray(raw)) return;
+    for (const e of raw) {
+      if (!e?.slug || !Array.isArray(e.tiles) || !e.tiles.length) continue;
+      queue.set(queueKey(e.slug, e.kind), {
+        slug: e.slug,
+        kind: KINDS.some((k) => k.id === e.kind) ? e.kind : 'attack',
+        tiles: e.tiles.map(String),
+        note: typeof e.note === 'string' ? e.note : '',
+        from: typeof e.from === 'string' ? e.from : 'range diagram',
+        origin: e.origin ?? { col: Math.floor(COLS / 2), row: ROWS - 1 },
+      });
+    }
+  } catch { /* nothing worth keeping */ }
+}
+
+function renderQueue() {
+  const all = [...queue.values()];
+  $('#queue-count').textContent = all.length
+    ? `${all.length} edit${all.length === 1 ? '' : 's'}` : '';
+  $('#btn-queue-clear').disabled = !all.length;
+
+  if (!all.length) {
+    $('#queue').innerHTML =
+      '<p class="hint contrib__aside">Nothing queued. Click a tile and this fills in.</p>';
+    return;
+  }
+
+  $('#queue').innerHTML = all.map((e) => {
+    const t = state.bySlug.get(e.slug);
+    const here = e.slug === picked.slug && e.kind === picked.kind;
+    return `
+      <button class="contrib__qitem" type="button" data-open="${esc(e.slug)}" data-kind="${esc(e.kind)}"
+              aria-current="${here}" title="${esc(t?.name ?? e.slug)} — ${e.kind}, ${e.tiles.length} tiles">
+        ${t ? artHTML(t, { lazy: false }) : ''}
+        <span class="contrib__qname">${esc(t?.name ?? e.slug)}</span>
+        <span class="contrib__qkind" data-kind="${esc(e.kind)}">${esc(e.kind)}</span>
+        <span class="contrib__qn">${e.tiles.length}</span>
+        <span class="contrib__qx" role="button" tabindex="-1" data-drop="${esc(e.slug)}"
+              data-kind="${esc(e.kind)}" aria-label="Take this edit off the queue">&times;</span>
+      </button>`;
+  }).join('');
+}
+
 // ---------------------------------------------------------------- picking
 
 /**
- * The roster, plus a mark on every card saying whether this reach is on file.
+ * The roster, plus a mark on every card saying whether this reach is on file
+ * and whether it is waiting in the queue.
  *
  * Painted after roster.js has rendered rather than from inside it: coverage is
  * this page's business, and a drafter picking a team has no use for knowing
@@ -195,21 +359,25 @@ function wire() {
 function refreshRoster() {
   renderRoster();
   for (const card of document.querySelectorAll('#roster .card')) {
-    card.dataset.range = rangeStatus(card.dataset.slug, picked.kind);
+    const slug = card.dataset.slug;
+    card.dataset.range = rangeStatus(slug, picked.kind);
+    card.dataset.queued = String(queue.has(queueKey(slug, picked.kind)));
   }
 }
 
 /** What a roster card click means here: record this one. */
 function choose(slug) {
-  picked.slug = slug;
-  picked.tiles.clear();
-  $('#note').value = '';
-  prefillFromData();
+  saveCurrent();
+  loadInto(slug, picked.kind);
   // On a phone the roster is a sheet over the grid, and the grid is where you
   // are going next. Above 760px this does nothing.
   closeSheet();
   renderAll();
-  toast(`Recording ${state.bySlug.get(slug)?.name ?? slug}`);
+
+  const held = queue.get(queueKey(slug, picked.kind));
+  toast(held
+    ? `Back to ${state.bySlug.get(slug)?.name ?? slug} — ${held.tiles.length} tiles kept`
+    : `Recording ${state.bySlug.get(slug)?.name ?? slug}`);
 }
 
 /**
@@ -257,6 +425,7 @@ function renderAll() {
   renderChosen();
   renderKinds();
   renderGrid();
+  renderQueue();
   renderOutput();
 }
 
@@ -323,60 +492,87 @@ function renderGrid() {
 // ---------------------------------------------------------------- output
 
 /** Sorted so two people recording the same range produce the same text. */
-function tileList() {
-  return [...picked.tiles]
+function tileList(tiles) {
+  return [...tiles]
     .map((k) => k.split(',').map(Number))
     .sort((a, b) => a[1] - b[1] || a[0] - b[0]);
 }
 
-function entry() {
-  const note = $('#note').value.trim();
-  const from = $('#from').value;
-  return {
-    tiles: tileList(),
-    ...(note ? { note } : {}),
-    from,
-  };
-}
+/** One tile per line reads as a shape; the default puts every number on its
+ *  own line and the pattern disappears. */
+const pretty = (obj) => JSON.stringify(obj, null, 2)
+  .replace(/\[\n\s+(-?\d+),\n\s+(-?\d+)\n\s+\]/g, '[$1, $2]');
 
+/**
+ * The whole queue, grouped by the file each reach belongs in.
+ *
+ * Grouped rather than listed flat because the two destinations take different
+ * shapes — ranges.json is keyed by slug at its top level, effect-ranges.json is
+ * keyed by reach first — and a contributor should not have to work that out from
+ * a paragraph of instructions.
+ */
 function entryText() {
-  if (!picked.slug) return '// Pick a Tatari first.';
-  const body = JSON.stringify({ [picked.slug]: entry() }, null, 2)
-    // One tile per line reads as a shape; the default breaks every number onto
-    // its own line and the pattern disappears.
-    .replace(/\[\n\s+(-?\d+),\n\s+(-?\d+)\n\s+\]/g, '[$1, $2]');
-  return body;
+  const all = [...queue.values()];
+  if (!all.length) return '// Click a tile and the entry appears here.';
+
+  const attack = all.filter((e) => e.kind === 'attack');
+  const effects = all.filter((e) => e.kind !== 'attack');
+  const body = (e) => ({
+    tiles: tileList(e.tiles),
+    ...(e.note ? { note: e.note } : {}),
+    from: e.from,
+  });
+
+  const out = [];
+  if (attack.length) {
+    out.push('// data/ranges.json  →  "bySlug"',
+      pretty(Object.fromEntries(attack.map((e) => [e.slug, body(e)]))));
+  }
+  if (effects.length) {
+    const byKind = {};
+    for (const e of effects) {
+      byKind[e.kind] ??= { bySlug: {} };
+      byKind[e.kind].bySlug[e.slug] = body(e);
+    }
+    if (attack.length) out.push('');
+    out.push('// data/effect-ranges.json', pretty(byKind));
+  }
+  return out.join('\n');
 }
 
 function renderOutput() {
-  const kind = KINDS.find((k) => k.id === picked.kind);
-  const n = picked.tiles.size;
+  const all = [...queue.values()];
+  const text = entryText();
+  const nameOf = (slug) => state.bySlug.get(slug)?.name ?? slug;
 
-  $('#out').textContent = entryText();
-  $('#out-target').textContent = picked.slug
-    ? `${n} tile${n === 1 ? '' : 's'}. This belongs in ${kind.file}, under "bySlug".`
+  $('#out').textContent = text;
+  $('#out-target').textContent = all.length
+    ? `${all.length} edit${all.length === 1 ? '' : 's'} across ${
+      new Set(all.map((e) => KINDS.find((k) => k.id === e.kind).file)).size} file${
+      new Set(all.map((e) => e.kind === 'attack')).size > 1 ? 's' : ''}.`
     : 'Pick a Tatari and click its tiles, and the entry appears here.';
 
-  for (const id of ['#btn-copy', '#btn-download']) $(id).disabled = !picked.slug || !n;
+  const ready = all.length > 0;
+  for (const id of ['#btn-copy', '#btn-download']) $(id).disabled = !ready;
+  $('#btn-issue').classList.toggle('is-disabled', !ready);
 
-  const title = picked.slug
-    ? `${kind.label} range: ${state.bySlug.get(picked.slug)?.name ?? picked.slug}`
-    : 'Range data';
+  const title = all.length === 1
+    ? `${KINDS.find((k) => k.id === all[0].kind).label} range: ${nameOf(all[0].slug)}`
+    : `Range data: ${all.length} entries`;
+
   const body = [
-    `**Tatari:** ${state.bySlug.get(picked.slug)?.name ?? '?'} (\`${picked.slug ?? '?'}\`)`,
-    `**Reach:** ${kind.label}`,
-    `**File:** \`${kind.file}\` under \`bySlug\``,
+    ...all.map((e) => `- **${nameOf(e.slug)}** (\`${e.slug}\`) — ${
+      KINDS.find((k) => k.id === e.kind).label}, ${e.tiles.length} tiles`),
     '',
     'Recorded with the [range recorder](https://jeremycanlas.github.io/clash-of-critters-horde-planner/contribute.html).',
     '',
     '```json',
-    entryText(),
+    text,
     '```',
   ].join('\n');
 
   $('#btn-issue').href =
     `https://github.com/${REPO}/issues/new?title=${encodeURIComponent(title)}&body=${encodeURIComponent(body)}`;
-  $('#btn-issue').classList.toggle('is-disabled', !picked.slug || !n);
 }
 
 main();
