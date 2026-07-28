@@ -10,7 +10,8 @@
 
 import { state } from './data.js';
 import * as store from './store.js';
-import { artOf, APP_VERSION, APP_AUTHOR, SITE_URL } from './ui.js';
+import { artOf, APP_VERSION, APP_AUTHOR } from './ui.js';
+import { effectsOf, GROUP_LABELS } from './effects.js';
 
 /** Logical width. The bitmap is SCALE times this, so text stays crisp. */
 const W = 1080;
@@ -110,40 +111,86 @@ function sectionLabel(ctx, colours, text, x, y) {
   return y + 18;
 }
 
+/** Every Tatari a card draws: the field, both benches, the co-op lines. */
+export function cardSlugs() {
+  return [
+    ...store.formation.cells.filter(Boolean).map((o) => o.slug),
+    ...store.players().flatMap((p) => store.benchOf(p)),
+    // Asked-for Tatari are on nobody's bench by definition, so they need
+    // fetching too or the LF band draws empty chips.
+    ...store.filledLines().flatMap((l) => l.wants),
+  ];
+}
+
+/**
+ * Decoded sprites, keyed by slug and source. A source rather than a slug alone
+ * because the glitter toggle swaps the art under it.
+ *
+ * @type {Map<string, Promise<HTMLImageElement|null>>}
+ */
+const warmed = new Map();
+
+const spriteKey = (slug, src) => `${slug}\n${src}`;
+
+/**
+ * Starts decoding the sprites a card would need, long before anyone asks for
+ * one.
+ *
+ * Pressing Share should not be the moment the download begins, and reading the
+ * page's own image elements is not enough either — one that has not decoded yet
+ * is skipped, which is most of them on a formation restored at load.
+ *
+ * Warming on every change means the picture is ready before anyone asks for it,
+ * and holding the promises rather than the results means a Share pressed
+ * immediately waits on the requests already in flight instead of starting its
+ * own.
+ */
+export function warmSprites(slugs = cardSlugs()) {
+  for (const slug of new Set(slugs)) {
+    const src = artOf(state.bySlug.get(slug) ?? {});
+    if (!src) continue;
+    const key = spriteKey(slug, src);
+    if (warmed.has(key)) continue;
+
+    const img = new Image();
+    img.fetchPriority = 'high';
+    img.src = src;
+
+    /*
+     * load/error, not decode(). decode() never settles for these images in
+     * Chrome — measured on eleven sprites that were all sitting there complete
+     * with a naturalWidth of 200, every one of them still pending after ten
+     * seconds. Every sprite therefore missed its deadline and the card drew
+     * empty tiles. A complete image is drawable; that is the whole test.
+     */
+    warmed.set(key, new Promise((resolve) => {
+      if (img.complete) { resolve(img.naturalWidth ? img : null); return; }
+      img.addEventListener('load', () => resolve(img), { once: true });
+      img.addEventListener('error', () => resolve(null), { once: true });
+    }));
+  }
+}
+
 /**
  * The sprites the card needs, skipping the ones with no art.
  *
- * Every Tatari on the card is also on the page, so the drawn <img> elements are
- * reused wherever possible. That matters: a fresh Image().decode() queues behind
- * the roster's several hundred sprites, and waiting on that pipeline can take
- * many seconds. Anything genuinely new waits, but not forever - a card missing
- * one sprite beats a card that never appears.
+ * These are nearly always already decoded by the time this runs; the timeout is
+ * only there so a card still appears when one sprite is genuinely unreachable.
+ * A card missing one sprite beats a card that never arrives.
  */
 async function loadSprites(slugs) {
   const sprites = new Map();
-  // naturalWidth, not complete: an image can be decoded and perfectly drawable
-  // while its load event is still pending, and those are exactly the sprites
-  // already on screen.
-  const onPage = new Map();
-  for (const img of document.images) {
-    if (img.naturalWidth) onPage.set(img.currentSrc || img.src, img);
-  }
+  warmSprites(slugs);
 
   await Promise.all([...new Set(slugs)].map(async (slug) => {
     const src = artOf(state.bySlug.get(slug) ?? {});
     if (!src) return;
 
-    const drawn = onPage.get(new URL(src, location.href).href);
-    if (drawn) { sprites.set(slug, drawn); return; }
-
-    const img = new Image();
-    img.fetchPriority = 'high';
-    img.src = src;
-    await Promise.race([
-      img.decode().catch(() => {}),
-      new Promise((resolve) => { setTimeout(resolve, 2500); }),
+    const img = await Promise.race([
+      warmed.get(spriteKey(slug, src)),
+      new Promise((resolve) => { setTimeout(() => resolve(null), 8000); }),
     ]);
-    if (img.complete && img.naturalWidth) sprites.set(slug, img);
+    if (img?.naturalWidth) sprites.set(slug, img);
   }));
   return sprites;
 }
@@ -218,15 +265,45 @@ function drawField(ctx, colours, sprites, x, y) {
         ctx.textAlign = 'left';
       }
 
-      // Planned target, the one number worth reading off a formation at a glance.
+      /*
+       * The planned level and where it falls in the order — the two numbers
+       * worth reading off a formation at a glance. The step number rides on the
+       * level badge exactly as it does on the token in the app, because a
+       * posted picture is where most people read a plan and "which one first"
+       * is the question a plan answers.
+       */
       const target = store.topLevel(occ.slug, occ.player);
-      if (target !== null) {
+      const seat = store.planPositionOf(occ.slug, occ.player);
+      if (target !== null || seat !== null) {
+        const label = target !== null ? `L${target}` : '';
         ctx.font = font(12, 800);
-        const label = `L${target}`;
-        const w = ctx.measureText(label).width + 10;
-        fill(ctx, colours.accent, cx + CELL - w - 4, cy + CELL - 20, w, 16, 4);
-        ctx.fillStyle = colours.accentInk;
-        ctx.fillText(label, cx + CELL - w + 1, cy + CELL - 8);
+        const labelW = label ? ctx.measureText(label).width : 0;
+        const discW = seat !== null ? 14 : 0;
+        const gap = label && discW ? 4 : 0;
+        const w = labelW + discW + gap + 10;
+        const bx = cx + CELL - w - 4;
+        const by = cy + CELL - 20;
+
+        fill(ctx, colours.accent, bx, by, w, 16, 4);
+
+        let tx = bx + 5;
+        if (seat !== null) {
+          const done = tint(ctx, colours.accentInk, 0.82);
+          roundRect(ctx, tx, by + 2, discW, 12, 6);
+          ctx.fill();
+          done();
+          ctx.fillStyle = colours.accent;
+          ctx.font = font(9.5, 800);
+          ctx.textAlign = 'center';
+          ctx.fillText(String(seat), tx + discW / 2, by + 11.5);
+          ctx.textAlign = 'left';
+          tx += discW + gap;
+        }
+        if (label) {
+          ctx.fillStyle = colours.accentInk;
+          ctx.font = font(12, 800);
+          ctx.fillText(label, tx, by + 12);
+        }
       }
       if (coop) {
         ctx.font = font(11, 800);
@@ -458,18 +535,91 @@ function drawBench(ctx, colours, sprites, x, y, width) {
  * Draws the card and returns the canvas.
  * @param {{username?: string}} options
  */
-export async function drawCard({ username = '' } = {}) {
+/**
+ * What the formation brings besides damage, laid out the way the panel under
+ * the field lays it out.
+ *
+ * It belongs in the picture because "has this team got a heal" is the first
+ * thing anyone reading a posted formation asks, and working it out from sprites
+ * is exactly the counting the tool exists to do for you.
+ *
+ * Returns the y it finished at, so the same call measures and draws.
+ */
+function drawEffects(ctx, colours, x, y, width, list) {
+  const found = effectsOf(list);
+  const groups = ['heal', 'buff', 'debuff'].filter((g) => found[g].length);
+  if (!groups.length) return y;
+
+  const colourOf = { heal: colours.ok, buff: colours.accent, debuff: colours.p2 };
+  const LABEL_W = 82;
+  const H = 22;
+  const GAP = 6;
+
+  for (const group of groups) {
+    const colour = colourOf[group];
+    const top = y;
+    let cx = x + LABEL_W;
+
+    for (const e of found[group]) {
+      // A level-only effect is something the formation could have, not
+      // something it has, and the dashed outline says so here as on the page.
+      const only = e.fromLevel && !e.fromBase;
+      const text = `${e.type} ${e.count}${
+        e.fromLevel ? `  ${only ? '' : '+'}L${e.minLevel}` : ''}`;
+
+      ctx.font = font(12, 600);
+      const chipW = ctx.measureText(text).width + 18;
+      if (cx > x + LABEL_W && cx + chipW > x + width) {
+        cx = x + LABEL_W;
+        y += H + GAP;
+      }
+
+      if (!only) {
+        ctx.save();
+        ctx.globalAlpha = 0.14;
+        fill(ctx, colour, cx, y, chipW, H, H / 2);
+        ctx.restore();
+      }
+      ctx.save();
+      if (only) ctx.setLineDash([4, 3]);
+      ctx.strokeStyle = colour;
+      ctx.lineWidth = 1;
+      roundRect(ctx, cx + 0.5, y + 0.5, chipW - 1, H - 1, H / 2);
+      ctx.stroke();
+      ctx.restore();
+
+      ctx.fillStyle = colour;
+      ctx.font = font(12, 600);
+      ctx.fillText(text, cx + 9, y + 15);
+      cx += chipW + GAP;
+    }
+
+    // Drawn after the chips so the label sits on the first row of a group that
+    // wrapped onto several.
+    ctx.font = font(11, 700);
+    ctx.fillStyle = colours.mute;
+    ctx.letterSpacing = '1.2px';
+    ctx.fillText(GROUP_LABELS[group].toUpperCase(), x, top + 15);
+    ctx.letterSpacing = '0px';
+
+    y += H + 10;
+  }
+  return y;
+}
+
+export async function drawCard({ username = '', full = false } = {}) {
   const colours = palette();
   const coop = store.isCoop();
 
-  const slugs = [
-    ...store.formation.cells.filter(Boolean).map((o) => o.slug),
-    ...store.players().flatMap((p) => store.benchOf(p)),
-    // Asked-for Tatari are on nobody's bench by definition, so they need
-    // fetching too or the LF band draws empty chips.
-    ...store.filledLines().flatMap((l) => l.wants),
-  ];
-  const sprites = await loadSprites(slugs);
+  /*
+   * Grid-only is the narrow card: the field and nothing beside it, which is
+   * what gets posted. The full card keeps the wide canvas, because the plan
+   * sits in a column to the right of the field and the benches run the whole
+   * way across it.
+   */
+  const w = full ? W : PAD * 2 + GRID_W;
+
+  const sprites = await loadSprites(cardSlugs());
 
   // Measure first: the plan and the benches decide how tall the card is.
   const probe = document.createElement('canvas').getContext('2d');
@@ -506,21 +656,32 @@ export async function drawCard({ username = '' } = {}) {
   // for; drawField returns past it, so the measure has to agree.
   const lfH = coop ? store.filledLines().length * 48 : 0;
   const fieldH = 42 + store.ROWS * CELL + (store.ROWS - 1) * CELL_GAP + 24 + lfH;
-  const bodyH = Math.max(fieldH, planHeight());
-  const height = PAD + headerH + bodyH + 20 + benchHeight() + 40 + PAD;
+
+  // On both cards, so measured for both. drawEffects returns its own bottom,
+  // which lets the probe run the measurement rather than duplicating the wrap.
+  const fielded = store.allPlaced()
+    .map(({ slug }) => state.bySlug.get(slug)).filter(Boolean);
+  const effectsH = fielded.length
+    ? drawEffects(probe, colours, 0, 0, w - PAD * 2, fielded) + 12
+    : 0;
+
+  const bodyH = full ? Math.max(fieldH, planHeight()) : fieldH;
+  const height = PAD + headerH + bodyH
+    + (full ? 20 + benchHeight() : 0)
+    + effectsH + 40 + PAD;
 
   const canvas = document.createElement('canvas');
-  canvas.width = W * SCALE;
+  canvas.width = w * SCALE;
   canvas.height = Math.round(height) * SCALE;
   const ctx = canvas.getContext('2d');
   ctx.scale(SCALE, SCALE);
   ctx.textBaseline = 'alphabetic';
 
-  fill(ctx, colours.bg, 0, 0, W, height);
-  fill(ctx, colours.surface, PAD - 16, PAD - 16, W - (PAD - 16) * 2, height - (PAD - 16) * 2, 18);
+  fill(ctx, colours.bg, 0, 0, w, height);
+  fill(ctx, colours.surface, PAD - 16, PAD - 16, w - (PAD - 16) * 2, height - (PAD - 16) * 2, 18);
   ctx.strokeStyle = colours.line;
   ctx.lineWidth = 1;
-  roundRect(ctx, PAD - 16.5, PAD - 16.5, W - (PAD - 16) * 2 + 1, height - (PAD - 16) * 2 + 1, 18);
+  roundRect(ctx, PAD - 16.5, PAD - 16.5, w - (PAD - 16) * 2 + 1, height - (PAD - 16) * 2 + 1, 18);
   ctx.stroke();
 
   // Header
@@ -532,44 +693,53 @@ export async function drawCard({ username = '' } = {}) {
   ctx.font = font(34, 700);
   ctx.fillStyle = colours.text;
   ctx.fillText(
-    fitText(ctx, store.formation.name || 'Untitled formation', W - PAD * 2 - bylineW - 24),
+    fitText(ctx, store.formation.name || 'Untitled formation', w - PAD * 2 - bylineW - 24),
     PAD, y
   );
   if (byline) {
     ctx.font = font(15, 600);
     ctx.fillStyle = colours.accent;
     ctx.textAlign = 'right';
-    ctx.fillText(byline, W - PAD, y - 2);
+    ctx.fillText(byline, w - PAD, y - 2);
     ctx.textAlign = 'left';
   }
 
   y += 26;
   ctx.font = font(14.5);
   ctx.fillStyle = colours.dim;
-  ctx.fillText([
+  ctx.fillText(fitText(ctx, [
     'Horde Invasion',
     store.mode().label,
     `${store.COLS} × ${store.ROWS} field`,
     `${store.allPlaced().length} of ${store.fieldCap() * store.playerCount()} deployed`,
-  ].join('  ·  '), PAD, y);
+  ].join('  ·  '), w - PAD * 2), PAD, y);
 
   y += 18;
-  fill(ctx, colours.line, PAD, y, W - PAD * 2, 1);
+  fill(ctx, colours.line, PAD, y, w - PAD * 2, 1);
   y += 8;
 
   // Body
-  const planBottom = drawPlan(ctx, colours, sprites, PAD + GRID_W + 32, y, RIGHT_W);
   const fieldBottom = drawField(ctx, colours, sprites, PAD, y);
-  y = Math.max(planBottom, fieldBottom) + 12;
+  y = full
+    ? Math.max(drawPlan(ctx, colours, sprites, PAD + GRID_W + 32, y, RIGHT_W), fieldBottom) + 12
+    : fieldBottom + 12;
 
-  fill(ctx, colours.line, PAD, y, W - PAD * 2, 1);
-  y = drawBench(ctx, colours, sprites, PAD, y + 8, W - PAD * 2);
+  if (full) {
+    fill(ctx, colours.line, PAD, y, w - PAD * 2, 1);
+    y = drawBench(ctx, colours, sprites, PAD, y + 8, w - PAD * 2);
+  }
+
+  if (fielded.length) {
+    fill(ctx, colours.line, PAD, y, w - PAD * 2, 1);
+    y = drawEffects(ctx, colours, PAD, y + 11, w - PAD * 2, fielded);
+  }
 
   // Footer
   ctx.font = font(12.5);
   ctx.fillStyle = colours.mute;
-  ctx.fillText(`Horde Drafter v${APP_VERSION} · by ${APP_AUTHOR} on Discord · ${SITE_URL}`,
-    PAD, height - PAD - 4);
+  ctx.fillText(fitText(ctx,
+    `Horde Drafter v${APP_VERSION} · by ${APP_AUTHOR} on Discord`,
+    w - PAD * 2), PAD, height - PAD - 4);
 
   return canvas;
 }

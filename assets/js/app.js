@@ -4,25 +4,31 @@ import { load, state } from './data.js';
 import * as store from './store.js';
 import {
   $, $$, glitterOn, toast, downloadJSON, readJSONFile, slugFilename, dragScrollVelocity,
-  APP_VERSION, SITE_URL,
+  APP_VERSION,
 } from './ui.js';
 import {
   buildGrid, renderGrid, renderBench, renderPlayerTabs, renderSummary,
-  renderRanges, rangesOn, renderLfSuggestions,
+  renderRanges, rangesOn, renderLfSuggestions, bossPullOn,
 } from './grid.js';
 import { buildFilters, renderRoster } from './roster.js';
 import { buildPriority, renderPriority } from './priority.js';
 import { buildShare, openShare } from './share.js';
+import { warmSprites } from './card.js';
+import { buildShell, renderShell } from './shell.js';
 import { buildAnalytics, track } from './analytics.js';
 import { importTatari } from './custom.js';
 
 function renderAll() {
+  // Before the roster asks for its 218 thumbnails, so the dozen sprites the
+  // share card needs are at the front of the queue rather than the back.
+  warmSprites();
   renderPlayerTabs();
   renderGrid();
   renderBench();
   renderPriority();
   renderRoster();
   renderSummary();
+  renderShell();
 
   for (const btn of $$('#mode-switch .segmented__btn')) {
     btn.setAttribute('aria-pressed', String(btn.dataset.mode === store.formation.mode));
@@ -46,6 +52,7 @@ async function main() {
   buildGrid();
   buildPriority();
   buildShare();
+  buildShell();
   buildAnalytics();
   buildFilters(() => renderRoster());
 
@@ -67,7 +74,6 @@ async function main() {
   // The name is in the markup so it shows without JS; only the version is
   // filled in, from the one constant that also stamps the share card.
   $('#app-version').textContent = `v${APP_VERSION}`;
-  $('#field-url').textContent = SITE_URL;
 
   wireToolbar();
   wireDragAutoScroll();
@@ -186,6 +192,11 @@ function wireToolbar() {
   $('#opt-ranges').addEventListener('change', (e) => {
     rangesOn.value = e.target.checked;
     renderRanges();
+  });
+
+  $('#opt-pull').addEventListener('change', (e) => {
+    bossPullOn.value = e.target.checked;
+    renderGrid();
   });
 
   $('#opt-glitter').addEventListener('change', (e) => {

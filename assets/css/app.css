@@ -359,29 +359,47 @@ img { -webkit-user-drag: none; }
   font-size: 9px; letter-spacing: 0;
 }
 /*
- * The base row carries the site address alongside its label. Both are held on
- * one line at every width — a wrapped "Your base" reads as a layout fault in
- * exactly the screenshot this is here to travel in — so the URL is the part
- * that gives, shrinking a little on the narrowest phones.
+ * "Your base" sits at the right, under the end of the row a Zobo would reach
+ * last. It used to share this row with the site address and was pushed there by
+ * space-between; with the address gone it needs saying outright.
  */
 .field-frame__base {
-  display: flex; align-items: baseline; justify-content: space-between; gap: var(--s2);
+  display: flex; align-items: baseline; justify-content: flex-end; gap: var(--s2);
   border-top: 1px solid var(--line-soft);
 }
 .field-frame__base > span { white-space: nowrap; }
+
 /*
- * Same quiet treatment as "Your base" beside it — it is a signpost, not a call
- * to action, and an accent colour there kept pulling the eye off the field.
- * Case and letter-spacing stay as they are: an uppercased, tracked-out URL is
- * harder to read and to type, and the extra width would cost the single line.
+ * Where the boss drags your rearmost row. Drawn as an extension of the spawn
+ * band above it rather than as another row of the field, because it is not
+ * ground you choose to stand on — the dashes carry over from the empty cells
+ * below, so it still reads as part of the same board.
  */
-.field-frame__url {
-  min-width: 0;
-  color: var(--text-mute);
-  font-size: 9.5px; font-weight: 600; letter-spacing: 0; text-transform: none;
+.pull-row {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: var(--s1);
+  padding: var(--s2);
+  border-bottom: 1px solid color-mix(in srgb, var(--danger) 45%, var(--line-soft));
+  background: color-mix(in srgb, var(--danger) 13%, var(--surface-2));
 }
-@media (max-width: 400px) { .field-frame__url { font-size: 8.5px; } }
-@media (max-width: 340px) { .field-frame__url { font-size: 7.5px; } }
+.pull-cell {
+  position: relative;
+  aspect-ratio: 1;
+  display: grid; place-items: center;
+  border: 1px dashed color-mix(in srgb, var(--danger) 45%, transparent);
+  border-radius: var(--r-sm);
+}
+.pull-cell.is-filled {
+  border-style: solid;
+  border-color: color-mix(in srgb, var(--danger) 70%, transparent);
+  background: color-mix(in srgb, var(--danger) 18%, transparent);
+}
+/* One continuous band: a grey rule between the spawn line and the pull row
+   would read as two separate things. */
+.field-frame:has(#pull-row:not([hidden])) .field-frame__enemy {
+  border-bottom-color: color-mix(in srgb, var(--danger) 45%, var(--line-soft));
+}
 
 /* The editable "looking for", above the frame. */
 .lf-input {
@@ -619,11 +637,28 @@ img { -webkit-user-drag: none; }
 }
 .token__rank {
   position: absolute; bottom: 1px; right: 3px;
+  display: inline-flex; align-items: center; gap: 2px;
   min-width: 13px; padding: 0 3px;
   border-radius: 3px;
   background: var(--accent); color: var(--accent-ink);
   font-size: 9px; font-weight: 700; text-align: center;
   pointer-events: none;
+}
+
+/*
+ * The step number, riding on the level badge rather than claiming a corner of
+ * its own — every corner of a token is already spoken for by tier, role, owner
+ * and level. Dark on the accent so the order reads first and the level second:
+ * which one you level next is the question the plan answers.
+ */
+.token__seq {
+  display: grid; place-items: center;
+  min-width: 11px; height: 11px;
+  padding: 0 1px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent-ink) 82%, transparent);
+  color: var(--accent);
+  font-size: 8px; font-weight: 800; line-height: 1;
 }
 
 /* Only offered while a Tatari has no planned level-ups. */
@@ -673,9 +708,12 @@ body[data-mode="coop"] .token {
               color 140ms var(--ease-out);
 }
 .ptab:hover { background: var(--surface-3); }
+/* Same weight as the bench's own active state, so the two agree about who is
+   selected instead of each hinting at it differently. */
 .ptab[data-active="true"] {
   border-color: var(--owner);
-  background: color-mix(in srgb, var(--owner) 12%, var(--surface-2));
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--owner) 55%, transparent);
+  background: color-mix(in srgb, var(--owner) 16%, var(--surface-2));
   color: var(--text);
 }
 .ptab__who {
@@ -692,19 +730,35 @@ body[data-mode="coop"] .token {
 
 .bench { display: grid; gap: var(--s3); margin-top: var(--s3); }
 .bench__player { display: grid; gap: var(--s2); }
+/*
+ * Both benches carry their owner's bar; only its strength says which one you
+ * are filling. The two states used to differ by a border-colour mix alone,
+ * which is not enough to answer "whose bench am I adding to" at a glance —
+ * the question the mode exists to keep straight.
+ *
+ * Border widths are identical in both states on purpose: changing them would
+ * shift the contents sideways every time you switched.
+ */
 body[data-mode="coop"] .bench__player {
   padding: var(--s2);
   border: 1px solid var(--line-soft);
-  border-left: 3px solid var(--owner);
+  border-left: 4px solid color-mix(in srgb, var(--owner) 30%, transparent);
   border-radius: var(--r-sm);
   background: var(--surface-2);
+  transition: border-color 140ms var(--ease-out), background-color 140ms var(--ease-out),
+              box-shadow 140ms var(--ease-out);
 }
 body[data-mode="coop"] .bench__player[data-active="true"] {
-  border-color: color-mix(in srgb, var(--owner) 45%, var(--line));
+  border-color: color-mix(in srgb, var(--owner) 55%, var(--line));
   border-left-color: var(--owner);
+  background: color-mix(in srgb, var(--owner) 14%, var(--surface-2));
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--owner) 55%, transparent);
 }
-.bench__head { display: flex; align-items: baseline; gap: var(--s2); }
+.bench__head { display: flex; align-items: baseline; flex-wrap: wrap; gap: var(--s2); }
+/* Only the first button takes the slack, so the pair sits together at the right
+   rather than one drifting to the middle. */
 .bench__head .btn { margin-left: auto; }
+.bench__head .btn ~ .btn { margin-left: 0; }
 .bench__count { color: var(--text-dim); font-size: 11.5px; }
 .bench__count b { color: var(--text); font-weight: 700; }
 .bench__empty { margin: 0; color: var(--text-mute); font-size: 12px; }
@@ -805,6 +859,22 @@ body[data-mode="coop"] .bench__player[data-active="true"] {
   background: var(--owner); color: #0e1118;
   letter-spacing: .02em;
 }
+
+/*
+ * In co-op the bench's own P1 / P2 pill is a button that switches which
+ * teammate you are planning for. Only the button chrome is reset — the pill's
+ * size, weight and owner colour still come from the rules above, so the control
+ * looks like the label it replaced.
+ */
+button.summary__label { border: 0; font-family: inherit; cursor: pointer; }
+button.summary__label:hover,
+button.summary__label:focus-visible {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--owner) 45%, transparent);
+}
+button.summary__label[aria-pressed="true"] { cursor: default; }
+
+/* The whole inactive bench is the target, not just the pill on it. */
+body[data-mode="coop"] .bench__player[data-active="false"] { cursor: pointer; }
 .tally {
   display: inline-flex; align-items: center; gap: 5px;
   padding: 2px var(--s2) 2px 5px;
@@ -1576,6 +1646,456 @@ body.is-dragging-active {
    * on the field's blank space.
    */
   .cell.is-filled, .benchchip { touch-action: none; }
+}
+
+/* ======================================================= phone app shell */
+
+/*
+ * Phones are 72% of visitors, and on a phone the field is not a section of a
+ * page — it is the page. The roster, the summary and the plan are drawn over
+ * it and dismissed again, so the frame never shares the viewport with a list of
+ * 218 cards, and picking something is no longer a round trip past everything
+ * else.
+ *
+ * That is also what makes the grid postable. Formations travel as a screenshot
+ * far more often than through the Share button, and a screenshot can only carry
+ * what was on screen at the time: keeping the frame whole and unscrolled means
+ * the phone's own screenshot button is the share feature.
+ *
+ * None of this applies above 760px. The tablet stack and the desktop three-panel
+ * layout are untouched.
+ */
+
+/* Phone-only chrome. Desktop reaches clean view from the Formation tools. */
+.appbar, .scrim, .bench__clean { display: none; }
+
+@media (max-width: 760px) {
+  /* One number, so the app bar's height and the sheets' bottom edge cannot
+     drift apart. The inset keeps it clear of a home indicator. */
+  :root { --appbar-h: calc(58px + env(safe-area-inset-bottom, 0px)); }
+
+  /* Body drives the height so the field can claim whatever the header and the
+     app bar leave, without either being measured in JavaScript. The padding
+     replaces the space the app bar gave up by going fixed, so the footer can
+     still be scrolled out from under it. */
+  /*
+   * --dock-h is measured in shell.js rather than assumed: co-op shows two
+   * benches, an empty one collapses, and a wrong guess either hides the last
+   * grid row behind the dock or leaves a band of dead space under it.
+   */
+  body {
+    display: flex; flex-direction: column;
+    min-height: 100dvh;
+    padding-bottom: calc(var(--appbar-h) + var(--dock-h, 120px));
+  }
+
+  /*
+   * Every row the header takes is a row the field does not get, and on a phone
+   * the field is the point. The title, the byline and the mode switch share one
+   * line; the name and the four actions get one tight line each rather than the
+   * three loose ones they were taking.
+   */
+  .topbar { padding: var(--s2) var(--s3); gap: var(--s1) var(--s2); }
+  .topbar__title h1 { font-size: 17px; }
+  .topbar__actions { gap: 4px; }
+  .topbar__actions .btn { flex: 1 1 0; padding: 6px 4px; font-size: 12px; }
+  .field--name { padding: 6px var(--s2); font-size: 13px; }
+
+  /* Three checkboxes and a button were wrapping to two rows of their own. */
+  .panel--field .panel__tools { gap: var(--s1) var(--s2); font-size: 12px; }
+  .hint { margin: 0; font-size: 12.5px; }
+
+  /* The three panels are no longer three places on one page, so there is
+     nothing left to jump to. */
+  .secnav { display: none; }
+
+  .layout {
+    flex: 1 0 auto;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "field";
+    min-height: 0;
+    padding: var(--s2) var(--s2) 0;
+    gap: 0;
+  }
+
+  /* ---- the field, filling what is left ---- */
+
+  .panel--field {
+    display: flex; flex-direction: column; gap: var(--s2);
+    min-height: 0;
+    padding: var(--s3);
+    /*
+     * .panel isolates, and the summary sheet is a child of this one — so its
+     * z-index was scoped to this panel's stacking context and could not rise
+     * above the scrim, which dimmed the sheet you had just opened. The roster
+     * and the plan are panels themselves and never had the problem.
+     */
+    isolation: auto;
+  }
+  .panel--field .panel__head { margin-bottom: 0; }
+  .panel--field .panel__head h2 { font-size: 15px; }
+
+  /*
+   * The frame keeps its natural height and is never asked to fill a flex slot.
+   * Six cells across a phone's width is already very close to a square, so the
+   * grid sizes itself from its width; telling it to fill instead let it be
+   * squeezed to a sliver whenever the header above it grew, taking the cells'
+   * aspect-ratio down with it.
+   */
+  .field-frame { flex: 0 0 auto; }
+
+  /* ---- the bench, as a dock ---- */
+
+  /*
+   * One row that scrolls sideways instead of a block that grows downward.
+   * Fifteen chips wrapping to three rows was taking a third of the screen from
+   * the field, and the field is the thing being worked on.
+   */
+  /*
+   * The dock floats just above the app bar instead of sitting at the end of the
+   * panel. Whether the field and the header happen to fit a given phone's
+   * viewport exactly is not something to bet the bench on — at the end of the
+   * panel it was landing a few dozen pixels below the fold on a 923px screen,
+   * which put the fifteen you are bringing out of sight on the one screen whose
+   * whole job is placing them.
+   */
+  #bench {
+    position: fixed; left: 0; right: 0;
+    /* Tucked 2px behind the bar rather than balanced exactly on its edge: two
+       fixed elements meeting at a fractional device pixel leave a hairline the
+       page shows through, and the overlap is hidden under an opaque bar. */
+    bottom: calc(var(--appbar-h) - 2px);
+    z-index: 62;
+    padding: var(--s2) var(--s3);
+    background: var(--surface);
+    border-top: 1px solid var(--line);
+    box-shadow: 0 -8px 20px -14px rgb(0 0 0 / .55);
+  }
+  .bench__player { gap: var(--s1); }
+  .bench__head { gap: var(--s2); font-size: 11.5px; }
+  .bench__strip {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+  }
+  .bench__strip::-webkit-scrollbar { display: none; }
+  /* Bigger than the 52px they started at: these are drag handles on a phone,
+     and a sprite you are meant to pick up and carry to a cell needs to be worth
+     aiming at. */
+  .benchchip { flex: 0 0 auto; width: 64px; height: 64px; }
+
+  /*
+   * The remove button only appears once a chip is armed. Touch normally reveals
+   * it on every chip, but a 22px × on a 52px tile covers the corner a thumb
+   * lands on, and the first real run on a phone removed a Tatari that was meant
+   * to be placed. Arming first is harmless; "stop bringing this" is not, and it
+   * should not be the easiest thing to hit on the control used most.
+   */
+  .benchchip__x { opacity: 0; pointer-events: none; }
+  .benchchip.is-armed .benchchip__x { opacity: 1; pointer-events: auto; }
+
+  /* The dock and the app bar both moved into the corner the toast used to own. */
+  .toast { bottom: calc(var(--appbar-h) + 104px); z-index: 90; }
+
+  /* ---- placing by thumb ---- */
+
+  /*
+   * The armed chip and the cell it is aimed at are one statement read in two
+   * places: the chip says which Tatari is in hand, the cell says where letting
+   * go would put it. Both carry the accent so the pair is obvious at arm's
+   * length, and the dashed inner edge marks the cell as a proposal rather than
+   * something already placed.
+   */
+  .benchchip.is-armed {
+    border-color: var(--accent);
+    box-shadow: 0 2px 12px -6px var(--accent), inset 0 0 0 1px var(--accent);
+    transform: translateY(-2px);
+  }
+  /* What the dock and the app bar cover is not "visible", so scrolling a cell
+     into view has to clear them. This is what lets arming scroll by the minimum
+     rather than recentring the field. */
+  .cell {
+    scroll-margin-bottom: calc(var(--appbar-h) + var(--dock-h, 120px) + 8px);
+    scroll-margin-top: 8px;
+  }
+
+  .cell.is-target {
+    position: relative;
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 14%, var(--surface-2));
+  }
+  .cell.is-target::after {
+    content: "";
+    position: absolute; inset: 3px;
+    border: 1px dashed color-mix(in srgb, var(--accent) 70%, transparent);
+    border-radius: 3px;
+    pointer-events: none;
+  }
+
+  /* ---- roster, summary and plan as sheets over the field ---- */
+
+  /*
+   * The sheet stops at the top of the app bar rather than running under it, so
+   * the bar stays tappable while a sheet is up and you can go straight from the
+   * roster to the plan without closing anything first.
+   */
+  .panel--roster, .panel--priority, #summary {
+    position: fixed; inset: auto 0 var(--appbar-h) 0; z-index: 70;
+    display: flex; flex-direction: column;
+    /*
+     * svh, not dvh. dvh tracks the browser's collapsing toolbar, so scrolling
+     * past the end of the roster resized the sheet mid-gesture and left it that
+     * way. svh is measured against the largest chrome and never moves.
+     */
+    max-height: calc(90svh - var(--appbar-h));
+    margin: 0;
+    padding: var(--s3);
+    border: 1px solid var(--line);
+    border-bottom: 0;
+    border-radius: var(--r-lg) var(--r-lg) 0 0;
+    background: var(--surface);
+    /* Offset and blur, so the sheet reads as lifted off the field rather than
+       outlined against it. */
+    box-shadow: 0 -8px 28px -12px rgb(0 0 0 / .55);
+    transform: translateY(101%);
+    visibility: hidden;
+    transition: transform 220ms var(--ease-out), visibility 220ms var(--ease-out);
+  }
+  /* The grab bar. Decoration would be a bad reason for it; it is here because a
+     sheet with no handle reads as a panel that was always there. */
+  .panel--roster::before, .panel--priority::before, #summary::before {
+    content: "";
+    flex: 0 0 auto;
+    width: 36px; height: 4px;
+    margin: 0 auto var(--s2);
+    border-radius: 999px;
+    background: var(--line);
+  }
+  body[data-sheet="roster"]   .panel--roster,
+  body[data-sheet="priority"] .panel--priority,
+  body[data-sheet="summary"]  #summary {
+    transform: none;
+    visibility: visible;
+  }
+
+  /* The page behind a sheet does not scroll. Overscrolling it is what collapsed
+     the browser's toolbar mid-gesture, and scrolling a field you cannot see was
+     never the intent anyway. */
+  body[data-sheet] { overflow: hidden; }
+
+  /* The sheet is the scroll container now, not the page. */
+  /*
+   * grid-auto-rows and align-content are both load-bearing. Inside a sheet the
+   * roster has a definite height for the first time, and left to itself the
+   * card rows were resolving against it rather than against their own contents
+   * — which squashed every sprite to a coloured sliver. Rows size to their
+   * cards and stack from the top; the sheet scrolls.
+   */
+  .panel--roster .roster {
+    flex: 1 1 auto; min-height: 0;
+    max-height: none; overflow-y: auto;
+    overscroll-behavior: contain;
+    grid-auto-rows: max-content;
+    align-content: start;
+  }
+  .panel--priority .priority, #summary { overscroll-behavior: contain; }
+  .panel--priority .priority { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+  #summary { gap: var(--s2); overflow-y: auto; }
+
+  .scrim:not([hidden]) {
+    display: block;
+    position: fixed; inset: 0; z-index: 65;
+    background: color-mix(in srgb, var(--bg) 62%, transparent);
+  }
+
+  /* ---- the app bar ---- */
+
+  .appbar {
+    display: flex; gap: var(--s1);
+    /*
+     * Fixed, not sticky. Sticky leaves the bar in the flow, so scrolling to the
+     * footer below it let it reach its natural position and ride up the screen
+     * — away from the sheets, which are fixed and stayed where they were.
+     */
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 75;
+    box-sizing: border-box;
+    min-height: var(--appbar-h);
+    padding: var(--s2) var(--s3);
+    padding-bottom: calc(var(--s2) + env(safe-area-inset-bottom, 0px));
+    /*
+     * Opaque, and no blur. The bar used to be 94% surface over a blur, which was
+     * fine when the page scrolled behind it — but the dock sits directly on top
+     * of it now, and a Tatari passing behind that last 6% read as a coloured
+     * smear along the seam. Nothing is meant to show through here.
+     */
+    background: var(--surface);
+    border-top: 1px solid var(--line);
+  }
+  .appbar__btn {
+    flex: 1;
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    min-height: 44px;
+    padding: 8px var(--s2);
+    border: 1px solid var(--line);
+    border-radius: var(--r-sm);
+    background: var(--surface-2);
+    color: var(--text-dim);
+    font: inherit; font-size: 12.5px; font-weight: 600;
+    cursor: pointer;
+    transition: background-color 140ms var(--ease-out), color 140ms var(--ease-out),
+                border-color 140ms var(--ease-out);
+  }
+  .appbar__btn[aria-expanded="true"] {
+    border-color: var(--accent);
+    background: var(--surface-3);
+    color: var(--text);
+  }
+  /* The one button here that produces something rather than opening something,
+     and the one the tool is failing at. It gets the accent. */
+  .appbar__btn--go {
+    border-color: color-mix(in srgb, var(--accent) 80%, #000);
+    background: var(--accent);
+    color: var(--accent-ink);
+  }
+  .appbar__btn--go:active { filter: brightness(.94); }
+  .appbar__label { overflow: hidden; text-overflow: ellipsis; }
+
+  /* Add is the one pressed most and it sits at the far edge of a thumb's reach,
+     so it gets the widest target of the four. */
+  .appbar__btn[data-sheet="roster"] { flex: 1.35; }
+
+  /* Desktop's copy. The dock carries this on a phone. */
+  .tools-only { display: none; }
+
+  /*
+   * The dock's head has to hold the owner pill, two counts and two buttons on
+   * one line. Adding "Just the grid" pushed Clear onto a second row, which made
+   * the dock taller and took that height off the field — so the prose in the
+   * counts and in Clear bench goes, and the numbers and the verb stay. The full
+   * wording survives as the title and the accessible name.
+   */
+  .wide-only { display: none; }
+  .bench__head { flex-wrap: nowrap; gap: var(--s1) var(--s2); }
+  .bench__count { min-width: 0; font-size: 11px; }
+
+  /*
+   * Named, not just an icon: this is the control that makes a screenshot worth
+   * posting, and a bare glyph in a row of counts reads as decoration. Outlined
+   * in the accent so it is findable without competing with Share, which is the
+   * filled one.
+   */
+  .bench__clean {
+    display: inline-flex;
+    gap: 5px;
+    border-color: color-mix(in srgb, var(--accent) 55%, var(--line));
+    color: var(--text);
+    white-space: nowrap;
+  }
+
+  /*
+   * Co-op: only the bench you are filling is open. Two full benches took very
+   * nearly half the screen and covered the bottom of the frame, which is where
+   * the co-op lines are drawn. The closed one keeps its head — that is still a
+   * switch target, since the whole block switches — so the other teammate's
+   * counts stay readable and one tap brings their bench back.
+   */
+  body[data-mode="coop"] .bench__player[data-active="false"] .bench__strip,
+  body[data-mode="coop"] .bench__player[data-active="false"] .bench__empty,
+  body[data-mode="coop"] .bench__player[data-active="false"] .bench__head .btn {
+    display: none;
+  }
+  .appbar__n {
+    min-width: 18px;
+    padding: 1px 5px;
+    border-radius: 999px;
+    background: var(--surface-3);
+    color: var(--text-dim);
+    font-size: 11px; font-weight: 700;
+  }
+  .appbar__n:empty { display: none; }
+  .appbar__btn[aria-expanded="true"] .appbar__n { background: var(--accent); color: var(--accent-ink); }
+
+  /* Credits and the privacy note still have to be reachable, so they sit below
+     the shell rather than being dropped from it. */
+  .foot { padding: var(--s3); font-size: 11.5px; }
+}
+
+/* ========================================================== clean view */
+
+/*
+ * The field and nothing else, so the phone's own screenshot button captures the
+ * formation without the dock, the app bar or the header in the frame. Not
+ * phone-only: a clean crop is worth having on a desktop too.
+ *
+ * The LF and HAVE lines drawn inside the frame stay — they are the ask, and the
+ * whole reason the frame is composed to survive a crop. Their editor above the
+ * frame goes, because it is a control.
+ */
+body.is-clean .topbar,
+body.is-clean .secnav,
+body.is-clean .appbar,
+body.is-clean .scrim,
+body.is-clean .foot,
+body.is-clean #bench,
+body.is-clean #summary,
+body.is-clean .panel--roster,
+body.is-clean .panel--priority,
+body.is-clean .panel--field .panel__head,
+body.is-clean .panel--field .hint,
+body.is-clean .panel--field .lf-input,
+body.is-clean .panel--field .ptabs { display: none !important; }
+
+body.is-clean { padding-bottom: 0; }
+
+/*
+ * The field takes the whole width and sits in the middle of what is left. Six
+ * square cells across means the grid is as large as the screen is wide and no
+ * larger, so the width is the whole budget — and it was being spent on margins:
+ * the frame came out a little over half the screen with the rest of the page
+ * empty beneath it, which is a worse picture than the one you get by not
+ * bothering with clean view at all.
+ */
+/*
+ * The field is lifted out of the page and pinned to the viewport, rather than
+ * being centred inside a layout that still has opinions about its width. Left
+ * in the flow it rendered at roughly 60% of the screen with black either side —
+ * six square cells across means the grid can only ever be as wide as the screen,
+ * so any margin at all is the whole budget being spent on nothing.
+ *
+ * inset: 0 makes the panel exactly the viewport, whatever the document below it
+ * thinks its width is.
+ */
+body.is-clean .panel--field {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin: 0;
+  padding: var(--s2);
+  border: 0;
+  border-radius: 0;
+  background: var(--bg);
+  overflow: auto;
+}
+body.is-clean .field-frame { width: 100%; }
+
+/* Only in clean view, and always below the frame rather than over it. */
+.clean-hint { display: none; }
+body.is-clean .clean-hint {
+  display: block;
+  flex: 0 0 auto;
+  margin: var(--s3) 0 0;
+  color: var(--text-mute);
+  font-size: 12.5px; text-align: center;
+}
+
+/* A phone gets the whole width; a desktop does not need a metre-wide grid. */
+@media (min-width: 761px) {
+  body.is-clean .field-frame { max-width: 820px; margin-inline: auto; }
 }
 
 /* ============================================================ motion */

@@ -19,6 +19,15 @@ const grid = $('#grid');
 const benchHost = $('#bench');
 const tabsHost = $('#player-tabs');
 
+/**
+ * Sprites that end up in the share card: the field, the benches and the co-op
+ * lines. They load eagerly and ahead of the roster, because the card reuses the
+ * images already on the page and anything still queued behind 218 thumbnails is
+ * simply missing from the picture. There are at most a few dozen of these and
+ * they are all on screen anyway.
+ */
+const ON_CARD = { lazy: false, priority: 'high' };
+
 /** Cell the keyboard user has "picked up", if any. */
 let carried = null;
 
@@ -92,9 +101,18 @@ export function buildGrid() {
 
   grid.addEventListener('click', (e) => {
     const add = e.target.closest('[data-add-step]');
-    if (!add) return;
-    const occ = store.formation.cells[Number(add.closest('.cell').dataset.cell)];
-    if (occ) quickAddStep(occ.slug, occ.player);
+    if (add) {
+      const occ = store.formation.cells[Number(add.closest('.cell').dataset.cell)];
+      if (occ) quickAddStep(occ.slug, occ.player);
+      return;
+    }
+
+    // With a chip armed, the field is a picker: the tapped cell wins over the
+    // one the preview suggested.
+    if (!armed) return;
+    const cell = e.target.closest('.cell');
+    if (!cell) return;
+    commit(Number(cell.dataset.cell));
   });
 
   grid.addEventListener('dblclick', (e) => {
@@ -103,6 +121,13 @@ export function buildGrid() {
   });
 
   grid.addEventListener('keydown', onKeydown);
+
+  // Escape backs out of an armed chip wherever focus happens to be. The sheet
+  // handler in shell.js also listens, but a sheet and an armed chip cannot be
+  // open at once — arming happens on the field, with every sheet dismissed.
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && armed) disarm();
+  });
 
   benchHost.addEventListener('click', (e) => {
     const clear = e.target.closest('[data-clear-bench]');
@@ -117,15 +142,42 @@ export function buildGrid() {
       return;
     }
 
+    /*
+     * Either bench switches to its owner. The player tabs above the field could
+     * already do this, but the bench is where you are looking when you notice
+     * you are adding to the wrong teammate — so the whole block is the target,
+     * not just the label on it. The label is a real button so the same thing is
+     * reachable from a keyboard.
+     */
+    const swap = e.target.closest('[data-switch-player]');
+    if (swap) {
+      store.setActivePlayer(Number(swap.dataset.switchPlayer));
+      return;
+    }
+
     const chip = e.target.closest('.benchchip');
-    if (!chip) return;
+    if (!chip) {
+      const block = e.target.closest('.bench__player');
+      if (block && store.isCoop()) {
+        const owner = Number(block.dataset.player);
+        if (owner !== store.formation.activePlayer) store.setActivePlayer(owner);
+      }
+      return;
+    }
     const { slug, player } = chip.dataset;
     if (e.target.closest('[data-unbench]')) {
       store.removeFromBench(slug, Number(player));
       return;
     }
-    const result = store.autoPlace(slug, Number(player));
-    if (!result.ok) toast(result.reason, 'error');
+    // A mouse can drag a chip onto the exact cell it wants, so a click there is
+    // unambiguously "just put it somewhere". A thumb cannot, so on a phone the
+    // tap shows where it would land first and waits to be told yes.
+    if (!PHONE.matches) {
+      const result = store.autoPlace(slug, Number(player));
+      if (!result.ok) toast(result.reason, 'error');
+      return;
+    }
+    arm(slug, Number(player));
   });
 
   tabsHost.addEventListener('click', (e) => {
@@ -208,6 +260,161 @@ export function renderRanges() {
  */
 export const rangesOn = { value: false };
 
+// ---------------------------------------------------------------- boss pull
+
+/**
+ * Whether to show the boss dragging your backline forward.
+ *
+ * Nothing is moved for real. The pull is drawn as a row of its own above the
+ * field and the vacated cells render empty, so turning it off puts everyone
+ * back exactly where they were — the formation, the share link and the saved
+ * file never knew about it. That matters: this is a question you ask of a
+ * formation ("what happens when it grabs them"), not an edit you make to one.
+ */
+export const bossPullOn = { value: false };
+
+/**
+ * The rearmost Tatari in each column, and the cells they leave behind.
+ *
+ * Per column, not per row: the boss reaches down every lane and takes whoever
+ * is standing at the back of it, so a formation with a ragged back edge loses
+ * one from each lane rather than one tidy row. Row 0 faces the spawn line, so
+ * "back of the lane" is the highest row index holding anything.
+ */
+function pulled() {
+  const taken = new Map();   // column -> occupant now standing in the pull row
+  const from = new Set();    // cells they vacated
+  if (!bossPullOn.value) return { taken, from };
+
+  for (let col = 0; col < store.COLS; col++) {
+    for (let row = store.ROWS - 1; row >= 0; row--) {
+      const i = row * store.COLS + col;
+      const occ = store.formation.cells[i];
+      if (!occ) continue;
+      taken.set(col, occ);
+      from.add(i);
+      break;
+    }
+  }
+  return { taken, from };
+}
+
+/** The dragged row, drawn between the spawn line and the field. */
+function renderPullRow(taken) {
+  const host = $('#pull-row');
+  host.hidden = !bossPullOn.value;
+  if (!bossPullOn.value) { host.innerHTML = ''; return; }
+
+  host.innerHTML = Array.from({ length: store.COLS }, (_, col) => {
+    const occ = taken.get(col);
+    if (!occ) return '<div class="pull-cell"></div>';
+    const t = state.bySlug.get(occ.slug);
+    if (!t) return '<div class="pull-cell"></div>';
+    return `<div class="pull-cell is-filled">
+      <span class="token" data-type="${t.type}" data-player="${occ.player}">
+        ${artHTML(t, ON_CARD)}${ownerBadge(occ.player)}
+      </span></div>`;
+  }).join('');
+
+  host.setAttribute('aria-label', taken.size
+    ? `Boss pull: ${[...taken.values()]
+      .map(({ slug }) => state.bySlug.get(slug)?.name ?? slug).join(', ')} dragged to the front`
+    : 'Boss pull: nothing on the field to drag');
+}
+
+// ---------------------------------------------------------------- arming
+
+/**
+ * Placing by thumb, on a phone.
+ *
+ * Tapping a bench chip does not place it. It shows where that Tatari would land
+ * and — when its range is recorded — which tiles it would cover from there, and
+ * waits. Tapping the chip again keeps that cell; tapping any cell takes that one
+ * instead.
+ *
+ * The cost of a wrong tap used to be a token appearing somewhere you were not
+ * looking, then a drag to fix it. The cost now is a second tap. It also answers
+ * "what does this one actually reach" for someone who does not know the roster
+ * by heart, which is most of the people this is for.
+ */
+const PHONE = matchMedia('(max-width: 760px)');
+
+/** @type {null | {slug: string, player: number, cell: number}} */
+let armed = null;
+
+/** Said once per session. After that the preview speaks for itself. */
+let taughtArming = false;
+
+function arm(slug, player) {
+  // A second tap on the same chip means "yes, there".
+  if (armed && armed.slug === slug && armed.player === player) {
+    commit(armed.cell);
+    return;
+  }
+
+  const t = state.bySlug.get(slug);
+  if (!t) return;
+
+  const reason = store.placeBlockedReason(t, player);
+  if (reason) { toast(reason, 'error'); return; }
+
+  const cell = store.firstFreeCell();
+  if (cell === null) { toast('No empty cell', 'error'); return; }
+
+  armed = { slug, player, cell };
+  renderArmed();
+
+  // Only if the proposed cell is actually hidden, and only by as much as it
+  // takes. The cells carry a scroll-margin the height of the dock and the app
+  // bar, so "nearest" knows the bottom strip is spoken for; centring it instead
+  // hauled the whole page and pushed the top of the field off the screen.
+  grid.children[cell]?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+
+  if (!taughtArming) {
+    taughtArming = true;
+    toast('Tap again to place it there, or tap the cell you want');
+  }
+}
+
+function commit(cell) {
+  if (!armed) return;
+  const { slug, player } = armed;
+  disarm();
+  const result = store.place(slug, cell, player);
+  if (!result.ok) toast(result.reason, 'error');
+}
+
+function disarm() {
+  armed = null;
+  renderArmed();
+}
+
+/**
+ * Draws the armed state. Called from both renderers because each of them
+ * rewrites the elements this marks.
+ */
+function renderArmed() {
+  // The suggested cell can be taken by the time this runs again — a co-op
+  // partner's token, an import, an undo — so it is re-checked rather than
+  // trusted.
+  if (armed && store.formation.cells[armed.cell]) {
+    const next = store.firstFreeCell();
+    if (next === null) armed = null;
+    else armed.cell = next;
+  }
+
+  for (const cell of grid.children) cell.classList.remove('is-target');
+  for (const chip of benchHost.querySelectorAll('.benchchip')) chip.classList.remove('is-armed');
+
+  if (!armed) { clearRangePreview(); return; }
+
+  grid.children[armed.cell]?.classList.add('is-target');
+  benchHost
+    .querySelector(`.benchchip[data-slug="${CSS.escape(armed.slug)}"][data-player="${armed.player}"]`)
+    ?.classList.add('is-armed');
+  previewRange(armed.cell, armed.slug);
+}
+
 // ---------------------------------------------------------------- rendering
 
 function ownerBadge(player) {
@@ -222,9 +429,14 @@ function tokenGhost(t, player) {
 }
 
 export function renderGrid() {
+  const { taken, from } = pulled();
+  renderPullRow(taken);
+
   for (const cell of grid.children) {
     const i = Number(cell.dataset.cell);
-    const occ = store.formation.cells[i];
+    // Anyone the boss has dragged is drawn in the pull row instead, so their
+    // own cell reads as empty — which is the point of looking.
+    const occ = from.has(i) ? null : store.formation.cells[i];
     const t = occ ? state.bySlug.get(occ.slug) : null;
     const where = `Row ${store.cellRow(i) + 1}, column ${store.cellCol(i) + 1}`;
 
@@ -247,23 +459,34 @@ export function renderGrid() {
     const plan = levels.length ? `planned to level ${levels.join(', then ')}` : 'no level-ups planned';
     const who = store.isCoop() ? `player ${occ.player}, ` : '';
 
+    // The step this one is taken at, so the field shows the plan has an order
+    // and not just a set of target levels.
+    const seat = store.planPositionOf(occ.slug, occ.player);
+    const order = seat
+      ? `<b class="token__seq">${seat}</b>`
+      : '';
+
     cell.dataset.type = t.type;
     cell.dataset.player = String(occ.player);
     cell.innerHTML = `
       <span class="token" data-type="${t.type}" data-player="${occ.player}">
-        ${artHTML(t)}
+        ${artHTML(t, ON_CARD)}
         <span class="token__tier">T${t.tier}</span>
         <span class="token__role">${roleIcon(t.role)}</span>
         ${ownerBadge(occ.player)}
-        ${target
-          ? `<span class="token__rank" title="${esc(t.name)} ${plan}">L${target}</span>`
+        ${seat || target
+          ? `<span class="token__rank" title="${esc(t.name)}${
+            seat ? ` — step ${seat} of the plan` : ''}, ${plan}">${order}${
+            target ? `L${target}` : ''}</span>`
           : '<button class="token__add" type="button" data-add-step ' +
             `aria-label="Plan a level-up for ${esc(t.name)}" title="Plan a level-up">+</button>`}
       </span>`;
     cell.setAttribute('aria-label',
-      `${where}: ${t.name}, ${who}${t.type} ${t.role}, tier ${t.tier}, ${plan}`);
+      `${where}: ${t.name}, ${who}${t.type} ${t.role}, tier ${t.tier}, ${plan}${
+        seat ? `, step ${seat} of the plan` : ''}`);
   }
   renderRanges();
+  renderArmed();
 }
 
 /**
@@ -299,7 +522,7 @@ export function renderLF() {
   const chips = line.wants.map((slug) => state.bySlug.get(slug)).filter(Boolean);
   $('#lf-wants').innerHTML = chips.map((t) => `
     <span class="want" data-slug="${esc(t.slug)}" data-type="${esc(t.type)}">
-      ${artHTML(t)}<span class="want__name">${esc(t.name)}</span>
+      ${artHTML(t, ON_CARD)}<span class="want__name">${esc(t.name)}</span>
       <button class="want__x" type="button" data-drop-want="${esc(t.slug)}"
         aria-label="Take ${esc(t.name)} off this line">×</button>
     </span>`).join('');
@@ -314,7 +537,7 @@ export function renderLF() {
     return `<span class="field-lf__line" data-mode="${l.side}">
       <span class="field-lf__tag">${esc(store.LF_LABELS[l.side])}</span>${
       named.map((t) => `<span class="field-lf__want" data-type="${esc(t.type)}">${
-        artHTML(t)}<span>${esc(t.name)}</span></span>`).join('')
+        artHTML(t, ON_CARD)}<span>${esc(t.name)}</span></span>`).join('')
     }${l.note.trim() ? `<span class="field-lf__note">${esc(l.note.trim())}</span>` : ''}
     </span>`;
   }).join('');
@@ -391,7 +614,7 @@ export function renderBench() {
         <span class="benchchip" data-slug="${esc(slug)}" data-player="${player}"
               data-type="${t.type}" tabindex="0" role="button"
               title="${esc(t.name)} — drag onto the field, or click to drop it in the back">
-          ${artHTML(t)}
+          ${artHTML(t, ON_CARD)}
           ${coop ? `<span class="benchchip__owner" data-player="${player}">${player}</span>` : ''}
           <button class="benchchip__x" type="button" data-unbench
                   aria-label="Stop bringing ${esc(t.name)}${coop ? ` for P${player}` : ''}">&times;</button>
@@ -408,12 +631,23 @@ export function renderBench() {
     return `
       <div class="bench__player" data-player="${player}" data-active="${active}">
         <div class="bench__head">
-          <span class="summary__label"${coop ? ` data-player="${player}"` : ''}>${
-            coop ? `P${player} bench` : 'Bench'}</span>
-          <span class="bench__count"><b>${bench.length}</b>/${store.benchCap()} on the bench,
-            <b>${bench.length - waiting.length}</b>/${store.fieldCap()} on the field</span>
+          ${coop
+    ? `<button class="summary__label" type="button" data-player="${player}"
+                     data-switch-player="${player}" aria-pressed="${active}"
+                     title="Plan for P${player}">P${player} bench</button>`
+    : '<span class="summary__label">Bench</span>'}
+          <span class="bench__count"
+                title="${bench.length} of ${store.benchCap()} on the bench, ${
+  bench.length - waiting.length} of ${store.fieldCap()} on the field"><b>${
+  bench.length}</b>/${store.benchCap()}<span class="wide-only"> on the bench</span>,
+            <b>${bench.length - waiting.length}</b>/${store.fieldCap()}<span class="wide-only"> on the field</span></span>
+          ${active
+    ? `<button class="btn btn--tiny bench__clean" type="button" data-clean
+                     title="Hide everything else so the field is all that is on screen">⛶ Just the grid</button>`
+    : ''}
           <button class="btn btn--tiny btn--quiet" type="button" data-clear-bench="${player}"
-                  ${bench.length ? '' : 'disabled'}>Clear bench</button>
+                  aria-label="Clear ${coop ? `P${player}'s bench` : 'the bench'}"
+                  ${bench.length ? '' : 'disabled'}>Clear<span class="wide-only"> bench</span></button>
         </div>
         ${body}
       </div>`;
@@ -428,6 +662,7 @@ export function renderBench() {
       () => tokenGhost(state.bySlug.get(slug), player)
     );
   }
+  renderArmed();
 }
 
 // ---------------------------------------------------------------- keyboard
