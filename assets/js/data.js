@@ -21,6 +21,8 @@ export const state = {
   aliases: {},
   /** hand-recorded attack ranges, see data/ranges.json */
   ranges: null,
+  /** hand-recorded heal / buff / debuff reach, see data/effect-ranges.json */
+  effectRanges: null,
 };
 
 /**
@@ -144,17 +146,19 @@ export function matches(t, query) {
 // ---------------------------------------------------------------- boot
 
 export async function load() {
-  const [meta, roster, aliases, ranges] = await Promise.all([
+  const [meta, roster, aliases, ranges, effectRanges] = await Promise.all([
     fetch('data/meta.json').then((r) => r.json()),
     fetch('data/tatari.json').then((r) => r.json()),
     fetch('data/aliases.json').then((r) => r.json()).catch(() => ({})),
     fetch('data/ranges.json').then((r) => r.json()).catch(() => ({})),
+    fetch('data/effect-ranges.json').then((r) => r.json()).catch(() => ({})),
   ]);
 
   delete aliases._readme;
   state.meta = meta;
   state.aliases = aliases;
   state.ranges = ranges;
+  state.effectRanges = effectRanges;
   state.all = [...roster, ...loadCustom().map(normalizeCustom)];
   reindex();
   return state;

@@ -26,6 +26,29 @@ export function rangeOf(slug) {
 
 export const hasRange = (slug) => rangeOf(slug) !== null;
 
+/**
+ * How well known this Tatari's reach is, for the range recorder's roster.
+ *
+ * Three states rather than two, because "somebody typed this in" and "somebody
+ * checked it against the game" are not the same claim and the difference is the
+ * whole reason coverage is worth showing. Several entries on file were read off
+ * a sibling's diagram and say UNVERIFIED in their own note; those are recorded,
+ * not verified.
+ *
+ * @param {string} slug
+ * @param {'attack'|'heal'|'buff'|'debuff'} kind
+ * @returns {'none'|'recorded'|'verified'}
+ */
+export function rangeStatus(slug, kind = 'attack') {
+  const tatari = state.bySlug.get(slug);
+  if (!tatari) return 'none';
+
+  const book = kind === 'attack' ? state.ranges : state.effectRanges?.[kind];
+  const entry = book?.bySlug?.[slug] ?? book?.byLine?.[lineKey(tatari)];
+  if (!entry?.tiles?.length) return 'none';
+  return entry.verified === true ? 'verified' : 'recorded';
+}
+
 /** The base form's slug, which is how ranges are keyed. */
 function lineKey(tatari) {
   const base = state.all.find((t) => t.familyId === tatari.familyId && t.tier === 1);

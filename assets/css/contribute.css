@@ -138,6 +138,52 @@
 .contrib__token { display: grid; place-items: center; width: 100%; height: 100%; }
 .contrib__token img { width: 100%; height: 100%; object-fit: contain; }
 
+/* ------------------------------------------------------------ coverage */
+
+/*
+ * Every card says whether this reach is on file. Three states, not two: a range
+ * somebody typed in and a range somebody checked against the game are different
+ * claims, and several entries were read off a sibling's diagram and say so in
+ * their own note.
+ *
+ * A ring, not a fill. Every card already carries its type as a colour behind
+ * the sprite, so tinting the card too made a Grass Tatari look recorded and a
+ * Fire one look missing. The border is the one channel not already spoken for.
+ */
+.contribute #roster .card[data-range] { opacity: 1; }
+
+.contribute #roster .card[data-range="none"] {
+  border-color: var(--danger);
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--danger) 40%, transparent);
+}
+.contribute #roster .card[data-range="recorded"] {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--accent) 40%, transparent);
+}
+.contribute #roster .card[data-range="verified"] {
+  border-color: var(--ok);
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--ok) 40%, transparent);
+}
+
+.contrib__legend {
+  display: flex; flex-wrap: wrap; gap: var(--s1) var(--s3);
+  margin: 0;
+  font-size: 11px;
+}
+.contrib__legend span {
+  display: inline-flex; align-items: center; gap: 5px;
+  color: var(--text-mute);
+}
+.contrib__legend span::before {
+  content: "";
+  width: 9px; height: 9px;
+  border: 1px solid currentColor;
+  border-radius: 2px;
+}
+.contrib__legend [data-range="none"]::before     { color: var(--danger); background: color-mix(in srgb, var(--danger) 40%, transparent); }
+.contrib__legend [data-range="recorded"]::before { color: var(--accent); background: color-mix(in srgb, var(--accent) 40%, transparent); }
+.contrib__legend [data-range="verified"]::before { color: var(--ok);     background: color-mix(in srgb, var(--ok) 40%, transparent); }
+
 /* ------------------------------------------------------------ output */
 
 .contrib__json {
