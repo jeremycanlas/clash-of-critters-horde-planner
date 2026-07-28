@@ -143,7 +143,28 @@ pretending otherwise:
   most of the work; it cannot reliably tell which tile the Tatari is standing
   on, so its `sheets` output is meant to be checked by eye before anything is
   written to the data. `docs/ranges-todo.md` lists what is still missing and
-  why. Contributions are welcome.
+  why.
+
+## Recording a range yourself
+
+Anyone who plays the game can see these ranges; the reason two thirds of the
+roster is blank was never the data, it was that contributing meant cloning the
+repo, running Python over a screenshot and hand-editing JSON.
+
+So there is a page for it: **[Record a range](https://jeremycanlas.github.io/clash-of-critters-horde-planner/contribute.html)**.
+Pick a Tatari, stand it where your screenshot had it, click what it reached, and
+it hands you the entry — copy it, download it, or let it open a filled-in issue
+for you. It writes nothing and uploads nothing.
+
+It also records **heal, buff and debuff reach**, which is not documented
+anywhere at all and which nobody has recorded yet. Those go to
+`data/effect-ranges.json`; attack ranges go to `data/ranges.json` as before, and
+the page tells you which.
+
+Picking a Tatari that already has an attack range loads it, so checking an
+existing entry is as easy as adding a missing one — several were read off a
+sibling's diagram and are marked `UNVERIFIED`, and a shape is much easier to
+check than to describe.
 
 ### Refreshing it
 
