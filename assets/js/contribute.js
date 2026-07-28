@@ -38,18 +38,22 @@ const KINDS = [
   {
     id: 'attack', label: 'Attack', file: 'data/ranges.json',
     note: 'The tiles it can hit. This is what the Ranges overlay in the drafter draws.',
+    all: 'Hits the whole field — no tile pattern',
   },
   {
     id: 'heal', label: 'Heal', file: 'data/effect-ranges.json',
     note: 'How far its healing reaches. Nobody has recorded one of these yet — you would be first.',
+    all: 'Heals the whole team — no tile pattern',
   },
   {
     id: 'buff', label: 'Buff', file: 'data/effect-ranges.json',
     note: 'How far its buffs reach — ATK Boost, Shield, DMG Reduction and so on.',
+    all: 'Buffs the whole team — no tile pattern',
   },
   {
     id: 'debuff', label: 'Debuff', file: 'data/effect-ranges.json',
     note: 'How far its debuffs reach — Slow, Weaken, Bind and so on.',
+    all: 'Hits every enemy — no tile pattern',
   },
 ];
 
@@ -76,6 +80,13 @@ const picked = {
   origin: null,
   /** @type {Set<string>} "dCol,dRow" offsets, so a move keeps the shape. */
   tiles: new Set(),
+  /**
+   * 'tiles' for a pattern, 'all' for a reach with no shape — a heal that mends
+   * the whole team, a debuff that lands on everything. Recording those as a
+   * pattern would invent a limit the game does not have, and a reader could not
+   * tell the invention from a measurement.
+   */
+  scope: 'tiles',
 };
 const key = (dCol, dRow) => `${dCol},${dRow}`;
 
@@ -135,6 +146,8 @@ function wire() {
     const cell = e.target.closest('.cell');
     if (!cell) return;
     const col = Number(cell.dataset.col), row = Number(cell.dataset.row);
+    // Nothing to draw when the reach has no shape.
+    if (picked.scope === 'all') return;
 
     if (picked.origin === null) {
       if (row < 0) {
@@ -149,6 +162,13 @@ function wire() {
     const k = key(col - picked.origin.col, row - picked.origin.row);
     if (picked.tiles.has(k)) picked.tiles.delete(k);
     else picked.tiles.add(k);
+    saveCurrent();
+    refreshRoster();
+    renderAll();
+  });
+
+  $('#opt-all').addEventListener('change', (e) => {
+    picked.scope = e.target.checked ? 'all' : 'tiles';
     saveCurrent();
     refreshRoster();
     renderAll();
@@ -259,11 +279,14 @@ function saveCurrent() {
   if (!picked.slug) return;
   const k = queueKey(picked.slug, picked.kind);
 
-  if (!picked.tiles.size) queue.delete(k);
+  // A whole-team reach is a complete edit with no tiles at all, so an empty
+  // tile set is only empty when a pattern was what was being drawn.
+  if (picked.scope !== 'all' && !picked.tiles.size) queue.delete(k);
   else {
     queue.set(k, {
       slug: picked.slug,
       kind: picked.kind,
+      scope: picked.scope,
       tiles: [...picked.tiles],
       note: $('#note').value.trim(),
       from: $('#from').value,
@@ -282,11 +305,13 @@ function loadInto(slug, kind) {
   const held = queue.get(queueKey(slug, kind));
   if (held) {
     for (const t of held.tiles) picked.tiles.add(t);
+    picked.scope = held.scope ?? 'tiles';
     $('#note').value = held.note;
     $('#from').value = held.from;
     picked.origin = { ...held.origin };
     return;
   }
+  picked.scope = 'tiles';
   $('#note').value = '';
   prefillFromData();
 }
@@ -305,10 +330,12 @@ function restoreQueue() {
     const raw = JSON.parse(localStorage.getItem(QUEUE_KEY) || '[]');
     if (!Array.isArray(raw)) return;
     for (const e of raw) {
-      if (!e?.slug || !Array.isArray(e.tiles) || !e.tiles.length) continue;
+      if (!e?.slug || !Array.isArray(e.tiles)) continue;
+      if (!e.tiles.length && e.scope !== 'all') continue;
       queue.set(queueKey(e.slug, e.kind), {
         slug: e.slug,
         kind: KINDS.some((k) => k.id === e.kind) ? e.kind : 'attack',
+        scope: e.scope === 'all' ? 'all' : 'tiles',
         tiles: e.tiles.map(String),
         note: typeof e.note === 'string' ? e.note : '',
         from: typeof e.from === 'string' ? e.from : 'range diagram',
@@ -339,7 +366,7 @@ function renderQueue() {
         ${t ? artHTML(t, { lazy: false }) : ''}
         <span class="contrib__qname">${esc(t?.name ?? e.slug)}</span>
         <span class="contrib__qkind" data-kind="${esc(e.kind)}">${esc(e.kind)}</span>
-        <span class="contrib__qn">${e.tiles.length}</span>
+        <span class="contrib__qn">${e.scope === 'all' ? 'all' : e.tiles.length}</span>
         <span class="contrib__qx" role="button" tabindex="-1" data-drop="${esc(e.slug)}"
               data-kind="${esc(e.kind)}" aria-label="Take this edit off the queue">&times;</span>
       </button>`;
@@ -444,23 +471,34 @@ function renderChosen() {
 }
 
 function renderKinds() {
+  const kind = KINDS.find((k) => k.id === picked.kind);
   for (const chip of $('#kinds').children) {
     chip.setAttribute('aria-pressed', String(chip.dataset.kind === picked.kind));
   }
-  $('#kind-note').textContent = KINDS.find((k) => k.id === picked.kind)?.note ?? '';
+  $('#kind-note').textContent = kind?.note ?? '';
+  // Worded per reach: "hits the whole field" and "heals the whole team" are the
+  // same shape of claim about very different things.
+  $('#opt-all-label').textContent = kind?.all ?? 'Reaches everything — no tile pattern';
+  $('#opt-all').checked = picked.scope === 'all';
 }
 
 function renderGrid() {
-  const placing = picked.origin === null;
-  $('#grid-hint').textContent = placing
-    ? 'Click the tile on the field it was standing on. Only the 6×6 can be stood on.'
-    : 'Click every tile it reached, beyond the line as well. Click one again to take it back off.';
+  const everywhere = picked.scope === 'all';
+  const placing = !everywhere && picked.origin === null;
+
+  $('.field-frame').classList.toggle('is-everywhere', everywhere);
+  $('#grid-hint').textContent = everywhere
+    ? 'No tiles to click — this one reaches regardless of where anything is standing.'
+    : placing
+      ? 'Click the tile on the field it was standing on. Only the 6×6 can be stood on.'
+      : 'Click every tile it reached, beyond the line as well. Click one again to take it back off.';
 
   let shown = 0;
   for (const cell of document.querySelectorAll('.field-frame .cell')) {
     const col = Number(cell.dataset.col), row = Number(cell.dataset.row);
-    const isOrigin = !placing && col === picked.origin.col && row === picked.origin.row;
-    const covered = !placing
+    const isOrigin = !placing && !everywhere && picked.origin
+      && col === picked.origin.col && row === picked.origin.row;
+    const covered = !placing && !everywhere && picked.origin
       && picked.tiles.has(key(col - picked.origin.col, row - picked.origin.row));
     if (covered) shown++;
 
@@ -481,8 +519,9 @@ function renderGrid() {
   // An offset can still fall outside what is drawn — sideways, or behind the
   // back row. They are kept rather than dropped, but silently keeping them
   // would be its own trap.
-  const lost = placing ? 0 : picked.tiles.size - shown;
-  $('#btn-clear').disabled = picked.tiles.size === 0;
+  const lost = placing || everywhere ? 0 : picked.tiles.size - shown;
+  $('#btn-clear').disabled = picked.tiles.size === 0 || everywhere;
+  $('#btn-move').disabled = everywhere;
   if (lost > 0) {
     $('#grid-hint').textContent
       += ` ${lost} recorded tile${lost === 1 ? '' : 's'} sit outside the board from here — move it to see them.`;
@@ -517,11 +556,12 @@ function entryText() {
 
   const attack = all.filter((e) => e.kind === 'attack');
   const effects = all.filter((e) => e.kind !== 'attack');
-  const body = (e) => ({
-    tiles: tileList(e.tiles),
-    ...(e.note ? { note: e.note } : {}),
-    from: e.from,
-  });
+  // "all" carries no tiles at all rather than tiles plus a flag. A reader
+  // reaching for .tiles gets nothing and has to notice why, which is safer than
+  // handing them a pattern that was never measured.
+  const body = (e) => (e.scope === 'all'
+    ? { scope: 'all', ...(e.note ? { note: e.note } : {}), from: e.from }
+    : { tiles: tileList(e.tiles), ...(e.note ? { note: e.note } : {}), from: e.from });
 
   const out = [];
   if (attack.length) {
@@ -562,7 +602,8 @@ function renderOutput() {
 
   const body = [
     ...all.map((e) => `- **${nameOf(e.slug)}** (\`${e.slug}\`) — ${
-      KINDS.find((k) => k.id === e.kind).label}, ${e.tiles.length} tiles`),
+      KINDS.find((k) => k.id === e.kind).label}, ${
+      e.scope === 'all' ? 'reaches everything' : `${e.tiles.length} tiles`}`),
     '',
     'Recorded with the [range recorder](https://jeremycanlas.github.io/clash-of-critters-horde-planner/contribute.html).',
     '',

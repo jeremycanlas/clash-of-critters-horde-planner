@@ -51,6 +51,14 @@
     <div id="kinds" class="chips chips--text" role="group" aria-label="What you are recording"></div>
     <p id="kind-note" class="hint"></p>
 
+    <!-- Not everything has a shape. A heal that mends the whole team has no
+         tile pattern to draw, and drawing one would be inventing a limit the
+         game does not have. -->
+    <label class="check contrib__scope">
+      <input id="opt-all" type="checkbox">
+      <span id="opt-all-label">Reaches everything — no tile pattern</span>
+    </label>
+
     <p id="grid-hint" class="hint"></p>
 
     <!--

@@ -98,6 +98,13 @@
 
 .contribute .cell { cursor: pointer; }
 
+/* No shape to draw, so the board stops inviting clicks rather than accepting
+   them and quietly ignoring them. */
+.contribute .field-frame.is-everywhere { opacity: .4; }
+.contribute .field-frame.is-everywhere .cell { cursor: not-allowed; }
+
+.contrib__scope { align-self: start; }
+
 /*
  * Beyond the line. Hatched with the same stripes as the strip below it, so the
  * two read as one band of ground that is not yours, and the tiles are outlined
