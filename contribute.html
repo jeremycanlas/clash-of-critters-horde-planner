@@ -21,61 +21,52 @@
   </div>
 </header>
 
-<main class="contrib">
+<!--
+  The drafter's own layout, verbatim: .panel--field beside .panel--roster on a
+  wide screen, and on a phone the field owns the screen while the roster becomes
+  a sheet drawn over it. Same grid areas, same shell, same app bar — the only
+  difference is that the field here is a recorder rather than a formation.
+-->
+<main class="layout">
 
-  <p class="contrib__lede">
-    Attack range is only documented as in-game screenshots, and reach for heals,
-    buffs and debuffs is not documented at all. Both have to be read off the game
-    by hand, which is why most of the roster has neither. This page turns that
-    reading into a few clicks: pick a Tatari from the roster, say where it was
-    standing, click what it reached, and it hands you the entry to send in.
-  </p>
-
-  <!-- ------------------------------------------------ the recorder -->
-  <div class="contrib__main">
-
-    <section class="panel contrib__step">
-      <div class="panel__head"><h2><span class="contrib__n">1</span> Which Tatari?</h2></div>
-      <div id="chosen" class="contrib__chosen contrib__chosen--empty">
-        Pick one from the roster.
+  <section id="sec-field" class="panel panel--field" aria-labelledby="h-rec">
+    <div class="panel__head">
+      <h2 id="h-rec">Record a range</h2>
+      <div class="panel__tools">
+        <button id="btn-move" class="btn btn--tiny" type="button">Move the Tatari</button>
+        <button id="btn-clear" class="btn btn--tiny btn--quiet" type="button">Clear tiles</button>
       </div>
-    </section>
+    </div>
 
-    <section class="panel contrib__step">
-      <div class="panel__head"><h2><span class="contrib__n">2</span> Which reach?</h2></div>
-      <div id="kinds" class="chips chips--text" role="group" aria-label="What you are recording"></div>
-      <p id="kind-note" class="hint"></p>
-    </section>
+    <p class="hint contrib__lede">
+      Attack range is only documented as in-game screenshots, and reach for heals,
+      buffs and debuffs is not documented at all. Pick a Tatari from the roster,
+      stand it where your screenshot had it, click what it reached.
+    </p>
 
-    <section class="panel contrib__step">
-      <div class="panel__head">
-        <h2><span class="contrib__n">3</span> Click what it reaches</h2>
-        <div class="panel__tools">
-          <button id="btn-move" class="btn btn--tiny" type="button">Move the Tatari</button>
-          <button id="btn-clear" class="btn btn--tiny btn--quiet" type="button">Clear tiles</button>
-        </div>
-      </div>
+    <div id="chosen" class="contrib__chosen contrib__chosen--empty">
+      Pick one from the roster.
+    </div>
 
-      <p id="grid-hint" class="hint"></p>
+    <div id="kinds" class="chips chips--text" role="group" aria-label="What you are recording"></div>
+    <p id="kind-note" class="hint"></p>
 
-      <div class="field-frame">
-        <div class="field-frame__enemy">Zobos spawn beyond this line</div>
-        <div id="grid" class="grid" role="grid" aria-label="Field, 6 columns by 6 rows"></div>
-        <div class="field-frame__base"><span>Your base</span></div>
-      </div>
+    <p id="grid-hint" class="hint"></p>
 
-      <p class="hint contrib__aside">
-        Stand it where the screenshot had it. Tiles are recorded as offsets from
-        its own tile, so a Tatari that reaches five rows ahead has to be standing
-        far enough back for you to click them all. The <b>i</b> on a roster card
-        opens its detail sheet, which carries the wiki's range diagram when one
-        exists — handy to have open beside this.
-      </p>
-    </section>
+    <div class="field-frame">
+      <div class="field-frame__enemy">Zobos spawn beyond this line</div>
+      <div id="grid" class="grid" role="grid" aria-label="Field, 6 columns by 6 rows"></div>
+      <div class="field-frame__base"><span>Your base</span></div>
+    </div>
 
-    <section class="panel contrib__step">
-      <div class="panel__head"><h2><span class="contrib__n">4</span> Where did this come from?</h2></div>
+    <p class="hint contrib__aside">
+      Tiles are offsets from its own tile, so a Tatari that reaches five rows
+      ahead has to be standing far enough back for you to click them all. The
+      <b>i</b> on a roster card opens its detail sheet, which carries the wiki's
+      range diagram when one exists.
+    </p>
 
+    <div class="contrib__meta">
       <label class="contrib__label" for="from">How you know</label>
       <select id="from" class="field field--select">
         <option value="range diagram">The wiki's range diagram</option>
@@ -84,41 +75,33 @@
         <option value="other">Something else — I'll say in the note</option>
       </select>
 
-      <label class="contrib__label" for="note">Note <span class="muted">— optional, but say if you are unsure</span></label>
+      <label class="contrib__label" for="note">Note <span class="muted">— say if you are unsure</span></label>
       <input id="note" class="field" type="text" maxlength="240" autocomplete="off"
              placeholder="e.g. 7 tiles, 3 wide and 3 deep — or UNVERIFIED, only saw it once">
-    </section>
+    </div>
 
-    <section class="panel contrib__step contrib__out">
-      <div class="panel__head"><h2>Send it in</h2></div>
-
+    <div class="contrib__out">
       <p id="out-target" class="hint"></p>
       <pre id="out" class="contrib__json" tabindex="0" aria-label="The entry this produces"></pre>
 
       <div class="contrib__actions">
         <button id="btn-copy" class="btn btn--primary" type="button">Copy the entry</button>
         <button id="btn-download" class="btn" type="button">Download it</button>
-        <a id="btn-issue" class="btn" href="#" target="_blank" rel="noopener">Open an issue with it</a>
+        <a id="btn-issue" class="btn" href="#" target="_blank" rel="noopener">Open an issue</a>
       </div>
 
       <p class="hint contrib__aside">
         An issue is the easiest route — the button fills one in for you. A pull
-        request editing the data file directly is very welcome too if you are
-        comfortable with that.
+        request editing the data file is very welcome too.
       </p>
-    </section>
-  </div>
+    </div>
+  </section>
 
   <!--
-    The drafter's own roster, not a copy of it: the search, the filters, the
-    cards and the detail sheet all come from roster.js, so anything that
-    improves there improves here. The only thing this page changes is what a
-    click on a card means.
+    roster.js renders all of this: the search, the filters, the cards and the
+    detail sheet. Only what a click means differs, and that is injected.
   -->
-  <!-- Deliberately NOT .panel--roster: that class carries grid-area: roster for
-       the drafter's layout, which invents implicit columns here, and turns into
-       a dismissable bottom sheet on a phone. -->
-  <aside class="panel contrib__roster" aria-labelledby="h-roster">
+  <section class="panel panel--roster" aria-labelledby="h-roster">
     <div class="panel__head">
       <h2 id="h-roster">Roster <span id="roster-count" class="muted"></span></h2>
     </div>
@@ -139,8 +122,8 @@
 
       <div class="filters__row filters__row--meta">
         <div id="filter-tiers" class="chips chips--text" role="group" aria-label="Filter by tier"></div>
-        <!-- Kept because roster.js wires it, hidden because "unavailable" means
-             blocked by a formation, and there is no formation on this page. -->
+        <!-- Wired by roster.js so it has to exist; hidden because "unavailable"
+             means blocked by a formation, and there is no formation here. -->
         <label class="check contrib__hidden">
           <input id="opt-hide-blocked" type="checkbox"> Hide unavailable</label>
         <label class="sortby">Sort
@@ -157,9 +140,17 @@
     </div>
 
     <div id="roster" class="roster" role="list"></div>
-  </aside>
-
+  </section>
 </main>
+
+<!-- Phones only, same component as the drafter's. One sheet to open here. -->
+<nav id="appbar" class="appbar" aria-label="Open a panel">
+  <button class="appbar__btn appbar__btn--go" type="button" data-sheet="roster">
+    <span class="appbar__label">Pick a Tatari</span>
+  </button>
+</nav>
+
+<div id="scrim" class="scrim" hidden></div>
 
 <footer class="foot">
   <span>Data and sprites from the

@@ -37,7 +37,7 @@ export function buildShell() {
       setSheet(null);
       // Reuses the toolbar's own button rather than opening the dialog a second
       // way, so the share sheet keeps one owner and one set of guards.
-      $('#btn-share').click();
+      $('#btn-share')?.click();
       return;
     }
     const btn = e.target.closest('[data-sheet]');
@@ -179,7 +179,13 @@ export function renderShell() {
   }
 }
 
-/** Zero reads as "nothing here yet", which the empty state already says. */
+/**
+ * Zero reads as "nothing here yet", which the empty state already says.
+ *
+ * Missing is fine too: the range recorder hosts this same shell for its roster
+ * sheet and has no bench, no field and no plan to count.
+ */
 function count(selector, n) {
-  $(selector).textContent = n ? String(n) : '';
+  const el = $(selector);
+  if (el) el.textContent = n ? String(n) : '';
 }

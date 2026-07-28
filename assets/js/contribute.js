@@ -21,6 +21,7 @@
 import { load, state } from './data.js';
 import { $, artHTML, esc, typeIcon, roleIcon, toast, copyText } from './ui.js';
 import { buildFilters, renderRoster } from './roster.js';
+import { buildShell, closeSheet } from './shell.js';
 
 const REPO = 'jeremycanlas/clash-of-critters-horde-planner';
 
@@ -92,6 +93,9 @@ async function main() {
   // The drafter's roster, whole: its search, filters, cards and detail sheet.
   // Only the meaning of a click changes.
   buildFilters(renderRoster, { onPick: choose });
+  // The drafter's phone shell, unchanged: below 760px the recorder owns the
+  // screen and the roster becomes a sheet the app bar opens.
+  buildShell();
   wire();
   renderRoster();
   renderAll();
@@ -166,6 +170,9 @@ function choose(slug) {
   picked.tiles.clear();
   $('#note').value = '';
   prefillFromData();
+  // On a phone the roster is a sheet over the grid, and the grid is where you
+  // are going next. Above 760px this does nothing.
+  closeSheet();
   renderAll();
   toast(`Recording ${state.bySlug.get(slug)?.name ?? slug}`);
 }
