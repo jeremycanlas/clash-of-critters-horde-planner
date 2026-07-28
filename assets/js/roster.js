@@ -63,7 +63,21 @@ function buildRosterDropZone() {
   });
 }
 
-export function buildFilters(onChange) {
+/**
+ * The drafter's own answer to a card being picked: bring it, or stop bringing
+ * it.
+ *
+ * Injectable because the range recorder hosts this same roster, where a click
+ * means "record this one" instead. The roster should not have to know which
+ * page it is sitting on, and neither page should need its own copy of the
+ * search, the filters or the cards.
+ */
+function bringToBench(slug) {
+  const result = store.toggleBench(slug);
+  if (!result.ok) toast(result.reason, 'error');
+}
+
+export function buildFilters(onChange, { onPick = bringToBench } = {}) {
   buildRosterDropZone();
 
   const chips = (host, values, set, kind, label) => {
@@ -112,8 +126,8 @@ export function buildFilters(onChange) {
     onChange();
   });
 
-  // Clicking toggles whether the active player brings this Tatari. Dragging is
-  // for putting it somewhere specific on the field.
+  // Clicking does whatever the host page wants. Dragging is for putting it
+  // somewhere specific on the field.
   $('#roster').addEventListener('click', (e) => {
     if (e.target.closest('.card__info')) {
       openDetail(e.target.closest('.card').dataset.slug);
@@ -121,8 +135,7 @@ export function buildFilters(onChange) {
     }
     const card = e.target.closest('.card');
     if (!card) return;
-    const result = store.toggleBench(card.dataset.slug);
-    if (!result.ok) toast(result.reason, 'error');
+    onPick(card.dataset.slug);
   });
 
   $('#roster').addEventListener('keydown', (e) => {
