@@ -22,6 +22,7 @@ import { load, state } from './data.js';
 import { $, artHTML, esc, typeIcon, roleIcon, toast, copyText } from './ui.js';
 import { buildFilters, renderRoster } from './roster.js';
 import { buildShell, closeSheet } from './shell.js';
+import { rangeStatus } from './range.js';
 
 const REPO = 'jeremycanlas/clash-of-critters-horde-planner';
 
@@ -101,12 +102,12 @@ async function main() {
   buildKinds();
   // The drafter's roster, whole: its search, filters, cards and detail sheet.
   // Only the meaning of a click changes.
-  buildFilters(renderRoster, { onPick: choose });
+  buildFilters(refreshRoster, { onPick: choose });
   // The drafter's phone shell, unchanged: below 760px the recorder owns the
   // screen and the roster becomes a sheet the app bar opens.
   buildShell();
   wire();
-  renderRoster();
+  refreshRoster();
   renderAll();
 }
 
@@ -119,6 +120,9 @@ function wire() {
     // one is a good way to file a heal range that is really an attack range.
     picked.tiles.clear();
     prefillFromData();
+    // Coverage is per reach: switching to Heals should show a roster of red,
+    // because none of it is recorded yet.
+    refreshRoster();
     renderAll();
   });
 
@@ -181,6 +185,20 @@ function wire() {
 
 // ---------------------------------------------------------------- picking
 
+/**
+ * The roster, plus a mark on every card saying whether this reach is on file.
+ *
+ * Painted after roster.js has rendered rather than from inside it: coverage is
+ * this page's business, and a drafter picking a team has no use for knowing
+ * which ranges happen to be documented.
+ */
+function refreshRoster() {
+  renderRoster();
+  for (const card of document.querySelectorAll('#roster .card')) {
+    card.dataset.range = rangeStatus(card.dataset.slug, picked.kind);
+  }
+}
+
 /** What a roster card click means here: record this one. */
 function choose(slug) {
   picked.slug = slug;
@@ -202,12 +220,13 @@ function choose(slug) {
  * easier to check a shape than to describe one.
  */
 function prefillFromData() {
-  if (picked.kind !== 'attack' || !picked.slug) return;
+  if (!picked.slug) return;
   const t = state.bySlug.get(picked.slug);
   if (!t) return;
 
+  const book = picked.kind === 'attack' ? state.ranges : state.effectRanges?.[picked.kind];
   const base = state.all.find((x) => x.familyId === t.familyId && x.tier === 1) ?? t;
-  const entry = state.ranges?.bySlug?.[picked.slug] ?? state.ranges?.byLine?.[base.slug];
+  const entry = book?.bySlug?.[picked.slug] ?? book?.byLine?.[base.slug];
   if (!entry?.tiles) return;
 
   for (const [dCol, dRow] of entry.tiles) picked.tiles.add(key(dCol, dRow));

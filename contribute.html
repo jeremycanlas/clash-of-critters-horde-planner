@@ -114,6 +114,14 @@
       <h2 id="h-roster">Roster <span id="roster-count" class="muted"></span></h2>
     </div>
 
+    <!-- Coverage for whichever reach is selected, so the gap is visible before
+         you go looking for it. -->
+    <p class="contrib__legend" aria-label="What the card colours mean">
+      <span data-range="verified">Checked by hand</span>
+      <span data-range="recorded">On file, unchecked</span>
+      <span data-range="none">Nothing recorded</span>
+    </p>
+
     <div class="filters">
       <input id="search" class="field" type="search" autocomplete="off"
              placeholder="Search name, animal, nickname or skill…" aria-label="Search Tatari">

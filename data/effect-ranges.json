@@ -1,0 +1,33 @@
+{
+  "_readme": [
+    "How far heals, buffs and debuffs reach, as tiles.",
+    "",
+    "Nothing is recorded here yet. The wiki documents attack range as in-game",
+    "screenshots and does not document support reach at all, so every entry in",
+    "this file has to be read off the game by hand. The range recorder at",
+    "/contribute.html produces entries in exactly this shape.",
+    "",
+    "Tiles use the same offsets as data/ranges.json: [column, row] from the tile",
+    "the Tatari stands on. Column is positive to the right. Row is NEGATIVE",
+    "towards the Zobos, so [0, -1] is one tile ahead and [0, 1] is one behind.",
+    "",
+    "Kept separate from ranges.json rather than added to it under a flag, because",
+    "everything that reads ranges.json wants attack range and would otherwise have",
+    "to learn a distinction it has never needed.",
+    "",
+    "Within each kind, entries are keyed the same way ranges.json keys them:",
+    "bySlug for one form, byLine for a whole evolution line keyed by its T1.",
+    "A per-slug entry wins over its line's.",
+    "",
+    "Fields on an entry:",
+    "  tiles     - required, the offsets",
+    "  from      - required, where the reading came from",
+    "  note      - optional, and the place to say so if you are unsure",
+    "  verified  - optional. true once a maintainer has checked it by hand.",
+    "              Absent means recorded but unchecked, which is not the same",
+    "              thing and should not be shown as if it were."
+  ],
+  "heal": { "bySlug": {}, "byLine": {} },
+  "buff": { "bySlug": {}, "byLine": {} },
+  "debuff": { "bySlug": {}, "byLine": {} }
+}
