@@ -13,7 +13,12 @@
  * The drafter reserves room at the bottom for its bench dock. There is no dock
  * here, so the reservation would be a band of dead space above the app bar.
  */
-.contribute { --dock-h: 0px; }
+/* Purple: not a type colour, not a state the drafter uses, so it cannot be
+   mistaken for anything the roster already says. */
+.contribute { --dock-h: 0px; --queued: #a273f0; }
+@media (prefers-color-scheme: light) {
+  .contribute { --queued: #7c4bd0; }
+}
 
 /*
  * Wider field column than the drafter's. Its field panel holds a 6x6 grid; this
@@ -165,6 +170,16 @@
   box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--ok) 40%, transparent);
 }
 
+/*
+ * Queued beats coverage. What is on file matters until you have recorded
+ * something yourself, and from then on what matters is that this one is done
+ * and waiting to be sent — so purple wins over all three.
+ */
+.contribute #roster .card[data-queued="true"] {
+  border-color: var(--queued);
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--queued) 55%, transparent);
+}
+
 .contrib__legend {
   display: flex; flex-wrap: wrap; gap: var(--s1) var(--s3);
   margin: 0;
@@ -183,6 +198,61 @@
 .contrib__legend [data-range="none"]::before     { color: var(--danger); background: color-mix(in srgb, var(--danger) 40%, transparent); }
 .contrib__legend [data-range="recorded"]::before { color: var(--accent); background: color-mix(in srgb, var(--accent) 40%, transparent); }
 .contrib__legend [data-range="verified"]::before { color: var(--ok);     background: color-mix(in srgb, var(--ok) 40%, transparent); }
+
+/* ------------------------------------------------------------ queue */
+
+.contrib__queue {
+  display: grid; gap: var(--s2);
+  padding: var(--s3);
+  border: 1px solid color-mix(in srgb, var(--queued) 40%, var(--line));
+  border-radius: var(--r-sm);
+  background: color-mix(in srgb, var(--queued) 7%, var(--surface-2));
+}
+.contrib__queuehead {
+  display: flex; align-items: baseline; gap: var(--s2);
+  font-size: 13px;
+}
+.contrib__queuehead .btn { margin-left: auto; }
+
+.contrib__queuelist { display: grid; gap: var(--s1); }
+
+.contrib__qitem {
+  display: flex; align-items: center; gap: var(--s2);
+  padding: 4px var(--s2) 4px 4px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit; font-size: 12.5px; text-align: left;
+  cursor: pointer;
+}
+.contrib__qitem:hover { border-color: var(--queued); }
+/* The one on the grid right now. */
+.contrib__qitem[aria-current="true"] {
+  border-color: var(--queued);
+  box-shadow: inset 0 0 0 1px var(--queued);
+}
+.contrib__qitem img { width: 28px; height: 28px; object-fit: contain; }
+.contrib__qname { font-weight: 600; }
+.contrib__qkind {
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--surface-3);
+  color: var(--text-dim);
+  font-size: 10.5px; text-transform: capitalize;
+}
+.contrib__qn {
+  margin-left: auto;
+  color: var(--text-mute); font-size: 11px;
+}
+.contrib__qx {
+  display: grid; place-items: center;
+  width: 20px; height: 20px;
+  border-radius: var(--r-sm);
+  color: var(--text-mute);
+  font-size: 14px; line-height: 1;
+}
+.contrib__qx:hover { background: var(--surface-3); color: var(--danger); }
 
 /* ------------------------------------------------------------ output */
 

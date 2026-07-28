@@ -88,6 +88,20 @@
              placeholder="e.g. 7 tiles, 3 wide and 3 deep — or UNVERIFIED, only saw it once">
     </div>
 
+    <!--
+      Everything recorded this session. An edit joins the moment it has a tile
+      on it and is picked up again unchanged if you come back to that Tatari,
+      so a contributor can work through a handful in one sitting and send them
+      together rather than one issue at a time.
+    -->
+    <div class="contrib__queue">
+      <div class="contrib__queuehead">
+        <b>Queue</b> <span id="queue-count" class="muted"></span>
+        <button id="btn-queue-clear" class="btn btn--tiny btn--quiet" type="button">Clear queue</button>
+      </div>
+      <div id="queue" class="contrib__queuelist"></div>
+    </div>
+
     <div class="contrib__out">
       <p id="out-target" class="hint"></p>
       <pre id="out" class="contrib__json" tabindex="0" aria-label="The entry this produces"></pre>
