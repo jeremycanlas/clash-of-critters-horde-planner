@@ -202,7 +202,8 @@ a dock pinned above the buttons.
   level-up plan buttons are now at the bottom of the screen so you don't have to scroll down just to access the roster and level-up plan.
 - **Additional ways to place a tatari on the field.** You can still drag the tatari from the bench but now you can also tap a tatari on the bench and it lights the cell it would land in then tap again to keep that cell, or tap any cell to use that one instead to keep in-line with the mobile redesign.
 - **Just the grid button**: Hides everything except the field, so your phone's own screenshot catches the formation and nothing else.
-- **Boss pull (toggle):** Shows the worm boss dragging the rearmost Tatari of every column to the front. Nothing is moved for real, untoggle and they go back.
+- Suggested  by @minhmax0r
+  - **Boss pull (toggle):** Shows the worm boss dragging the rearmost Tatari of every column to the front. Nothing is moved for real, untoggle and they go back.
 - **The level-up plan sequence is now readable on the field.** Every planned Tatari carries
   its step number beside its target level, so the order is visible on the
   formation itself and in a shared picture.
