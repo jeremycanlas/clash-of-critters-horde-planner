@@ -5,21 +5,39 @@
  * meant to be read back there.
  */
 
+/*
+ * Recorder on the left, the drafter's own roster on the right. Side by side
+ * rather than stacked because the two are used together: you read a diagram,
+ * find the Tatari, click its tiles, then go straight to the next one.
+ */
 .contrib {
   display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 400px);
+  align-items: start;
   gap: var(--s4);
-  max-width: 720px;
+  max-width: 1400px;
   margin: 0 auto;
-  padding: var(--s4) var(--s4) var(--s6);
+  padding: var(--s4) var(--s5) var(--s6);
 }
 
 .contrib__lede {
+  grid-column: 1 / -1;
+  max-width: 78ch;
   margin: 0;
   color: var(--text-dim);
   font-size: 14px; line-height: 1.6;
 }
 
+.contrib__main { display: grid; gap: var(--s4); min-width: 0; }
+
+/* Stays put while you work down the steps beside it. */
+.contrib__roster { position: sticky; top: 74px; }
+
 .contrib__step { display: grid; gap: var(--s3); }
+
+/* Wired by roster.js, so it has to exist — but "unavailable" means blocked by a
+   formation, and there is no formation on this page. */
+.contrib__hidden { display: none; }
 
 /* Numbered because the order matters: the tiles mean nothing until the Tatari
    has somewhere to stand. */
@@ -43,28 +61,6 @@
 
 /* ------------------------------------------------------------ picking */
 
-.contrib__hits { display: grid; gap: 2px; }
-.contrib__hits:empty { display: none; }
-
-.contrib__hit {
-  display: flex; align-items: center; gap: var(--s2);
-  padding: var(--s1) var(--s2);
-  border: 1px solid transparent;
-  border-radius: var(--r-sm);
-  background: var(--surface-2);
-  color: var(--text);
-  font: inherit; text-align: left;
-  cursor: pointer;
-}
-.contrib__hit:hover, .contrib__hit:focus-visible { border-color: var(--accent); }
-.contrib__hit img { width: 30px; height: 30px; object-fit: contain; }
-.contrib__hitname { font-size: 13px; font-weight: 600; }
-.contrib__hitmeta {
-  display: inline-flex; align-items: center; gap: 4px;
-  margin-left: auto;
-  color: var(--text-mute); font-size: 11px;
-}
-
 .contrib__chosen {
   display: flex; align-items: center; gap: var(--s3);
   padding: var(--s2);
@@ -72,6 +68,15 @@
   border-radius: var(--r-sm);
   background: var(--surface-2);
 }
+.contrib__chosen--empty {
+  justify-content: center;
+  padding: var(--s3);
+  border-style: dashed;
+  background: none;
+  color: var(--text-mute);
+  font-size: 13px;
+}
+
 .contrib__art {
   display: grid; place-items: center;
   width: 52px; height: 52px;
@@ -134,6 +139,16 @@
 /* An anchor cannot be :disabled, and one that silently does nothing is worse
    than one that says it is not ready. */
 .btn.is-disabled { opacity: .45; pointer-events: none; }
+
+/* One column, roster first: step 1 is "pick one", so it has to be the thing you
+   meet after the explanation rather than something below four panels. */
+@media (max-width: 1000px) {
+  .contrib { grid-template-columns: minmax(0, 1fr); }
+  /* Ahead of the roster, or the page opens on 218 cards and no explanation. */
+  .contrib__lede { order: -2; }
+  .contrib__roster { position: static; order: -1; }
+  .contrib__roster .roster { max-height: 46vh; overflow-y: auto; }
+}
 
 @media (max-width: 760px) {
   .contrib { padding: var(--s3) var(--s3) var(--s5); gap: var(--s3); }

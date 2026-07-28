@@ -18,8 +18,9 @@
  * Tatari afterwards carries its pattern along instead of scrambling it.
  */
 
-import { load, state, matches } from './data.js';
+import { load, state } from './data.js';
 import { $, artHTML, esc, typeIcon, roleIcon, toast, copyText } from './ui.js';
+import { buildFilters, renderRoster } from './roster.js';
 
 const REPO = 'jeremycanlas/clash-of-critters-horde-planner';
 
@@ -50,8 +51,6 @@ const KINDS = [
   },
 ];
 
-const HITS = 8;
-
 let COLS = 6;
 let ROWS = 6;
 
@@ -75,7 +74,7 @@ async function main() {
   try {
     await load();
   } catch (err) {
-    $('#hits').innerHTML =
+    $('#roster').innerHTML =
       '<p class="hint">Could not load the roster. If you opened this file directly, '
       + 'serve the folder over HTTP instead — browsers block data loading on <code>file://</code>.</p>';
     console.error(err);
@@ -90,18 +89,15 @@ async function main() {
 
   buildGrid();
   buildKinds();
+  // The drafter's roster, whole: its search, filters, cards and detail sheet.
+  // Only the meaning of a click changes.
+  buildFilters(renderRoster, { onPick: choose });
   wire();
+  renderRoster();
   renderAll();
 }
 
 function wire() {
-  $('#pick').addEventListener('input', (e) => renderHits(e.target.value));
-
-  $('#hits').addEventListener('click', (e) => {
-    const hit = e.target.closest('[data-slug]');
-    if (hit) choose(hit.dataset.slug);
-  });
-
   $('#kinds').addEventListener('click', (e) => {
     const chip = e.target.closest('[data-kind]');
     if (!chip) return;
@@ -164,25 +160,14 @@ function wire() {
 
 // ---------------------------------------------------------------- picking
 
-function renderHits(query) {
-  const q = query.trim();
-  const hits = q ? state.all.filter((t) => matches(t, q)).slice(0, HITS) : [];
-
-  $('#hits').innerHTML = hits.map((t) => `
-    <button class="contrib__hit" type="button" data-slug="${esc(t.slug)}" data-type="${esc(t.type)}">
-      ${artHTML(t, { lazy: false })}
-      <span class="contrib__hitname">${esc(t.name)}</span>
-      <span class="contrib__hitmeta">${typeIcon(t.type)}${roleIcon(t.role)}T${t.tier}</span>
-    </button>`).join('');
-}
-
+/** What a roster card click means here: record this one. */
 function choose(slug) {
   picked.slug = slug;
   picked.tiles.clear();
+  $('#note').value = '';
   prefillFromData();
-  $('#pick').value = '';
-  $('#hits').innerHTML = '';
   renderAll();
+  toast(`Recording ${state.bySlug.get(slug)?.name ?? slug}`);
 }
 
 /**
@@ -235,8 +220,8 @@ function renderAll() {
 function renderChosen() {
   const box = $('#chosen');
   const t = picked.slug ? state.bySlug.get(picked.slug) : null;
-  box.hidden = !t;
-  if (!t) return;
+  box.classList.toggle('contrib__chosen--empty', !t);
+  if (!t) { box.textContent = 'Pick one from the roster.'; return; }
 
   box.innerHTML = `
     <span class="contrib__art" data-type="${esc(t.type)}">${artHTML(t, { lazy: false })}</span>
