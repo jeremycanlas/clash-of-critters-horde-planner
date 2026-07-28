@@ -25,7 +25,30 @@ let cardBlob = null;
 let previewUrl = null;
 let redrawTimer = null;
 
+/**
+ * How much of the formation the picture carries.
+ *
+ * 'grid' is the default because that is what actually gets posted — a picture
+ * of the field, croppable and readable at thumbnail size in a Discord channel.
+ * 'full' is the whole card, for handing someone a complete build.
+ */
+let scope = 'grid';
+
+const SCOPE_NOTE = {
+  grid: 'The field on its own, with what the formation brings. Reads at a glance in a chat.',
+  full: 'The field, both benches, the level-up plan and what the formation brings.',
+};
+
 export function buildShare() {
+  $('#share-scope').addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-scope]');
+    if (!btn || btn.dataset.scope === scope) return;
+    scope = btn.dataset.scope;
+    renderScope();
+    redraw();
+  });
+  renderScope();
+
   try { nameField.value = localStorage.getItem(NAME_KEY) || ''; } catch { /* private mode */ }
 
   nameField.addEventListener('input', () => {
@@ -70,6 +93,13 @@ export function buildShare() {
   dialog.addEventListener('close', releasePreview);
 }
 
+function renderScope() {
+  for (const btn of $('#share-scope').children) {
+    btn.setAttribute('aria-pressed', String(btn.dataset.scope === scope));
+  }
+  $('#share-scope-note').textContent = SCOPE_NOTE[scope];
+}
+
 function releasePreview() {
   if (previewUrl) { URL.revokeObjectURL(previewUrl); previewUrl = null; }
 }
@@ -82,7 +112,8 @@ function setBusy(busy) {
 
 async function redraw() {
   setBusy(true);
-  cardBlob = await canvasBlob(await drawCard({ username: nameField.value }));
+  cardBlob = await canvasBlob(
+    await drawCard({ username: nameField.value, full: scope === 'full' }));
   releasePreview();
   previewUrl = URL.createObjectURL(cardBlob);
   preview.src = previewUrl;

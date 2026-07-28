@@ -438,6 +438,19 @@ export function plannedLevels(slug, player = formation.activePlayer) {
 }
 
 /**
+ * Where this Tatari first appears in its owner's plan, counting from 1.
+ *
+ * The field draws this so the ordering is legible on the formation itself. A
+ * token badged L7 says what it gets levelled to but not whether it gets there
+ * first or last, and going in order is the entire point of a plan meant to be
+ * read top-down mid-run.
+ */
+export function planPositionOf(slug, player = formation.activePlayer) {
+  const at = planFor(player).findIndex(({ step }) => hasMember(step, slug, player));
+  return at === -1 ? null : at + 1;
+}
+
+/**
  * The highest level this Tatari is already planned to reach, or null for none.
  *
  * The highest is the only one that matters: levelling to 7 passes through

@@ -215,7 +215,9 @@ export function renderRoster() {
            role="listitem" tabindex="0" data-slug="${esc(t.slug)}" data-type="${t.type}"
            title="${esc(t.name)} — ${t.type} ${t.role}, T${t.tier}${
              state_ ? `\n${state_}` : ''}${clash ? `\n${clash.name} from the same line is brought` : ''}">
-        <div class="card__art">${artHTML(t)}${effectMarks(t)}</div>
+        <!-- Last in the queue: 218 thumbnails will otherwise crowd out the
+             dozen sprites the field and the benches are showing right now. -->
+        <div class="card__art">${artHTML(t, { priority: 'low' })}${effectMarks(t)}</div>
         <div class="card__meta">
           <span class="card__tier">T${t.tier}</span>
           ${typeIcon(t.type)}${roleIcon(t.role)}

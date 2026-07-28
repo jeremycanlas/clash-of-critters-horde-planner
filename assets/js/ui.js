@@ -21,10 +21,22 @@ export function artOf(t) {
  * Sprite, or the name split across lines when the wiki has no art yet
  * (a handful of unreleased Tatari).
  */
-export function artHTML(t, { lazy = true } = {}) {
+/**
+ * `priority` maps to fetchpriority.
+ *
+ * The roster is 218 thumbnails and the browser will happily have all of them in
+ * flight at once, which leaves the dozen sprites actually on screen — the
+ * field, the benches, the co-op lines — waiting behind art nobody has scrolled
+ * to. Those load eagerly and high; the roster asks last.
+ */
+export function artHTML(t, { lazy = true, priority = null } = {}) {
   const src = artOf(t);
   if (!src) return `<span class="token__fallback">${esc(t.name)}</span>`;
-  return `<img src="${esc(src)}" alt="${esc(t.name)}"${lazy ? ' loading="lazy" decoding="async"' : ''}>`;
+  const attrs = [
+    lazy ? 'loading="lazy" decoding="async"' : '',
+    priority ? `fetchpriority="${priority}"` : '',
+  ].filter(Boolean).join(' ');
+  return `<img src="${esc(src)}" alt="${esc(t.name)}"${attrs ? ` ${attrs}` : ''}>`;
 }
 
 /**
@@ -32,16 +44,16 @@ export function artHTML(t, { lazy = true } = {}) {
  * the share card — so a posted picture says which build drew it, which matters
  * while the attack-range data is still being filled in.
  */
-export const APP_VERSION = '1.1.0';
+export const APP_VERSION = '1.2.0';
 export const APP_AUTHOR = 'jacc6475';
 
-/**
- * Drawn on the field frame, because a screenshot of the grid is how these get
- * passed around and the picture should carry the way back here. Without the
- * scheme and trailing slash: it has to fit on one line beside "Your base" on a
- * 320px phone, and nobody types "https://" anyway.
+/*
+ * There is deliberately no SITE_URL any more. It used to be drawn on the field
+ * frame and in the card's footer, on the theory that a screenshot should carry
+ * the way back here. Sharing dropped sharply once it appeared: a watermarked
+ * grid reads as an advert for a tool rather than as someone's team, and people
+ * stopped posting. The credit line stays; the address does not.
  */
-export const SITE_URL = 'jeremycanlas.github.io/clash-of-critters-horde-planner';
 
 export { typeIcon, roleIcon };
 

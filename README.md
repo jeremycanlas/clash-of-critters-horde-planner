@@ -168,6 +168,7 @@ assets/js/
   store.js      benches, field, caps, plan, share links, save/open
   dnd.js        pointer-based drag controller (mouse and touch)
   grid.js       the field, bench strip and player tabs
+  shell.js      the phone shell: the field owns the screen, the rest are sheets
   roster.js     the picker, filters and search
   priority.js   the level-up plan
   share.js      the share sheet
@@ -187,6 +188,37 @@ a branch**, branch `main`, folder `/ (root)`. That's all — there's no build st
 and `.nojekyll` is already committed so Pages serves the files as they are.
 
 ## Changelog
+
+### 1.2.0
+#### Summary:
+The phone layout is rebuilt (again). Around 77% of visitors uses the tool on a mobile device, and the old
+page asked them to scroll past 218 roster cards to get back to the field. So I rebuilt the whole
+layout to be mobile-first. The field is now the main view on mobile, and the roster, summary and
+plan are overlaid on top. They dismiss again when you're done, and the Tatari you're bringing sit in
+a dock pinned above the buttons.
+
+#### Changes:
+- **The field owns the screen on a phone.** The roster, the summary and the
+  level-up plan buttons are now at the bottom of the screen so you don't have to scroll down just to access the roster and level-up plan.
+- **Additional ways to place a tatari on the field.** You can still drag the tatari from the bench but now you can also tap a tatari on the bench and it lights the cell it would land in then tap again to keep that cell, or tap any cell to use that one instead to keep in-line with the mobile redesign.
+- **Just the grid button**: Hides everything except the field, so your phone's own screenshot catches the formation and nothing else.
+- **Boss pull (toggle):** Shows the worm boss dragging the rearmost Tatari of every column to the front. Nothing is moved for real, untoggle and they go back.
+- **The level-up plan sequence is now readable on the field.** Every planned Tatari carries
+  its step number beside its target level, so the order is visible on the
+  formation itself and in a shared picture.
+- **Share gives you the grid by default**, with *Everything* as an option for
+  the full card with both benches and the plan.
+- **The shared picture now carries the heals, buffs and debuffs** the formation
+  brings, the same way the panel under the field does.
+- Share sits in the bottom bar on a phone rather than in the header.
+- **Co-op mobile view QOL:** tap either bench to switch to that player, and the one you are filling
+  is much easier to pick out. Only the open bench takes up room.
+- The site address no longer appears on the field or in the shared picture.
+
+#### Bug Fixes:
+- Fixed Tatari art missing from a downloaded or copied picture when the roster
+  had not been scrolled yet. The card waited on an image decode that never
+  finished, so it drew coloured tiles with no sprites in them.
 
 ### 1.1.0
 

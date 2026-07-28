@@ -66,7 +66,14 @@
         <label class="check"
                title="Light the tiles a Tatari can hit, and shade the field by how many cover each tile. Only 72 of the 218 Tatari have a recorded range so far, so the picture is incomplete.">
           <input id="opt-ranges" type="checkbox"> Ranges <span class="wip">WIP</span></label>
+        <label class="check"
+               title="Show where the boss drags your rearmost row. Nothing is moved for real — turn it off and they go back.">
+          <input id="opt-pull" type="checkbox"> Boss pull</label>
         <label class="check"><input id="opt-glitter" type="checkbox"> <span class="check__text">Glitter art</span></label>
+        <!-- Desktop's copy. Phones get the one in the app bar instead, where it
+             is always on screen rather than above a field they have scrolled. -->
+        <button class="btn btn--tiny tools-only" type="button" data-clean
+                title="Hide everything except the field, so you can screenshot it">Clean view</button>
         <button id="btn-clear-field" class="btn btn--tiny btn--quiet" type="button">Clear field</button>
       </div>
     </div>
@@ -77,9 +84,10 @@
          describes a keyboard nobody holding it has. -->
     <p class="hint hint--pointer">Zobos advance from the top. Drag Tatari in from the roster, drag them between
       cells to rearrange, and double-click or press <kbd>Delete</kbd> to take one off the field.</p>
-    <p class="hint hint--touch">Zobos advance from the top. Tap a Tatari in the roster to bring it, then tap it
-      on the bench to drop it into the first free cell. Hold a token to drag it somewhere else, and
-      double-tap to take it off.</p>
+    <!-- Short on purpose: this sits between the header and the field on a phone,
+         and every line it takes is a line the grid does not get. -->
+    <p class="hint hint--touch">Zobos advance from the top. Tap one on the bench to see where it lands,
+      then tap again to place it. Double-tap to take it off.</p>
 
     <!-- Co-op only. Sits inside the frame so a screenshot of the grid carries
          the ask with it, which is how these actually get shared. -->
@@ -112,16 +120,27 @@
 
     <div class="field-frame">
       <div class="field-frame__enemy">Zobos spawn beyond this line</div>
+      <!-- The row the boss drags your backline into. Sits between the spawn
+           line and the field because that is where they end up: in front of
+           everything, in reach. Hidden until the toggle asks for it. -->
+      <div id="pull-row" class="pull-row" aria-live="polite" hidden></div>
       <div id="grid" class="grid" role="grid" aria-label="Formation grid, 6 columns by 6 rows"></div>
       <p id="field-lf" class="field-frame__lf" hidden></p>
+      <!-- No site URL here. It was on this row to carry the way back when a
+           screenshot got posted, and posting dropped sharply once it appeared:
+           a watermarked grid reads as an advert rather than someone's team. -->
       <div class="field-frame__base">
-        <span id="field-url" class="field-frame__url"></span>
         <span>Your base</span>
       </div>
     </div>
 
     <div id="bench" class="bench"></div>
     <div id="summary" class="summary"></div>
+
+    <!-- Clean view's own way out. In the flow after the frame rather than a
+         floating toast, so it can never sit on top of the grid it is telling
+         you to photograph. -->
+    <p class="clean-hint">Tap anywhere to bring the controls back</p>
   </section>
 
   <!-- ------------------------------------------------ priority -->
@@ -200,6 +219,36 @@
   </section>
 </main>
 
+<!--
+  Phones only. The field owns the screen there, so the roster, the summary and
+  the plan are not places you scroll to — they are drawn over it and dismissed.
+  Buttons rather than anchors because these open sheets rather than move the
+  page; the .secnav anchors above still serve the tablet stack, where all three
+  really are further down the page.
+-->
+<nav id="appbar" class="appbar" aria-label="Open a panel">
+  <button class="appbar__btn" type="button" data-sheet="roster">
+    <span class="appbar__label">Add</span>
+    <span id="appbar-bench" class="appbar__n"></span>
+  </button>
+  <button class="appbar__btn" type="button" data-sheet="summary">
+    <span class="appbar__label">Summary</span>
+    <span id="appbar-field" class="appbar__n"></span>
+  </button>
+  <button class="appbar__btn" type="button" data-sheet="priority">
+    <span class="appbar__label">Plan</span>
+    <span id="appbar-steps" class="appbar__n"></span>
+  </button>
+  <!-- Sharing is half of what this tool is for and converts at a fraction of
+       drafting, so it sits in the most visible chrome on the phone rather than
+       four buttons deep in a header that scrolls away. -->
+  <button class="appbar__btn appbar__btn--go" type="button" data-action="share">
+    <span class="appbar__label">Share</span>
+  </button>
+</nav>
+
+<div id="scrim" class="scrim" hidden></div>
+
 <footer class="foot">
   <span>Data and sprites from the
     <a href="https://clashofcritters.wiki.gg/wiki/Tatari" target="_blank" rel="noopener">Clash of Critters Wiki</a>.
@@ -222,7 +271,14 @@
 
 <dialog id="share" class="modal modal--share">
   <h2>Share this formation</h2>
-  <p class="hint">A picture of the field, both benches and the level-up plan.</p>
+
+  <!-- Grid first, because that is what people post. The full card carries the
+       benches and the plan for anyone who wants to hand over a whole build. -->
+  <div id="share-scope" class="segmented" role="group" aria-label="What to include in the picture">
+    <button class="segmented__btn" type="button" data-scope="grid" aria-pressed="true">Grid only</button>
+    <button class="segmented__btn" type="button" data-scope="full" aria-pressed="false">Everything</button>
+  </div>
+  <p id="share-scope-note" class="hint"></p>
 
   <div class="share__preview">
     <img id="share-preview" alt="The formation drawn as a shareable card" hidden>
