@@ -55,18 +55,27 @@ const KINDS = [
 let COLS = 6;
 let ROWS = 6;
 
+/**
+ * Rows drawn beyond the line, which Tatari reach into but never stand on.
+ *
+ * Seven because the data already goes that far: the deepest offset on file is
+ * row -7, and on a 6x6 alone the furthest anything can reach ahead is 5. Those
+ * ranges were simply not expressible here before.
+ */
+const ENEMY_ROWS = 7;
+
 const picked = {
   slug: null,
   kind: 'attack',
-  /** Cell index the Tatari stands on, or null while it is being placed. */
+  /**
+   * {col, row} the Tatari stands on, or null while it is being placed. Row 0 is
+   * the field's contact line and row 5 is nearest your base; rows beyond the
+   * line are negative, matching how offsets are stored.
+   */
   origin: null,
-  /** @type {Set<string>} "col,row" offsets, so a move keeps the shape. */
+  /** @type {Set<string>} "dCol,dRow" offsets, so a move keeps the shape. */
   tiles: new Set(),
 };
-
-const cellOf = (col, row) => row * COLS + col;
-const colOf = (cell) => cell % COLS;
-const rowOf = (cell) => Math.floor(cell / COLS);
 const key = (dCol, dRow) => `${dCol},${dRow}`;
 
 // ---------------------------------------------------------------- boot
@@ -86,7 +95,7 @@ async function main() {
   ROWS = state.meta?.hordeGrid?.rows ?? 6;
   // Back row, middle column: the deepest a Tatari can stand, which is where a
   // range that reaches a long way forward has room to be drawn.
-  picked.origin = cellOf(Math.floor(COLS / 2), ROWS - 1);
+  picked.origin = { col: Math.floor(COLS / 2), row: ROWS - 1 };
 
   buildGrid();
   buildKinds();
@@ -113,16 +122,24 @@ function wire() {
     renderAll();
   });
 
-  $('#grid').addEventListener('click', (e) => {
+  // One listener for both grids: reaching beyond the line is the same gesture
+  // as reaching across the field.
+  $('.field-frame').addEventListener('click', (e) => {
     const cell = e.target.closest('.cell');
     if (!cell) return;
-    const i = Number(cell.dataset.cell);
+    const col = Number(cell.dataset.col), row = Number(cell.dataset.row);
 
-    if (picked.origin === null) { picked.origin = i; renderAll(); return; }
+    if (picked.origin === null) {
+      if (row < 0) {
+        toast('Tatari stand on the field, not beyond the line', 'error');
+        return;
+      }
+      picked.origin = { col, row };
+      renderAll();
+      return;
+    }
 
-    const dCol = colOf(i) - colOf(picked.origin);
-    const dRow = rowOf(i) - rowOf(picked.origin);
-    const k = key(dCol, dRow);
+    const k = key(col - picked.origin.col, row - picked.origin.row);
     if (picked.tiles.has(k)) picked.tiles.delete(k);
     else picked.tiles.add(k);
     renderAll();
@@ -200,15 +217,15 @@ function prefillFromData() {
 // ---------------------------------------------------------------- rendering
 
 function buildGrid() {
-  const grid = $('#grid');
-  grid.innerHTML = '';
-  for (let i = 0; i < COLS * ROWS; i++) {
-    const cell = document.createElement('div');
-    cell.className = 'cell';
-    cell.dataset.cell = String(i);
-    cell.setAttribute('role', 'gridcell');
-    grid.append(cell);
-  }
+  const cell = (col, row, cls) =>
+    `<div class="cell ${cls}" role="gridcell" data-col="${col}" data-row="${row}"></div>`;
+
+  // Beyond the line: rows -7 up to -1, with -1 sitting directly on the line.
+  $('#enemy').innerHTML = Array.from({ length: ENEMY_ROWS }, (_, i) =>
+    Array.from({ length: COLS }, (_, col) => cell(col, i - ENEMY_ROWS, 'cell--enemy')).join('')).join('');
+
+  $('#grid').innerHTML = Array.from({ length: ROWS }, (_, row) =>
+    Array.from({ length: COLS }, (_, col) => cell(col, row, '')).join('')).join('');
 }
 
 function buildKinds() {
@@ -248,40 +265,39 @@ function renderKinds() {
 function renderGrid() {
   const placing = picked.origin === null;
   $('#grid-hint').textContent = placing
-    ? 'Click the tile the Tatari was standing on.'
-    : 'Click every tile it reached. Click one again to take it back off.';
+    ? 'Click the tile on the field it was standing on. Only the 6×6 can be stood on.'
+    : 'Click every tile it reached, beyond the line as well. Click one again to take it back off.';
 
-  const covered = new Set();
-  if (!placing) {
-    for (const k of picked.tiles) {
-      const [dCol, dRow] = k.split(',').map(Number);
-      const c = colOf(picked.origin) + dCol;
-      const r = rowOf(picked.origin) + dRow;
-      if (c < 0 || c >= COLS || r < 0 || r >= ROWS) continue;
-      covered.add(cellOf(c, r));
-    }
-  }
+  let shown = 0;
+  for (const cell of document.querySelectorAll('.field-frame .cell')) {
+    const col = Number(cell.dataset.col), row = Number(cell.dataset.row);
+    const isOrigin = !placing && col === picked.origin.col && row === picked.origin.row;
+    const covered = !placing
+      && picked.tiles.has(key(col - picked.origin.col, row - picked.origin.row));
+    if (covered) shown++;
 
-  for (const cell of $('#grid').children) {
-    const i = Number(cell.dataset.cell);
-    const isOrigin = i === picked.origin;
     cell.classList.toggle('is-origin', isOrigin);
-    cell.classList.toggle('is-covered', covered.has(i));
+    cell.classList.toggle('is-covered', covered);
     cell.classList.toggle('is-placing', placing);
     cell.innerHTML = isOrigin && picked.slug
       ? `<span class="contrib__token">${artHTML(state.bySlug.get(picked.slug), { lazy: false })}</span>`
       : '';
-    cell.setAttribute('aria-label', `Row ${rowOf(i) + 1}, column ${colOf(i) + 1}${
-      isOrigin ? ', where the Tatari stands' : covered.has(i) ? ', reached' : ''}`);
+
+    const where = row < 0
+      ? `${-row} beyond the line, column ${col + 1}`
+      : `Row ${row + 1}, column ${col + 1}`;
+    cell.setAttribute('aria-label', `${where}${
+      isOrigin ? ', where the Tatari stands' : covered ? ', reached' : ''}`);
   }
 
-  // Offsets can sit off the field once the Tatari moves forward. They are kept,
-  // not dropped — but silently keeping them would be its own trap.
-  const lost = picked.tiles.size - covered.size - (placing ? picked.tiles.size : 0);
+  // An offset can still fall outside what is drawn — sideways, or behind the
+  // back row. They are kept rather than dropped, but silently keeping them
+  // would be its own trap.
+  const lost = placing ? 0 : picked.tiles.size - shown;
   $('#btn-clear').disabled = picked.tiles.size === 0;
   if (lost > 0) {
     $('#grid-hint').textContent
-      += ` ${lost} recorded tile${lost === 1 ? '' : 's'} fall off the field from here — move it back to see them.`;
+      += ` ${lost} recorded tile${lost === 1 ? '' : 's'} sit outside the board from here — move it to see them.`;
   }
 }
 
