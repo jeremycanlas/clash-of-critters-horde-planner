@@ -158,10 +158,14 @@
  * this tool runs on has that to spare under the controls. The board a contributor
  * was told to draw a shape on could not be seen entire on any of them.
  *
- * Clamped rather than free: 252px is where a cell stops being 42px and starts
- * being too small to hit with a thumb, and this audience is three quarters
- * phones. Below that the frame keeps its size and the page scrolls, which is the
- * better trade — a board you can hit and scroll beats one you can see and miss.
+ * Floored at 300px, and the floor is the part that matters. The frame's width is
+ * not six cells: it is six cells plus five 4px gaps plus its own padding, about
+ * 36px of furniture, so 300px is where a cell is 44px and 252px — which an earlier
+ * pass used — was where a cell is 36px. Three quarters of this audience is
+ * pointing a thumb at these tiles to record a measurement, and shrinking the
+ * target by a quarter to win a little visible board is the wrong way round when
+ * picking a Tatari already scrolls the board into view. Below the floor the frame
+ * keeps its size and the page scrolls.
  *
  * width:100% is load-bearing: auto inline margins on a grid item turn off
  * stretch, so without it the frame collapses to its content and the cap never
@@ -169,7 +173,7 @@
  */
 .contribute .field-frame {
   width: 100%;
-  max-width: clamp(252px, calc((100svh - 320px) * 6 / 13), 340px);
+  max-width: clamp(300px, calc((100svh - 320px) * 6 / 13), 340px);
   margin-inline: auto;
 }
 
@@ -431,9 +435,14 @@
 /* Your own work and somebody else's are the two that change what you do next. */
 .contrib__legend [data-flight] { color: var(--text-dim); }
 /* Says what the bars are counting, which the three swatches on their own cannot.
-   Drops off first when the row runs out of width. */
-.contrib__legendnote { color: var(--text-mute); }
-@media (max-width: 1180px) { .contrib__legendnote { display: none; } }
+   Drops off first when the row runs out of width — and it is selected through
+   .contrib__legend here because `.contrib__legend span` sets display, so a bare
+   .contrib__legendnote loses on specificity and the rule below did nothing at any
+   width. */
+.contrib__legend .contrib__legendnote { color: var(--text-mute); }
+@media (max-width: 1180px) {
+  .contrib__legend .contrib__legendnote { display: none; }
+}
 
 /*
  * Said once, when the lookup lands, and never again. It sits under the legend
