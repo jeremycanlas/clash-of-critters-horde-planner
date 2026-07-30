@@ -29,6 +29,7 @@ const SHEETS = {
   roster: '.panel--roster',
   summary: '#summary',
   priority: '.panel--priority',
+  saves: '.panel--saves',
 };
 
 export function buildShell() {

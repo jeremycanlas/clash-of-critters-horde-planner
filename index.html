@@ -52,8 +52,12 @@
        class="topbar__contribute-plus" aria-hidden="true">+</span>Record a range</a>
     <button id="btn-share" class="btn" type="button"
             title="Share this formation as a picture or a link">Share</button>
+    <!-- Was "Save" while a file download was the only way to keep a formation.
+         The in-browser Saved list owns that word now, and a "Save" that writes
+         a file next to a "Saved" that does not would be two features wearing
+         one name. Export/Import also read as the pair they are. -->
     <button id="btn-save"  class="btn" type="button"
-            title="Download this formation as a file you can open again">Save</button>
+            title="Download this formation as a file you can open again">Export</button>
     <!-- A real label, so the file picker opens on the browser's own activation
          rather than a synthetic .click(). Files can also just be dropped on the page. -->
     <label class="btn" for="import-file" title="Open a saved .json formation, or drop one on the page">Import
@@ -268,6 +272,10 @@
     <span class="appbar__label">Plan</span>
     <span id="appbar-steps" class="appbar__n"></span>
   </button>
+  <button class="appbar__btn" type="button" data-sheet="saves">
+    <span class="appbar__label">Saved</span>
+    <span id="appbar-saves" class="appbar__n"></span>
+  </button>
   <!-- Sharing is half of what this tool is for and converts at a fraction of
        drafting, so it sits in the most visible chrome on the phone rather than
        four buttons deep in a header that scrolls away. -->
@@ -275,6 +283,37 @@
     <span class="appbar__label">Share</span>
   </button>
 </nav>
+
+<!-- ------------------------------------------------ saved formations -->
+
+<!-- Desktop and tablet: the drawer's tab, pinned to the right edge where it is
+     always in view without costing the field or the roster a pixel. Phones get
+     the Saved button on the app bar instead, and never see this. -->
+<button id="saves-handle" class="saves-handle" type="button"
+        aria-controls="sec-saves" aria-expanded="false"
+        title="Formations saved in this browser">
+  <span class="saves-handle__label">Saved</span>
+  <span id="saves-handle-n" class="saves-handle__n"></span>
+</button>
+
+<!-- One element, two homes: a right-edge drawer on desktop, an app-bar sheet on
+     a phone. Outside .layout because it never takes part in the page grid. -->
+<section id="sec-saves" class="panel panel--saves" aria-labelledby="h-saves">
+  <div class="panel__head">
+    <h2 id="h-saves">Saved formations <span id="saves-count" class="muted"></span></h2>
+    <!-- Desktop's way out. The phone sheet closes like the others: scrim,
+         Escape, or its own app-bar button. -->
+    <button id="saves-close" class="btn btn--tiny btn--quiet tools-only" type="button">Close</button>
+  </div>
+
+  <button id="btn-keep" class="btn btn--primary saves__keep" type="button">Save this formation</button>
+
+  <p id="saves-empty" class="saves__empty">Nothing saved yet. Save a formation and
+    it will be waiting here next visit — these stay in this browser, and
+    <b>Clear all</b> does not touch them.</p>
+
+  <ol id="saves-list" class="saves" aria-label="Saved formations, newest first"></ol>
+</section>
 
 <div id="scrim" class="scrim" hidden></div>
 

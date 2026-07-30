@@ -44,7 +44,7 @@ export function artHTML(t, { lazy = true, priority = null } = {}) {
  * the share card — so a posted picture says which build drew it, which matters
  * while the attack-range data is still being filled in.
  */
-export const APP_VERSION = '1.2.1';
+export const APP_VERSION = '1.3.0';
 export const APP_AUTHOR = 'jacc6475';
 
 /*
@@ -60,13 +60,31 @@ export { typeIcon, roleIcon };
 // ---------------------------------------------------------------- toast
 
 let toastTimer;
-export function toast(message, kind = 'info') {
+/**
+ * `action` is an optional `{label, fn}` - an Undo, mostly. A toast carrying one
+ * accepts the pointer and stays up longer, because "press this before it goes"
+ * is only fair if there is time to press it.
+ */
+export function toast(message, kind = 'info', action = null) {
   const el = $('#toast');
   el.textContent = message;
   el.dataset.kind = kind;
+  if (action) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'toast__act';
+    btn.textContent = action.label;
+    btn.addEventListener('click', () => {
+      clearTimeout(toastTimer);
+      el.classList.remove('is-shown');
+      action.fn();
+    });
+    el.append(btn);
+  }
+  el.classList.toggle('has-act', !!action);
   el.classList.add('is-shown');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('is-shown'), 2600);
+  toastTimer = setTimeout(() => el.classList.remove('is-shown'), action ? 6000 : 2600);
 }
 
 // ---------------------------------------------------------------- files

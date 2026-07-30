@@ -15,6 +15,7 @@ import { buildPriority, renderPriority } from './priority.js';
 import { buildShare, openShare } from './share.js';
 import { warmSprites } from './card.js';
 import { buildShell, renderShell } from './shell.js';
+import { buildSaves } from './saves.js';
 import { buildAnalytics, track } from './analytics.js';
 import { importTatari } from './custom.js';
 
@@ -53,6 +54,7 @@ async function main() {
   buildPriority();
   buildShare();
   buildShell();
+  buildSaves();
   buildAnalytics();
   buildFilters(() => renderRoster());
 
@@ -248,9 +250,11 @@ function wireToolbar() {
   });
 
   $('#btn-save').addEventListener('click', () => {
-    if (nothingBrought('Nothing to save yet')) return;
+    if (nothingBrought('Nothing to export yet')) return;
     downloadJSON(slugFilename(store.formation.name, 'horde-formation'), store.toJSON());
-    toast('Formation saved', 'ok');
+    // The label moved from Save to Export when the in-browser Saved list took
+    // the word; the analytics label stays, so the funnel counts stay comparable.
+    toast('Exported as a .json file', 'ok');
     track('formation-saved');
   });
 

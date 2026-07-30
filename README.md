@@ -278,6 +278,33 @@ and `.nojekyll` is already committed so Pages serves the files as they are.
 
 ## Changelog
 
+### 1.3.0
+
+#### Summary:
+
+Formations can now be saved in the browser and brought back with one click. On a
+desktop the list lives in a drawer behind a **Saved** tab on the right edge of the
+screen; on a phone it is a **Saved** button on the bottom bar, opening as a sheet
+like the roster and the plan. Each saved formation shows a stamp-sized map of the
+actual sprites on the 6×6 field, so you recognise a build by its shape before you
+read its name.
+
+#### Changes:
+
+- **Saved formations.** *Save this formation* keeps a snapshot of the field, both
+  benches, the level-up plan, the name and the co-op lines in this browser.
+  Saving the same name again updates that entry; up to 40 are kept.
+- Loading a save replaces what you were working on, and the toast offers **Undo**
+  so one stray click cannot cost a draft. Deleting offers the same.
+- The save that exactly matches what is on the field is marked **On the field**.
+- **Clear all does not touch saved formations** — coming back to a kept draft
+  after wiping the field is the point of keeping one.
+- The header's *Save* button is now called **Export** — it still downloads the
+  same `.json` file, but "Save" belongs to the in-browser list now, and
+  Export/Import read as the pair they are.
+- Nothing new leaves the browser: saved formations are `localStorage` only, and
+  the only analytics are two fixed labels (`save-kept`, `save-loaded`).
+
 ### 1.2.1
 
 #### Summary:
