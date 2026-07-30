@@ -640,12 +640,36 @@ function reconcile() {
 
 function persist() {
   try {
-    localStorage.setItem(SAVE_KEY, JSON.stringify({
-      mode: formation.mode, cells: formation.cells, bench: formation.bench,
-      plan: formation.plan, name: formation.name, lf: formation.lf,
-      lines: formation.lines, lfMode: formation.lfMode,
-    }));
+    localStorage.setItem(SAVE_KEY, JSON.stringify(snapshot()));
   } catch { /* private browsing, quota - not worth interrupting the user */ }
+}
+
+/**
+ * The whole working state as one plain object - the shape persist() writes and
+ * apply() reads back. Deep-copied, so a snapshot held by a caller does not
+ * change under it when the formation does. The saved-formations list keeps
+ * these in localStorage next to the autosave.
+ */
+export function snapshot() {
+  return {
+    mode: formation.mode,
+    cells: formation.cells.map((o) => (o ? { ...o } : null)),
+    bench: { 1: [...formation.bench[1]], 2: [...formation.bench[2]] },
+    plan: formation.plan.map((s) => ({ ...s, members: s.members.map((m) => ({ ...m })) })),
+    name: formation.name,
+    lines: {
+      lf: { wants: [...formation.lines.lf.wants], note: formation.lines.lf.note },
+      have: { wants: [...formation.lines.have.wants], note: formation.lines.have.note },
+    },
+    lfMode: formation.lfMode,
+  };
+}
+
+/** Loads a snapshot back. apply() enforces every invariant on the way in. */
+export function applySnapshot(data) {
+  if (!data || typeof data !== 'object') return false;
+  apply(data);
+  return true;
 }
 
 /** The formation left in localStorage. A shared link takes priority over it. */

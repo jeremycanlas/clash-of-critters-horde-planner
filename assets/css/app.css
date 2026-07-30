@@ -1601,6 +1601,186 @@ body.is-dragging-active {
 .toast[data-kind="error"] { border-color: var(--danger); color: color-mix(in srgb, var(--danger) 80%, var(--text)); }
 .toast[data-kind="ok"]    { border-color: var(--ok); }
 
+/* A toast carrying an Undo accepts the pointer; a plain one stays untouchable
+   so it never eats a click meant for what is behind it. */
+.toast.has-act {
+  pointer-events: auto;
+  display: flex; align-items: center; gap: var(--s3);
+  max-width: min(92vw, 480px);
+}
+.toast__act {
+  flex: none;
+  padding: 3px 10px;
+  border: 1px solid color-mix(in srgb, var(--accent) 60%, var(--line));
+  border-radius: 999px;
+  background: transparent;
+  color: var(--accent);
+  font: inherit; font-size: 12px; font-weight: 700;
+  cursor: pointer;
+  transition: background-color 140ms var(--ease-out);
+}
+.toast__act:hover { background: color-mix(in srgb, var(--accent) 14%, transparent); }
+
+/* ==================================================== saved formations */
+
+/*
+ * Snapshots of the whole working state, kept in localStorage next to the
+ * autosave. The autosave is the working copy and every change overwrites it;
+ * these are decisions, and only saving the same name again touches one.
+ *
+ * Desktop keeps the list in a drawer off the right edge, behind a tab that is
+ * always in view without costing the field or the roster any room. The phone
+ * opens the same element as a sheet from the app bar — those rules live with
+ * the other sheets in the phone block below.
+ */
+
+.saves-handle {
+  position: fixed; top: 50%; right: 0; z-index: var(--z-sticky);
+  transform: translateY(-50%);
+  display: inline-flex; flex-direction: column; align-items: center; gap: var(--s2);
+  padding: var(--s3) 5px var(--s3) 7px;
+  border: 1px solid var(--line); border-right: 0;
+  border-radius: var(--r-md) 0 0 var(--r-md);
+  background: var(--surface-2);
+  color: var(--text-dim);
+  font: inherit; font-size: 12px; font-weight: 650; letter-spacing: .04em;
+  cursor: pointer;
+  writing-mode: vertical-rl;
+  transition: background-color 140ms var(--ease-out), color 140ms var(--ease-out),
+              border-color 140ms var(--ease-out);
+}
+.saves-handle:hover { background: var(--surface-3); color: var(--text); }
+.saves-handle[aria-expanded="true"] { border-color: var(--accent); color: var(--text); }
+/* The count keeps its own writing mode: a rotated digit reads as a mistake. */
+.saves-handle__n {
+  writing-mode: horizontal-tb;
+  min-width: 18px; padding: 1px 5px;
+  border-radius: 999px;
+  background: var(--surface-3);
+  color: var(--text-dim);
+  font-size: 11px; font-weight: 700; letter-spacing: 0;
+  text-align: center;
+}
+.saves-handle__n:empty { display: none; }
+
+@media (min-width: 761px) {
+  .panel--saves {
+    position: fixed; top: 0; right: 0; bottom: 0; z-index: var(--z-modal);
+    display: flex; flex-direction: column;
+    width: min(380px, 92vw);
+    border: 0; border-left: 1px solid var(--line);
+    border-radius: 0;
+    box-shadow: var(--lift-2);
+    transform: translateX(103%);
+    visibility: hidden;
+    transition: transform 220ms var(--ease-out), visibility 220ms var(--ease-out);
+  }
+  body.saves-open .panel--saves { transform: none; visibility: visible; }
+}
+
+.saves__keep { width: 100%; }
+
+.saves__empty {
+  margin: var(--s3) 0 0;
+  color: var(--text-dim); font-size: 12.5px;
+}
+.saves__empty b { font-weight: 650; }
+
+.saves {
+  list-style: none;
+  margin: var(--s3) 0 0; padding: 0;
+  flex: 1 1 auto; min-height: 0;
+  display: flex; flex-direction: column; gap: var(--s2);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.save { position: relative; }
+
+/* The whole card loads — the map and the name are one target, because "which
+   one is it" and "open it" are answered by the same glance. */
+.save__main {
+  display: flex; align-items: center; gap: var(--s3);
+  width: 100%;
+  padding: var(--s2) 30px var(--s2) var(--s2);   /* right gap clears the × */
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit; text-align: left;
+  cursor: pointer;
+  transition: background-color 140ms var(--ease-out), border-color 140ms var(--ease-out);
+}
+.save__main:hover {
+  background: var(--surface-3);
+  border-color: color-mix(in srgb, var(--line) 60%, var(--text-mute));
+}
+.save.is-current .save__main { border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); }
+
+/*
+ * The formation itself, sprite by sprite on a 6×6 grid the size of a stamp.
+ * Art reads faster than names: a build is recognised by its shape and its
+ * sprites long before its title. The hairline gradients draw the empty field
+ * behind them so five sprites still read as a formation, not a scatter.
+ */
+.save__map {
+  flex: none;
+  display: grid;
+  grid-template-columns: repeat(6, 13px);
+  grid-template-rows: repeat(6, 13px);
+  gap: 1px;
+  padding: 3px;
+  border-radius: var(--r-sm);
+  background: var(--bg);
+  background-image:
+    repeating-linear-gradient(to right,  transparent 0 13px, var(--line-soft) 13px 14px),
+    repeating-linear-gradient(to bottom, transparent 0 13px, var(--line-soft) 13px 14px);
+  background-origin: content-box;
+  background-clip: content-box;
+}
+.save__map img { width: 13px; height: 13px; object-fit: contain; }
+/* The handful of Tatari with no art yet: an initial, not a broken image. */
+.save__stub {
+  display: grid; place-items: center;
+  font-size: 8px; font-weight: 700; color: var(--text-mute);
+}
+
+.save__body {
+  flex: 1 1 auto; min-width: 0;
+  display: flex; flex-direction: column; gap: 3px;
+}
+.save__name {
+  font-size: 13.5px; font-weight: 600;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.save__meta {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px;
+  color: var(--text-mute); font-size: 11.5px;
+}
+/* Shown only on the save that is exactly what is on the field right now. */
+.save__now { display: none; color: var(--accent); font-size: 10px; font-weight: 700;
+  letter-spacing: .06em; text-transform: uppercase; }
+.save.is-current .save__now { display: inline; }
+
+/* Deleting should be present but never the easiest thing to hit — same lesson
+   the bench chips learned. Revealed by the pointer; always there for touch. */
+.save__x {
+  position: absolute; top: 4px; right: 4px;
+  width: 24px; height: 24px;
+  display: grid; place-items: center;
+  border: 0; border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--text-mute);
+  font: inherit; font-size: 15px; line-height: 1;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 140ms var(--ease-out), color 140ms var(--ease-out),
+              background-color 140ms var(--ease-out);
+}
+.save:hover .save__x, .save:focus-within .save__x { opacity: 1; }
+.save__x:hover { background: var(--surface-3); color: var(--danger); }
+@media (hover: none) { .save__x { opacity: 1; } }
+
 /* ============================================================ footer */
 
 .foot {
@@ -1886,7 +2066,9 @@ body.is-dragging-active {
    * the bar stays tappable while a sheet is up and you can go straight from the
    * roster to the plan without closing anything first.
    */
-  .panel--roster, .panel--priority, #summary {
+  /* The saved list joins the sheets here: same element the desktop drawer
+     uses, but the drawer rules are scoped to wide screens and stand aside. */
+  .panel--roster, .panel--priority, .panel--saves, #summary {
     position: fixed; inset: auto 0 var(--appbar-h) 0; z-index: 70;
     display: flex; flex-direction: column;
     /*
@@ -1910,7 +2092,7 @@ body.is-dragging-active {
   }
   /* The grab bar. Decoration would be a bad reason for it; it is here because a
      sheet with no handle reads as a panel that was always there. */
-  .panel--roster::before, .panel--priority::before, #summary::before {
+  .panel--roster::before, .panel--priority::before, .panel--saves::before, #summary::before {
     content: "";
     flex: 0 0 auto;
     width: 36px; height: 4px;
@@ -1920,10 +2102,15 @@ body.is-dragging-active {
   }
   body[data-sheet="roster"]   .panel--roster,
   body[data-sheet="priority"] .panel--priority,
+  body[data-sheet="saves"]    .panel--saves,
   body[data-sheet="summary"]  #summary {
     transform: none;
     visibility: visible;
   }
+
+  /* The app bar's Saved button owns the feature here; the edge tab is
+     desktop furniture. */
+  .saves-handle { display: none; }
 
   /* The page behind a sheet does not scroll. Overscrolling it is what collapsed
      the browser's toolbar mid-gesture, and scrolling a field you cannot see was
@@ -2008,8 +2195,15 @@ body.is-dragging-active {
   .appbar__label { overflow: hidden; text-overflow: ellipsis; }
 
   /* Add is the one pressed most and it sits at the far edge of a thumb's reach,
-     so it gets the widest target of the four. */
+     so it gets the widest target of the row. */
   .appbar__btn[data-sheet="roster"] { flex: 1.35; }
+
+  /* Five buttons share the bar now that Saved is one of them. On the narrowest
+     phones the row gives up padding before it gives up letters. */
+  @media (max-width: 430px) {
+    .appbar { gap: 3px; padding-left: var(--s2); padding-right: var(--s2); }
+    .appbar__btn { padding: 8px 3px; gap: 4px; font-size: 12px; }
+  }
 
   /* Desktop's copy. The dock carries this on a phone. */
   .tools-only { display: none; }
@@ -2087,6 +2281,8 @@ body.is-clean #bench,
 body.is-clean #summary,
 body.is-clean .panel--roster,
 body.is-clean .panel--priority,
+body.is-clean .panel--saves,
+body.is-clean .saves-handle,
 body.is-clean .panel--field .panel__head,
 body.is-clean .panel--field .hint,
 body.is-clean .panel--field .lf-input,
