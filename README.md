@@ -164,7 +164,35 @@ the page tells you which.
 Picking a Tatari that already has an attack range loads it, so checking an
 existing entry is as easy as adding a missing one — several were read off a
 sibling's diagram and are marked `UNVERIFIED`, and a shape is much easier to
-check than to describe.
+check than to describe. What is loaded that way is on loan from the data file: it
+sits on the board to be looked at and joins your queue only once you change
+something.
+
+### Knowing what is worth doing
+
+Every roster card says two things at once, on two channels, because they are two
+different questions.
+
+Along the bottom, one bar per reach that Tatari can have — attack always, then a
+heal, buff or debuff bar only if it has one, since "no heal reach recorded" is not
+a gap on something that has never healed. Each bar is empty for nothing recorded,
+grey for on file, and solid for checked by hand; the bar for the reach you are
+recording stands taller than the rest. All four are on the card at once, so
+noticing that a Tatari has an attack range but no heal reach no longer means
+switching tabs and re-reading the roster.
+
+Around the edge, whether a contribution is already in flight: violet for an edit
+waiting in your queue, and a paler violet — with the issue number printed on the
+card — for one somebody has already opened an issue for. That last one is the most
+useful mark on the page, because a Tatari with nothing on file and an issue open
+is exactly the one you would otherwise spend twenty minutes duplicating.
+
+One hue, and only one, on purpose. A card already carries its element as a tint
+behind the sprite and up to three effect badges in the corner, which between them
+use red, yellow, green and blue — so those four cannot mean anything else here
+without meaning two things at once. Coverage is a sequence rather than a set of
+categories, so it is drawn as one: three steps of brightness rather than three
+unrelated colours.
 
 ### Reading one that came in
 
