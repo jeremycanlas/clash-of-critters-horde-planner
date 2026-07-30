@@ -1,297 +1,298 @@
 <!doctype html>
 <html lang="en">
+
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Record a range — Horde Drafter</title>
-<meta name="description" content="Click the tiles a Tatari reaches and get back a JSON entry for the Horde Drafter range data.">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='19' font-size='20'>🐾</text></svg>">
-<link rel="stylesheet" href="assets/css/app.css">
-<link rel="stylesheet" href="assets/css/contribute.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Horde Drafter: Record a range </title>
+  <meta name="description"
+    content="Click the tiles a Tatari reaches and get back a JSON entry for the Horde Drafter range data.">
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='19' font-size='20'>🐾</text></svg>">
+  <link rel="stylesheet" href="assets/css/app.css">
+  <link rel="stylesheet" href="assets/css/contribute.css">
 </head>
+
 <body class="contribute">
 
-<header class="topbar">
-  <div class="topbar__title">
-    <h1>Record a range</h1>
-    <span class="topbar__sub">Horde&nbsp;Drafter</span>
-  </div>
-  <div class="topbar__actions">
-    <a class="btn btn--quiet" href="index.html">Back to the drafter</a>
-  </div>
-</header>
+  <header class="topbar">
+    <div class="topbar__title">
+      <h1>Record a range</h1>
+      <span class="topbar__sub">Horde&nbsp;Drafter</span>
+    </div>
+    <div class="topbar__actions">
+      <a class="btn btn--quiet" href="index.html">Back to the drafter</a>
+    </div>
+  </header>
 
-<!--
+  <!--
   The drafter's own layout, verbatim: .panel--field beside .panel--roster on a
   wide screen, and on a phone the field owns the screen while the roster becomes
-  a sheet drawn over it. Same grid areas, same shell, same app bar — the only
+  a sheet drawn over it. Same grid areas, same shell, same app bar - the only
   difference is that the field here is a recorder rather than a formation.
 -->
-<main class="layout">
+  <main class="layout">
 
-  <section id="sec-field" class="panel panel--field" aria-labelledby="h-rec">
-    <div class="panel__head">
-      <h2 id="h-rec">Record a range</h2>
-      <div class="panel__tools">
-        <button id="btn-move" class="btn btn--tiny" type="button">Move the Tatari</button>
-        <button id="btn-clear" class="btn btn--tiny btn--quiet" type="button">Clear tiles</button>
-        <!-- The other end of the issue button: put a recorded entry back on the
+    <section id="sec-field" class="panel panel--field" aria-labelledby="h-rec">
+      <div class="panel__head">
+        <h2 id="h-rec">Record a range</h2>
+        <div class="panel__tools">
+          <button id="btn-move" class="btn btn--tiny" type="button">Move the Tatari</button>
+          <button id="btn-clear" class="btn btn--tiny btn--quiet" type="button">Clear tiles</button>
+          <!-- The other end of the issue button: put a recorded entry back on the
              grid it was drawn on, next to whatever is already on file. -->
-        <button id="btn-import" class="btn btn--tiny btn--quiet" type="button">Import an entry</button>
+          <button id="btn-import" class="btn btn--tiny btn--quiet" type="button">Import an entry</button>
+        </div>
       </div>
-    </div>
 
-    <!--
+      <!--
       One sentence. Everything above the board is rent the board pays: the frame
       is thirteen rows tall, and with the old four-paragraph preamble the 6x6 a
       contributor is told to click began 191px below the fold on a 945px screen.
       The rest of the why moved under the board, which is where it is read after
       the first range rather than before it.
     -->
-    <p class="hint contrib__lede">
-      Attack range is only published as screenshots and support reach is not
-      published at all, so both get read off the game by hand. Stand a Tatari
-      where your screenshot had it and click what it reached.
-    </p>
+      <p class="hint contrib__lede">
+        Attack range is only published as screenshots and support reach is not
+        published at all, so both get read off the game by hand. Stand a Tatari
+        where your screenshot had it and click what it reached.
+      </p>
 
-    <div id="chosen" class="contrib__chosen contrib__chosen--empty">
-      Pick one from the roster.
-    </div>
+      <div id="chosen" class="contrib__chosen contrib__chosen--empty">
+        Pick one from the roster.
+      </div>
 
-    <!--
+      <!--
       What is being recorded, on one row: the four reaches, and the escape hatch
       for the ones that have no shape at all. A heal that mends the whole team has
       no tile pattern to draw, and drawing one would invent a limit the game does
       not have.
     -->
-    <div class="contrib__what">
-      <div id="kinds" class="chips chips--text" role="group" aria-label="What you are recording"></div>
-      <label class="check contrib__scope">
-        <input id="opt-all" type="checkbox">
-        <span id="opt-all-label">Reaches everything — no tile pattern</span>
-      </label>
-    </div>
+      <div class="contrib__what">
+        <div id="kinds" class="chips chips--text" role="group" aria-label="What you are recording"></div>
+        <label class="check contrib__scope">
+          <input id="opt-all" type="checkbox">
+          <span id="opt-all-label">Reaches everything, no tile pattern</span>
+        </label>
+      </div>
 
-    <!-- What this reach is, then what to do about it. Two sentences, one block,
+      <!-- What this reach is, then what to do about it. Two sentences, one block,
          because they are read together and each cost a 24px gap of its own. -->
-    <div class="contrib__say">
-      <p id="kind-note"></p>
-      <p id="grid-hint"></p>
-    </div>
+      <div class="contrib__say">
+        <p id="kind-note"></p>
+        <p id="grid-hint"></p>
+      </div>
 
-    <!--
+      <!--
       Only shown while an imported entry is on the grid. Reviewing somebody
       else's reading is not the same job as taking your own: what you are
       looking for is not the shape but the difference between it and what is
       already on file, so that difference is what the tiles say.
     -->
-    <div id="diff" class="contrib__diff" hidden>
-      <p id="diff-say" class="contrib__diffsay"></p>
-      <p id="diff-legend" class="contrib__legend contrib__legend--diff"
-         aria-label="What the tile colours mean">
-        <span data-tile="added">Added by this entry</span>
-        <span data-tile="removed">Dropped by this entry</span>
-        <span data-tile="kept">Already on file</span>
-      </p>
-    </div>
+      <div id="diff" class="contrib__diff" hidden>
+        <p id="diff-say" class="contrib__diffsay"></p>
+        <p id="diff-legend" class="contrib__legend contrib__legend--diff" aria-label="What the tile colours mean">
+          <span data-tile="added">Added by this entry</span>
+          <span data-tile="removed">Dropped by this entry</span>
+          <span data-tile="kept">Already on file</span>
+        </p>
+      </div>
 
-    <!--
+      <!--
       Two grids, one frame. The upper one is the ground beyond the line, which
       Tatari can reach into but never stand on; the lower one is the 6x6 they
       actually occupy. Recorded ranges already reach seven rows past the line,
       which a 6x6 on its own simply cannot express.
     -->
-    <div class="field-frame">
-      <div id="enemy" class="grid grid--enemy" role="grid"
-           aria-label="Beyond the line, 6 columns by 7 rows — reachable, not standable"></div>
-      <div class="field-frame__enemy">Zobos spawn beyond this line</div>
-      <div id="grid" class="grid" role="grid" aria-label="Field, 6 columns by 6 rows"></div>
-      <div class="field-frame__base"><span>Your base</span></div>
-    </div>
+      <div class="field-frame">
+        <div id="enemy" class="grid grid--enemy" role="grid"
+          aria-label="Beyond the line, 6 columns by 7 rows. Reachable, not standable"></div>
+        <div class="field-frame__enemy">Zobos spawn beyond this line</div>
+        <div id="grid" class="grid" role="grid" aria-label="Field, 6 columns by 6 rows"></div>
+        <div class="field-frame__base"><span>Your base</span></div>
+      </div>
 
-    <p class="hint contrib__aside">
-      Tiles are offsets from its own tile, so a Tatari that reaches five rows
-      ahead has to be standing far enough back for you to click them all. The
-      <b>i</b> on a roster card opens its detail sheet, which carries the wiki's
-      range diagram when one exists.
-    </p>
+      <p class="hint contrib__aside">
+        Tiles are offsets from its own tile, so a Tatari that reaches five rows
+        ahead has to be standing far enough back for you to click them all. The
+        <b>i</b> on a roster card opens its detail sheet, which carries the wiki's
+        range diagram when one exists.
+      </p>
 
-    <div class="contrib__meta">
-      <label class="contrib__label" for="from">How you know</label>
-      <select id="from" class="field field--select">
-        <option value="range diagram">The wiki's range diagram</option>
-        <option value="in-game screenshot">A screenshot I took in-game</option>
-        <option value="in-game observation">Watching it in a run</option>
-        <option value="other">Something else — I'll say in the note</option>
-      </select>
+      <div class="contrib__meta">
+        <label class="contrib__label" for="from">How you know</label>
+        <select id="from" class="field field--select">
+          <option value="range diagram">The wiki's range diagram</option>
+          <option value="in-game screenshot">A screenshot I took in-game</option>
+          <option value="in-game observation">Watching it in a run</option>
+          <option value="other">Something else, I'll say in the note</option>
+        </select>
 
-      <label class="contrib__label" for="note">Note <span class="muted">— say if you are unsure</span></label>
-      <input id="note" class="field" type="text" maxlength="240" autocomplete="off"
-             placeholder="e.g. 7 tiles, 3 wide and 3 deep — or UNVERIFIED, only saw it once">
-    </div>
+        <label class="contrib__label" for="note">Note <span class="muted"> say if you are unsure</span></label>
+        <input id="note" class="field" type="text" maxlength="240" autocomplete="off" placeholder="">
+      </div>
 
-    <!--
+      <!--
       Everything recorded this session. An edit joins the moment it has a tile
       on it and is picked up again unchanged if you come back to that Tatari,
       so a contributor can work through a handful in one sitting and send them
       together rather than one issue at a time.
     -->
-    <div class="contrib__queue">
-      <div class="contrib__queuehead">
-        <b>Queue</b> <span id="queue-count" class="muted"></span>
-        <button id="btn-queue-clear" class="btn btn--tiny btn--quiet" type="button">Clear queue</button>
-      </div>
-      <div id="queue" class="contrib__queuelist"></div>
-    </div>
-
-    <div class="contrib__out">
-      <p id="out-target" class="hint"></p>
-      <pre id="out" class="contrib__json" tabindex="0" aria-label="The entry this produces"></pre>
-
-      <div class="contrib__actions">
-        <button id="btn-copy" class="btn btn--primary" type="button">Copy the entry</button>
-        <button id="btn-download" class="btn" type="button">Download it</button>
-        <a id="btn-issue" class="btn" href="#" target="_blank" rel="noopener">Open an issue</a>
+      <div class="contrib__queue">
+        <div class="contrib__queuehead">
+          <b>Queue</b> <span id="queue-count" class="muted"></span>
+          <button id="btn-queue-clear" class="btn btn--tiny btn--quiet" type="button">Clear queue</button>
+        </div>
+        <div id="queue" class="contrib__queuelist"></div>
       </div>
 
-      <p class="hint contrib__aside">
-        An issue is the easiest route — the button fills one in for you. A pull
-        request editing the data file is very welcome too.
-      </p>
-    </div>
-  </section>
+      <div class="contrib__out">
+        <p id="out-target" class="hint"></p>
+        <pre id="out" class="contrib__json" tabindex="0" aria-label="The entry this produces"></pre>
 
-  <!--
+        <div class="contrib__actions">
+          <button id="btn-copy" class="btn btn--primary" type="button">Copy the entry</button>
+          <button id="btn-download" class="btn" type="button">Download it</button>
+          <a id="btn-issue" class="btn" href="#" target="_blank" rel="noopener">Open an issue</a>
+        </div>
+
+        <p class="hint contrib__aside">
+          Clicking the Issue button will prefill an issue with the current queue so that I can review and merge it -
+          jacc.
+        </p>
+      </div>
+    </section>
+
+    <!--
     roster.js renders all of this: the search, the filters, the cards and the
     detail sheet. Only what a click means differs, and that is injected.
   -->
-  <section class="panel panel--roster" aria-labelledby="h-roster">
-    <div class="panel__head">
-      <h2 id="h-roster">Roster <span id="roster-count" class="muted"></span></h2>
-    </div>
+    <section class="panel panel--roster" aria-labelledby="h-roster">
+      <div class="panel__head">
+        <h2 id="h-roster">Roster <span id="roster-count" class="muted"></span></h2>
+      </div>
 
-    <!--
+      <!--
       Two channels, so two rows. The strip along the bottom of a card carries one
       segment per reach that Tatari can have and says what is on file for each;
       the card's edge says whether a contribution is already in flight. They used
       to be the same channel, five values deep with a precedence order, so a card
-      could only tell you one of the two things — and on a phone the other went
+      could only tell you one of the two things - and on a phone the other went
       into a `title` nobody can open.
 
       Named in the order they are read rather than in order of importance: you
       look at the strip while deciding what to record, and at the edge to find out
       whether to bother.
     -->
-    <div class="contrib__legend">
-      <p class="contrib__legendrow"><b>On file</b>
-        <span data-cov="none">Nothing yet</span>
-        <span data-cov="recorded">Recorded</span>
-        <span data-cov="verified">Checked by hand</span>
-        <span class="contrib__legendnote">— one bar per reach: attack, then any heal, buff or debuff it has</span>
-      </p>
-      <p class="contrib__legendrow"><b>In flight</b>
-        <span data-flight="mine">Waiting in your queue</span>
-        <span data-flight="theirs">An issue is open — the card carries its number</span>
-      </p>
-    </div>
+      <div class="contrib__legend">
+        <p class="contrib__legendrow"><b>On file</b>
+          <span data-cov="none">Nothing yet</span>
+          <span data-cov="recorded">Recorded</span>
+          <span data-cov="verified">Checked by hand</span>
+          <span class="contrib__legendnote">- one bar per reach: attack, then any heal, buff or debuff it has</span>
+        </p>
+        <p class="contrib__legendrow"><b>In flight</b>
+          <span data-flight="mine">Waiting in your queue</span>
+          <span data-flight="theirs">An issue is open, the card carries its number</span>
+        </p>
+      </div>
 
-    <!--
+      <!--
       Filled in once the open issues have been read, and left empty if they
       cannot be. The one network call this page makes, so it says so.
     -->
-    <p id="issues-say" class="hint contrib__issues" hidden></p>
+      <p id="issues-say" class="hint contrib__issues" hidden></p>
 
-    <div class="filters">
-      <input id="search" class="field" type="search" autocomplete="off"
-             placeholder="Search name, animal, nickname or skill…" aria-label="Search Tatari">
+      <div class="filters">
+        <input id="search" class="field" type="search" autocomplete="off"
+          placeholder="Search name, animal, nickname or skill…" aria-label="Search Tatari">
 
-      <div class="filters__row">
-        <div id="filter-types" class="chips" role="group" aria-label="Filter by type"></div>
-        <div id="filter-roles" class="chips" role="group" aria-label="Filter by role"></div>
-      </div>
+        <div class="filters__row">
+          <div id="filter-types" class="chips" role="group" aria-label="Filter by type"></div>
+          <div id="filter-roles" class="chips" role="group" aria-label="Filter by role"></div>
+        </div>
 
-      <div class="filters__row">
-        <div id="filter-effects" class="chips chips--text" role="group"
-             aria-label="Filter by what they bring besides damage"></div>
-      </div>
+        <div class="filters__row">
+          <div id="filter-effects" class="chips chips--text" role="group"
+            aria-label="Filter by what they bring besides damage"></div>
+        </div>
 
-      <div class="filters__row filters__row--meta">
-        <div id="filter-tiers" class="chips chips--text" role="group" aria-label="Filter by tier"></div>
-        <!-- Wired by roster.js so it has to exist; hidden because "unavailable"
+        <div class="filters__row filters__row--meta">
+          <div id="filter-tiers" class="chips chips--text" role="group" aria-label="Filter by tier"></div>
+          <!-- Wired by roster.js so it has to exist; hidden because "unavailable"
              means blocked by a formation, and there is no formation here. -->
-        <label class="check contrib__hidden">
-          <input id="opt-hide-blocked" type="checkbox"> Hide unavailable</label>
-        <label class="sortby">Sort
-          <select id="sort" class="field field--select">
-            <option value="default">Default</option>
-            <option value="name">Name</option>
-            <option value="type">Type</option>
-            <option value="role">Role</option>
-            <option value="tier">Tier</option>
-          </select>
-        </label>
-        <button id="btn-reset-filters" class="btn btn--tiny btn--quiet" type="button">Reset</button>
+          <label class="check contrib__hidden">
+            <input id="opt-hide-blocked" type="checkbox"> Hide unavailable</label>
+          <label class="sortby">Sort
+            <select id="sort" class="field field--select">
+              <option value="default">Default</option>
+              <option value="name">Name</option>
+              <option value="type">Type</option>
+              <option value="role">Role</option>
+              <option value="tier">Tier</option>
+            </select>
+          </label>
+          <button id="btn-reset-filters" class="btn btn--tiny btn--quiet" type="button">Reset</button>
+        </div>
       </div>
-    </div>
 
-    <div id="roster" class="roster" role="list"></div>
-  </section>
-</main>
+      <div id="roster" class="roster" role="list"></div>
+    </section>
+  </main>
 
-<!-- Phones only, same component as the drafter's. One sheet to open here. -->
-<nav id="appbar" class="appbar" aria-label="Open a panel">
-  <button class="appbar__btn appbar__btn--go" type="button" data-sheet="roster">
-    <span class="appbar__label">Pick a Tatari</span>
-  </button>
-</nav>
+  <!-- Phones only, same component as the drafter's. One sheet to open here. -->
+  <nav id="appbar" class="appbar" aria-label="Open a panel">
+    <button class="appbar__btn appbar__btn--go" type="button" data-sheet="roster">
+      <span class="appbar__label">Pick a Tatari</span>
+    </button>
+  </nav>
 
-<div id="scrim" class="scrim" hidden></div>
+  <div id="scrim" class="scrim" hidden></div>
 
-<footer class="foot">
-  <span>Data and sprites from the
-    <a href="https://clashofcritters.wiki.gg/wiki/Tatari" target="_blank" rel="noopener">Clash of Critters Wiki</a>.
-    Fan-made, unofficial.</span>
-  <span class="muted">Nothing here is uploaded. The entry is built in your browser and it is
-    yours to send or not. The page reads this repo's open issues from GitHub so it can
-    show what somebody has already sent in — that request carries nothing but the
-    repo's name.</span>
-</footer>
+  <footer class="foot">
+    <span>Data and sprites from the
+      <a href="https://clashofcritters.wiki.gg/wiki/Tatari" target="_blank" rel="noopener">Clash of Critters Wiki</a>.
+      Fan-made, unofficial.</span>
+    <span class="muted">Nothing here is uploaded. The entry is built in your browser and it is
+      yours to send or not. The page reads this repo's open issues from GitHub so it can
+      show what somebody has already sent in - that request carries nothing but the
+      repo's name.</span>
+  </footer>
 
-<!--
+  <!--
   Import. The issue button sends an entry out; this takes one back in. It reads
   the whole issue body rather than asking for the JSON to be dug out of it,
   because the body is what you have in front of you when you are reading one.
 -->
-<dialog id="import" class="modal modal--import">
-  <h2>Import a recorded entry</h2>
-  <p class="hint">
-    Paste an issue — the whole body, bullets and fences and all — or just the JSON
-    from it. Attack ranges and heal, buff and debuff reach are all read. Nothing is
-    written to the data files: the entry goes on the grid so you can see what it
-    changes, with anything it adds in blue and anything it drops in orange.
-  </p>
+  <dialog id="import" class="modal modal--import">
+    <h2>Import a recorded entry</h2>
+    <p class="hint">
+      Paste an the entire contents of the github issue or just the JSON
+      from it. Attack ranges and heal, buff and debuff reach are all read. Nothing is
+      written to the data files: the entry goes on the grid so you can see what it
+      changes, with anything it adds in blue and anything it drops in orange.
+    </p>
 
-  <textarea id="import-text" class="field contrib__paste" rows="9" spellcheck="false"
-            aria-label="The issue body, or the JSON from it"
-            placeholder='// data/ranges.json  →  "bySlug"
+    <textarea id="import-text" class="field contrib__paste" rows="9" spellcheck="false"
+      aria-label="The issue body, or the JSON from it" placeholder='// data/ranges.json  →  "bySlug"
 {
   "sproutlet": { "tiles": [[0, -1], [0, -2]], "from": "range diagram" }
 }'></textarea>
 
-  <p id="import-say" class="contrib__importsay" hidden></p>
+    <p id="import-say" class="contrib__importsay" hidden></p>
 
-  <div class="modal__actions">
-    <button id="import-go" class="btn btn--primary" type="button">Import</button>
-    <label class="btn" for="import-file">Read a file…</label>
-    <input id="import-file" type="file" hidden
-           accept=".json,.txt,.md,application/json,text/plain,text/markdown">
-    <button class="btn btn--quiet" type="button" data-close>Close</button>
-  </div>
-</dialog>
+    <div class="modal__actions">
+      <button id="import-go" class="btn btn--primary" type="button">Import</button>
+      <label class="btn" for="import-file">Read a file…</label>
+      <input id="import-file" type="file" hidden accept=".json,.txt,.md,application/json,text/plain,text/markdown">
+      <button class="btn btn--quiet" type="button" data-close>Close</button>
+    </div>
+  </dialog>
 
-<dialog id="detail" class="modal modal--detail"></dialog>
-<div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <dialog id="detail" class="modal modal--detail"></dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-<script type="module" src="assets/js/contribute.js"></script>
+  <script type="module" src="assets/js/contribute.js"></script>
 </body>
+
 </html>
