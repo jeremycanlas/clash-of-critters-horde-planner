@@ -251,6 +251,48 @@ export function renderRanges() {
     if (on && n) cell.dataset.cover = Math.min(n, 4);
     else delete cell.dataset.cover;
   }
+
+  renderRangeGap(on);
+}
+
+/**
+ * Why the shading has holes in it, and who can close them.
+ *
+ * The overlay is honest about being incomplete — it draws nothing for a Tatari
+ * whose range nobody has measured — but "nothing drawn" and "reaches nothing"
+ * look identical on a grid, and the only place that difference was stated was the
+ * `title` on the Ranges checkbox. Three quarters of this audience is holding a
+ * phone and cannot open a `title` at all, so for them the overlay simply had gaps
+ * and no explanation.
+ *
+ * It counts the Tatari on this field rather than quoting the roster total. A
+ * player looking at their own formation is owed a fact about their own formation,
+ * and "four of these fifteen are not drawn" is the one that makes the gap real.
+ * Shown only while the overlay is on: the rest of the time this is a solicitation
+ * nobody asked for.
+ */
+function renderRangeGap(on) {
+  const box = $('#range-gap');
+  if (!box) return;
+
+  const placed = store.allPlaced();
+  const missing = placed.filter((p) => !hasRange(p.slug));
+  const known = state.all.filter((t) => hasRange(t.slug)).length;
+
+  box.hidden = !on;
+  if (!on) return;
+
+  const roster = `Reach is recorded for ${known} of ${state.all.length} Tatari.`;
+  const yours = !placed.length
+    ? 'Nothing is on the field yet.'
+    : missing.length
+      ? `${missing.length} on your field ${missing.length === 1 ? 'has' : 'have'} none, so ${
+        missing.length === 1 ? 'its' : 'their'} reach is not drawn — ${
+        missing.map((p) => esc(state.bySlug.get(p.slug)?.name ?? p.slug)).join(', ')}.`
+      : 'Every Tatari on your field has one.';
+
+  box.innerHTML = `<span>${roster} ${yours}</span>`
+    + '<a class="rangegap__go" href="contribute.html">Record a range</a>';
 }
 
 /**

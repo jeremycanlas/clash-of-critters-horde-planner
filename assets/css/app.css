@@ -158,7 +158,13 @@ img { -webkit-user-drag: none; }
  * this keeps its own, because a link squeezed to "Record a…" is a link nobody
  * follows.
  */
-.topbar__contribute { flex: 0 0 auto; margin-right: var(--s2); }
+.topbar__contribute { flex: 0 0 auto; margin-right: var(--s2); gap: 5px; }
+/* Dim, so it reads as a mark on the label rather than a second word in it. */
+.topbar__contribute-plus {
+  color: var(--text-mute);
+  font-size: 14px; font-weight: 700; line-height: 1;
+}
+.topbar__contribute:hover .topbar__contribute-plus { color: var(--accent); }
 
 /* Narrow screens: two tight rows that scroll away instead of a sticky slab. */
 @media (max-width: 760px) {
@@ -1527,6 +1533,33 @@ body.is-dragging-active {
   border-color: var(--accent);
   border-style: solid;
   background: color-mix(in srgb, var(--accent) 12%, var(--bg));
+}
+
+/*
+ * What the coverage shading is not showing, and the one thing a player can do
+ * about it. Only on screen while the overlay is on — see grid.js for why it
+ * counts this field rather than the roster.
+ *
+ * Read as a note, not a banner: the same left rule .effect__help and .prio__note
+ * carry, because it is the same kind of thing. An accent-filled call to action
+ * under the field would compete with the field, and this is a footnote to it. The
+ * link is the only part allowed to look like a link.
+ */
+.rangegap {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--s1) var(--s3);
+  margin: var(--s2) 0 0;
+  padding: var(--s2) var(--s3);
+  border-left: 2px solid color-mix(in srgb, var(--accent) 55%, var(--line));
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  background: var(--surface-2);
+  color: var(--text-dim);
+  font-size: 12px; line-height: 1.5;
+}
+.rangegap > span { flex: 1 1 20ch; }
+.rangegap__go {
+  flex: none;
+  font-weight: 650;
+  white-space: nowrap;
 }
 
 /* ============================================================ file drop */
