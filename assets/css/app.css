@@ -151,6 +151,15 @@ img { -webkit-user-drag: none; }
 .topbar__sub { color: var(--text-mute); font-size: 11.5px; text-transform: uppercase; letter-spacing: .08em; }
 .topbar__actions { display: flex; align-items: center; gap: var(--s2); margin-left: auto; flex-wrap: wrap; }
 
+/*
+ * The one thing in this row that leaves the page, so it is set apart from the
+ * four that act on the formation rather than sitting fifth in their sequence.
+ * On narrow screens those four share the width equally (`flex: 1 1 0` below);
+ * this keeps its own, because a link squeezed to "Record a…" is a link nobody
+ * follows.
+ */
+.topbar__contribute { flex: 0 0 auto; margin-right: var(--s2); }
+
 /* Narrow screens: two tight rows that scroll away instead of a sticky slab. */
 @media (max-width: 760px) {
   .topbar {
@@ -216,6 +225,9 @@ img { -webkit-user-drag: none; }
   color: var(--text);
   font: inherit; font-size: 13px; font-weight: 550;
   white-space: nowrap;
+  /* An <a> wearing this is a button as far as the eye is concerned, and the
+     underline the base link style gives it says otherwise. */
+  text-decoration: none;
   cursor: pointer;
   transition: background-color 140ms var(--ease-out), border-color 140ms var(--ease-out),
               transform 90ms var(--ease-out);
