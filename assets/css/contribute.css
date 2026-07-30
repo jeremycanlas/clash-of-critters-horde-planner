@@ -13,27 +13,46 @@
  * The drafter reserves room at the bottom for its bench dock. There is no dock
  * here, so the reservation would be a band of dead space above the app bar.
  */
-/* Purple: not a type colour, not a state the drafter uses, so it cannot be
-   mistaken for anything the roster already says. */
+/*
+ * Colour, and what each hue is allowed to mean here.
+ *
+ * A roster card is the most crowded object in the product. It already carries
+ * its elemental type as a tint behind the sprite — Water blue, Fire red, Grass
+ * green, Lightning yellow, Rock brown — and up to three effect badges in the
+ * corner, which app.css draws in green for a heal, yellow for a buff and red for
+ * a debuff. That is every warm and cool hue spoken for, most of them twice,
+ * before this page adds a single mark of its own.
+ *
+ * The recorder used to add five more: red for nothing recorded, yellow for on
+ * file, green for checked, blue for an open issue, purple for your queue. So a
+ * Fire Tatari with a debuff and no recorded range was red three times over for
+ * three unrelated reasons, and a Water Tatari with an issue open wore a blue
+ * ring against a blue tint. Hue had stopped carrying information.
+ *
+ * One hue is kept, and only one, for the only thing on this page that is neither
+ * type nor effect: a contribution in flight. Violet has no twin among the five
+ * type colours or the three effect ones. Bright means the edit is yours and
+ * queued; the same violet dimmed means somebody else's issue is open — one idea,
+ * two weights, rather than two colours that happen to look unrelated.
+ *
+ * Coverage gets no hue at all. It is ordinal — nothing, written down, checked —
+ * and it is drawn as three steps of brightness on the neutral ramp, which is the
+ * one channel a card has not already used.
+ */
 /* Blue and orange for an imported entry against what is on file: added and
-   dropped. Neither is a type colour and neither is yellow, so a diff can never
-   be misread as the reach itself. */
-/* An open issue takes the same blue an imported tile does, and deliberately:
-   both mean somebody else's contribution, on its way in. The two never share a
-   surface — one paints roster cards, the other grid tiles — so a shared hue
-   reads as one idea rather than two things that look alike by accident. It is
-   also the only hue left with real distance from the four already on a card
-   (red, yellow, green, purple). */
+   dropped. These paint grid tiles, never cards, and neither is yellow — so a
+   diff can never be misread as the reach itself. */
 .contribute {
   --dock-h: 0px;
   --queued: #a273f0;
   --added: #6cc2ff;
   --removed: #f2913c;
-  --pending: #6cc2ff;
+  /* Somebody else's, in the same hue as your own so the two read as one idea. */
+  --pending: color-mix(in srgb, var(--queued) 58%, var(--surface-2));
 }
 @media (prefers-color-scheme: light) {
   .contribute {
-    --queued: #7c4bd0; --added: #1f7fd0; --removed: #c96a12; --pending: #1f7fd0;
+    --queued: #7c4bd0; --added: #1f7fd0; --removed: #c96a12;
   }
 }
 
@@ -50,6 +69,30 @@
 
 .contrib__lede { margin: 0; line-height: 1.6; }
 .contrib__aside { margin: 0; color: var(--text-mute); }
+
+/*
+ * The panel already spaces its children by var(--s3), so a .hint's own bottom
+ * margin stacked a second gap on top of the first — 24px between two lines that
+ * belong together, thirteen rows of board pushed down by it.
+ */
+.contribute .panel--field > .hint { margin: 0; }
+
+/* The four reaches and the no-shape toggle, on one row while there is width for
+   it. They are one question — what am I recording — and they were two rows. */
+.contrib__what {
+  display: flex; flex-wrap: wrap; align-items: center;
+  gap: var(--s2) var(--s4);
+}
+.contrib__what .chips { flex: 0 1 auto; }
+
+.contrib__say { display: grid; gap: 2px; }
+.contrib__say p {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: 12.5px;
+  max-width: 68ch;
+}
+.contrib__say p:empty { display: none; }
 
 .contrib__label {
   display: block;
@@ -108,10 +151,27 @@
  * it, so the whole board — the reachable ground and the field under it — fits on
  * screen at once. Seeing the shape entire is the point of drawing it.
  */
-/* width:100% is load-bearing: auto inline margins on a grid item turn off
-   stretch, so without it the frame collapses to its content and the cap never
-   applies. */
-.contribute .field-frame { width: 100%; max-width: 340px; margin-inline: auto; }
+/*
+ * Sized from the height available rather than from a fixed width, because the
+ * constraint is vertical: thirteen square rows are a shade over twice as tall as
+ * the frame is wide, so 340px of width asked for 794px of height and no screen
+ * this tool runs on has that to spare under the controls. The board a contributor
+ * was told to draw a shape on could not be seen entire on any of them.
+ *
+ * Clamped rather than free: 252px is where a cell stops being 42px and starts
+ * being too small to hit with a thumb, and this audience is three quarters
+ * phones. Below that the frame keeps its size and the page scrolls, which is the
+ * better trade — a board you can hit and scroll beats one you can see and miss.
+ *
+ * width:100% is load-bearing: auto inline margins on a grid item turn off
+ * stretch, so without it the frame collapses to its content and the cap never
+ * applies.
+ */
+.contribute .field-frame {
+  width: 100%;
+  max-width: clamp(252px, calc((100svh - 320px) * 6 / 13), 340px);
+  margin-inline: auto;
+}
 
 .contribute .cell { cursor: pointer; }
 
@@ -120,7 +180,8 @@
 .contribute .field-frame.is-everywhere { opacity: .4; }
 .contribute .field-frame.is-everywhere .cell { cursor: not-allowed; }
 
-.contrib__scope { align-self: start; }
+/* Sits beside the reach chips now, so it takes the row's own alignment. */
+.contrib__scope { flex: 0 1 auto; }
 
 /*
  * Beyond the line. Hatched with the same stripes as the strip below it, so the
@@ -177,11 +238,55 @@
       transparent 4px 9px),
     color-mix(in srgb, var(--removed) 18%, var(--bg));
 }
+/*
+ * Where it stands. Every offset on the board is measured from this tile, so it
+ * has to be the one tile that cannot be mistaken for a reached one: a bright
+ * edge and a raised surface, against the reached tiles' yellow fill.
+ */
 .contribute .cell.is-origin {
   border-style: solid;
   border-color: var(--text);
   background: var(--surface-3);
   box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--text) 35%, transparent);
+}
+/*
+ * Some ranges include the tile the Tatari is standing on. The origin's own styling
+ * is declared after the reached tile's and so was quietly winning, which made a
+ * range that covers its own square indistinguishable from one that does not — an
+ * invisible tile in a file of measurements. It keeps its bright edge and takes the
+ * reached fill inside it.
+ */
+.contribute .cell.is-origin.is-covered {
+  background: color-mix(in srgb, var(--accent) 38%, var(--surface-3));
+}
+.contribute .cell.is-origin.is-added {
+  background: color-mix(in srgb, var(--added) 38%, var(--surface-3));
+}
+/* And the same for a tile the imported entry takes away. This is the worst one to
+   lose: a reviewer looking at somebody's reading needs to see that it drops the
+   Tatari's own square, and under the origin's own styling that drop was simply
+   not drawn. Hatched like every other dropped tile, so it reads as one. */
+.contribute .cell.is-origin.is-removed {
+  background:
+    repeating-linear-gradient(45deg,
+      color-mix(in srgb, var(--removed) 62%, transparent) 0 4px,
+      transparent 4px 9px),
+    color-mix(in srgb, var(--removed) 22%, var(--surface-3));
+}
+
+/*
+ * Played once, on arrival. Picking a Tatari scrolls the board into view and lights
+ * a shape on it, and neither of those is obviously a consequence of the click
+ * that caused them — this is what ties the two together.
+ */
+.contribute .cell.is-arriving { animation: origin-arrive 620ms var(--ease-out) 1; }
+@keyframes origin-arrive {
+  0%   { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--text) 35%, transparent); }
+  22%  { box-shadow: inset 0 0 0 3px var(--text), 0 0 0 3px color-mix(in srgb, var(--text) 28%, transparent); }
+  100% { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--text) 35%, transparent); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .contribute .cell.is-arriving { animation: none; }
 }
 /* While placing, every tile is a candidate and none of them is an answer. */
 .contribute .cell.is-placing:hover { border-color: var(--text-dim); background: var(--surface-2); }
@@ -192,82 +297,143 @@
 /* ------------------------------------------------------------ coverage */
 
 /*
- * Every card says whether this reach is on file. Three states, not two: a range
- * somebody typed in and a range somebody checked against the game are different
- * claims, and several entries were read off a sibling's diagram and say so in
- * their own note.
+ * What is on file, as a strip along the bottom edge: one segment per reach this
+ * Tatari can have. Attack always; a heal segment only on something that heals,
+ * because "no heal reach recorded" is not a gap on a Tatari that has no heal.
  *
- * A ring, not a fill. Every card already carries its type as a colour behind
- * the sprite, so tinting the card too made a Grass Tatari look recorded and a
- * Fire one look missing. The border is the one channel not already spoken for.
+ * All of them at once, which is the point. Coverage used to be shown for the one
+ * reach the chips were pointed at, so finding out that Shellshy has an attack
+ * range but no heal reach meant switching chips and re-reading the whole roster.
+ * The card is 76px wide and it had room for this all along.
  */
-.contribute #roster .card[data-range] { opacity: 1; }
-
-.contribute #roster .card[data-range="none"] {
-  border-color: var(--danger);
-  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--danger) 40%, transparent);
+.contribute #roster .card {
+  /* The strip is the card's last row, so the name above it gives up 4px rather
+     than the strip sitting on top of it. */
+  grid-template-rows: 1fr auto auto auto;
 }
-.contribute #roster .card[data-range="recorded"] {
-  border-color: var(--accent);
-  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--accent) 40%, transparent);
+/* Tall enough to hold the selected segment at its full height. The card clips its
+   own overflow for the sprite's sake, so a segment taller than this strip is a
+   segment with its top shaved off. */
+.card__reach {
+  display: flex; align-items: flex-end; gap: 2px;
+  margin-top: 3px;
+  height: 6px;
 }
-.contribute #roster .card[data-range="verified"] {
-  border-color: var(--ok);
-  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--ok) 40%, transparent);
+.card__pip {
+  flex: 1;
+  height: 3px;
+  border-radius: 1px;
+  /*
+   * Nothing recorded, drawn as an empty slot rather than an alarm. Missing range
+   * data is the reason this page exists, not a fault — 146 red rings said
+   * "something is wrong here" 146 times about the one thing that is normal.
+   *
+   * Mixed from --text rather than taken from --line, so it inverts with the theme.
+   * --line is a hairline colour tuned for edges: on the light theme it came out
+   * paler than the card it sat on, which hid the empty segments altogether and
+   * with them the fact a Tatari has three unrecorded reaches. Quiet is the intent;
+   * invisible is a different claim.
+   */
+  background: color-mix(in srgb, var(--text) 15%, transparent);
+  transition: background-color 140ms var(--ease-out);
 }
+/* Three steps of brightness for a three-step sequence. */
+.card__pip[data-cov="recorded"] { background: var(--text-mute); }
+.card__pip[data-cov="verified"] { background: var(--text); }
+/* In flight beats coverage on its own segment: what is on file stops mattering
+   once somebody has drawn this one and is waiting to send it. */
+.card__pip[data-flight="theirs"] { background: var(--pending); }
+.card__pip[data-flight="mine"]   { background: var(--queued); }
+/* Which segment the reach chips are pointed at — so the border and the badge,
+   which are both about one reach, are anchored to that reach and not to the card
+   as a whole. Twice the height rather than an outline: at three pixels an outline
+   is most of the segment, and it read as a fourth coverage state. */
+.card__pip[data-sel="true"] { height: 6px; }
 
 /*
- * Somebody already sent this one in. It beats all three coverage rings, because
- * a Tatari with nothing on file and an issue open is the exact card a
- * contributor would otherwise pick — red says "do this next" and it is the one
- * thing on the roster not worth doing.
- *
- * Ordered after the coverage rules and before the queued one, so the cascade
- * does the precedence without a stack of :not() selectors: queued > issue >
- * coverage. The coverage it displaces moves into the card's tooltip rather than
- * being lost.
+ * In flight. One hue, two weights, and it is the only hue this page puts on a
+ * card — see the note at the top of this file for why every other one was
+ * already taken. It no longer displaces coverage, because coverage is not on
+ * the border any more.
  */
-.contribute #roster .card[data-issue] {
+.contribute #roster .card[data-flight="theirs"] {
   border-color: var(--pending);
-  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--pending) 45%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--pending) 60%, transparent);
 }
-
-/*
- * Queued beats coverage, and beats an open issue too. What is on file matters
- * until you have recorded something yourself, and from then on what matters is
- * that this one is done and waiting to be sent — so purple wins over all four.
- */
-.contribute #roster .card[data-queued="true"] {
+.contribute #roster .card[data-flight="mine"] {
   border-color: var(--queued);
   box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--queued) 55%, transparent);
 }
 
+/*
+ * The issue's number, on the art. A colour can say somebody got here first; it
+ * cannot say who, or where to go and read it. The number can, it is the issue's
+ * real name, and it is readable without a tooltip — which matters because three
+ * quarters of this audience is on a phone and has no way to open one.
+ */
+.card__flight {
+  position: absolute; right: 2px; bottom: 2px;
+  padding: 0 3px;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--bg) 78%, transparent);
+  color: var(--queued);
+  font-size: 8.5px; font-weight: 800;
+  line-height: 1.5;
+  letter-spacing: .01em;
+  pointer-events: none;
+}
+
+/* ------------------------------------------------------------ legend */
+
+/*
+ * Two channels, so two rows — read as "what is on file" and "what is in flight"
+ * rather than as five colours in a precedence order nobody could infer. The old
+ * legend was one line of five 9px swatches, which is a key you have to study
+ * before the roster means anything.
+ */
 .contrib__legend {
-  display: flex; flex-wrap: wrap; gap: var(--s1) var(--s3);
+  display: grid; gap: var(--s1);
   margin: 0;
-  font-size: 11px;
+  font-size: 11.5px;
+}
+.contrib__legendrow {
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--s1) var(--s3);
+}
+.contrib__legendrow > b {
+  flex: none;
+  min-width: 66px;
+  color: var(--text-dim);
+  font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .06em;
 }
 .contrib__legend span {
   display: inline-flex; align-items: center; gap: 5px;
   color: var(--text-mute);
 }
-.contrib__legend span::before {
+/* The swatch is the mark itself at the size it appears on a card — a bar for the
+   strip, a box for the border — so the key and the thing it explains are the
+   same shape. */
+.contrib__legend [data-cov]::before {
   content: "";
-  width: 9px; height: 9px;
-  border: 1px solid currentColor;
-  border-radius: 2px;
+  width: 14px; height: 4px;
+  border-radius: 1px;
+  background: color-mix(in srgb, var(--text) 15%, transparent);
 }
-.contrib__legend [data-range="none"]::before     { color: var(--danger);  background: color-mix(in srgb, var(--danger) 40%, transparent); }
-.contrib__legend [data-range="recorded"]::before { color: var(--accent);  background: color-mix(in srgb, var(--accent) 40%, transparent); }
-.contrib__legend [data-range="verified"]::before { color: var(--ok);      background: color-mix(in srgb, var(--ok) 40%, transparent); }
-.contrib__legend [data-range="issue"]::before    { color: var(--pending); background: color-mix(in srgb, var(--pending) 45%, transparent); }
-.contrib__legend [data-range="queued"]::before   { color: var(--queued);  background: color-mix(in srgb, var(--queued) 55%, transparent); }
-
-/* The two states that are not coverage — your own work and somebody else's —
-   are the ones that change what you do next, so they are not dimmed the way the
-   three coverage entries are. */
-.contrib__legend [data-range="queued"],
-.contrib__legend [data-range="issue"] { color: var(--text-dim); }
+.contrib__legend [data-cov="recorded"]::before { background: var(--text-mute); }
+.contrib__legend [data-cov="verified"]::before { background: var(--text); }
+.contrib__legend [data-flight]::before {
+  content: "";
+  width: 10px; height: 10px;
+  border: 2px solid var(--pending);
+  border-radius: 3px;
+}
+.contrib__legend [data-flight="mine"]::before { border-color: var(--queued); }
+/* Your own work and somebody else's are the two that change what you do next. */
+.contrib__legend [data-flight] { color: var(--text-dim); }
+/* Says what the bars are counting, which the three swatches on their own cannot.
+   Drops off first when the row runs out of width. */
+.contrib__legendnote { color: var(--text-mute); }
+@media (max-width: 1180px) { .contrib__legendnote { display: none; } }
 
 /*
  * Said once, when the lookup lands, and never again. It sits under the legend
@@ -292,7 +458,15 @@
   background: color-mix(in srgb, var(--added) 7%, var(--surface-2));
 }
 .contrib__diffsay { margin: 0; color: var(--text-dim); font-size: 12.5px; }
-.contrib__legend--diff { gap: var(--s1) var(--s3); }
+/* Tiles, not cards — so the swatch is a tile: a square the shape of the thing it
+   stands for, the way the roster legend's swatches are bars. */
+.contrib__legend--diff { display: flex; flex-wrap: wrap; gap: var(--s1) var(--s3); }
+.contrib__legend [data-tile]::before {
+  content: "";
+  width: 9px; height: 9px;
+  border: 1px solid currentColor;
+  border-radius: 2px;
+}
 .contrib__legend [data-tile="added"]::before   { color: var(--added);   background: color-mix(in srgb, var(--added) 52%, transparent); }
 .contrib__legend [data-tile="removed"]::before { color: var(--removed); background: color-mix(in srgb, var(--removed) 30%, transparent); }
 .contrib__legend [data-tile="kept"]::before    { color: var(--accent);  background: color-mix(in srgb, var(--accent) 52%, transparent); }

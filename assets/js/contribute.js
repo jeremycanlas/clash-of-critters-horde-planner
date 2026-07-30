@@ -21,6 +21,7 @@
 import { load, state } from './data.js';
 import { $, artHTML, esc, typeIcon, roleIcon, toast, copyText } from './ui.js';
 import { buildFilters, renderRoster } from './roster.js';
+import { bringsEffect } from './effects.js';
 import { buildShell, closeSheet } from './shell.js';
 import { rangeStatus } from './range.js';
 import { parseContribution } from './range-import.js';
@@ -95,6 +96,31 @@ const picked = {
    * but how it differs from what is on file — so the grid says so.
    */
   imported: false,
+  /**
+   * Whether a person changed this, as opposed to it being handed to them.
+   *
+   * Picking a Tatari loads whatever is already on file onto the grid, so having
+   * tiles is no evidence that anybody recorded anything — and the queue used to
+   * take that as evidence. Looking at two Tatari queued both of them, verbatim
+   * from the data file, and the roster marked them as your work. Worse than the
+   * stray colour: "Copy the entry" would hand back the project's own data as a
+   * fresh contribution.
+   *
+   * So the queue asks for a gesture, not a tile count. Clicking the board,
+   * toggling the whole-team scope, clearing, or typing a note or a source all
+   * count; arriving on a Tatari does not.
+   */
+  touched: false,
+  /**
+   * Whether the note in the box was written by the file rather than by a person.
+   *
+   * The prefill brings the recorded note along with the recorded tiles, and the
+   * notes describe the shape — "straight up its own lane, 6 tiles". Change the
+   * shape and that sentence is no longer true of it, so an entry claiming five
+   * tiles would ship a note insisting on six. Incomplete beats wrong: the borrowed
+   * note goes as soon as the shape it describes does.
+   */
+  noteOnLoan: false,
 };
 const key = (dCol, dRow) => `${dCol},${dRow}`;
 
@@ -159,7 +185,7 @@ async function findOpenIssues() {
   }
 
   say.textContent = `${res.count} reach${res.count === 1 ? ' has' : 'es have'
-  } an open issue already — those cards are outlined in blue, and recording one again would duplicate somebody's work.`;
+  } an open issue already — those cards carry the issue number, and recording one again would duplicate somebody's work.`;
   say.hidden = false;
   refreshRoster();
 }
@@ -203,6 +229,8 @@ function wire() {
     const k = key(col - picked.origin.col, row - picked.origin.row);
     if (picked.tiles.has(k)) picked.tiles.delete(k);
     else picked.tiles.add(k);
+    picked.touched = true;
+    releaseNote();
     saveCurrent();
     refreshRoster();
     renderAll();
@@ -210,6 +238,8 @@ function wire() {
 
   $('#opt-all').addEventListener('change', (e) => {
     picked.scope = e.target.checked ? 'all' : 'tiles';
+    picked.touched = true;
+    releaseNote();
     saveCurrent();
     refreshRoster();
     renderAll();
@@ -227,13 +257,22 @@ function wire() {
     // prefilled "7 tiles, 3 wide and 3 deep" is how a wrong description gets
     // filed alongside a right range.
     $('#note').value = '';
+    picked.noteOnLoan = false;
+    picked.touched = true;
     saveCurrent();
     refreshRoster();
     renderAll();
   });
 
   for (const id of ['#from', '#note']) {
-    const sync = () => { saveCurrent(); renderQueue(); renderOutput(); };
+    // Only a person can fire these — the prefill assigns .value directly, which
+    // raises no event — so reaching either one is a change worth keeping.
+    const sync = () => {
+      picked.touched = true;
+      // Typed in, so it is theirs now and no longer on loan from the file.
+      picked.noteOnLoan = false;
+      saveCurrent(); renderQueue(); renderOutput();
+    };
     $(id).addEventListener('input', sync);
     $(id).addEventListener('change', sync);
   }
@@ -245,9 +284,12 @@ function wire() {
       queue.delete(queueKey(drop.dataset.drop, drop.dataset.kind));
       persistQueue();
       // Dropping the one being edited leaves the grid holding tiles that are no
-      // longer queued, so it is cleared to match.
+      // longer queued, so it is cleared to match — and cleared back to untouched,
+      // or the next repaint would put the dropped edit straight back.
       if (drop.dataset.drop === picked.slug && drop.dataset.kind === picked.kind) {
         picked.tiles.clear();
+        picked.touched = false;
+        picked.imported = false;
       }
       refreshRoster();
       renderAll();
@@ -259,6 +301,7 @@ function wire() {
     loadInto(open.dataset.open, open.dataset.kind);
     refreshRoster();
     renderAll();
+    showBoard();
   });
 
   $('#btn-queue-clear').addEventListener('click', () => {
@@ -267,6 +310,8 @@ function wire() {
     queue.clear();
     persistQueue();
     picked.tiles.clear();
+    picked.touched = false;
+    picked.imported = false;
     refreshRoster();
     renderAll();
     toast(`Queue cleared — ${n} edit${n === 1 ? '' : 's'} dropped`);
@@ -394,6 +439,7 @@ function takeIn(text, dialog) {
   loadInto(kept[0].slug, kept[0].kind);
   refreshRoster();
   renderAll();
+  showBoard();
 
   const summary = `${kept.length} entr${kept.length === 1 ? 'y' : 'ies'} imported — ${
     kept.map((e) => `${state.bySlug.get(e.slug)?.name ?? e.slug} (${e.kind})`).join(', ')}.`;
@@ -465,6 +511,9 @@ const queueKey = (slug, kind) => `${kind}\n${slug}`;
 /** Writes the edit in progress, or drops it once its last tile is taken off. */
 function saveCurrent() {
   if (!picked.slug) return;
+  // Nothing was changed, so there is nothing of anybody's to keep. Prefilled
+  // tiles are the project's own data on loan to look at, not a contribution.
+  if (!picked.touched) return;
   const k = queueKey(picked.slug, picked.kind);
 
   // A whole-team reach is a complete edit with no tiles at all, so an empty
@@ -496,6 +545,10 @@ function loadInto(slug, kind) {
     for (const t of held.tiles) picked.tiles.add(t);
     picked.scope = held.scope ?? 'tiles';
     picked.imported = held.imported === true;
+    // Already somebody's work — either clicked here or read in from an issue —
+    // so it stays in the queue whatever happens next, note included.
+    picked.touched = true;
+    picked.noteOnLoan = false;
     $('#note').value = held.note;
     $('#from').value = held.from;
     picked.origin = { ...held.origin };
@@ -503,6 +556,9 @@ function loadInto(slug, kind) {
   }
   picked.scope = 'tiles';
   picked.imported = false;
+  // Whatever the prefill puts on the board is on loan from the data file.
+  picked.touched = false;
+  picked.noteOnLoan = false;
   $('#note').value = '';
   prefillFromData();
 }
@@ -580,42 +636,122 @@ function renderQueue() {
 // ---------------------------------------------------------------- picking
 
 /**
- * The roster, plus a mark on every card saying whether this reach is on file
- * and whether it is waiting in the queue.
+ * The roster, plus what is known and what is in flight for every card.
  *
  * Painted after roster.js has rendered rather than from inside it: coverage is
  * this page's business, and a drafter picking a team has no use for knowing
  * which ranges happen to be documented.
+ *
+ * Two facts, two channels, and that is the whole of the redesign. They used to
+ * share one — the card's border colour carried five values in a precedence
+ * order, so a card outlined for its open issue could not also say whether
+ * anything was on file, and the coverage it displaced went into a `title`
+ * attribute. Three quarters of this audience is on a phone and has no way to
+ * read a `title` at all, which made the losing fact simply invisible to them.
+ *
+ * So: the strip along the bottom carries what is on file, one segment per reach
+ * this Tatari can even have, and the border and badge carry what is in flight.
+ * Neither hides the other, and switching reach chips no longer changes what the
+ * strip says — all four are on every card at once.
  */
 function refreshRoster() {
   renderRoster();
   for (const card of document.querySelectorAll('#roster .card')) {
-    const slug = card.dataset.slug;
-    const status = rangeStatus(slug, picked.kind);
-    card.dataset.range = status;
-    card.dataset.queued = String(queue.has(queueKey(slug, picked.kind)));
-
-    // What is on file is worth knowing; what is on its way is worth knowing
-    // first, because it is the difference between recording something useful
-    // and recording something somebody already sent. The colour it takes says
-    // so, and the tooltip keeps the coverage that colour displaced.
-    //
-    // Appended rather than assigned: the card's own title names the Tatari and
-    // its type and role, and renderRoster() has just written it. Replacing it
-    // would trade a tooltip every card carries for one three of them do.
-    const open = issueFor(slug, picked.kind);
-    if (!open) continue;
-    card.dataset.issue = String(open.number);
-    card.title = `${card.title}\n\n#${open.number} is already open for this ${picked.kind
-    } reach — ${open.title}\n${COVERAGE_SAYS[status] ?? status}`;
+    const t = state.bySlug.get(card.dataset.slug);
+    if (t) markCard(card, t);
   }
 }
 
-/** The coverage a card's ring gives up when an open issue takes the colour. */
+/**
+ * Which reaches this Tatari can have at all.
+ *
+ * Everything attacks. A heal reach, though, is only a fact about a Tatari that
+ * heals — showing an empty heal slot on one that has never healed anything would
+ * report missing data about something that cannot exist, and 218 cards each
+ * claiming three absences is how a coverage display comes to mean nothing.
+ */
+function reachesOf(t) {
+  return KINDS.filter((k) => k.id === 'attack' || bringsEffect(t, k.id));
+}
+
+/** What is on file, what is in flight, drawn onto one card. */
+function markCard(card, t) {
+  const slug = t.slug;
+  const mine = queue.has(queueKey(slug, picked.kind));
+  const open = issueFor(slug, picked.kind);
+
+  // The border, for scanning 218 cards: one hue, two weights. Violet has no twin
+  // among the five elemental type colours, which is exactly why the old scheme's
+  // red, yellow, green and blue could not be used — every one of them is also a
+  // type tint sitting behind the sprite, and three of them are also an effect
+  // badge in the corner. Bright is your own work, dim is somebody else's.
+  card.dataset.flight = mine ? 'mine' : open ? 'theirs' : '';
+  // Kept for the queue's own bookkeeping and for anything reading the DOM.
+  card.dataset.queued = String(mine);
+  if (open) card.dataset.issue = String(open.number);
+
+  const reaches = reachesOf(t);
+  card.append(reachStrip(slug, reaches));
+  if (open) card.querySelector('.card__art')?.append(issueBadge(open));
+
+  // The card's own title names the Tatari, its type and role, and renderRoster()
+  // has just written it — so this is appended, not assigned. It is the long form
+  // of the strip for anyone on a pointer, and the only place the issue's subject
+  // line fits.
+  const said = reaches.map((k) => `${k.label}: ${COVERAGE_SAYS[rangeStatus(slug, k.id)]}`);
+  card.title = `${card.title}\n\n${said.join('\n')}${
+    open ? `\n\n#${open.number} is already open for its ${picked.kind} reach — ${open.title}` : ''}${
+    mine ? `\n\nIts ${picked.kind} reach is waiting in your queue.` : ''}`;
+}
+
+/**
+ * One segment per reach, filled by how well known that reach is.
+ *
+ * Coverage is a sequence — nothing, then written down, then checked — so it is
+ * drawn as one: three steps of brightness on the same neutral, which is the
+ * channel a card has left. Every hue on this card is already spoken for twice
+ * over, and encoding an ordinal three-step as three unrelated colours asked
+ * people to memorise an order that the colours themselves never implied.
+ */
+function reachStrip(slug, reaches) {
+  const strip = document.createElement('span');
+  strip.className = 'card__reach';
+  strip.setAttribute('aria-hidden', 'true');
+
+  for (const k of reaches) {
+    const pip = document.createElement('span');
+    pip.className = 'card__pip';
+    pip.dataset.cov = rangeStatus(slug, k.id);
+    pip.dataset.reach = k.id;
+    // Which segment the reach chips are currently pointed at, so the border and
+    // the badge are anchored to a specific one rather than to the card at large.
+    if (k.id === picked.kind) pip.dataset.sel = 'true';
+    if (queue.has(queueKey(slug, k.id))) pip.dataset.flight = 'mine';
+    else if (issueFor(slug, k.id)) pip.dataset.flight = 'theirs';
+    strip.append(pip);
+  }
+  return strip;
+}
+
+/**
+ * An open issue, as its number.
+ *
+ * A colour can say "somebody got here first" but it cannot say who or where, and
+ * on a phone the tooltip that used to carry that is unreachable. The number is
+ * the issue's actual name, it is legible at 8px, and it collides with nothing.
+ */
+function issueBadge(open) {
+  const badge = document.createElement('span');
+  badge.className = 'card__flight';
+  badge.textContent = `#${open.number}`;
+  return badge;
+}
+
+/** Coverage, in the words the tooltip and the legend both use. */
 const COVERAGE_SAYS = {
-  none: 'Nothing is recorded for it yet.',
-  recorded: 'On file, unchecked.',
-  verified: 'On file and checked by hand.',
+  none: 'nothing recorded',
+  recorded: 'on file, unchecked',
+  verified: 'on file and checked by hand',
 };
 
 /** What a roster card click means here: record this one. */
@@ -625,12 +761,67 @@ function choose(slug) {
   // On a phone the roster is a sheet over the grid, and the grid is where you
   // are going next. Above 760px this does nothing.
   closeSheet();
+  // The queue may have gained or lost an entry on the way in, and a roster
+  // whose marks lag one interaction behind the queue is where the wandering
+  // purple came from: a card would change colour on some later, unrelated click.
+  refreshRoster();
   renderAll();
+  showBoard();
 
   const held = queue.get(queueKey(slug, picked.kind));
   toast(held
     ? `Back to ${state.bySlug.get(slug)?.name ?? slug} — ${held.tiles.length} tiles kept`
     : `Recording ${state.bySlug.get(slug)?.name ?? slug}`);
+}
+
+/**
+ * Brings the tile the Tatari is standing on into view.
+ *
+ * The frame is thirteen rows tall and the Tatari stands in the back row of it,
+ * so on arrival the interesting part is the better part of a screen below the
+ * fold — under the lede, the pick, the four reach chips and their note. Picking
+ * a Tatari looked like it had done nothing at all: the board lit up correctly,
+ * off screen, while the output block underneath filled in. Which is to say the
+ * page answered a question nobody could see it answering.
+ */
+function showBoard() {
+  const origin = document.querySelector('.field-frame .cell.is-origin')
+    ?? document.querySelector('.field-frame');
+  if (!origin) return;
+
+  // Called after renderAll() has already mutated the DOM, and reading a rect
+  // flushes pending layout — so this measures the page as it now is, including the
+  // height the pick just added above the board. No frame to wait for.
+  const box = origin.getBoundingClientRect();
+  // Only when it is actually out of the way. Scrolling a board somebody is
+  // already looking at moves the thing under their cursor for no reason.
+  if (box.top < 0 || box.bottom > window.innerHeight) {
+    // Instant, and scrollIntoView is not asked to do it: `behavior: "smooth"` is
+    // a no-op wherever the browser has smooth scrolling turned off — not slower,
+    // not instant, nothing at all — and a jump that sometimes fails to happen is
+    // worse than one that always does. The pulse is what makes it legible.
+    const mid = box.top + box.height / 2 - window.innerHeight / 2;
+    window.scrollTo({ top: Math.max(0, window.scrollY + mid) });
+  }
+  pulseOrigin();
+}
+
+/**
+ * Says where the Tatari is standing, once, by flashing its tile.
+ *
+ * Picking one moves the page several hundred pixels and lights up a shape, and
+ * nothing connected the click to either — which is why picking a Tatari read as
+ * having done nothing. The pulse is the only thing here that answers "what just
+ * happened", so it lands on the tile everything else is measured from.
+ */
+function pulseOrigin() {
+  const cell = document.querySelector('.field-frame .cell.is-origin');
+  if (!cell) return;
+  cell.classList.remove('is-arriving');
+  // Reading offsetWidth restarts the animation; without it, picking a second
+  // Tatari whose origin is the same tile replays nothing at all.
+  void cell.offsetWidth;
+  cell.classList.add('is-arriving');
 }
 
 /**
@@ -646,7 +837,23 @@ function prefillFromData() {
   if (!entry?.tiles) return;
 
   for (const [dCol, dRow] of entry.tiles) picked.tiles.add(key(dCol, dRow));
-  if (entry.note) $('#note').value = entry.note;
+  if (entry.note) {
+    $('#note').value = entry.note;
+    picked.noteOnLoan = true;
+  }
+}
+
+/**
+ * Lets go of a borrowed note, once the shape it described has changed.
+ *
+ * Called from the gestures that change the shape rather than from saveCurrent(),
+ * because the box has to visibly empty at the moment the contributor invalidates
+ * it — a note silently dropped on save is one they still believe they sent.
+ */
+function releaseNote() {
+  if (!picked.noteOnLoan) return;
+  picked.noteOnLoan = false;
+  $('#note').value = '';
 }
 
 /**

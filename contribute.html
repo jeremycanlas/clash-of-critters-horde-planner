@@ -41,28 +41,43 @@
       </div>
     </div>
 
+    <!--
+      One sentence. Everything above the board is rent the board pays: the frame
+      is thirteen rows tall, and with the old four-paragraph preamble the 6x6 a
+      contributor is told to click began 191px below the fold on a 945px screen.
+      The rest of the why moved under the board, which is where it is read after
+      the first range rather than before it.
+    -->
     <p class="hint contrib__lede">
-      Attack range is only documented as in-game screenshots, and reach for heals,
-      buffs and debuffs is not documented at all. Pick a Tatari from the roster,
-      stand it where your screenshot had it, click what it reached.
+      Attack range is only published as screenshots and support reach is not
+      published at all, so both get read off the game by hand. Stand a Tatari
+      where your screenshot had it and click what it reached.
     </p>
 
     <div id="chosen" class="contrib__chosen contrib__chosen--empty">
       Pick one from the roster.
     </div>
 
-    <div id="kinds" class="chips chips--text" role="group" aria-label="What you are recording"></div>
-    <p id="kind-note" class="hint"></p>
+    <!--
+      What is being recorded, on one row: the four reaches, and the escape hatch
+      for the ones that have no shape at all. A heal that mends the whole team has
+      no tile pattern to draw, and drawing one would invent a limit the game does
+      not have.
+    -->
+    <div class="contrib__what">
+      <div id="kinds" class="chips chips--text" role="group" aria-label="What you are recording"></div>
+      <label class="check contrib__scope">
+        <input id="opt-all" type="checkbox">
+        <span id="opt-all-label">Reaches everything — no tile pattern</span>
+      </label>
+    </div>
 
-    <!-- Not everything has a shape. A heal that mends the whole team has no
-         tile pattern to draw, and drawing one would be inventing a limit the
-         game does not have. -->
-    <label class="check contrib__scope">
-      <input id="opt-all" type="checkbox">
-      <span id="opt-all-label">Reaches everything — no tile pattern</span>
-    </label>
-
-    <p id="grid-hint" class="hint"></p>
+    <!-- What this reach is, then what to do about it. Two sentences, one block,
+         because they are read together and each cost a 24px gap of its own. -->
+    <div class="contrib__say">
+      <p id="kind-note"></p>
+      <p id="grid-hint"></p>
+    </div>
 
     <!--
       Only shown while an imported entry is on the grid. Reviewing somebody
@@ -156,22 +171,29 @@
     </div>
 
     <!--
-      Coverage for whichever reach is selected, so the gap is visible before you
-      go looking for it. All five states are named, because a card outlined in a
-      colour nobody explained is worse than one with no outline at all — and the
-      two that are not coverage at all, yours and somebody else's, are the two
-      that change what you would do next.
+      Two channels, so two rows. The strip along the bottom of a card carries one
+      segment per reach that Tatari can have and says what is on file for each;
+      the card's edge says whether a contribution is already in flight. They used
+      to be the same channel, five values deep with a precedence order, so a card
+      could only tell you one of the two things — and on a phone the other went
+      into a `title` nobody can open.
 
-      Read top to bottom in the order a card's colour is decided: purple wins
-      over blue, blue over the three coverage rings.
+      Named in the order they are read rather than in order of importance: you
+      look at the strip while deciding what to record, and at the edge to find out
+      whether to bother.
     -->
-    <p class="contrib__legend" aria-label="What the card colours mean">
-      <span data-range="queued">Waiting in your queue</span>
-      <span data-range="issue">An issue is already open</span>
-      <span data-range="verified">Checked by hand</span>
-      <span data-range="recorded">On file, unchecked</span>
-      <span data-range="none">Nothing recorded</span>
-    </p>
+    <div class="contrib__legend">
+      <p class="contrib__legendrow"><b>On file</b>
+        <span data-cov="none">Nothing yet</span>
+        <span data-cov="recorded">Recorded</span>
+        <span data-cov="verified">Checked by hand</span>
+        <span class="contrib__legendnote">— one bar per reach: attack, then any heal, buff or debuff it has</span>
+      </p>
+      <p class="contrib__legendrow"><b>In flight</b>
+        <span data-flight="mine">Waiting in your queue</span>
+        <span data-flight="theirs">An issue is open — the card carries its number</span>
+      </p>
+    </div>
 
     <!--
       Filled in once the open issues have been read, and left empty if they
