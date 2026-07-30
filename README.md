@@ -166,6 +166,46 @@ existing entry is as easy as adding a missing one — several were read off a
 sibling's diagram and are marked `UNVERIFIED`, and a shape is much easier to
 check than to describe.
 
+### Reading one that came in
+
+**Import an entry** on the same page takes a recorded entry back in: paste the
+issue — the whole body, bullets and fences and all — or the JSON from it, or read
+it out of a file. It goes on the grid beside whatever is already on file, with
+the tiles it **adds in blue**, the tiles it **drops in orange**, and the ones
+both agree on in the usual yellow. Several entries can come in at once and they
+queue up, so an issue carrying five ranges is five things to look at rather than
+five files to open.
+
+Nothing is written by importing. Once a reading looks right:
+
+```bash
+node tools/apply-ranges.mjs entry.json                          # or: pbpaste | … -
+node tools/apply-ranges.mjs entry.json --dry                    # say what it would do
+node tools/apply-ranges.mjs entry.json --by "@who" --issue 12   # credit them, close their issue
+node tools/apply-ranges.mjs entry.json --verified               # you checked it yourself
+```
+
+That merges into `data/ranges.json` and `data/effect-ranges.json`, keeping each
+`tiles` array on one line so applying one range is a one-entry diff rather than
+an unreviewable rewrite. Nothing is marked `verified` unless you pass
+`--verified`: applying somebody else's reading is not the same claim as having
+checked it against the game yourself.
+
+`--by` is what puts a contributor in the credits list below, and with a GitHub
+`@handle` it also writes the commit for you — subject, what changed, `Closes #12`
+and a `Co-authored-by:` trailer carrying their account, so the commit shows their
+avatar and the contribution lands on their profile:
+
+```bash
+git commit -a -F .git/RANGE_COMMIT_MSG
+```
+
+The trailer needs the account's numeric id, which comes from a single unauthenticated
+call to `api.github.com` — `--email addr` supplies an address directly and skips
+the lookup. A name that is not a `@handle` (a `u/reddit` one, say) is credited in
+the list but gets no trailer, because guessing which GitHub account it belongs to
+would credit a stranger.
+
 ### Refreshing it
 
 ```bash
@@ -265,3 +305,16 @@ a dock pinned above the buttons.
 
 Data and art from the [Clash of Critters Wiki](https://clashofcritters.wiki.gg).
 Fan-made and unofficial; not affiliated with the developers of Clash of Critters.
+
+### Ranges recorded by the community
+
+Attack range is only published as screenshots and support reach is not published
+at all, so every entry below is somebody who sat down with the game and read one
+off by hand. This list is generated from the `by` field on the entries themselves
+(`node tools/credits.mjs`), so nothing between the markers below is worth editing
+by hand — the next applied entry rewrites it.
+
+<!-- credits:start -->
+Nothing has come in through the recorder yet. The first entry applied with
+`tools/apply-ranges.mjs --by "@you"` puts its contributor here.
+<!-- credits:end -->
