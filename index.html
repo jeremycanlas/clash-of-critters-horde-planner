@@ -36,12 +36,20 @@
   <div class="topbar__actions">
     <!--
       The other half of the "72 of 218 ranges recorded" problem. The Ranges
-      toggle tells you the data is thin; this is the only thing on the page that
-      says what you can do about it, so it sits with the global actions rather
-      than buried in the footer. A link, not a button: it goes somewhere.
+      toggle tells you the data is thin; this is the standing way to do something
+      about it, so it sits with the global actions rather than buried in the
+      footer. A link, not a button: it goes somewhere.
+
+      Not btn--quiet. Quiet made it the faintest thing in a row of five, which is
+      a strange rank for the only item in it that leads anywhere — it read as a
+      fifth, lesser formation action. At plain .btn weight it sits level with
+      Share and Save, and the leading + says it adds something rather than doing
+      something to the formation. The moment-of-need ask is #range-gap, under the
+      field; this is wayfinding, and wayfinding only has to be findable.
     -->
-    <a class="btn btn--quiet topbar__contribute" href="contribute.html"
-       title="Record a Tatari's attack range or support reach — it takes a couple of minutes and the data is missing for most of the roster">Record a range</a>
+    <a class="btn topbar__contribute" href="contribute.html"
+       title="Record a Tatari's attack range or support reach — it takes a couple of minutes and the data is missing for most of the roster"><span
+       class="topbar__contribute-plus" aria-hidden="true">+</span>Record a range</a>
     <button id="btn-share" class="btn" type="button"
             title="Share this formation as a picture or a link">Share</button>
     <button id="btn-save"  class="btn" type="button"
@@ -141,6 +149,19 @@
         <span>Your base</span>
       </div>
     </div>
+
+    <!--
+      Shown only while the Ranges overlay is on, because that is the one moment
+      the missing data is visible rather than theoretical: the shading has holes
+      in it and some of them are holes in the data, not in the formation. It says
+      which, and it counts the Tatari on this field rather than quoting a total,
+      because "four of yours are not drawn" is a fact about your screen.
+
+      Deliberately outside .field-frame. The frame is what gets screenshotted into
+      Discord, an ask inside it would ride along in every share, and the row above
+      already learned that lesson with the site URL.
+    -->
+    <p id="range-gap" class="rangegap" hidden></p>
 
     <div id="bench" class="bench"></div>
     <div id="summary" class="summary"></div>
