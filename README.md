@@ -278,6 +278,26 @@ and `.nojekyll` is already committed so Pages serves the files as they are.
 
 ## Changelog
 
+### 1.2.1
+
+#### Summary:
+
+The range recorder has been added to record Tatari attack, support and debuff ranges. 
+The board consists of the usual 6x6 field where you can place your tataris as well as the area behind the line (7 rows). If
+a Tatari has multiple ranges (e.g. both an attack and a support range), they are now shown on
+the same card. When an entry has been verified (either by you or by another contributor), the
+entry bar turns grey, and the tiles that it would add or remove are shown in their respective
+colours on the board.
+
+#### Changes:
+
+- The range recorder records indicators for attack, support and debuff ranges and creates a github issue for contributors to review.
+- The board shows both the area behind the line (7 rows) and the 6x6 field. If a Tatari has multiple ranges (e.g. both an attack and a support range), they are now shown on
+the same card.
+- When an entry has been verified (either by you or by another contributor), the entry bar turns grey,
+and the tiles that it would add or remove are shown in their respective colours on the board.
+- A new `verified` flag has been added to the range entries. 
+
 ### 1.2.0
 #### Summary:
 The phone layout is rebuilt (again). Around 77% of visitors uses the tool on a mobile device, and the old
@@ -340,7 +360,7 @@ Attack range is only published as screenshots and support reach is not published
 at all, so every entry below is somebody who sat down with the game and read one
 off by hand. This list is generated from the `by` field on the entries themselves
 (`node tools/credits.mjs`), so nothing between the markers below is worth editing
-by hand — the next applied entry rewrites it.
+by hand - the next applied entry rewrites it.
 
 <!-- credits:start -->
 Nothing has come in through the recorder yet. The first entry applied with
