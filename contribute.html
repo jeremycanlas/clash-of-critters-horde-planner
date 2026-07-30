@@ -35,6 +35,9 @@
       <div class="panel__tools">
         <button id="btn-move" class="btn btn--tiny" type="button">Move the Tatari</button>
         <button id="btn-clear" class="btn btn--tiny btn--quiet" type="button">Clear tiles</button>
+        <!-- The other end of the issue button: put a recorded entry back on the
+             grid it was drawn on, next to whatever is already on file. -->
+        <button id="btn-import" class="btn btn--tiny btn--quiet" type="button">Import an entry</button>
       </div>
     </div>
 
@@ -60,6 +63,22 @@
     </label>
 
     <p id="grid-hint" class="hint"></p>
+
+    <!--
+      Only shown while an imported entry is on the grid. Reviewing somebody
+      else's reading is not the same job as taking your own: what you are
+      looking for is not the shape but the difference between it and what is
+      already on file, so that difference is what the tiles say.
+    -->
+    <div id="diff" class="contrib__diff" hidden>
+      <p id="diff-say" class="contrib__diffsay"></p>
+      <p id="diff-legend" class="contrib__legend contrib__legend--diff"
+         aria-label="What the tile colours mean">
+        <span data-tile="added">Added by this entry</span>
+        <span data-tile="removed">Dropped by this entry</span>
+        <span data-tile="kept">Already on file</span>
+      </p>
+    </div>
 
     <!--
       Two grids, one frame. The upper one is the ground beyond the line, which
@@ -136,13 +155,29 @@
       <h2 id="h-roster">Roster <span id="roster-count" class="muted"></span></h2>
     </div>
 
-    <!-- Coverage for whichever reach is selected, so the gap is visible before
-         you go looking for it. -->
+    <!--
+      Coverage for whichever reach is selected, so the gap is visible before you
+      go looking for it. All five states are named, because a card outlined in a
+      colour nobody explained is worse than one with no outline at all — and the
+      two that are not coverage at all, yours and somebody else's, are the two
+      that change what you would do next.
+
+      Read top to bottom in the order a card's colour is decided: purple wins
+      over blue, blue over the three coverage rings.
+    -->
     <p class="contrib__legend" aria-label="What the card colours mean">
+      <span data-range="queued">Waiting in your queue</span>
+      <span data-range="issue">An issue is already open</span>
       <span data-range="verified">Checked by hand</span>
       <span data-range="recorded">On file, unchecked</span>
       <span data-range="none">Nothing recorded</span>
     </p>
+
+    <!--
+      Filled in once the open issues have been read, and left empty if they
+      cannot be. The one network call this page makes, so it says so.
+    -->
+    <p id="issues-say" class="hint contrib__issues" hidden></p>
 
     <div class="filters">
       <input id="search" class="field" type="search" autocomplete="off"
@@ -195,8 +230,42 @@
     <a href="https://clashofcritters.wiki.gg/wiki/Tatari" target="_blank" rel="noopener">Clash of Critters Wiki</a>.
     Fan-made, unofficial.</span>
   <span class="muted">Nothing here is uploaded. The entry is built in your browser and it is
-    yours to send or not.</span>
+    yours to send or not. The page reads this repo's open issues from GitHub so it can
+    show what somebody has already sent in — that request carries nothing but the
+    repo's name.</span>
 </footer>
+
+<!--
+  Import. The issue button sends an entry out; this takes one back in. It reads
+  the whole issue body rather than asking for the JSON to be dug out of it,
+  because the body is what you have in front of you when you are reading one.
+-->
+<dialog id="import" class="modal modal--import">
+  <h2>Import a recorded entry</h2>
+  <p class="hint">
+    Paste an issue — the whole body, bullets and fences and all — or just the JSON
+    from it. Attack ranges and heal, buff and debuff reach are all read. Nothing is
+    written to the data files: the entry goes on the grid so you can see what it
+    changes, with anything it adds in blue and anything it drops in orange.
+  </p>
+
+  <textarea id="import-text" class="field contrib__paste" rows="9" spellcheck="false"
+            aria-label="The issue body, or the JSON from it"
+            placeholder='// data/ranges.json  →  "bySlug"
+{
+  "sproutlet": { "tiles": [[0, -1], [0, -2]], "from": "range diagram" }
+}'></textarea>
+
+  <p id="import-say" class="contrib__importsay" hidden></p>
+
+  <div class="modal__actions">
+    <button id="import-go" class="btn btn--primary" type="button">Import</button>
+    <label class="btn" for="import-file">Read a file…</label>
+    <input id="import-file" type="file" hidden
+           accept=".json,.txt,.md,application/json,text/plain,text/markdown">
+    <button class="btn btn--quiet" type="button" data-close>Close</button>
+  </div>
+</dialog>
 
 <dialog id="detail" class="modal modal--detail"></dialog>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
