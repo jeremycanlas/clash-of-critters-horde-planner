@@ -45,7 +45,11 @@ export function rangeStatus(slug, kind = 'attack') {
 
   const book = kind === 'attack' ? state.ranges : state.effectRanges?.[kind];
   const entry = book?.bySlug?.[slug] ?? book?.byLine?.[lineKey(tatari)];
-  if (!entry?.tiles?.length) return 'none';
+  // A reach with no shape carries no tiles at all, deliberately — a heal that
+  // mends the whole team has no pattern to store. It is still a recorded reach,
+  // and counting it as nothing would have the recorder ask for it again forever.
+  if (!entry) return 'none';
+  if (entry.scope !== 'all' && !entry.tiles?.length) return 'none';
   return entry.verified === true ? 'verified' : 'recorded';
 }
 
