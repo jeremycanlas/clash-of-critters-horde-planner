@@ -23,6 +23,8 @@ import { $, artHTML, esc, typeIcon, roleIcon, toast, copyText } from './ui.js';
 import { buildFilters, renderRoster } from './roster.js';
 import { buildShell, closeSheet } from './shell.js';
 import { rangeStatus } from './range.js';
+import { parseContribution } from './range-import.js';
+import { loadIssues, issueFor } from './issues.js';
 
 const REPO = 'jeremycanlas/clash-of-critters-horde-planner';
 
@@ -87,6 +89,12 @@ const picked = {
    * tell the invention from a measurement.
    */
   scope: 'tiles',
+  /**
+   * True when this edit came in from an issue rather than from clicking. A
+   * review is a different job from a recording — what matters is not the shape
+   * but how it differs from what is on file — so the grid says so.
+   */
+  imported: false,
 };
 const key = (dCol, dRow) => `${dCol},${dRow}`;
 
@@ -121,6 +129,39 @@ async function main() {
   wire();
   refreshRoster();
   renderAll();
+  // Not awaited: the page is usable the moment the roster is drawn, and what is
+  // already in flight is a hint rather than something to hold it up for. It
+  // repaints when the answer arrives, or never, if GitHub is busy.
+  findOpenIssues();
+}
+
+/**
+ * Marks the Tatari somebody has already sent in.
+ *
+ * The gap this closes is a contributor spending twenty minutes reading a range
+ * that has been sitting in an open issue for a week. Nothing here is required
+ * for the page to work, so a failure is said once, quietly, and dropped.
+ */
+async function findOpenIssues() {
+  const byName = new Map(state.all.map((t) => [t.name.toLowerCase(), t.slug]));
+  const say = $('#issues-say');
+
+  const res = await loadIssues(REPO, (name) => byName.get(name.trim().toLowerCase()) ?? null);
+
+  if (!res.ok) {
+    say.textContent = res.why;
+    say.hidden = false;
+    return;
+  }
+  if (!res.count) {
+    say.hidden = true;
+    return;
+  }
+
+  say.textContent = `${res.count} reach${res.count === 1 ? ' has' : 'es have'
+  } an open issue already — those cards are outlined in blue, and recording one again would duplicate somebody's work.`;
+  say.hidden = false;
+  refreshRoster();
 }
 
 function wire() {
@@ -231,6 +272,8 @@ function wire() {
     toast(`Queue cleared — ${n} edit${n === 1 ? '' : 's'} dropped`);
   });
 
+  wireImport();
+
   $('#btn-copy').addEventListener('click', async () => {
     toast(await copyText(entryText()) ? 'Entry copied' : 'Could not copy — select it and copy by hand',
       'ok');
@@ -250,6 +293,151 @@ function wire() {
     URL.revokeObjectURL(url);
     toast(`Saved ${name}`, 'ok');
   });
+}
+
+// ---------------------------------------------------------------- import
+
+/**
+ * Taking an entry back in.
+ *
+ * The issue button sends a reading out; this is how one comes back. A range
+ * arriving as coordinates in an issue has to be checked before it is merged, and
+ * checking it as text means reading twenty pairs of numbers against a file of
+ * seven hundred more. Put back on the grid beside what is already on file, the
+ * same question answers itself at a glance.
+ */
+function wireImport() {
+  const dialog = $('#import');
+
+  $('#btn-import').addEventListener('click', () => {
+    $('#import-say').hidden = true;
+    dialog.showModal();
+    $('#import-text').focus();
+  });
+
+  dialog.addEventListener('click', (e) => {
+    if (e.target.closest('[data-close]') || e.target === dialog) dialog.close();
+  });
+
+  $('#import-file').addEventListener('change', async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    try {
+      $('#import-text').value = await file.text();
+      $('#import-text').focus();
+    } catch { report([`Could not read ${file.name}.`], 'error'); }
+  });
+
+  $('#import-go').addEventListener('click', () => takeIn($('#import-text').value, dialog));
+}
+
+function report(lines, kind) {
+  const say = $('#import-say');
+  say.dataset.kind = kind;
+  say.hidden = false;
+  say.innerHTML = lines.map((l) => `<span>${esc(l)}</span>`).join('');
+}
+
+/**
+ * Queues everything readable in `text`, and says what it refused.
+ *
+ * Refusals are shown rather than counted: an entry left out of a review is one
+ * nobody looks at again, and "3 of 4 imported" does not tell you which one went
+ * missing or why.
+ */
+function takeIn(text, dialog) {
+  // Whatever is on the grid is written first, or importing the same Tatari
+  // would drop the edit in progress on the floor.
+  saveCurrent();
+
+  const { entries, problems } = parseContribution(text);
+  const kept = [];
+
+  for (const e of entries) {
+    if (!KINDS.some((k) => k.id === e.kind)) {
+      problems.push(`${e.slug}: “${e.kind}” is not a reach this records.`);
+      continue;
+    }
+    if (!state.bySlug.has(e.slug)) {
+      problems.push(`${e.slug} (${e.kind}) is not a Tatari in the roster, so there is nothing to draw it on.`);
+      continue;
+    }
+    // Silently overwriting somebody's own reading with an imported one is the
+    // only way this page can lose work, so it is never done quietly.
+    const held = queue.get(queueKey(e.slug, e.kind));
+    if (held && !held.imported) {
+      problems.push(`${state.bySlug.get(e.slug)?.name ?? e.slug} (${e.kind}): the edit you had queued for this was replaced by the imported one.`);
+    }
+
+    queue.set(queueKey(e.slug, e.kind), {
+      slug: e.slug,
+      kind: e.kind,
+      scope: e.scope,
+      tiles: [...e.tiles],
+      note: e.note,
+      from: e.from,
+      // The contributor's own origin is not in the file — only offsets are — so
+      // one is chosen that shows as much of both readings as the board can hold.
+      origin: bestOrigin([...e.tiles, ...(onFileTiles(e.slug, e.kind)?.tiles ?? [])]),
+      imported: true,
+    });
+    kept.push(e);
+  }
+
+  if (!kept.length) {
+    report(problems.length ? problems : ['Nothing in that was a range entry.'], 'error');
+    return;
+  }
+
+  persistQueue();
+  loadInto(kept[0].slug, kept[0].kind);
+  refreshRoster();
+  renderAll();
+
+  const summary = `${kept.length} entr${kept.length === 1 ? 'y' : 'ies'} imported — ${
+    kept.map((e) => `${state.bySlug.get(e.slug)?.name ?? e.slug} (${e.kind})`).join(', ')}.`;
+
+  if (problems.length) {
+    report([summary, ...problems], 'warn');
+  } else {
+    dialog.close();
+  }
+  toast(kept.length === 1
+    ? `Imported ${state.bySlug.get(kept[0].slug)?.name ?? kept[0].slug} — ${kept[0].kind}`
+    : `Imported ${kept.length} entries`, 'ok');
+}
+
+/**
+ * Where to stand a Tatari so that the most of a recorded shape is on the board.
+ *
+ * An entry from an issue carries offsets and no origin: the origin was the
+ * contributor's screenshot and it is not in the file. Standing it in the back
+ * row by default hides anything reaching behind it, and a tile that cannot be
+ * seen cannot be checked — which is the whole point of importing it.
+ */
+function bestOrigin(keys) {
+  const offsets = [...new Set(keys)].map((k) => k.split(',').map(Number));
+  const home = { col: Math.floor(COLS / 2), row: ROWS - 1 };
+  if (!offsets.length) return home;
+
+  let best = home;
+  let bestScore = -1;
+  for (let row = 0; row < ROWS; row++) {
+    for (let col = 0; col < COLS; col++) {
+      let seen = 0;
+      for (const [dCol, dRow] of offsets) {
+        const c = col + dCol, r = row + dRow;
+        if (c >= 0 && c < COLS && r >= -ENEMY_ROWS && r < ROWS) seen++;
+      }
+      // Ties go to the tile nearest where a Tatari would otherwise stand, so the
+      // same shape lands in the same place every time rather than wherever the
+      // scan happened to start.
+      const score = seen * 100 - (Math.abs(col - home.col) + Math.abs(row - home.row));
+      if (score > bestScore) { bestScore = score; best = { col, row }; }
+    }
+  }
+  return best;
 }
 
 // ---------------------------------------------------------------- the queue
@@ -291,6 +479,7 @@ function saveCurrent() {
       note: $('#note').value.trim(),
       from: $('#from').value,
       origin: { ...picked.origin },
+      imported: picked.imported,
     });
   }
   persistQueue();
@@ -306,12 +495,14 @@ function loadInto(slug, kind) {
   if (held) {
     for (const t of held.tiles) picked.tiles.add(t);
     picked.scope = held.scope ?? 'tiles';
+    picked.imported = held.imported === true;
     $('#note').value = held.note;
     $('#from').value = held.from;
     picked.origin = { ...held.origin };
     return;
   }
   picked.scope = 'tiles';
+  picked.imported = false;
   $('#note').value = '';
   prefillFromData();
 }
@@ -340,6 +531,7 @@ function restoreQueue() {
         note: typeof e.note === 'string' ? e.note : '',
         from: typeof e.from === 'string' ? e.from : 'range diagram',
         origin: e.origin ?? { col: Math.floor(COLS / 2), row: ROWS - 1 },
+        imported: e.imported === true,
       });
     }
   } catch { /* nothing worth keeping */ }
@@ -360,12 +552,24 @@ function renderQueue() {
   $('#queue').innerHTML = all.map((e) => {
     const t = state.bySlug.get(e.slug);
     const here = e.slug === picked.slug && e.kind === picked.kind;
+    // Imported entries carry what they would change, so the queue is a list of
+    // reviews to work through rather than a list of names.
+    const d = e.imported ? diffOf(e.slug, e.kind, new Set(e.tiles)) : null;
+    const moved = [
+      d?.added.length ? `<b>+${d.added.length}</b>` : '',
+      d?.removed.length ? `&minus;${d.removed.length}` : '',
+    ].filter(Boolean);
+    const delta = d?.was && moved.length ? `<span class="contrib__qdelta">${moved.join(' ')}</span>` : '';
     return `
       <button class="contrib__qitem" type="button" data-open="${esc(e.slug)}" data-kind="${esc(e.kind)}"
-              aria-current="${here}" title="${esc(t?.name ?? e.slug)} — ${e.kind}, ${e.tiles.length} tiles">
+              data-imported="${e.imported === true}"
+              aria-current="${here}" title="${esc(t?.name ?? e.slug)} — ${e.kind}, ${e.tiles.length} tiles${
+                d?.was ? `, ${d.added.length} added and ${d.removed.length} dropped against the file` : ''}">
         ${t ? artHTML(t, { lazy: false }) : ''}
         <span class="contrib__qname">${esc(t?.name ?? e.slug)}</span>
         <span class="contrib__qkind" data-kind="${esc(e.kind)}">${esc(e.kind)}</span>
+        ${e.imported ? '<span class="contrib__qtag">imported</span>' : ''}
+        ${delta}
         <span class="contrib__qn">${e.scope === 'all' ? 'all' : e.tiles.length}</span>
         <span class="contrib__qx" role="button" tabindex="-1" data-drop="${esc(e.slug)}"
               data-kind="${esc(e.kind)}" aria-label="Take this edit off the queue">&times;</span>
@@ -387,10 +591,32 @@ function refreshRoster() {
   renderRoster();
   for (const card of document.querySelectorAll('#roster .card')) {
     const slug = card.dataset.slug;
-    card.dataset.range = rangeStatus(slug, picked.kind);
+    const status = rangeStatus(slug, picked.kind);
+    card.dataset.range = status;
     card.dataset.queued = String(queue.has(queueKey(slug, picked.kind)));
+
+    // What is on file is worth knowing; what is on its way is worth knowing
+    // first, because it is the difference between recording something useful
+    // and recording something somebody already sent. The colour it takes says
+    // so, and the tooltip keeps the coverage that colour displaced.
+    //
+    // Appended rather than assigned: the card's own title names the Tatari and
+    // its type and role, and renderRoster() has just written it. Replacing it
+    // would trade a tooltip every card carries for one three of them do.
+    const open = issueFor(slug, picked.kind);
+    if (!open) continue;
+    card.dataset.issue = String(open.number);
+    card.title = `${card.title}\n\n#${open.number} is already open for this ${picked.kind
+    } reach — ${open.title}\n${COVERAGE_SAYS[status] ?? status}`;
   }
 }
+
+/** The coverage a card's ring gives up when an open issue takes the colour. */
+const COVERAGE_SAYS = {
+  none: 'Nothing is recorded for it yet.',
+  recorded: 'On file, unchecked.',
+  verified: 'On file and checked by hand.',
+};
 
 /** What a roster card click means here: record this one. */
 function choose(slug) {
@@ -416,16 +642,63 @@ function choose(slug) {
  */
 function prefillFromData() {
   if (!picked.slug) return;
-  const t = state.bySlug.get(picked.slug);
-  if (!t) return;
-
-  const book = picked.kind === 'attack' ? state.ranges : state.effectRanges?.[picked.kind];
-  const base = state.all.find((x) => x.familyId === t.familyId && x.tier === 1) ?? t;
-  const entry = book?.bySlug?.[picked.slug] ?? book?.byLine?.[base.slug];
+  const entry = onFile(picked.slug, picked.kind);
   if (!entry?.tiles) return;
 
   for (const [dCol, dRow] of entry.tiles) picked.tiles.add(key(dCol, dRow));
   if (entry.note) $('#note').value = entry.note;
+}
+
+/**
+ * What the data files already say about this Tatari and reach.
+ *
+ * Ranges are keyed by evolution line with a per-slug override, so a tier 3 with
+ * nothing of its own inherits its line's entry — the same lookup range.js does
+ * for the drafter.
+ */
+function onFile(slug, kind) {
+  const t = state.bySlug.get(slug);
+  if (!t) return null;
+  const book = kind === 'attack' ? state.ranges : state.effectRanges?.[kind];
+  const base = state.all.find((x) => x.familyId === t.familyId && x.tier === 1) ?? t;
+  return book?.bySlug?.[slug] ?? book?.byLine?.[base.slug] ?? null;
+}
+
+/** The same, as offset keys, or null when nothing is on file. */
+function onFileTiles(slug, kind) {
+  const entry = onFile(slug, kind);
+  if (!entry) return null;
+  const tiles = (entry.tiles ?? []).map(([dCol, dRow]) => key(dCol, dRow));
+  return { scope: entry.scope === 'all' && !tiles.length ? 'all' : 'tiles', tiles };
+}
+
+/**
+ * The entry on the grid against the one on file, tile by tile.
+ *
+ * Only for imported entries. While you are recording your own reading, the
+ * tiles you have clicked are the answer and colouring some of them differently
+ * would be the page arguing with you; while you are reviewing somebody else's,
+ * the difference is the only thing you are there to look at.
+ *
+ * @returns {{was: ?{scope: string, tiles: string[]}, base: Set<string>,
+ *   added: string[], removed: string[], kept: string[]}|null}
+ */
+function diffOf(slug, kind, tiles) {
+  const was = onFileTiles(slug, kind);
+  const base = new Set(was?.tiles ?? []);
+  return {
+    was,
+    base,
+    added: [...tiles].filter((k) => !base.has(k)),
+    removed: [...base].filter((k) => !tiles.has(k)),
+    kept: [...tiles].filter((k) => base.has(k)),
+  };
+}
+
+/** The diff for whatever is on the grid, or null when this is not a review. */
+function currentDiff() {
+  if (!picked.imported || !picked.slug) return null;
+  return diffOf(picked.slug, picked.kind, picked.tiles);
 }
 
 // ---------------------------------------------------------------- rendering
@@ -449,9 +722,11 @@ function buildKinds() {
 }
 
 function renderAll() {
+  const review = currentDiff();
   renderChosen();
   renderKinds();
-  renderGrid();
+  renderGrid(review);
+  renderDiff(review);
   renderQueue();
   renderOutput();
 }
@@ -482,9 +757,12 @@ function renderKinds() {
   $('#opt-all').checked = picked.scope === 'all';
 }
 
-function renderGrid() {
+function renderGrid(review) {
   const everywhere = picked.scope === 'all';
   const placing = !everywhere && picked.origin === null;
+  // Nothing on file is nothing to differ from, so the tiles stay the plain
+  // yellow of a recording rather than every one of them reading as new.
+  const cmp = review?.was ? review : null;
 
   $('.field-frame').classList.toggle('is-everywhere', everywhere);
   $('#grid-hint').textContent = everywhere
@@ -498,12 +776,19 @@ function renderGrid() {
     const col = Number(cell.dataset.col), row = Number(cell.dataset.row);
     const isOrigin = !placing && !everywhere && picked.origin
       && col === picked.origin.col && row === picked.origin.row;
-    const covered = !placing && !everywhere && picked.origin
-      && picked.tiles.has(key(col - picked.origin.col, row - picked.origin.row));
+    const live = !placing && !everywhere && !!picked.origin;
+    const offset = live ? key(col - picked.origin.col, row - picked.origin.row) : null;
+    const covered = live && picked.tiles.has(offset);
+    const added = covered && !!cmp && !cmp.base.has(offset);
+    // The one tile drawn that the entry does not claim: it is on file and this
+    // entry takes it away, which is exactly the thing worth seeing.
+    const dropped = live && !covered && !!cmp && cmp.base.has(offset);
     if (covered) shown++;
 
     cell.classList.toggle('is-origin', isOrigin);
-    cell.classList.toggle('is-covered', covered);
+    cell.classList.toggle('is-covered', covered && !added);
+    cell.classList.toggle('is-added', added);
+    cell.classList.toggle('is-removed', dropped);
     cell.classList.toggle('is-placing', placing);
     cell.innerHTML = isOrigin && picked.slug
       ? `<span class="contrib__token">${artHTML(state.bySlug.get(picked.slug), { lazy: false })}</span>`
@@ -512,8 +797,11 @@ function renderGrid() {
     const where = row < 0
       ? `${-row} beyond the line, column ${col + 1}`
       : `Row ${row + 1}, column ${col + 1}`;
-    cell.setAttribute('aria-label', `${where}${
-      isOrigin ? ', where the Tatari stands' : covered ? ', reached' : ''}`);
+    const says = isOrigin ? ', where the Tatari stands'
+      : added ? ', reached — added by this entry'
+        : dropped ? ', on file — dropped by this entry'
+          : covered ? ', reached' : '';
+    cell.setAttribute('aria-label', `${where}${says}`);
   }
 
   // An offset can still fall outside what is drawn — sideways, or behind the
@@ -526,6 +814,47 @@ function renderGrid() {
     $('#grid-hint').textContent
       += ` ${lost} recorded tile${lost === 1 ? '' : 's'} sit outside the board from here — move it to see them.`;
   }
+}
+
+/** "3 tiles", "1 tile" — a count that reads as English. */
+const count = (n, one = 'tile') => `${n} ${n === 1 ? one : `${one}s`}`;
+
+/**
+ * What an imported entry changes, in a sentence.
+ *
+ * The colours say which tiles; this says how many, and covers the two cases
+ * colour cannot — an entry claiming a whole-field reach, and one that turns out
+ * to match the file exactly. "No change" is a useful answer to a review and an
+ * unlit grid does not give it.
+ */
+function renderDiff(review) {
+  const box = $('#diff');
+  box.hidden = !review;
+  if (!review) return;
+
+  const name = state.bySlug.get(picked.slug)?.name ?? picked.slug;
+  // Nothing to compare against, so the three colours would be a legend for two
+  // states that cannot occur.
+  $('#diff-legend').hidden = !review.was;
+  $('#diff-say').textContent = `Imported entry for ${name} — ${diffSay(review)}`;
+}
+
+function diffSay(d) {
+  const kind = KINDS.find((k) => k.id === picked.kind)?.label.toLowerCase() ?? picked.kind;
+  if (!d.was) return `nothing is on file for its ${kind} reach, so all of this is new.`;
+
+  if (picked.scope === 'all') {
+    return d.was.scope === 'all'
+      ? 'the file already says it reaches everything. No change.'
+      : `it says it reaches everything, where the file draws ${count(d.base.size)}.`;
+  }
+  if (d.was.scope === 'all') {
+    return `it draws ${count(picked.tiles.size)}, where the file says it reaches everything.`;
+  }
+  if (!d.added.length && !d.removed.length) {
+    return `identical to what is on file, all ${count(d.kept.length)}.`;
+  }
+  return `${count(d.added.length)} added, ${d.removed.length} dropped, ${d.kept.length} unchanged.`;
 }
 
 // ---------------------------------------------------------------- output
