@@ -1,0 +1,29 @@
+{
+  "_readme": [
+    "When the game changed, as far as anyone here can tell.",
+    "",
+    "Clash of Critters publishes no patch identifier that this tool can read —",
+    "not in the wiki data, not anywhere the scraper reaches. So a 'patch' here is",
+    "an editorial judgement by the maintainer about when the game changed enough",
+    "that formations from before and after should not be ranked against each",
+    "other. Every entry should carry a `source` so the judgement can be checked",
+    "rather than trusted.",
+    "",
+    "`endsAt` is never written. Each patch ends where the next one begins, and",
+    "the newest has no end. That removes the whole class of bug where two",
+    "boundaries disagree, and the database has an exclusion constraint that",
+    "refuses overlapping windows anyway.",
+    "",
+    "A formation is filed under the patch whose window contains the moment it",
+    "was posted. That is derived, not stored by the client — so correcting a",
+    "boundary here and re-running the tool re-files every affected formation",
+    "rather than losing anything.",
+    "",
+    "Apply with:  node tools/patches.mjs --dry     (then --apply)",
+    "",
+    "Leaving `patches` empty is a coherent state: the gallery drops the patch",
+    "filter entirely and says it is not tracking game updates yet, rather than",
+    "inventing a label nobody can check."
+  ],
+  "patches": []
+}

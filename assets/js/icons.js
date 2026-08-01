@@ -3,8 +3,8 @@
  *
  * These are the wiki's own art (Category:In-game_Icons), pulled by
  * tools/scrape-wiki.mjs into data/images/icons and squared off to a common
- * 64px box by tools/normalize_images.py. They arrive already badged — types
- * are ringed colour discs, roles are dark plates — so the wrappers here only
+ * 64px box by tools/normalize_images.py. They arrive already badged (types
+ * are ringed colour discs, roles are dark plates), so the wrappers here only
  * size and align them, they draw no background of their own.
  */
 

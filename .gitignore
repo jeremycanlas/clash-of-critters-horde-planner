@@ -1,6 +1,18 @@
 node_modules/
 __pycache__/
+
+# The service_role key lives here when tools/ needs it, and must never be
+# committed — it bypasses every row-level security policy in supabase/migrations/.
+.env
+.env.*
+
+# Local tooling, not the app. These are vendored agent/skill definitions and the
+# lockfile that pins them — useful at this desk, and noise in a repo whose whole
+# claim is that it is plain HTML, CSS and JavaScript with no build step. Nothing
+# in here is needed to run, serve, deploy or fork the site.
 .claude/
 .impeccable/
+.agents/
+skills-lock.json
 .DS_Store
 Thumbs.db

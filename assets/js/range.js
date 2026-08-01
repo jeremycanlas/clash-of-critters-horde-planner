@@ -55,7 +55,9 @@ export function rangeStatus(slug, kind = 'attack') {
 
 /** The base form's slug, which is how ranges are keyed. */
 function lineKey(tatari) {
-  const base = state.all.find((t) => t.familyId === tatari.familyId && t.tier === 1);
+  // One Map lookup. This used to scan all 218 Tatari, from inside loops that
+  // themselves ran over all 218 — see data.js reindex() for the numbers.
+  const base = state.baseOfFamily?.get(tatari.familyId);
   return (base ?? tatari).slug;
 }
 

@@ -54,7 +54,7 @@ function buildRosterDropZone() {
       const who = store.isCoop() ? ` (P${payload.player})` : '';
       if (payload.from === 'field') {
         store.unplace(payload.slug, payload.player);
-        toast(`${nameOf(payload.slug)}${who} off the field — still on the bench`);
+        toast(`${nameOf(payload.slug)}${who} off the field, still on the bench`);
       } else {
         store.removeFromBench(payload.slug, payload.player);
         toast(`Stopped bringing ${nameOf(payload.slug)}${who}`);
@@ -107,11 +107,20 @@ export function buildFilters(onChange, { onPick = bringToBench } = {}) {
   chips($('#filter-roles'), ROLES, filters.roles, 'role', (v) => `${v} role`);
   chips($('#filter-tiers'), TIERS, filters.tiers, 'tier', (v) => `Tier ${v}`);
   chips($('#filter-effects'), EFFECTS.map((e) => e.key), filters.effects, 'effect',
-    (v) => `${EFFECTS.find((e) => e.key === v).label} — from the base skill or a level-up`);
+    (v) => `${EFFECTS.find((e) => e.key === v).label}, from the base skill or a level-up`);
 
+  /*
+   * Debounced. Every keystroke rebuilds 218 cards and rebinds 218 drag handlers,
+   * which on a phone -- three quarters of the traffic -- is felt as the search
+   * box lagging behind the thumb. 120ms is under the ~150ms that reads as
+   * instant, so nothing feels slower and the work happens once per word rather
+   * than once per letter.
+   */
+  let queryTimer;
   $('#search').addEventListener('input', (e) => {
     filters.query = e.target.value;
-    onChange();
+    clearTimeout(queryTimer);
+    queryTimer = setTimeout(onChange, 120);
   });
   $('#sort').addEventListener('change', (e) => {
     filters.sort = e.target.value;
@@ -240,7 +249,11 @@ export function renderRoster() {
         </div>
         <div class="card__name">${esc(t.name)}</div>
         ${clash ? `<span class="card__lock">${esc(clash.name)} in use</span>` : ''}
-        <button class="card__info" type="button" tabindex="-1"
+        <!-- Focusable. It was tabindex="-1", which took the detail sheet — and
+             with it "Place on the field" — off the keyboard entirely. The
+             reveal already handles :focus-visible, so it appears when tabbed
+             to exactly as it does on hover. -->
+        <button class="card__info" type="button"
                 aria-label="Details for ${esc(t.name)}">i</button>
       </div>`;
   }).join('');

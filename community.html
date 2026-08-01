@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <!-- viewport-fit=cover, or env(safe-area-inset-*) resolves to 0 on iOS and every
+     safe-area rule in app.css silently does nothing — which put the app bar
+     inside the home-indicator strip on every notched iPhone. -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Horde Drafter: Community formations</title>
+  <meta name="description"
+    content="Horde Invasion formations posted by other players, with the field, the benches and the level-up plan intact. Open any of them in the drafter.">
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='19' font-size='20'>🐾</text></svg>">
+  <link rel="stylesheet" href="assets/css/app.css">
+  <link rel="stylesheet" href="assets/css/community.css">
+</head>
+
+<body class="community">
+
+  <header class="topbar">
+    <div class="topbar__title">
+      <h1>Community formations</h1>
+      <span class="topbar__sub">Horde&nbsp;Drafter</span>
+    </div>
+    <div class="topbar__actions">
+      <a class="btn btn--quiet" href="index.html">Back to the drafter</a>
+    </div>
+  </header>
+
+  <!--
+    One column, not the drafter's two. There is no roster to place from and no
+    field to place onto. This page is a list, and a list that has grown a second
+    column is a list nobody finishes reading. .panel and .layout still come from
+    app.css so the frame matches the rest of the tool.
+  -->
+  <main class="layout layout--one">
+
+    <section id="sec-list" class="panel" aria-labelledby="h-list">
+      <div class="panel__head">
+        <h2 id="h-list">Posted formations <span id="list-count" class="muted"></span></h2>
+        <!-- Only ever filled in while signed in, so a reader who never posts
+             sees nothing here. The token this browser keeps lasts 30 days, or 7
+             unused, so the way to end it early has to be reachable. -->
+        <p id="whoami" class="community__who" hidden></p>
+      </div>
+
+      <!--
+        Said once, at the top, rather than as a badge on every card. These are
+        other people's builds and the tool has no way to know whether any of them
+        is good, only that somebody thought it was worth posting.
+      -->
+      <p class="hint">Formations other players have posted, with the field, both benches
+        and the level-up plan. Click one to load it into the drafter. Nothing you do to it here is saved back. This tool
+        has no way to know
+        whether any of them is good (WIP).</p>
+
+      <!--
+        Two decisions, one row, never taller. Porting the drafter's three chip
+        rows would put more control above the list than one row of the list
+        itself, on a page whose whole job is showing formations.
+      -->
+      <div class="community__controls">
+        <div id="sort-switch" class="segmented" role="group" aria-label="How to order these">
+          <button class="segmented__btn" type="button" data-sort="top" aria-pressed="true">Most upvoted</button>
+          <button class="segmented__btn" type="button" data-sort="new" aria-pressed="false">Newest</button>
+        </div>
+        <div id="mode-filter" class="segmented" role="group" aria-label="Filter by number of players">
+          <button class="segmented__btn" type="button" data-mode="" aria-pressed="true">All</button>
+          <button class="segmented__btn" type="button" data-mode="solo" aria-pressed="false">Solo</button>
+          <button class="segmented__btn" type="button" data-mode="coop" aria-pressed="false">Co-op</button>
+        </div>
+        <!--
+          Tier, by the highest a formation fields. Picking T2 asks for builds
+          whose best Tatari is a T2 — not builds that merely contain one — so
+          the answer is a set of formations somebody at that stage of the game
+          could actually field, rather than a T4 roster with one T2 in it.
+        -->
+        <div id="tier-filter" class="segmented" role="group" aria-label="Filter by the highest tier fielded">
+          <button class="segmented__btn" type="button" data-tier="" aria-pressed="true">Any tier</button>
+          <button class="segmented__btn" type="button" data-tier="1" aria-pressed="false">T1</button>
+          <button class="segmented__btn" type="button" data-tier="2" aria-pressed="false">T2</button>
+          <button class="segmented__btn" type="button" data-tier="3" aria-pressed="false">T3</button>
+          <button class="segmented__btn" type="button" data-tier="4" aria-pressed="false">T4</button>
+        </div>
+
+        <!-- Only rendered once the patches table has anything in it. A filter
+             with no values can only disappoint. -->
+        <div id="patch-filter" class="segmented" role="group" aria-label="Filter by game update" hidden></div>
+      </div>
+
+      <!--
+        The whole failure surface, and it is deliberately quiet. A gallery that
+        cannot load costs a visitor a gallery; the drafter behind it is untouched
+        and still works, so a red banner would be a bigger claim than the facts.
+      -->
+      <p id="list-say" class="community__say" role="status" aria-live="polite" hidden></p>
+
+      <ol id="list" class="community__list" aria-label="Formations, newest first"></ol>
+
+      <button id="list-more" class="btn community__more" type="button" hidden>Show more</button>
+    </section>
+  </main>
+
+  <!--
+    The way back, and it does not scroll away.
+
+    The topbar goes position:static below 760px, so "Back to the drafter", the
+    only exit this page had, was gone for good after one flick, and a row now
+    539px tall means that happens immediately. Android has a back gesture to
+    fall back on; iOS has nothing, and iOS is 44% of the audience.
+
+    Two items rather than five: this page is not the drafter and does not need
+    its bar, only its one certainty that there is always a way out.
+  -->
+  <nav class="appbar appbar--two" aria-label="Go back">
+    <a class="appbar__btn" href="index.html">
+      <span class="appbar__label">‹ Drafter</span>
+    </a>
+    <button class="appbar__btn appbar__btn--go" type="button" data-top>
+      <span class="appbar__label">Back to top</span>
+    </button>
+  </nav>
+
+  <footer class="foot">
+    <span>Data and sprites from the
+      <a href="https://clashofcritters.wiki.gg/wiki/Tatari" target="_blank" rel="noopener">Clash of Critters Wiki</a>.
+      Fan-made, unofficial.</span>
+    <span class="muted">This page reads a list of formations other people chose to post.
+      Nothing about what you are planning is sent. The drafter keeps your own formations
+      in your browser, the same as it always has. Posters' profile pictures are loaded
+      from Discord, which is the one thing on this site fetched from somewhere else.</span>
+  </footer>
+
+  <!--
+    Preview. The list carries the map, which is enough to recognise a build but
+    not to judge it; this fetches the whole snapshot so the benches and the
+    level-up plan can be read before it is opened.
+  -->
+  <dialog id="peek" class="modal modal--peek"></dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script type="module" src="assets/js/community.js"></script>
+</body>
+
+</html>

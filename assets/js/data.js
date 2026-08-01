@@ -134,6 +134,20 @@ export function reindex() {
     state.families.get(t.familyId).push(t);
   }
   for (const members of state.families.values()) members.sort((a, b) => a.tier - b.tier);
+
+  /*
+   * The tier-1 form of each evolution line, by familyId.
+   *
+   * range.js and contribute.js both need it to resolve a line's shared range,
+   * and both were reaching for `state.all.find(...)`, a 218-item scan, from
+   * inside loops over the whole roster. On the recorder that is 218 cards times
+   * four reaches times 218, about 190,000 array steps for one tile click. The
+   * families map is already sorted by tier here, so the answer is its head.
+   */
+  state.baseOfFamily = new Map();
+  for (const [familyId, members] of state.families) {
+    state.baseOfFamily.set(familyId, members[0]);
+  }
 }
 
 /** Case- and order-insensitive multi-word match. */

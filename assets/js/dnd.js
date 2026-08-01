@@ -110,11 +110,32 @@ function setHover(hit) {
   if (hit) hit.zone.onHover?.(hit.target, hit.zone.accepts(hit.target, active.payload), active.payload);
 }
 
+/**
+ * Coalesced to one frame.
+ *
+ * The move handler writes the ghost's transform and then hit-tests, and the hit
+ * test reads `elementFromPoint`, which forces a synchronous style and layout
+ * flush. Write, read, write -- once per pointermove, and a 120Hz pointer fires
+ * more often than the screen redraws, so most of that work was thrown away
+ * before anyone saw it. Now the last position each frame is the one that costs
+ * anything.
+ */
+let queued = null;
+let frame = null;
+
+function flushMove() {
+  frame = null;
+  if (!queued || !active) return;
+  const { x, y } = queued;
+  moveGhost(x, y);
+  setHover(hitTest(x, y));
+}
+
 function onMove(e) {
   if (active) {
     if (e.cancelable) e.preventDefault();
-    moveGhost(e.clientX, e.clientY);
-    setHover(hitTest(e.clientX, e.clientY));
+    queued = { x: e.clientX, y: e.clientY };
+    if (frame === null) frame = requestAnimationFrame(flushMove);
     return;
   }
   if (!armed || e.pointerId !== armed.pointerId) return;
@@ -141,6 +162,11 @@ function onUp(e) {
 
 function finish() {
   if (!active) return;
+  // A frame still pending would run moveGhost against a ghost that is about to
+  // be removed, and hit-test a drag that has already ended.
+  if (frame !== null) cancelAnimationFrame(frame);
+  frame = null;
+  queued = null;
   if (active.hovered) active.hovered.zone.onHover?.(active.hovered.target, false, active.payload);
   active.ghost.remove();
   active.source.classList.remove('is-dragging');
@@ -160,6 +186,26 @@ export function cancelDrag() { disarm(); finish(); }
  */
 document.addEventListener('dragstart', (e) => {
   if (e.target.closest?.('img, .card, .benchchip, .cell, .prio, .token')) e.preventDefault();
+});
+
+/**
+ * The same collision, on touch: a long press is this app's drag gesture and it
+ * is also the browser's "do something with this image" gesture, and the browser
+ * wins. Pressing a bench chip to move a Tatari opened Download image / Open in
+ * new tab instead. -webkit-touch-callout in app.css settles it on iOS; Chrome
+ * on Android has no CSS equivalent, so the event itself has to be refused.
+ *
+ * Only for touch, and only over the surfaces that are dragged. Right-clicking a
+ * sprite with a mouse is not a mistake and that menu is left alone, as is every
+ * other image on the page -- long-pressing a posted card to save it still works.
+ */
+const DRAG_SURFACES = '.card, .benchchip, .cell, .prio, .token';
+let touchLast = false;
+window.addEventListener('pointerdown', (e) => { touchLast = e.pointerType !== 'mouse'; }, true);
+
+document.addEventListener('contextmenu', (e) => {
+  if (!touchLast && !active) return;
+  if (active || e.target.closest?.(DRAG_SURFACES)) e.preventDefault();
 });
 
 window.addEventListener('pointermove', onMove, { passive: false });

@@ -4,8 +4,8 @@
  * Attack range is only published as in-game screenshots and support reach is not
  * published at all, so both have to be read off the game by hand. That is why 72
  * of 218 Tatari have an attack range recorded and none have a heal, buff or
- * debuff one. The bottleneck was never the data — people in the community can
- * see these ranges any time they play — it was that contributing meant cloning a
+ * debuff one. The bottleneck was never the data, since people in the community can
+ * see these ranges any time they play. It was that contributing meant cloning a
  * repo, running a Python script over a screenshot, and hand-editing JSON.
  *
  * So this is the whole job in one page: pick a Tatari, stand it where the
@@ -33,7 +33,7 @@ const REPO = 'jeremycanlas/clash-of-critters-horde-planner';
  * What can be recorded, and where each one belongs.
  *
  * Attack goes to the file the app already reads. The three support ranges have
- * no home yet — nobody has recorded one — so they are pointed at a file of their
+ * no home yet (nobody has recorded one), so they are pointed at a file of their
  * own rather than smuggled into the attack data under a flag, which would make
  * every existing consumer of ranges.json have to care.
  */
@@ -41,22 +41,22 @@ const KINDS = [
   {
     id: 'attack', label: 'Attack', file: 'data/ranges.json',
     note: 'The tiles it can hit. This is what the Ranges overlay in the drafter draws.',
-    all: 'Hits the whole field — no tile pattern',
+    all: 'Hits the whole field, no tile pattern',
   },
   {
     id: 'heal', label: 'Heal', file: 'data/effect-ranges.json',
-    note: 'How far its healing reaches. Nobody has recorded one of these yet — you would be first.',
-    all: 'Heals the whole team — no tile pattern',
+    note: 'How far its healing reaches. Nobody has recorded one of these yet. You would be first.',
+    all: 'Heals the whole team, no tile pattern',
   },
   {
     id: 'buff', label: 'Buff', file: 'data/effect-ranges.json',
-    note: 'How far its buffs reach — ATK Boost, Shield, DMG Reduction and so on.',
-    all: 'Buffs the whole team — no tile pattern',
+    note: 'How far its buffs reach: ATK Boost, Shield, DMG Reduction and so on.',
+    all: 'Buffs the whole team, no tile pattern',
   },
   {
     id: 'debuff', label: 'Debuff', file: 'data/effect-ranges.json',
-    note: 'How far its debuffs reach — Slow, Weaken, Bind and so on.',
-    all: 'Hits every enemy — no tile pattern',
+    note: 'How far its debuffs reach: Slow, Weaken, Bind and so on.',
+    all: 'Hits every enemy, no tile pattern',
   },
 ];
 
@@ -92,8 +92,8 @@ const picked = {
   scope: 'tiles',
   /**
    * True when this edit came in from an issue rather than from clicking. A
-   * review is a different job from a recording — what matters is not the shape
-   * but how it differs from what is on file — so the grid says so.
+   * review is a different job from a recording: what matters is not the shape
+   * but how it differs from what is on file, so the grid says so.
    */
   imported: false,
   /**
@@ -132,7 +132,7 @@ async function main() {
   } catch (err) {
     $('#roster').innerHTML =
       '<p class="hint">Could not load the roster. If you opened this file directly, '
-      + 'serve the folder over HTTP instead — browsers block data loading on <code>file://</code>.</p>';
+      + 'serve the folder over HTTP instead. Browsers block data loading on <code>file://</code>.</p>';
     console.error(err);
     return;
   }
@@ -265,8 +265,8 @@ function wire() {
   });
 
   for (const id of ['#from', '#note']) {
-    // Only a person can fire these — the prefill assigns .value directly, which
-    // raises no event — so reaching either one is a change worth keeping.
+    // Only a person can fire these (the prefill assigns .value directly, which
+    // raises no event), so reaching either one is a change worth keeping.
     const sync = () => {
       picked.touched = true;
       // Typed in, so it is theirs now and no longer on loan from the file.
@@ -320,7 +320,7 @@ function wire() {
   wireImport();
 
   $('#btn-copy').addEventListener('click', async () => {
-    toast(await copyText(entryText()) ? 'Entry copied' : 'Could not copy — select it and copy by hand',
+    toast(await copyText(entryText()) ? 'Entry copied' : 'Could not copy. Select it and copy by hand',
       'ok');
   });
 
@@ -401,7 +401,7 @@ function takeIn(text, dialog) {
 
   for (const e of entries) {
     if (!KINDS.some((k) => k.id === e.kind)) {
-      problems.push(`${e.slug}: “${e.kind}” is not a reach this records.`);
+      problems.push(`${e.slug}: "${e.kind}" is not a reach this records.`);
       continue;
     }
     if (!state.bySlug.has(e.slug)) {
@@ -422,7 +422,7 @@ function takeIn(text, dialog) {
       tiles: [...e.tiles],
       note: e.note,
       from: e.from,
-      // The contributor's own origin is not in the file — only offsets are — so
+      // The contributor's own origin is not in the file (only offsets are), so
       // one is chosen that shows as much of both readings as the board can hold.
       origin: bestOrigin([...e.tiles, ...(onFileTiles(e.slug, e.kind)?.tiles ?? [])]),
       imported: true,
@@ -545,7 +545,7 @@ function loadInto(slug, kind) {
     for (const t of held.tiles) picked.tiles.add(t);
     picked.scope = held.scope ?? 'tiles';
     picked.imported = held.imported === true;
-    // Already somebody's work — either clicked here or read in from an issue —
+    // Already somebody's work, either clicked here or read in from an issue,
     // so it stays in the queue whatever happens next, note included.
     picked.touched = true;
     picked.noteOnLoan = false;
@@ -700,14 +700,14 @@ function markCard(card, t) {
   // line fits.
   const said = reaches.map((k) => `${k.label}: ${COVERAGE_SAYS[rangeStatus(slug, k.id)]}`);
   card.title = `${card.title}\n\n${said.join('\n')}${
-    open ? `\n\n#${open.number} is already open for its ${picked.kind} reach — ${open.title}` : ''}${
+    open ? `\n\n#${open.number} is already open for its ${picked.kind} reach: ${open.title}` : ''}${
     mine ? `\n\nIts ${picked.kind} reach is waiting in your queue.` : ''}`;
 }
 
 /**
  * One segment per reach, filled by how well known that reach is.
  *
- * Coverage is a sequence — nothing, then written down, then checked — so it is
+ * Coverage is a sequence (nothing, then written down, then checked), so it is
  * drawn as one: three steps of brightness on the same neutral, which is the
  * channel a card has left. Every hue on this card is already spoken for twice
  * over, and encoding an ordinal three-step as three unrelated colours asked
@@ -770,7 +770,7 @@ function choose(slug) {
 
   const held = queue.get(queueKey(slug, picked.kind));
   toast(held
-    ? `Back to ${state.bySlug.get(slug)?.name ?? slug} — ${held.tiles.length} tiles kept`
+    ? `Back to ${state.bySlug.get(slug)?.name ?? slug}, ${held.tiles.length} tiles kept`
     : `Recording ${state.bySlug.get(slug)?.name ?? slug}`);
 }
 
@@ -797,8 +797,8 @@ function showBoard() {
   // already looking at moves the thing under their cursor for no reason.
   if (box.top < 0 || box.bottom > window.innerHeight) {
     // Instant, and scrollIntoView is not asked to do it: `behavior: "smooth"` is
-    // a no-op wherever the browser has smooth scrolling turned off — not slower,
-    // not instant, nothing at all — and a jump that sometimes fails to happen is
+    // a no-op wherever the browser has smooth scrolling turned off: not slower,
+    // not instant, nothing at all. And a jump that sometimes fails to happen is
     // worse than one that always does. The pulse is what makes it legible.
     const mid = box.top + box.height / 2 - window.innerHeight / 2;
     window.scrollTo({ top: Math.max(0, window.scrollY + mid) });
@@ -827,8 +827,8 @@ function pulseOrigin() {
 /**
  * Loads whatever is already on file for this Tatari and reach.
  *
- * Verifying an existing entry is as useful as adding a missing one — several
- * were read off a sibling's diagram and are marked UNVERIFIED — and it is much
+ * Verifying an existing entry is as useful as adding a missing one. Several
+ * were read off a sibling's diagram and are marked UNVERIFIED, and it is much
  * easier to check a shape than to describe one.
  */
 function prefillFromData() {
@@ -960,7 +960,7 @@ function renderKinds() {
   $('#kind-note').textContent = kind?.note ?? '';
   // Worded per reach: "hits the whole field" and "heals the whole team" are the
   // same shape of claim about very different things.
-  $('#opt-all-label').textContent = kind?.all ?? 'Reaches everything — no tile pattern';
+  $('#opt-all-label').textContent = kind?.all ?? 'Reaches everything, no tile pattern';
   $('#opt-all').checked = picked.scope === 'all';
 }
 
@@ -973,7 +973,7 @@ function renderGrid(review) {
 
   $('.field-frame').classList.toggle('is-everywhere', everywhere);
   $('#grid-hint').textContent = everywhere
-    ? 'No tiles to click — this one reaches regardless of where anything is standing.'
+    ? 'No tiles to click. This one reaches regardless of where anything is standing.'
     : placing
       ? 'Click the tile on the field it was standing on. Only the 6×6 can be stood on.'
       : 'Click every tile it reached, beyond the line as well. Click one again to take it back off.';
@@ -1005,8 +1005,8 @@ function renderGrid(review) {
       ? `${-row} beyond the line, column ${col + 1}`
       : `Row ${row + 1}, column ${col + 1}`;
     const says = isOrigin ? ', where the Tatari stands'
-      : added ? ', reached — added by this entry'
-        : dropped ? ', on file — dropped by this entry'
+      : added ? ', reached and added by this entry'
+        : dropped ? ', on file and dropped by this entry'
           : covered ? ', reached' : '';
     cell.setAttribute('aria-label', `${where}${says}`);
   }
@@ -1043,7 +1043,7 @@ function renderDiff(review) {
   // Nothing to compare against, so the three colours would be a legend for two
   // states that cannot occur.
   $('#diff-legend').hidden = !review.was;
-  $('#diff-say').textContent = `Imported entry for ${name} — ${diffSay(review)}`;
+  $('#diff-say').textContent = `Imported entry for ${name}: ${diffSay(review)}`;
 }
 
 function diffSay(d) {
@@ -1082,8 +1082,8 @@ const pretty = (obj) => JSON.stringify(obj, null, 2)
  * The whole queue, grouped by the file each reach belongs in.
  *
  * Grouped rather than listed flat because the two destinations take different
- * shapes — ranges.json is keyed by slug at its top level, effect-ranges.json is
- * keyed by reach first — and a contributor should not have to work that out from
+ * shapes (ranges.json is keyed by slug at its top level, effect-ranges.json is
+ * keyed by reach first), and a contributor should not have to work that out from
  * a paragraph of instructions.
  */
 function entryText() {

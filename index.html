@@ -2,7 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- viewport-fit=cover, or env(safe-area-inset-*) resolves to 0 on iOS and every
+     safe-area rule in app.css silently does nothing — which put the app bar
+     inside the home-indicator strip on every notched iPhone. -->
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Horde Drafter — Clash of Critters</title>
 <meta name="description" content="Plan your 15-Tatari Horde Invasion formation for Clash of Critters: drag-and-drop grid, type and role filters, and a level-up priority plan.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='19' font-size='20'>🐾</text></svg>">
@@ -33,37 +36,83 @@
     <button class="segmented__btn" type="button" data-mode="coop" aria-pressed="false">Co-op</button>
   </div>
 
+  <!--
+    All of it in the open, on every screen. These spent a while behind one ⋮
+    button, which bought the field a row on a phone and charged every control in
+    here its discoverability: a thing you cannot see is a thing most players
+    never find out exists, and "Community" and "Record a range" are exactly the
+    two that live or die on being noticed. On a narrow screen the row wraps to a
+    line of its own rather than collapsing, so what this costs is height, which
+    is recoverable by scrolling, rather than knowledge, which is not.
+
+    Order: the two links that leave the page, then the four that act on the
+    formation in front of you.
+  -->
   <div class="topbar__actions">
+    <!--
+      "Community formations", not "Community". On its own the word is a
+      category, not a description: in a fan tool it reads just as easily as a
+      Discord invite or a wiki, which is a poor showing for the page most
+      players do not know exists. The second word is what says what is there.
+
+      It is first in the row on purpose. The full label is 152px against about
+      107px of spare width on a 411px phone, so the row wraps there — and
+      because this is the first item, the wrap costs "Clear all" its place on
+      line one and costs this nothing. Prominence and width are not the same
+      problem, and only one of them was worth solving here.
+
+      Outlined in the accent rather than filled: findable at a glance without
+      outbidding Share, which is the action this tool exists to produce.
+    -->
+    <a class="btn topbar__community" href="community.html"
+       title="Formations other players have posted">Community formations</a>
+
     <!--
       The other half of the "72 of 218 ranges recorded" problem. The Ranges
       toggle tells you the data is thin; this is the standing way to do something
       about it, so it sits with the global actions rather than buried in the
       footer. A link, not a button: it goes somewhere.
 
-      Not btn--quiet. Quiet made it the faintest thing in a row of five, which is
-      a strange rank for the only item in it that leads anywhere — it read as a
-      fifth, lesser formation action. At plain .btn weight it sits level with
-      Share and Save, and the leading + says it adds something rather than doing
-      something to the formation. The moment-of-need ask is #range-gap, under the
-      field; this is wayfinding, and wayfinding only has to be findable.
+      Not btn--quiet. Quiet made it the faintest thing in the row, which is a
+      strange rank for an item that leads somewhere — it read as a lesser
+      formation action. At plain .btn weight it sits level with Share and Export,
+      and the leading + says it adds something rather than doing something to the
+      formation. The moment-of-need ask is #range-gap, under the field; this is
+      wayfinding, and wayfinding only has to be findable.
     -->
     <a class="btn topbar__contribute" href="contribute.html"
        title="Record a Tatari's attack range or support reach — it takes a couple of minutes and the data is missing for most of the roster"><span
        class="topbar__contribute-plus" aria-hidden="true">+</span>Record a range</a>
-    <button id="btn-share" class="btn" type="button"
+
+    <!-- Phones only, and invisible: forces the row to break here, between the
+         two links that leave the page and the three buttons that act on the
+         formation, rather than wherever the last label happens to run out of
+         width. Nothing on a wide screen, where the row fits on one line. -->
+    <span class="topbar__break" aria-hidden="true"></span>
+
+    <!-- Wide screens only, and the one exception to bringing everything back:
+         on a phone the app bar already carries Share, filled and in a thumb's
+         reach, and a second one here would be the same action twice on one
+         screen rather than a control anybody had lost. -->
+    <button id="btn-share" class="btn btn--primary topbar__share wide-only" type="button"
             title="Share this formation as a picture or a link">Share</button>
+
     <!-- Was "Save" while a file download was the only way to keep a formation.
          The in-browser Saved list owns that word now, and a "Save" that writes
          a file next to a "Saved" that does not would be two features wearing
          one name. Export/Import also read as the pair they are. -->
-    <button id="btn-save"  class="btn" type="button"
+    <button id="btn-save" class="btn" type="button"
             title="Download this formation as a file you can open again">Export</button>
+
     <!-- A real label, so the file picker opens on the browser's own activation
          rather than a synthetic .click(). Files can also just be dropped on the page. -->
-    <label class="btn" for="import-file" title="Open a saved .json formation, or drop one on the page">Import
+    <label class="btn" for="import-file"
+           title="Open a saved .json formation, or drop one on the page">Import
       <input id="import-file" class="sr-only" type="file" accept=".json">
     </label>
-    <button id="btn-clear"  class="btn btn--quiet" type="button">Clear all</button>
+
+    <button id="btn-clear" class="btn btn--quiet" type="button"
+            title="Empty the field, the benches and the plan. Saved formations are kept.">Clear all</button>
   </div>
 </header>
 
@@ -83,6 +132,18 @@
     <div class="panel__head">
       <h2 id="h-field">Formation</h2>
       <div class="panel__tools">
+        <!--
+          The three switches, on the panel rather than inside a View button.
+          Folding them away saved a row and cost more than it saved: a 250px
+          panel dropped over the board covering the thing the switches change,
+          and no way to see at a glance whether Ranges was on — which is the
+          question you ask of it most, because it silently repaints the field.
+          A checkbox that shows its own state is the whole point of a checkbox.
+
+          The explanations live in title= rather than under each label: they are
+          worth having once, and not worth a paragraph of standing chrome above
+          the field on every visit.
+        -->
         <label class="check"
                title="Light the tiles a Tatari can hit, and shade the field by how many cover each tile. Only 72 of the 218 Tatari have a recorded range so far, so the picture is incomplete.">
           <input id="opt-ranges" type="checkbox"> Ranges <span class="wip">WIP</span></label>
@@ -90,10 +151,11 @@
                title="Show where the boss drags your rearmost row. Nothing is moved for real — turn it off and they go back.">
           <input id="opt-pull" type="checkbox"> Boss pull</label>
         <label class="check"><input id="opt-glitter" type="checkbox"> <span class="check__text">Glitter art</span></label>
+
         <!-- Desktop's copy. Phones get the one in the app bar instead, where it
              is always on screen rather than above a field they have scrolled. -->
         <button class="btn btn--tiny tools-only" type="button" data-clean
-                title="Hide everything except the field, so you can screenshot it">Clean view</button>
+                title="Hide everything except the field, so you can screenshot it">Just the grid</button>
         <button id="btn-clear-field" class="btn btn--tiny btn--quiet" type="button">Clear field</button>
       </div>
     </div>
@@ -143,7 +205,11 @@
       <!-- The row the boss drags your backline into. Sits between the spawn
            line and the field because that is where they end up: in front of
            everything, in reach. Hidden until the toggle asks for it. -->
-      <div id="pull-row" class="pull-row" aria-live="polite" hidden></div>
+      <!-- No aria-live here: renderGrid() replaces this element's whole innerHTML
+           on every placement, move, removal and name keystroke, so a live region
+           re-announced six sprite names each time. The pull is described once, in
+           the label, which is read on demand rather than shouted. -->
+      <div id="pull-row" class="pull-row" hidden></div>
       <div id="grid" class="grid" role="grid" aria-label="Formation grid, 6 columns by 6 rows"></div>
       <p id="field-lf" class="field-frame__lf" hidden></p>
       <!-- No site URL here. It was on this row to carry the way back when a
@@ -189,7 +255,7 @@
     <form id="step-adder" class="step-adder" hidden>
       <div class="step-adder__row">
         <div id="step-picker" class="step-picker" role="group"
-             aria-label="Tatari for this step — pick one or several"></div>
+             aria-label="Tatari for this step: pick one or several"></div>
       </div>
       <div class="step-adder__row step-adder__row--go">
         <output id="step-adder-name" class="step-adder__name"></output>
@@ -254,7 +320,7 @@
 
 <!--
   Phones only. The field owns the screen there, so the roster, the summary and
-  the plan are not places you scroll to — they are drawn over it and dismissed.
+  the plan are not places you scroll to; they are drawn over it and dismissed.
   Buttons rather than anchors because these open sheets rather than move the
   page; the .secnav anchors above still serve the tablet stack, where all three
   really are further down the page.
@@ -301,6 +367,10 @@
 <section id="sec-saves" class="panel panel--saves" aria-labelledby="h-saves">
   <div class="panel__head">
     <h2 id="h-saves">Saved formations <span id="saves-count" class="muted"></span></h2>
+    <!-- Here as well as in the header, because this is where somebody is
+         already thinking about whole formations rather than single Tatari,
+         and on a phone this panel is a sheet, where the header is not. -->
+    <a class="btn btn--tiny saves__community" href="community.html">Community</a>
     <!-- Desktop's way out. The phone sheet closes like the others: scrim,
          Escape, or its own app-bar button. -->
     <button id="saves-close" class="btn btn--tiny btn--quiet tools-only" type="button">Close</button>
@@ -309,11 +379,58 @@
   <button id="btn-keep" class="btn btn--primary saves__keep" type="button">Save this formation</button>
 
   <p id="saves-empty" class="saves__empty">Nothing saved yet. Save a formation and
-    it will be waiting here next visit — these stay in this browser, and
+    it will be waiting here next visit. These stay in this browser, and
     <b>Clear all</b> does not touch them.</p>
 
   <ol id="saves-list" class="saves" aria-label="Saved formations, newest first"></ol>
 </section>
+
+<!--
+  Posting. The board comes first, because you should be able to see what you are
+  about to publish rather than take a name's word for it. No consent checkbox:
+  this is unreachable except by pressing Post, the disclosure sits directly above
+  the confirm, and the confirm says "publicly".
+-->
+<dialog id="dlg-submit" class="modal modal--submit">
+  <h2>Post this formation</h2>
+
+  <div id="submit-map" class="submit__map"></div>
+  <p id="submit-facts" class="hint submit__facts"></p>
+
+  <p id="submit-why" class="submit__why" hidden></p>
+
+  <label class="submit__field">
+    <span class="summary__label">Name</span>
+    <input id="submit-name" class="field" type="text" maxlength="60" autocomplete="off"
+           placeholder="What is this build called?">
+  </label>
+
+  <label class="submit__field">
+    <span class="summary__label">What is it for? (optional)</span>
+    <input id="submit-note" class="field" type="text" maxlength="240" autocomplete="off"
+           placeholder="e.g. holds the left lane while the healers catch up">
+  </label>
+
+  <div class="submit__terms">
+    <p><b>This one does leave your browser.</b></p>
+    <p>Posting sends this formation to a database anyone can read: the layout,
+      the benches, the level-up plan, and the name and note above. Your other
+      saved formations stay where they are.</p>
+    <p>Signing in with Discord tells this site your display name, your account ID
+      and the email on your Discord account. Only the display name is ever shown
+      or stored with a formation. Your password is never involved, and nothing is
+      ever posted to Discord.</p>
+    <p id="submit-who" class="muted"></p>
+  </div>
+
+  <div class="modal__actions">
+    <!-- aria-describedby, so the reason a disabled Post is disabled reaches
+         somebody who cannot see the paragraph above it. -->
+    <button id="submit-go" class="btn btn--primary" type="button"
+            aria-describedby="submit-why">Post it publicly</button>
+    <button class="btn btn--quiet" type="button" data-close>Cancel</button>
+  </div>
+</dialog>
 
 <div id="scrim" class="scrim" hidden></div>
 
@@ -321,8 +438,11 @@
   <span>Data and sprites from the
     <a href="https://clashofcritters.wiki.gg/wiki/Tatari" target="_blank" rel="noopener">Clash of Critters Wiki</a>.
     Fan-made, unofficial.</span>
-  <span class="muted">Your formation stays in your browser. Anonymous visit and
-    button counts only — no cookies, no accounts, nothing about what you plan.</span>
+  <span class="muted">Your formations stay in your browser unless you post one to
+    <a href="community.html">Community</a>. That is the one thing here that sends
+    anything anywhere, and it only happens when you press a button that says so.
+    Otherwise: anonymous visit and button counts only, no cookies, nothing about
+    what you plan.</span>
   <span id="foot-meta" class="muted"></span>
   <span class="foot__by">
     <img class="foot__avatar" src="assets/img/jacc6475.jpg" width="34" height="34"
@@ -354,12 +474,16 @@
   </div>
 
   <label class="share__name">
-    <span class="summary__label">Your name — optional, shown on the card</span>
+    <span class="summary__label">Your name (optional, shown on the card)</span>
     <input id="share-name" class="field" type="text" maxlength="32" autocomplete="off"
            placeholder="Leave empty to skip">
   </label>
 
   <div class="modal__actions">
+    <!-- Only rendered where navigator.canShare accepts a file. On iOS it is the
+         only one of these four that actually reaches Discord: the clipboard is
+         unreliable there and a download lands in Files, not Photos. -->
+    <button id="share-native" class="btn btn--primary" type="button" hidden>Share…</button>
     <button id="share-download" class="btn btn--primary" type="button">Download PNG</button>
     <button id="share-copy-image" class="btn" type="button">Copy image</button>
     <button id="share-copy-link" class="btn" type="button">Copy link</button>

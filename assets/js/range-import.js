@@ -3,8 +3,8 @@
  *
  * The recorder hands a contributor a JSON block and they open an issue with it;
  * tools/apply-ranges.mjs merges that block into the data files. Between those two
- * is the part that actually takes the time — reading somebody else's range and
- * deciding whether it is right — and that was being done by eye, against a file
+ * is the part that actually takes the time (reading somebody else's range and
+ * deciding whether it is right), and that was being done by eye, against a file
  * of seven hundred lines of coordinates. Nobody can see a shape in that.
  *
  * So this parses the same text the merge tool accepts, and puts it back on the
@@ -157,7 +157,7 @@ function collect(obj, hint, out, problems) {
 }
 
 /**
- * A book is either `{bySlug, byLine}` — a data file or a slice of one — or the
+ * A book is either `{bySlug, byLine}` (a data file or a slice of one) or the
  * bare slug-to-entry map the recorder writes. Both key on a slug, so both read
  * the same way.
  */
@@ -215,7 +215,7 @@ function readEntry(slug, kind, entry, problems) {
 function source(value, where, problems) {
   if (SOURCES.includes(value)) return value;
   if (typeof value === 'string' && value.trim()) {
-    problems.push(`${where} came from “${value}”, which is not one of the recorder's sources; it reads as “other” here.`);
+    problems.push(`${where} came from "${value}", which is not one of the recorder's sources; it reads as "other" here.`);
   } else {
     problems.push(`${where} does not say where it came from.`);
   }
