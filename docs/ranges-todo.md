@@ -2,7 +2,7 @@
 
 `data/ranges.json` currently holds 72 of the 218 Tatari. This is what is missing
 and why, so nobody re-treads it. A Tatari absent from `ranges.json` shows no range
-in the app at all, which is deliberate — a wrong tile is worse than a missing one.
+in the app at all, which is deliberate: a wrong tile is worse than a missing one.
 
 ## 1. No range screenshot exists (104)
 
@@ -38,7 +38,7 @@ open the Tatari in game and screenshot the range diagram.
 
 ### Lines with no diagram for any form (12)
 
-Worth grabbing first — right now these lines have no range data at any tier.
+Worth grabbing first: right now these lines have no range data at any tier.
 
 - `Blowfin` | `Budboo` | `Drilleroo` | `Dumbopus`
 - `Flameow` | `Glowfly` | `Hootlet` | `Lollama`
@@ -46,9 +46,10 @@ Worth grabbing first — right now these lines have no range data at any tier.
 
 ## 2. The diagram lights the whole board (8)
 
-Every tile of the field is highlighted. That may genuinely mean board-wide reach —
-several are Support forms — but it could equally be a different UI state that got
-screenshotted. Needs confirming in game before writing 30-odd tiles into the data.
+Every tile of the field is highlighted. That may genuinely mean board-wide reach,
+and several of these are Support forms, but it could equally be a different UI
+state that got screenshotted. Needs confirming in game before writing 30-odd
+tiles into the data.
 
 - `Buddi` | `Cindermunk` | `Embertail` | `Fluffle`
 - `Fumekit` | `Galewether` | `Pyropup` | `Sunfleur`
@@ -74,4 +75,4 @@ or a small block; the question is only where the near end stops.
 
 The Tatari stands at the bottom, lit tiles are what it reaches. Write the offsets as
 `[column, row]` from its own tile, negative rows towards the Zobos. Key it under
-`bySlug` by that form's own slug — range is per-form, not per-line.
+`bySlug` by that form's own slug. Range is per-form, not per-line.

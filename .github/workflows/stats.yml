@@ -1,0 +1,63 @@
+# Keeps the usage numbers in the README honest.
+#
+# Weekly rather than on push: visit counts move because somebody posts the tool
+# to Reddit, not because a CSS bug got fixed. Tying the two together would update
+# the numbers when nothing had changed and leave them stale through exactly the
+# week a spike made them interesting.
+#
+# Needs one repository secret, GOATCOUNTER_TOKEN, made at
+# jacc.goatcounter.com under [your name] -> API with "read statistics"
+# permission. Settings -> Secrets and variables -> Actions.
+#
+# GitHub disables scheduled workflows after 60 days of repository inactivity and
+# emails first; the run-name below makes the last real run easy to spot in the
+# Actions list.
+
+name: Refresh README stats
+
+run-name: Refresh README stats (${{ github.event_name }})
+
+on:
+  schedule:
+    # 07:00 UTC on Mondays. Cron here is always UTC, never local time.
+    - cron: '0 7 * * 1'
+  workflow_dispatch:
+
+# The job commits back to the repo, so it needs write access to contents and
+# nothing else.
+permissions:
+  contents: write
+
+# A manual run while the weekly one is mid-flight would race on the same file.
+concurrency:
+  group: readme-stats
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # No install step: tools/stats.mjs uses built-in fetch and node:fs only,
+      # which is the same reason this repo has no package.json.
+      - name: Rewrite the stats blocks
+        env:
+          GOATCOUNTER_TOKEN: ${{ secrets.GOATCOUNTER_TOKEN }}
+        run: node tools/stats.mjs
+
+      - name: Commit if the numbers moved
+        run: |
+          if git diff --quiet -- README.md; then
+            echo "README.md is already up to date; nothing to commit."
+            exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          git commit -m "Refresh the README usage numbers [skip ci]"
+          git push

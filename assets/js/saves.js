@@ -1,6 +1,6 @@
 /**
- * Saved formations: snapshots of the whole working state — field, benches,
- * plan, name, co-op lines — kept in this browser and brought back with a click.
+ * Saved formations: snapshots of the whole working state (field, benches,
+ * plan, name, co-op lines) kept in this browser and brought back with a click.
  *
  * Deliberately separate from the autosave. The autosave is the working copy and
  * every change overwrites it; a saved formation is a decision, taken when a
@@ -17,9 +17,9 @@
  * analytics are the two fixed labels 'save-kept' and 'save-loaded'.
  */
 
-import { state } from './data.js';
 import * as store from './store.js';
-import { $, esc, artOf, toast } from './ui.js';
+import { $, esc, toast } from './ui.js';
+import { mapHTML, statsOf, fmtWhen } from './formation-card.js';
 import { closeSheet } from './shell.js';
 import { track } from './analytics.js';
 
@@ -41,6 +41,14 @@ let saves = read();
 const jsonOf = new Map();
 
 const DESKTOP = matchMedia('(min-width: 761px)');
+
+/*
+ * Whether posting is a thing on this copy of the site, and what to do about it.
+ * Injected the way roster.js takes `onPick`, so this module never learns that a
+ * network exists — it draws a button and calls back.
+ */
+let canPost = false;
+let onPost = null;
 
 function read() {
   try {
@@ -73,20 +81,11 @@ function autoName(when) {
   return `Formation ${day} ${time}`;
 }
 
-/** Fresh saves say how fresh; older ones just say the day. */
-function fmtSavedAt(ts) {
-  const mins = Math.floor((Date.now() - ts) / 60000);
-  if (mins < 1) return 'just now';
-  if (mins < 60) return `${mins}m ago`;
-  if (mins < 24 * 60) return `${Math.floor(mins / 60)}h ago`;
-  return new Date(ts).toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
-}
-
 // ---------------------------------------------------------------- model
 
 /**
  * Saves the current state. A save whose name matches an existing one replaces
- * it — that is how you iterate on a build — and moves it to the top, because
+ * it, which is how you iterate on a build, and moves it to the top, because
  * the list is newest-first and it just became the newest.
  */
 function saveCurrent() {
@@ -98,7 +97,7 @@ function saveCurrent() {
   const at = saves.findIndex((s) => s.name.toLowerCase() === name.toLowerCase());
 
   if (at === -1 && saves.length >= CAP) {
-    toast(`Saved formations are full (${CAP}) — delete a few first`, 'error');
+    toast(`Saved formations are full (${CAP}). Delete a few first`, 'error');
     return;
   }
 
@@ -110,10 +109,10 @@ function saveCurrent() {
 
   if (!write()) {
     saves = read();
-    toast('Could not save — browser storage is full or blocked', 'error');
+    toast('Could not save. Browser storage is full or blocked', 'error');
     return;
   }
-  toast(at === -1 ? `Saved “${name}”` : `Updated “${name}”`, 'ok');
+  toast(at === -1 ? `Saved "${name}"` : `Updated "${name}"`, 'ok');
   track('save-kept');
   renderSaves();
 }
@@ -135,7 +134,7 @@ function loadSave(id) {
   $('#formation-name').value = store.formation.name;
   closeSheet();                       // the phone sheet covers the field it just changed
 
-  toast(`Loaded “${entry.name}”`, 'ok', stash && {
+  toast(`Loaded "${entry.name}"`, 'ok', stash && {
     label: 'Undo',
     fn: () => {
       store.applySnapshot(stash);
@@ -154,7 +153,7 @@ function deleteSave(id) {
   write();
   renderSaves();
 
-  toast(`Deleted “${entry.name}”`, 'info', {
+  toast(`Deleted "${entry.name}"`, 'info', {
     label: 'Undo',
     fn: () => {
       saves.splice(Math.min(at, saves.length), 0, entry);
@@ -164,6 +163,9 @@ function deleteSave(id) {
   });
 }
 
+/** One saved formation by id, or null. For resuming a post after a sign-in. */
+export const savedById = (id) => saves.find((s) => s.id === id) ?? null;
+
 const jsonText = (entry) => {
   let held = jsonOf.get(entry.id);
   if (!held) { held = JSON.stringify(entry.data); jsonOf.set(entry.id, held); }
@@ -172,46 +174,26 @@ const jsonText = (entry) => {
 
 // ---------------------------------------------------------------- render
 
-/**
- * The card's map: every placed Tatari as a thumb-sized sprite on a 6×6 grid.
- * Art reads faster than names — a formation is recognised by its shape and its
- * sprites long before its title. Unknown slugs (custom Tatari from a file that
- * is no longer loaded) draw nothing, the same way the autosave drops them.
- */
-function mapHTML(data) {
-  const cells = Array.isArray(data.cells) ? data.cells : [];
-  const tiles = cells.map((occ, i) => {
-    if (!occ?.slug) return '';
-    const t = state.bySlug.get(occ.slug);
-    if (!t) return '';
-    const place = `grid-row:${Math.floor(i / store.COLS) + 1};grid-column:${(i % store.COLS) + 1}`;
-    const src = artOf(t);
-    return src
-      ? `<img style="${place}" src="${esc(src)}" alt="" loading="lazy" decoding="async">`
-      : `<span class="save__stub" style="${place}">${esc(t.name[0] ?? '?')}</span>`;
-  }).join('');
-  return `<span class="save__map" aria-hidden="true">${tiles}</span>`;
-}
-
 function cardHTML(entry) {
   const d = entry.data;
-  const placed = (Array.isArray(d.cells) ? d.cells : []).filter(Boolean).length;
-  const modeLabel = store.MODES[d.mode]?.label ?? 'Solo';
-  const steps = Array.isArray(d.plan) ? d.plan.length : 0;
+  const { placed, modeLabel, steps } = statsOf(d);
   const bits = [modeLabel, `${placed} placed`];
   if (steps) bits.push(`${steps} step${steps === 1 ? '' : 's'}`);
-  bits.push(fmtSavedAt(entry.savedAt));
+  bits.push(fmtWhen(entry.savedAt));
 
   return `
     <li class="save" data-id="${esc(entry.id)}">
       <button class="save__main" type="button" data-load="${esc(entry.id)}"
               title="Load this formation">
-        ${mapHTML(d)}
+        ${mapHTML(d.cells)}
         <span class="save__body">
           <span class="save__name">${esc(entry.name)}</span>
           <span class="save__meta"><span class="save__now">On the field</span>${esc(bits.join(' · '))}</span>
         </span>
       </button>
+      ${canPost ? `<button class="btn btn--tiny save__post" type="button"
+              data-post="${esc(entry.id)}"
+              title="Share this formation with other players">Post</button>` : ''}
       <button class="save__x" type="button" data-del="${esc(entry.id)}"
               aria-label="Delete ${esc(entry.name)}" title="Delete ${esc(entry.name)}">×</button>
     </li>`;
@@ -219,6 +201,7 @@ function cardHTML(entry) {
 
 function renderSaves() {
   jsonOf.clear();
+  $('#saves-list').classList.toggle('saves--posting', canPost);
   $('#saves-list').innerHTML = saves.map(cardHTML).join('');
   $('#saves-empty').hidden = saves.length > 0;
 
@@ -248,7 +231,7 @@ function refresh() {
   const keep = $('#btn-keep');
   keep.disabled = empty;
   keep.title = empty
-    ? 'Nothing to save yet — bring some Tatari first'
+    ? 'Nothing to save yet. Bring some Tatari first'
     : 'Keep a copy of the field, the benches and the plan in this browser';
 }
 
@@ -279,7 +262,14 @@ function setDrawer(open) {
 
 // ---------------------------------------------------------------- build
 
-export function buildSaves() {
+/**
+ * @param {{canPost?: boolean, onPost?: (save: object) => void}} [opts]
+ *   `canPost` draws the Post button; `onPost` is handed the whole saved entry.
+ */
+export function buildSaves(opts = {}) {
+  canPost = !!opts.canPost;
+  onPost = opts.onPost ?? null;
+
   $('#btn-keep').addEventListener('click', saveCurrent);
   $('#saves-handle').addEventListener('click', () => setDrawer(!drawerOpen));
   $('#saves-close').addEventListener('click', () => setDrawer(false));
@@ -287,6 +277,12 @@ export function buildSaves() {
   $('#saves-list').addEventListener('click', (e) => {
     const del = e.target.closest('[data-del]');
     if (del) { deleteSave(del.dataset.del); return; }
+    const share = e.target.closest('[data-post]');
+    if (share) {
+      const entry = saves.find((s) => s.id === share.dataset.post);
+      if (entry && onPost) onPost(entry);
+      return;
+    }
     const load = e.target.closest('[data-load]');
     if (load) loadSave(load.dataset.load);
   });

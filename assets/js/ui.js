@@ -25,8 +25,8 @@ export function artOf(t) {
  * `priority` maps to fetchpriority.
  *
  * The roster is 218 thumbnails and the browser will happily have all of them in
- * flight at once, which leaves the dozen sprites actually on screen — the
- * field, the benches, the co-op lines — waiting behind art nobody has scrolled
+ * flight at once, which leaves the dozen sprites actually on screen (the
+ * field, the benches, the co-op lines) waiting behind art nobody has scrolled
  * to. Those load eagerly and high; the roster asks last.
  */
 export function artHTML(t, { lazy = true, priority = null } = {}) {
@@ -44,7 +44,7 @@ export function artHTML(t, { lazy = true, priority = null } = {}) {
  * the share card — so a posted picture says which build drew it, which matters
  * while the attack-range data is still being filled in.
  */
-export const APP_VERSION = '1.3.0';
+export const APP_VERSION = '1.4.0';
 export const APP_AUTHOR = 'jacc6475';
 
 /*
@@ -67,6 +67,9 @@ let toastTimer;
  */
 export function toast(message, kind = 'info', action = null) {
   const el = $('#toast');
+  // textContent replaces the words but not an appended button, so a second
+  // action toast used to arrive wearing the first one's Undo as well.
+  el.querySelector('.toast__act')?.remove();
   el.textContent = message;
   el.dataset.kind = kind;
   if (action) {
@@ -84,7 +87,18 @@ export function toast(message, kind = 'info', action = null) {
   el.classList.toggle('has-act', !!action);
   el.classList.add('is-shown');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('is-shown'), action ? 6000 : 2600);
+  toastTimer = setTimeout(() => {
+    el.classList.remove('is-shown');
+    /*
+     * The button goes with it. `.has-act` keeps pointer-events on so Undo can be
+     * pressed, and removing only `is-shown` left an invisible, still-focusable
+     * control in the tab order — one whose job is to replace the formation you
+     * are now working on. On a phone it also sat over the bench dock, eating
+     * taps meant for a Tatari.
+     */
+    el.classList.remove('has-act');
+    el.querySelector('.toast__act')?.remove();
+  }, action ? 6000 : 2600);
 }
 
 // ---------------------------------------------------------------- files

@@ -101,8 +101,24 @@ export function typesInText(text) {
   return out;
 }
 
+/**
+ * Memoised, because this is the app's hot path.
+ *
+ * Every keystroke in the roster search rebuilds all 218 cards, and each card
+ * asks what its Tatari brings. Answering means running the 22 wording patterns
+ * over up to three level-up skill texts — about 66 regex tests per Tatari, so
+ * roughly 14,000 per repaint, and three times that again when an effect chip is
+ * pressed and the filter asks as well.
+ *
+ * A Tatari is immutable once data.js has loaded it, so the answer never changes.
+ * A WeakMap keyed on the object means custom Tatari that get replaced are
+ * collected rather than pinned.
+ */
+const sourceCache = new WeakMap();
+
 /** Every effect one Tatari brings: base skill first, then each levelled skill. */
 export function effectSources(t) {
+  if (t && sourceCache.has(t)) return sourceCache.get(t);
   const out = [];
   for (const type of t?.skillTypes ?? []) out.push({ type, level: null });
 
@@ -113,6 +129,7 @@ export function effectSources(t) {
       out.push({ type, level, skillName: skill?.name ?? '' });
     }
   }
+  if (t) sourceCache.set(t, out);
   return out;
 }
 
@@ -181,7 +198,10 @@ export function sourceLabel(source) {
  *
  * @returns {{heal: G, buff: G, debuff: G}} where G is {base: boolean, level: number|null}
  */
+const groupCache = new WeakMap();
+
 export function effectGroupsOf(t) {
+  if (t && groupCache.has(t)) return groupCache.get(t);
   const out = {
     heal: { base: false, level: null },
     buff: { base: false, level: null },
@@ -193,6 +213,7 @@ export function effectGroupsOf(t) {
     if (level === null) group.base = true;
     else group.level = group.level === null ? level : Math.min(group.level, level);
   }
+  if (t) groupCache.set(t, out);
   return out;
 }
 

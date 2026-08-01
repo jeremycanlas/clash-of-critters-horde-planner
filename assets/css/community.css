@@ -1,0 +1,439 @@
+/*
+ * Community formations.
+ *
+ * The same contract contribute.css states: the layout, the panels, the buttons,
+ * the fields, the footer and the formation stamp all come from app.css. What is
+ * here is only what a list of other people's builds needs and the drafter does
+ * not.
+ */
+
+/* One column. The drafter's grid puts a roster beside the field; there is no
+   roster here, and a list that has grown a second column is a list nobody
+   finishes reading. */
+.layout--one {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "list";
+  max-width: 820px;
+}
+
+/* No field, so nothing needs room reserved under a bench dock. `.community` is
+   the body's scoping hook, the same way `.contribute` is on the recorder — the
+   list below is `.community__list` so the two cannot collide. */
+body.community { --dock-h: 0px; }
+
+/* ---------------------------------------------------------------- the list */
+
+.community__list {
+  list-style: none;
+  margin: var(--s3) 0 0;
+  padding: 0;
+  display: flex; flex-direction: column; gap: var(--s2);
+}
+
+/*
+ * A row is one formation, whole.
+ *
+ * It used to be a 23px-per-cell thumbnail beside three lines of text, which is
+ * enough to recognise a build you already knew and not enough to judge one you
+ * did not — so every row needed opening, and the row grew a second control that
+ * did the same thing as pressing it.
+ *
+ * Now the row *is* the picture `drawCard` makes for Share. Same renderer, so a
+ * change to the shared PNG is a change to every row here, and what a reader
+ * scrolls past is exactly what they would get if they posted it.
+ */
+.community__item {
+  display: flex; flex-direction: column; gap: var(--s2);
+  padding: var(--s2);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  /* Off-screen rows cost nothing to lay out. At this row height that is the
+     difference between a list that scrolls and one that stutters. */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 520px;
+  transition: border-color 140ms var(--ease-out);
+}
+.community__item:hover {
+  border-color: color-mix(in srgb, var(--line) 60%, var(--text-mute));
+}
+
+.community__shotwrap {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: var(--bg);
+  cursor: pointer;
+  /*
+   * The card's own proportions, so the row reserves its height before the
+   * picture exists and the list cannot jump as rows decode.
+   *
+   * The "Everything" card rather than the grid-only one now: 1080 wide, and
+   * between about 1140 and 1300 tall depending on how full the benches are and
+   * how long the plan runs. This is the middle of that, and `object-fit:
+   * contain` on the picture means being a little out costs a thin band above
+   * and below rather than a stretched formation.
+   */
+  aspect-ratio: 1080 / 1120;
+  position: relative;
+  overflow: hidden;
+}
+
+.community__shot {
+  display: block;
+  width: 100%; height: 100%;
+  object-fit: contain;
+  opacity: 0;
+  transition: opacity 160ms var(--ease-out);
+}
+.community__shot.is-drawn { opacity: 1; }
+
+/*
+ * Once the picture exists it sizes its own box, and the reserved ratio above
+ * stops applying. A drawn card runs from about 1000 to 1300 tall depending on
+ * how long the plan is and how full the benches are, so holding the estimate
+ * afterwards framed the short ones in a band of empty surface — which reads as
+ * a card that failed to draw rather than one that is simply not very tall.
+ */
+.community__shotwrap.is-drawn { aspect-ratio: auto; }
+.community__shotwrap.is-drawn .community__shot { height: auto; }
+
+/* Sits under the picture until it arrives, and is covered rather than removed —
+   the same reasoning as the avatar monogram. */
+.community__shotwait {
+  position: absolute; inset: 0;
+  display: grid; place-items: center;
+  color: var(--text-mute); font-size: 12.5px;
+}
+.community__shot.is-drawn + .community__shotwait { display: none; }
+.community__shotwrap.is-failed .community__shotwait::after {
+  content: "Could not draw this one";
+}
+.community__shotwrap.is-failed .community__shotwait { font-size: 0; }
+.community__shotwrap.is-failed .community__shotwait::after { font-size: 12.5px; }
+
+/* (.community__note went when the note moved onto the card itself. The picture
+   carries it now, and the alt text carries it for anyone not looking at the
+   picture.) */
+
+.community__missing {
+  margin: 0;
+  color: color-mix(in srgb, var(--danger) 70%, var(--text-dim));
+  font-size: 11.5px;
+}
+
+/*
+ * A flex row, which it always meant to be.
+ *
+ * The rules under the phone breakpoint below — wrap, order, `flex: 1 1 0` —
+ * only mean anything inside a flex container, and there was never one: this is
+ * a <span>, so its children were laid out as inline text and every flex
+ * property on them was quietly ignored. On a wide screen that left the whole
+ * row bunched against the left edge with 400-odd pixels of nothing after it,
+ * and the gaps between the controls were word spacing rather than a gap.
+ */
+.community__acts {
+  display: flex; align-items: center; flex-wrap: wrap;
+  gap: var(--s1) var(--s2);
+}
+
+.community__when {
+  flex: 1 1 auto;
+  color: var(--text-mute); font-size: 11.5px;
+}
+
+/*
+ * Who you are posting as, and the way to stop. Quiet and to the right of the
+ * heading: it is a fact about you rather than about the gallery, and it only
+ * exists at all while signed in.
+ */
+.community__who {
+  display: flex; align-items: center; gap: var(--s2);
+  margin: 0 0 0 auto;
+  color: var(--text-dim); font-size: 12px;
+}
+.community__who b { color: var(--text); font-weight: 650; }
+.community__signout { flex: 0 0 auto; }
+
+/*
+ * Delete goes to the far edge, as far from Open as the row is wide.
+ *
+ * In practice the timestamp does the work: it has `flex: 1 1 auto`, growth is
+ * resolved before auto margins get a look at the free space, so it stretches
+ * and Delete is carried to the right edge behind it.
+ *
+ * The auto margin is the fallback for when it cannot. A row whose timestamp is
+ * missing has no growing item in it, and then this is the only thing holding
+ * the button against the edge rather than letting it drift back beside Open.
+ */
+.community__remove { margin-left: auto; }
+
+/* ------------------------------------------------------------- waiting */
+
+/*
+ * An empty panel and a loading panel used to be pixel-identical, which on a
+ * cold free-tier database reads as "nobody has posted" — the one conclusion
+ * that is both wrong and hard to argue somebody out of afterwards.
+ */
+.community__item--wait { pointer-events: none; }
+/* Sized from the real row's aspect ratio. A skeleton that does not match the
+   thing it stands in for is a guaranteed layout jump the moment data lands. */
+.community__skel-map {
+  width: 100%;
+  aspect-ratio: 636 / 890;
+  border-radius: var(--r-sm);
+  background: var(--surface-3);
+}
+.community__skel-line {
+  display: block;
+  height: 11px; width: 60%;
+  margin-bottom: 6px;
+  border-radius: 999px;
+  background: var(--surface-3);
+}
+.community__skel-line--short { width: 35%; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .community__item--wait { animation: community-wait 1.4s var(--ease-out) infinite; }
+  @keyframes community-wait { 0%, 100% { opacity: 1; } 50% { opacity: .55; } }
+}
+
+/* ---------------------------------------------------------------- states */
+
+/*
+ * Every failure this page has, and the empty state, in one line. Muted, not
+ * red: an unreachable gallery costs a visitor a gallery, and the drafter behind
+ * this page is untouched — so an alarm would claim more than the facts do.
+ */
+.community__say {
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2) var(--s3);
+  margin: var(--s3) 0 0;
+  padding: var(--s3);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  color: var(--text-dim);
+  font-size: 12.5px; line-height: 1.5;
+}
+.community__retry { flex: none; }
+
+.community__more { width: 100%; margin-top: var(--s3); }
+
+/* ---------------------------------------------------------------- preview */
+
+.modal--peek {
+  width: min(440px, 92vw);
+  padding: var(--s4);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  color: var(--text);
+}
+.modal--peek::backdrop { background: color-mix(in srgb, var(--bg) 72%, transparent); }
+
+.peek__by { margin-bottom: var(--s2); }
+/* (.peek__note went the same way as .community__note — the drawn card carries
+   the note in both places now.) */
+
+/*
+ * The two controls only the poster sees. Pushed to the far end of the row so
+ * they are not adjacent to Close, which is the button most likely to be reached
+ * for in a hurry — Delete sitting next to it is how a stray press becomes a
+ * lost formation.
+ */
+.peek__own { margin-left: auto; }
+.peek__own ~ .peek__own,
+.peek__own ~ .btn { margin-left: 0; }
+
+/*
+ * Delete, in the row and in the dialog. Quiet until you point at it: this is
+ * the only irreversible thing on the page, and a control that looks dangerous
+ * at rest just makes the whole row look dangerous.
+ */
+.peek__danger,
+.community__remove { color: var(--text-dim); }
+.peek__danger:hover,
+.community__remove:hover { color: var(--danger); border-color: var(--danger); }
+
+/*
+ * Armed. Filled rather than outlined, because the difference between "Delete"
+ * and "Delete for good?" has to survive being read at a glance by somebody who
+ * has already decided to press it once.
+ */
+.peek__danger.is-armed,
+.community__remove.is-armed {
+  border-color: var(--danger);
+  background: var(--danger);
+  color: #fff;
+}
+
+.peek__edit { margin-top: var(--s3); }
+.peek__edit .hint { margin: calc(var(--s2) * -1) 0 var(--s3); }
+
+/*
+ * The card, drawn by the same function that draws the shareable PNG.
+ *
+ * This is the one place the canvas earns its cost. A reader who wants to send
+ * somebody this build gets the identical artifact the poster would have got
+ * from Share — which is the whole point of there being one renderer, and the
+ * direct answer to a share funnel that produced zero copied links.
+ */
+.peek__card {
+  display: flex; justify-content: center; align-items: center;
+  min-height: 120px;
+  margin: var(--s3) 0;
+}
+.peek__canvas {
+  max-width: 100%; height: auto;
+  border-radius: var(--r-md);
+}
+
+.modal--peek .modal__actions { flex-wrap: wrap; }
+.modal--peek .modal__actions .btn { min-height: 44px; }
+
+/* ---------------------------------------------------------------- phone */
+
+@media (max-width: 760px) {
+  .layout--one { padding: var(--s3); }
+
+  /*
+   * The actions drop under the card, but stay beside each other. Three
+   * full-width bars in a column all look like the same control, and the one a
+   * thumb reaches first was the one that navigates away.
+   */
+  .community__when { flex: 1 1 100%; order: -1; }
+  /*
+   * No auto margin here. On a phone the three controls share one line by
+   * growing into it, and an auto margin would swallow the free space before
+   * any of them grew — leaving two narrow buttons and Delete pinned to the
+   * right. The row is already only these three; there is nothing to push away
+   * from.
+   */
+  .community__remove { margin-left: 0; }
+  /* Look is the reversible one and gets the smaller share; Open leaves the
+     page and sits where the thumb expects the primary action. */
+  .community__act { flex: 1 1 0; justify-content: center; }
+  /* Open leaves the page and sits where a thumb lands by default; the two
+     reversible controls share the rest rather than competing with it. */
+  .community__act--go { flex: 1.4 1 0; }
+  .community__vote { flex: 1.2 1 0; }
+
+  /* The peek is nearly the whole screen here, so the card gets the width. */
+  .modal--peek { width: 94vw; padding: var(--s3); }
+
+  /* No app bar on this page, so nothing covers the end of the list — and the
+     drafter reserves --appbar-h on body, which here would be dead padding. */
+  body.community { padding-bottom: 0; }
+  .foot { padding: var(--s3); font-size: 11.5px; }
+}
+
+/* ---------------------------------------------------------------- controls */
+
+/*
+ * Two decisions, one row. The drafter's filter block is three wrapped rows of
+ * chips; ported here it would put ~120px of controls above a list whose whole
+ * job is showing formations — more than one row of the list itself.
+ */
+.community__controls {
+  display: flex; flex-wrap: wrap; gap: var(--s2);
+  margin-bottom: var(--s3);
+}
+/* No min-height here: app.css now sets 44px on .segmented__btn under
+   (hover: none), and a 0,2,0 selector here would quietly win and put these
+   -- the only controls on the page -- back under the rest of the product. */
+
+/* ---------------------------------------------------------------- keeping */
+
+/*
+ * "Keep", not "like". It says what the number counts (how many people kept
+ * this build) and not what it cannot: whether the build is any good. The hint
+ * above the list says the tool has no way to know that, and a control labelled
+ * "like" would quietly contradict it.
+ */
+.community__vote {
+  gap: 5px;
+  color: var(--text-dim);
+}
+.community__vote:hover { color: var(--text); }
+.community__vote.is-kept {
+  border-color: color-mix(in srgb, var(--accent) 60%, var(--line));
+  color: var(--text);
+}
+.community__vote-mark { color: var(--text-mute); font-size: 13px; line-height: 1; }
+.community__vote.is-kept .community__vote-mark { color: var(--accent); }
+
+/*
+ * Your own formation: a label, not a control. It is a <span> rather than a
+ * disabled <button> because there is no action being withheld pending some
+ * condition you could meet — this one is never yours to press, and a greyed
+ * button invites the press that a plain count does not.
+ */
+.community__vote.is-mine {
+  border-style: dashed;
+  color: var(--text-mute);
+  cursor: default;
+}
+.community__vote.is-mine:hover { background: var(--btn-bg); color: var(--text-mute); }
+
+/* ---------------------------------------------------------------- who */
+
+/*
+ * Small, round, hairlined — the same treatment as the author byline in the
+ * drafter's own header (`.byline__avatar`), so a face means the same thing
+ * everywhere in this tool. 22px because the board is what this row is led by
+ * and a face competing with it for the same glance would win the wrong fight.
+ */
+/* (.community__meta and an earlier .community__who lived here, styling a byline
+   the row printed beside its thumbnail. The row is a drawn card now and carries
+   its own byline, so both had no users left — and the second was quietly
+   restyling the sign-out strip, which took the same name.) */
+/* The monogram sits underneath and the picture on top of it, so the space is
+   never empty — see facePart() for why `onerror` could not be trusted. */
+.community__face-slot {
+  position: relative;
+  flex: none;
+  width: 22px; height: 22px;
+}
+.community__face,
+.community__mono {
+  position: absolute; inset: 0;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+}
+.community__mono {
+  display: grid; place-items: center;
+  background: var(--surface-3);
+  color: var(--text-dim);
+  font-size: 11px; font-weight: 700;
+}
+/* Revealed only once it has decoded. A blocked or hanging request simply never
+   arrives here, and the monogram it would have covered stays visible. */
+.community__face { object-fit: cover; opacity: 0; transition: opacity 140ms var(--ease-out); }
+.community__face.is-there { opacity: 1; }
+.peek__by { display: flex; align-items: center; gap: 6px; }
+
+/* ---------------------------------------------------------------- the way out */
+
+/*
+ * The drafter's app bar, cut down to what this page needs.
+ *
+ * app.css only builds .appbar below 760px, which is right there — the drafter's
+ * topbar stays reachable on a wide screen because the page does not scroll far
+ * enough to lose it. Here the rows are tall, so the phone is where a permanent
+ * exit matters and the desktop is where it does not.
+ */
+@media (max-width: 760px) {
+  .appbar--two { padding-bottom: calc(var(--s2) + env(safe-area-inset-bottom, 0px)); }
+  .appbar--two .appbar__btn { flex: 1; text-decoration: none; }
+  /* Room for the bar, so the last row and the footer are not sitting under it. */
+  body.community { padding-bottom: var(--appbar-h); }
+  .foot { margin-bottom: var(--s2); }
+}
+
+/* Wide screens keep the topbar in view, so the bar would be furniture. */
+@media (min-width: 761px) {
+  .appbar--two { display: none; }
+}

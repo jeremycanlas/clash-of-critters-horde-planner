@@ -9,7 +9,7 @@ web
 ## Users
 
 Players of Clash of Critters planning a Horde Invasion run. Confirmed: desktop
-and mobile are both primary — neither is the fallback, and a design that works
+and mobile are both primary. Neither is the fallback, and a design that works
 on one at the expense of the other has failed half the audience.
 
 **Resolved by measurement: mobile is the primary target.** Desktop remains
@@ -26,8 +26,8 @@ GoatCounter, 455 hits (286 pageviews + 169 events):
   not pulled directly, but the path totals bound it: desktop's 114 hits split
   between pageviews and events, giving ~74% mobile `used` at equal activation,
   and under 40% desktop pageviews even in the most desktop-favourable case.
-- An earlier hypothesis — that phone traffic was inflated by people opening
-  shared formation links — is **disproved**: `link-copied` is 0 and card shares
+- One earlier hypothesis is **disproved**: that phone traffic was inflated by
+  people opening shared formation links. `link-copied` is 0 and card shares
   total 7. Arrivals are Reddit → tool (39% of `used` referrals are Reddit, the
   rest mostly direct), and those visitors build.
 
@@ -55,8 +55,9 @@ and the interface is expected to carry that knowledge rather than assume it.
 Density and speed still matter, but they do not outrank being legible to
 someone learning the game.
 
-Secondary audience: the person receiving a shared formation — a co-op partner
-or a Discord/Reddit reader who did not build it and may not have the tool open.
+Secondary audience: the person receiving a shared formation, meaning a co-op
+partner or a Discord/Reddit reader who did not build it and may not have the
+tool open.
 
 ## Product Purpose
 
@@ -72,9 +73,9 @@ glance and act on.
 ## Positioning
 
 The alternative is a spreadsheet, a screenshot of the in-game team screen, or
-memory. Horde Drafter's difference is that it holds the game's actual data —
-roster, types, roles, tiers, evolution lines, skills, level-up skills, attack
-ranges — and reasons over the formation with it: what the formation brings
+memory. Horde Drafter's difference is that it holds the game's actual data
+(roster, types, roles, tiers, evolution lines, skills, level-up skills, attack
+ranges) and reasons over the formation with it: what the formation brings
 besides damage, which Tatari are locked out by an evolution line already in
 use, which tiles are covered. A generic planner cannot do this without the
 data; a screenshot cannot do it at all.
@@ -85,14 +86,14 @@ formations actually travel.
 
 ## Operating Context
 
-- Planning happens **between runs**, not during one — there is time to think,
+- Planning happens **between runs**, not during one. There is time to think,
   but the payoff is in the game, not in the tool.
 - Formations travel through **Discord and Reddit**, usually as an image. Both
   named feature requests and the one reported bug in the changelog came from
   those channels (@lem77, u/Nikky-Nami, u/R2DKK).
 - **Co-op** is a conversation between two players before a run. The LF
   ("looking for") and HAVE lines exist to make that ask postable, and both can
-  be filled at once — "I have these, looking for those" is one sentence.
+  be filled at once: "I have these, looking for those" is one sentence.
 - Work is **resumable**: state lives in `localStorage`, so a reload continues
   where the player left off. Formations also save to and open from `.json`.
 - The published site is served from **GitHub Pages** at
@@ -118,13 +119,20 @@ Confirmed functionality:
   imported files may register custom Tatari.
 - Glitter-art toggle for alternate sprites.
 
-Technical constraints — **confirmed as not binding**:
+Technical constraints, **confirmed as not binding**:
 
 The current implementation is plain HTML/CSS/JS with no build step, no runtime
 dependencies, and every asset self-hosted so a clone runs without network
 access. The user has confirmed these are current implementation facts, **not
 rules future work must obey**. A build step, a framework, or web fonts are all
 permitted if they earn their place.
+
+As of Community, the project has one runtime service dependency: a Supabase
+project reached over `fetch` against its PostgREST endpoint. There is still no
+build step and no bundled library: the client is about 250 lines of `fetch` in
+`assets/js/supabase.js`. `contribute.html` does not touch it; `community.html`
+does, and says so plainly when it cannot reach it. `index.html` touches it only
+when somebody presses Post.
 
 Open decisions, not to be assumed:
 
@@ -187,7 +195,7 @@ invented.
    rather than guess. Unrecorded ranges draw no tiles; undefined skill tags say
    they are undefined. In a tool people position by, a wrong tile is worse than
    a missing one.
-2. **Name the source.** Inference is labelled as inference — the level-up
+2. **Name the source.** Inference is labelled as inference. The level-up
    effects derived from wording carry their level and their source Tatari, so a
    player can check the reasoning rather than trust it.
 3. **The artifact must survive the crop.** Formations travel as screenshots
@@ -197,9 +205,19 @@ invented.
    in any language. Wherever a Tatari is referenced, its art comes with it.
 5. **Both hands and both screens.** Every interaction has a pointer path and a
    touch path, and the copy shown matches the input the player actually has.
-6. **Nothing leaves the browser.** Formations stay in `localStorage`; analytics
-   are anonymous fixed labels only, published site only. This is a stated
-   promise, not a default.
+6. **Nothing leaves the browser unless you post it.** Formations stay in
+   `localStorage`; analytics are anonymous fixed labels only, published site
+   only. The one exception is Community. Pressing *Post it publicly* sends that
+   one formation, and doing so signs you in with Discord, which gives the
+   database a display name, an account ID and an email address. Only the display
+   name is used or shown. The email is requested by Supabase's Discord provider,
+   which offers no way to opt out, so it is disclosed rather than denied.
+   Both happen only on a press of a button that says what it does. Nothing is
+   ever sent in the background, and a formation you do not post is never sent at
+   all. Reading the gallery is the cheaper half: opening somebody's build is a
+   plain `#v6=` link the drafter already knows how to read, so no network
+   request is involved in that direction. This is a stated promise, not a
+   default.
 
 ## Accessibility & Inclusion
 

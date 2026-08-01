@@ -48,6 +48,7 @@ export function buildShare() {
     redraw();
   });
   renderScope();
+  renderShareRoutes();
 
   try { nameField.value = localStorage.getItem(NAME_KEY) || ''; } catch { /* private mode */ }
 
@@ -55,6 +56,44 @@ export function buildShare() {
     try { localStorage.setItem(NAME_KEY, nameField.value); } catch { /* private mode */ }
     clearTimeout(redrawTimer);
     redrawTimer = setTimeout(redraw, 180);
+  });
+
+  /*
+   * The native share sheet, when the browser has one.
+   *
+   * This is the answer to the number in PRODUCT.md: 286 opens produced four
+   * downloads, three image copies and zero copied links. On iOS (47% of
+   * browsers here) none of the other three routes actually reaches Discord.
+   * Writing an image to the clipboard is unreliable there, and a download lands
+   * in Files rather than Photos, which is not where anyone posts from.
+   *
+   * `navigator.share` with a File is one tap into Messages, Discord or anywhere
+   * else, and it needs no clipboard permission. Feature-detected with canShare
+   * on the actual file, because Android Chrome exposes `share` while refusing
+   * files in some configurations — asking about the thing we are sending is the
+   * only test that means anything.
+   *
+   * AbortError is the person changing their mind, not a failure. Saying
+   * "couldn't share" to somebody who pressed Cancel would be the tool arguing
+   * with them.
+   */
+  $('#share-native').addEventListener('click', async () => {
+    if (!cardBlob) return;
+    const file = new File([cardBlob],
+      slugFilename(store.formation.name, 'horde-formation', 'png'), { type: 'image/png' });
+    if (!navigator.canShare?.({ files: [file] })) {
+      toast('This browser cannot share a file. Use Download instead', 'error');
+      return;
+    }
+    try {
+      await navigator.share({
+        files: [file],
+        title: store.formation.name || 'Horde formation',
+      });
+      track('card-shared');
+    } catch (err) {
+      if (err?.name !== 'AbortError') toast('Could not open the share sheet', 'error');
+    }
   });
 
   $('#share-download').addEventListener('click', () => {
@@ -68,10 +107,10 @@ export function buildShare() {
     if (!cardBlob) return;
     try {
       await navigator.clipboard.write([new ClipboardItem({ 'image/png': cardBlob })]);
-      toast('Card copied — paste it anywhere', 'ok');
+      toast('Card copied. Paste it anywhere', 'ok');
       track('card-copied');
     } catch {
-      toast('This browser will not let a page copy an image — use Download instead', 'error');
+      toast('This browser will not let a page copy an image. Use Download instead', 'error');
     }
   });
 
@@ -80,7 +119,7 @@ export function buildShare() {
     history.replaceState(null, '', url);
     toast(await copyText(url)
       ? 'Share link copied'
-      : 'Link is in the address bar — copy it from there', 'ok');
+      : 'Link is in the address bar. Copy it from there', 'ok');
     track('link-copied');
   });
 
@@ -91,6 +130,21 @@ export function buildShare() {
     if (e.target === dialog) dialog.close();
   });
   dialog.addEventListener('close', releasePreview);
+}
+
+/**
+ * Share... is primary where it exists, and absent where it does not.
+ *
+ * A button that is present but always fails is worse than one that never
+ * appeared, so this is decided once from canShare rather than being disabled
+ * later. Where it is offered, Download stops being the loudest thing in the
+ * row — on a phone it is the worst of the three.
+ */
+function renderShareRoutes() {
+  const probe = new File([new Blob([''], { type: 'image/png' })], 'x.png', { type: 'image/png' });
+  const native = !!navigator.canShare?.({ files: [probe] });
+  $('#share-native').hidden = !native;
+  $('#share-download').classList.toggle('btn--primary', !native);
 }
 
 function renderScope() {

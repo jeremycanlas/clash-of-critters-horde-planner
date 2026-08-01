@@ -19,19 +19,16 @@
  */
 
 import { state } from './data.js';
+import { COLS, ROWS, CELLS, MAX_LEVEL, MODES, cellRow, cellCol } from './rules.js';
+import { toFragment, fromFragment } from './hash.js';
 
-/** Your half of the Horde field: 6 tiles across, 6 deep. Zobos spawn beyond row 0. */
-export const COLS = 6;
-export const ROWS = 6;
-export const CELLS = COLS * ROWS;
-
-/** Tatari cap out at level 7. */
-export const MAX_LEVEL = 7;
-
-export const MODES = {
-  solo: { label: 'Solo', players: 1, bench: 15, field: 15 },
-  coop: { label: 'Co-op', players: 2, bench: 15, field: 10 },
-};
+/*
+ * The grid's shape lives in rules.js so a page that only draws formations can
+ * have it without this module's 1000 lines behind it. Re-exported here because
+ * every existing caller says `store.COLS`, and moving a constant is not a
+ * reason to touch thirty call sites.
+ */
+export { COLS, ROWS, CELLS, MAX_LEVEL, MODES, cellRow, cellCol };
 
 // v4: occupants gained a player, and the bench layer is new. Earlier saves have
 // no player information, so they are read as solo.
@@ -39,7 +36,6 @@ export const MODES = {
 // deliberately left at v4 - apply() reads both step shapes, so an existing plan
 // survives the upgrade rather than being thrown away.
 const SAVE_KEY = 'coc.formation.v4';
-const HASH_VERSION = 'v6';
 
 /**
  * @typedef {{slug: string, player: number}} Occupant
@@ -130,9 +126,6 @@ export function setActivePlayer(player) {
 }
 
 // ---------------------------------------------------------------- queries
-
-export const cellRow = (i) => Math.floor(i / COLS);
-export const cellCol = (i) => i % COLS;
 
 /** @returns {{cell: number, slug: string, player: number}[]} in cell order */
 export function placedFor(player) {
@@ -292,6 +285,19 @@ export function unplace(slug, player = formation.activePlayer) {
   if (cell !== null) unplaceAt(cell);
 }
 
+/**
+ * Takes everyone off the field. Benches are kept; the plan is not, and cannot be.
+ *
+ * A step names Tatari that are on the field — reconcile() drops any member whose
+ * cell is null, and a step with no members left goes with it. So emptying the
+ * field empties the plan whatever this function does; the assignment below is
+ * explicit about that rather than leaving it to a side effect two hundred lines
+ * away.
+ *
+ * That is a real cost, and the plan has its own Clear button, which reads as a
+ * promise that it is separate. The answer is not to pretend it survives — it is
+ * for the caller to say so plainly and offer the way back. app.js does both.
+ */
 export function clearField() {
   formation.cells = Array(CELLS).fill(null);
   formation.plan = [];
@@ -725,139 +731,25 @@ function apply({ mode: m, cells, bench, plan, name, lf, lfWants, lfMode, lines }
 // ---------------------------------------------------------------- share links
 
 /**
- * `#v5=<mode>/<layout>;<plan>` where layout is `player.slug@cell,...` and plan is
- * `player.slug+player.slug.level$note,...` in the order the level-ups should be
- * taken. Benched but unplaced Tatari ride along as `player.slug@-`, a step with
- * no level writes `-`, and a step with no note leaves off the `$` entirely.
+ * The whole formation as a link to this page.
  *
- * A third segment carries what is not a placement — `n=<name>~lf=<note>~w=<slug+slug>`
- * — so a shared link arrives with the formation's name and its co-op ask intact.
- *
- * v4 links wrote one Tatari and no note per step, and v5 had no third segment.
- * Both are contained by this grammar, so they are still read.
+ * The grammar and both directions of it live in hash.js, because the community
+ * gallery has to write one of these for a formation it is not editing. What is
+ * left here is the part that is genuinely about this module: which formation
+ * (the live one) and which page (this one).
  */
 export function shareUrl() {
-  const tokens = [];
-  for (const player of players()) {
-    for (const { slug, cell } of placedFor(player)) tokens.push(`${player}.${slug}@${cell}`);
-    for (const slug of unplacedBench(player)) tokens.push(`${player}.${slug}@-`);
-  }
-  const plan = formation.plan.map((s) => {
-    const body = `${s.members.map((m) => `${m.player}.${m.slug}`).join('+')}.${s.level ?? '-'}`;
-    return s.note ? `${body}$${encodeNote(s.note)}` : body;
-  }).join(',');
-  // Third segment: everything about the formation that is not a placement.
-  // `~` separates the fields rather than `&`, because the fragment is matched
-  // up to the first `&` so that other hash params can sit alongside it.
-  const meta = [];
-  if (formation.name.trim()) meta.push(`n=${encodeNote(formation.name.trim())}`);
-  if (formation.lines.lf.note.trim()) meta.push(`lf=${encodeNote(formation.lines.lf.note.trim())}`);
-  if (formation.lines.lf.wants.length) meta.push(`w=${formation.lines.lf.wants.join('+')}`);
-  if (formation.lines.have.note.trim()) meta.push(`hn=${encodeNote(formation.lines.have.note.trim())}`);
-  if (formation.lines.have.wants.length) meta.push(`hw=${formation.lines.have.wants.join('+')}`);
-
   const url = new URL(location.href);
-  url.hash = tokens.length
-    ? `${HASH_VERSION}=${formation.mode}/${tokens.join(',')};${plan};${meta.join('~')}`
-    : '';
+  url.hash = toFragment(snapshot());
   return url.toString();
-}
-
-/**
- * Notes are free text, and fromHash() decodes the whole fragment in one go
- * before splitting it. Encoding twice means that after that first pass a note
- * still holds none of the separators this grammar uses - `,` `+` `.` and `$`
- * all survive as escapes until the note itself is decoded.
- */
-const encodeNote = (note) => encodeURIComponent(encodeURIComponent(note));
-
-/** A hand-edited link can hold a stray `%`, which decodeURIComponent throws on. */
-function safeDecode(text) {
-  try { return decodeURIComponent(text); } catch { return text; }
 }
 
 /** @returns {{unknown: string[]}|null} null when the hash held no formation */
 export function fromHash() {
-  const m = location.hash.match(/(?:v6|v5|v4)=([^&]+)/);
-  if (!m) return null;
-
-  const raw = decodeURIComponent(m[1]);
-  const slash = raw.indexOf('/');
-  const modeName = slash === -1 ? 'solo' : raw.slice(0, slash);
-  const [layoutPart = '', planPart = '', metaPart = ''] = raw.slice(slash + 1).split(';');
-
-  const cells = Array(CELLS).fill(null);
-  const bench = { 1: [], 2: [] };
-  const unknown = [];
-
-  for (const token of layoutPart.split(',')) {
-    const at = token.lastIndexOf('@');
-    if (at === -1) continue;
-    const dot = token.indexOf('.');
-    const player = Number(token.slice(0, dot)) || 1;
-    const slug = token.slice(dot + 1, at);
-    const where = token.slice(at + 1);
-    if (!slug) continue;
-    if (!state.bySlug.has(slug)) { unknown.push(slug); continue; }
-    if (!bench[player]) continue;
-    if (!bench[player].includes(slug)) bench[player].push(slug);
-    if (where === '-') continue;
-    const cell = Number(where);
-    if (!Number.isInteger(cell) || cell < 0 || cell >= CELLS || cells[cell]) continue;
-    cells[cell] = { slug, player };
-  }
-
-  const plan = [];
-  for (const token of planPart.split(',')) {
-    if (!token) continue;
-    const [body, rawNote] = token.split('$');
-    const dot = body.lastIndexOf('.');
-    if (dot === -1) continue;
-    const members = body.slice(0, dot).split('+').map((one) => {
-      const at = one.indexOf('.');
-      return at === -1 ? null : { player: Number(one.slice(0, at)) || 1, slug: one.slice(at + 1) };
-    }).filter((m) => m?.slug);
-    if (!members.length) continue;
-    const level = body.slice(dot + 1);
-    plan.push({
-      members,
-      level: level === '-' ? null : Number(level),
-      note: rawNote ? safeDecode(rawNote) : '',
-    });
-  }
-
-  // v4 and v5 links carry no meta segment, so these stay as they are.
-  let name;
-  let lf;
-  let lfWants;
-  let lfMode;
-  let haveNote;
-  let haveWants;
-  for (const field of metaPart.split('~')) {
-    const eq = field.indexOf('=');
-    if (eq === -1) continue;
-    const key = field.slice(0, eq);
-    const value = field.slice(eq + 1);
-    if (key === 'n') name = safeDecode(value);
-    else if (key === 'lf') lf = safeDecode(value);
-    else if (key === 'w') lfWants = value.split('+').filter(Boolean);
-    else if (key === 'hn') haveNote = safeDecode(value);
-    else if (key === 'hw') haveWants = value.split('+').filter(Boolean);
-    // v6 links written before the two lines existed said which side they meant.
-    else if (key === 'm') lfMode = value;
-  }
-
-  // A link from before the split carries one line plus the side it was on;
-  // apply() folds that into the right half on its own.
-  const lines = (haveNote !== undefined || haveWants !== undefined)
-    ? {
-      lf: { wants: lfWants ?? [], note: lf ?? '' },
-      have: { wants: haveWants ?? [], note: haveNote ?? '' },
-    }
-    : undefined;
-
-  apply({ mode: modeName, cells, bench, plan, name, lf, lfWants, lfMode, lines });
-  return { unknown };
+  const read = fromFragment(location.hash);
+  if (!read) return null;
+  apply(read.blob);
+  return { unknown: read.unknown };
 }
 
 // ---------------------------------------------------------------- import/export

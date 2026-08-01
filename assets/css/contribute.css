@@ -17,8 +17,8 @@
  * Colour, and what each hue is allowed to mean here.
  *
  * A roster card is the most crowded object in the product. It already carries
- * its elemental type as a tint behind the sprite — Water blue, Fire red, Grass
- * green, Lightning yellow, Rock brown — and up to three effect badges in the
+ * its elemental type as a tint behind the sprite (Water blue, Fire red, Grass
+ * green, Lightning yellow, Rock brown) and up to three effect badges in the
  * corner, which app.css draws in green for a heal, yellow for a buff and red for
  * a debuff. That is every warm and cool hue spoken for, most of them twice,
  * before this page adds a single mark of its own.
@@ -35,7 +35,7 @@
  * queued; the same violet dimmed means somebody else's issue is open — one idea,
  * two weights, rather than two colours that happen to look unrelated.
  *
- * Coverage gets no hue at all. It is ordinal — nothing, written down, checked —
+ * Coverage gets no hue at all. It is ordinal (nothing, written down, checked)
  * and it is drawn as three steps of brightness on the neutral ramp, which is the
  * one channel a card has not already used.
  */
@@ -137,7 +137,7 @@
   display: inline-flex; align-items: center; gap: 5px;
   font-size: 11.5px;
 }
-.contrib__who svg { width: 13px; height: 13px; }
+
 
 /* ------------------------------------------------------------ the grid */
 
@@ -148,7 +148,7 @@
  */
 /*
  * Thirteen rows of squares is tall. Narrowing the frame shrinks the cells with
- * it, so the whole board — the reachable ground and the field under it — fits on
+ * it, so the whole board (the reachable ground and the field under it) fits on
  * screen at once. Seeing the shape entire is the point of drawing it.
  */
 /*
@@ -160,8 +160,8 @@
  *
  * Floored at 300px, and the floor is the part that matters. The frame's width is
  * not six cells: it is six cells plus five 4px gaps plus its own padding, about
- * 36px of furniture, so 300px is where a cell is 44px and 252px — which an earlier
- * pass used — was where a cell is 36px. Three quarters of this audience is
+ * 36px of furniture, so 300px is where a cell is 44px and 252px (which an earlier
+ * pass used) was where a cell is 36px. Three quarters of this audience is
  * pointing a thumb at these tiles to record a measurement, and shrinking the
  * target by a quarter to win a little visible board is the wrong way round when
  * picking a Tatari already scrolls the board into view. Below the floor the frame

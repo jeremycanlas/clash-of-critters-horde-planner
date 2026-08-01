@@ -56,6 +56,22 @@ export function buildShell() {
     }
   });
 
+  /*
+   * Android's back gesture must close the sheet, not leave the site.
+   *
+   * On a phone a sheet is visually a new screen, and back-to-dismiss is the
+   * platform's contract rather than a nicety — 129 of 455 visits are Android,
+   * and every one of them could open the roster and be thrown out of the
+   * drafter by the gesture they use to go back. Opening pushes a history entry;
+   * back pops it and lands here.
+   *
+   * `fromPop` stops the pair fighting: the listener closes without pushing, and
+   * closing any other way pops without re-entering.
+   */
+  addEventListener('popstate', () => {
+    if (open) setSheet(null, { fromPop: true });
+  });
+
   // Rotating to landscape or dragging the window wider must not leave a sheet
   // stranded: past 760px these are ordinary panels sitting on the page, and a
   // body[data-sheet] left behind would have nothing to act on.
@@ -132,8 +148,19 @@ function watchDock() {
  * on a phone the panel is visually a new screen even though it never left the
  * page.
  */
-function setSheet(name) {
+function setSheet(name, { fromPop = false } = {}) {
   if (name === open) return;
+
+  /*
+   * One history entry per open sheet, so back closes it. Pushed before the
+   * sheet paints and popped when it closes any other way, which keeps the
+   * stack the same depth however the sheet was dismissed — otherwise a scrim
+   * tap would leave an orphan entry and back would appear to do nothing.
+   */
+  if (!fromPop) {
+    if (name && !open) history.pushState({ sheet: name }, '');
+    else if (!name && open) history.back();
+  }
 
   if (name && !returnTo) returnTo = document.activeElement;
   open = name;
@@ -142,6 +169,28 @@ function setSheet(name) {
   else delete document.body.dataset.sheet;
 
   scrim.hidden = !name;
+
+  /*
+   * Everything behind an open sheet goes inert.
+   *
+   * The sheet looks modal (it sits over an opaque scrim) but Tab walked
+   * straight past its last control into the field, the topbar and the footer,
+   * all of them invisible underneath. `inert` is the one-property version of a
+   * focus trap, and it also hides the background from assistive technology, so
+   * the sheet reads as the screen it appears to be.
+   *
+   * Named one by one rather than by inerting <main>, because three of the four
+   * sheets live *inside* <main> — inerting it would disable the sheet being
+   * opened. `inert` is inherited and a descendant cannot opt back out, so the
+   * only correct move is to never set it on an ancestor of the open panel.
+   */
+  const behind = ['.topbar', '.foot', '.panel--field', ...Object.values(SHEETS)];
+  for (const sel of behind) {
+    const el = $(sel);
+    if (!el) continue;
+    el.inert = !!name && sel !== SHEETS[name];
+  }
+
   renderShell();
 
   if (name) {
@@ -178,6 +227,25 @@ export function renderShell() {
   for (const btn of bar.querySelectorAll('[data-sheet]')) {
     btn.setAttribute('aria-expanded', String(btn.dataset.sheet === open));
   }
+
+  /*
+   * The accent points at the next thing to do, not at the last.
+   *
+   * On a cold screen the only filled control was Share, which answers "Bring
+   * some Tatari first" — so the loudest thing on the page refused, while Add,
+   * the actual first step, was the same grey as everything else. Until there is
+   * something to share, Add is the one lit; the moment anything is brought, the
+   * accent moves back to Share and the empty-handed controls come alive.
+   */
+  const empty = !bench;
+  const share = bar.querySelector('[data-action="share"]');
+  const add = bar.querySelector('[data-sheet="roster"]');
+  share?.classList.toggle('appbar__btn--go', !empty);
+  add?.classList.toggle('appbar__btn--go', empty);
+  if (share) share.disabled = empty;
+  // Clean view offers to strip the chrome off an empty grid; the dock's own
+  // Clear is already guarded, but this one was not.
+  for (const el of document.querySelectorAll('[data-clean]')) el.disabled = empty;
 }
 
 /**

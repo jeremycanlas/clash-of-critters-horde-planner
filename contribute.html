@@ -3,7 +3,10 @@
 
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- viewport-fit=cover, or env(safe-area-inset-*) resolves to 0 on iOS and every
+     safe-area rule in app.css silently does nothing — which put the app bar
+     inside the home-indicator strip on every notched iPhone. -->
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Horde Drafter: Record a range </title>
   <meta name="description"
     content="Click the tiles a Tatari reaches and get back a JSON entry for the Horde Drafter range data.">
@@ -157,8 +160,8 @@
         </div>
 
         <p class="hint contrib__aside">
-          Clicking the Issue button will prefill an issue with the current queue so that I can review and merge it -
-          jacc.
+          The Issue button prefills an issue with the current queue, so I can
+          review it and merge it. Thanks. &mdash; jacc
         </p>
       </div>
     </section>
@@ -255,7 +258,7 @@
       Fan-made, unofficial.</span>
     <span class="muted">Nothing here is uploaded. The entry is built in your browser and it is
       yours to send or not. The page reads this repo's open issues from GitHub so it can
-      show what somebody has already sent in - that request carries nothing but the
+      show what somebody has already sent in. That request carries nothing but the
       repo's name.</span>
   </footer>
 
@@ -267,7 +270,7 @@
   <dialog id="import" class="modal modal--import">
     <h2>Import a recorded entry</h2>
     <p class="hint">
-      Paste an the entire contents of the github issue or just the JSON
+      Paste the whole GitHub issue, or just the JSON
       from it. Attack ranges and heal, buff and debuff reach are all read. Nothing is
       written to the data files: the entry goes on the grid so you can see what it
       changes, with anything it adds in blue and anything it drops in orange.
@@ -279,12 +282,17 @@
   "sproutlet": { "tiles": [[0, -1], [0, -2]], "from": "range diagram" }
 }'></textarea>
 
-    <p id="import-say" class="contrib__importsay" hidden></p>
+    <!-- role="status": this carries the import result, including which entries
+         were refused and why. Silent to a screen reader before. -->
+    <p id="import-say" class="contrib__importsay" role="status" aria-live="polite" hidden></p>
 
     <div class="modal__actions">
       <button id="import-go" class="btn btn--primary" type="button">Import</button>
       <label class="btn" for="import-file">Read a file…</label>
-      <input id="import-file" type="file" hidden accept=".json,.txt,.md,application/json,text/plain,text/markdown">
+      <!-- sr-only, not hidden: `hidden` is display:none, which takes the input out
+           of the tab order and leaves the <label>, which is not focusable itself, as the
+           only route to the picker. index.html already does it this way. -->
+      <input id="import-file" class="sr-only" type="file" accept=".json,.txt,.md,application/json,text/plain,text/markdown">
       <button class="btn btn--quiet" type="button" data-close>Close</button>
     </div>
   </dialog>

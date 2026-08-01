@@ -31,8 +31,35 @@ const ON_CARD = { lazy: false, priority: 'high' };
 /** Cell the keyboard user has "picked up", if any. */
 let carried = null;
 
+/**
+ * The 36 cell elements, in cell order.
+ *
+ * Cells used to be `grid.children`, and four call sites indexed them that way.
+ * They are one level deeper now that each row of six is wrapped in a
+ * `role="row"` — so the position in the DOM is no longer the position on the
+ * board, and anything that assumed it was silently found rows instead of cells.
+ */
+const cellEls = [];
+
 export function buildGrid() {
   grid.innerHTML = '';
+  cellEls.length = 0;
+  /*
+   * ARIA requires a `row` between a `grid` and its `gridcell`s. Without it the
+   * structure is invalid and a screen reader may drop or mis-report the whole
+   * board — which the per-cell "Row 3, column 4" labels were quietly papering
+   * over. `display: contents` means the rows exist for assistive technology and
+   * not for layout, so the CSS grid still sees 36 cells.
+   */
+  const rows = [];
+  for (let r = 0; r < store.ROWS; r++) {
+    const row = document.createElement('div');
+    row.className = 'grid__row';
+    row.setAttribute('role', 'row');
+    grid.append(row);
+    rows.push(row);
+  }
+
   for (let i = 0; i < store.CELLS; i++) {
     const cell = document.createElement('div');
     cell.className = 'cell';
@@ -40,7 +67,8 @@ export function buildGrid() {
     cell.dataset.row = String(store.cellRow(i));
     cell.setAttribute('role', 'gridcell');
     cell.tabIndex = i === 0 ? 0 : -1;
-    grid.append(cell);
+    rows[store.cellRow(i)].append(cell);
+    cellEls[i] = cell;
 
     // Cell elements live for the whole session, so this binds exactly once.
     draggable(
@@ -127,6 +155,29 @@ export function buildGrid() {
   // open at once — arming happens on the field, with every sheet dismissed.
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && armed) disarm();
+  });
+
+  /*
+   * A bench chip is a `role="button"` span, and a span does not synthesise a
+   * click from Enter or Space the way a real <button> does — so pressing either
+   * on a benched Tatari did nothing at all.
+   *
+   * That was the last link in the only keyboard chain to the field. The roster
+   * card's Enter benches rather than places; an empty cell's Enter returns
+   * early because picking up needs an occupant; drag is pointer-only; and the
+   * detail sheet's "Place on the field" sat behind a tabindex="-1" trigger. So
+   * a keyboard-only player could bring fifteen Tatari and never put one down —
+   * the whole point of the tool, unreachable.
+   *
+   * Forwarding to the click handler keeps one implementation of arming and
+   * placing rather than a second that can drift from it.
+   */
+  benchHost.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    const chip = e.target.closest('.benchchip');
+    if (!chip || e.target.closest('[data-unbench]')) return;
+    e.preventDefault();          // Space would otherwise scroll the page
+    chip.click();
   });
 
   benchHost.addEventListener('click', (e) => {
@@ -226,7 +277,7 @@ function previewRange(cell, slug) {
   if (!rangesOn.value) return;
   if (!slug || !hasRange(slug)) return;
   for (const i of coveredFrom(cell, slug)) {
-    const el = grid.children[i];
+    const el = cellEls[i];
     if (!el) continue;
     el.classList.add('is-inrange');
     previewed.push(el);
@@ -246,10 +297,26 @@ export function renderRanges() {
     ? coverage(store.allPlaced())
     : { counts: [] };
 
-  for (const cell of grid.children) {
+  for (const cell of cellEls) {
     const n = counts[Number(cell.dataset.cell)] ?? 0;
-    if (on && n) cell.dataset.cover = Math.min(n, 4);
-    else delete cell.dataset.cover;
+    if (on && n) {
+      cell.dataset.cover = Math.min(n, 4);
+      /*
+       * The number, not just the shade.
+       *
+       * Four levels of a translucent yellow are about 1.45:1 apart, so "one
+       * Tatari reaches here" and "nothing reaches here" were nearly the same
+       * colour -- which is the one question the overlay exists to answer. The
+       * count is already computed; printing it costs nothing and means the
+       * answer does not depend on distinguishing four tints.
+       */
+      cell.dataset.coverN = String(n);
+      cell.setAttribute('aria-description', `${n} can reach this tile`);
+    } else {
+      delete cell.dataset.cover;
+      delete cell.dataset.coverN;
+      cell.removeAttribute('aria-description');
+    }
   }
 
   renderRangeGap(on);
@@ -258,8 +325,8 @@ export function renderRanges() {
 /**
  * Why the shading has holes in it, and who can close them.
  *
- * The overlay is honest about being incomplete — it draws nothing for a Tatari
- * whose range nobody has measured — but "nothing drawn" and "reaches nothing"
+ * The overlay is honest about being incomplete (it draws nothing for a Tatari
+ * whose range nobody has measured) but "nothing drawn" and "reaches nothing"
  * look identical on a grid, and the only place that difference was stated was the
  * `title` on the Ranges checkbox. Three quarters of this audience is holding a
  * phone and cannot open a `title` at all, so for them the overlay simply had gaps
@@ -370,7 +437,7 @@ function renderPullRow(taken) {
  * Placing by thumb, on a phone.
  *
  * Tapping a bench chip does not place it. It shows where that Tatari would land
- * and — when its range is recorded — which tiles it would cover from there, and
+ * and, when its range is recorded, which tiles it would cover from there, and
  * waits. Tapping the chip again keeps that cell; tapping any cell takes that one
  * instead.
  *
@@ -410,7 +477,7 @@ function arm(slug, player) {
   // takes. The cells carry a scroll-margin the height of the dock and the app
   // bar, so "nearest" knows the bottom strip is spoken for; centring it instead
   // hauled the whole page and pushed the top of the field off the screen.
-  grid.children[cell]?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  cellEls[cell]?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
 
   if (!taughtArming) {
     taughtArming = true;
@@ -436,8 +503,8 @@ function disarm() {
  * rewrites the elements this marks.
  */
 function renderArmed() {
-  // The suggested cell can be taken by the time this runs again — a co-op
-  // partner's token, an import, an undo — so it is re-checked rather than
+  // The suggested cell can be taken by the time this runs again (a co-op
+  // partner's token, an import, an undo), so it is re-checked rather than
   // trusted.
   if (armed && store.formation.cells[armed.cell]) {
     const next = store.firstFreeCell();
@@ -445,12 +512,12 @@ function renderArmed() {
     else armed.cell = next;
   }
 
-  for (const cell of grid.children) cell.classList.remove('is-target');
+  for (const cell of cellEls) cell.classList.remove('is-target');
   for (const chip of benchHost.querySelectorAll('.benchchip')) chip.classList.remove('is-armed');
 
   if (!armed) { clearRangePreview(); return; }
 
-  grid.children[armed.cell]?.classList.add('is-target');
+  cellEls[armed.cell]?.classList.add('is-target');
   benchHost
     .querySelector(`.benchchip[data-slug="${CSS.escape(armed.slug)}"][data-player="${armed.player}"]`)
     ?.classList.add('is-armed');
@@ -474,7 +541,7 @@ export function renderGrid() {
   const { taken, from } = pulled();
   renderPullRow(taken);
 
-  for (const cell of grid.children) {
+  for (const cell of cellEls) {
     const i = Number(cell.dataset.cell);
     // Anyone the boss has dragged is drawn in the pull row instead, so their
     // own cell reads as empty — which is the point of looking.
@@ -518,7 +585,7 @@ export function renderGrid() {
         ${ownerBadge(occ.player)}
         ${seat || target
           ? `<span class="token__rank" title="${esc(t.name)}${
-            seat ? ` — step ${seat} of the plan` : ''}, ${plan}">${order}${
+            seat ? `, step ${seat} of the plan` : ''}, ${plan}">${order}${
             target ? `L${target}` : ''}</span>`
           : '<button class="token__add" type="button" data-add-step ' +
             `aria-label="Plan a level-up for ${esc(t.name)}" title="Plan a level-up">+</button>`}
@@ -569,8 +636,8 @@ export function renderLF() {
         aria-label="Take ${esc(t.name)} off this line">×</button>
     </span>`).join('');
 
-  // On the field, both lines are drawn — that is the whole point of splitting
-  // them — with HAVE first, because it reads as the offer before the ask.
+  // On the field, both lines are drawn, which is the whole point of splitting
+  // them, with HAVE first, because it reads as the offer before the ask.
   const filled = store.filledLines();
   const shown = $('#field-lf');
   shown.hidden = !coop || !filled.length;
@@ -655,7 +722,7 @@ export function renderBench() {
       return `
         <span class="benchchip" data-slug="${esc(slug)}" data-player="${player}"
               data-type="${t.type}" tabindex="0" role="button"
-              title="${esc(t.name)} — drag onto the field, or click to drop it in the back">
+              title="${esc(t.name)}: drag onto the field, or click to drop it in the back">
           ${artHTML(t, ON_CARD)}
           ${coop ? `<span class="benchchip__owner" data-player="${player}">${player}</span>` : ''}
           <button class="benchchip__x" type="button" data-unbench
@@ -664,8 +731,15 @@ export function renderBench() {
     }).join('');
 
     const body = !bench.length
-      ? `<p class="bench__empty">${
-        coop ? `` : ''}</p>`
+      /*
+       * Real copy, not an empty <p>. Both branches of the ternary that used to
+       * be here produced the empty string, so the one surface where a first-time
+       * player is looking -- the dock, right above the button they need -- said
+       * nothing at all. PRODUCT.md names that player as an intended user the
+       * interface has to carry.
+       */
+      ? `<p class="bench__empty">Nothing brought yet. Press <b>Add</b> to pick from the
+           ${state.all.length} Tatari${coop ? `, for P${player}` : ''}.</p>`
       : waiting.length
         ? `<div class="bench__strip">${chips}</div>`
         : '<p class="bench__empty">Everything brought is on the field.</p>';
@@ -681,15 +755,15 @@ export function renderBench() {
           <span class="bench__count"
                 title="${bench.length} of ${store.benchCap()} on the bench, ${
   bench.length - waiting.length} of ${store.fieldCap()} on the field"><b>${
-  bench.length}</b>/${store.benchCap()}<span class="wide-only"> on the bench</span>,
-            <b>${bench.length - waiting.length}</b>/${store.fieldCap()}<span class="wide-only"> on the field</span></span>
+  bench.length}</b>/${store.benchCap()} brought,
+            <b>${bench.length - waiting.length}</b>/${store.fieldCap()} placed</span>
           ${active
     ? `<button class="btn btn--tiny bench__clean" type="button" data-clean
                      title="Hide everything else so the field is all that is on screen">⛶ Just the grid</button>`
     : ''}
           <button class="btn btn--tiny btn--quiet" type="button" data-clear-bench="${player}"
                   aria-label="Clear ${coop ? `P${player}'s bench` : 'the bench'}"
-                  ${bench.length ? '' : 'disabled'}>Clear<span class="wide-only"> bench</span></button>
+                  ${bench.length ? '' : 'disabled'}>Clear bench</button>
         </div>
         ${body}
       </div>`;
@@ -737,7 +811,7 @@ function onKeydown(e) {
       if (!store.formation.cells[i]) return;
       carried = i;
       renderGrid();
-      toast('Picked up — arrow keys to move, Enter to drop');
+      toast('Picked up. Arrow keys to move, Enter to drop');
     } else {
       const occ = store.formation.cells[carried];
       carried = null;
@@ -755,9 +829,9 @@ function onKeydown(e) {
 }
 
 export function focusCell(i) {
-  for (const cell of grid.children) cell.tabIndex = -1;
-  grid.children[i].tabIndex = 0;
-  grid.children[i].focus();
+  for (const cell of cellEls) cell.tabIndex = -1;
+  cellEls[i].tabIndex = 0;
+  cellEls[i].focus();
 }
 
 // ---------------------------------------------------------------- summary
@@ -777,7 +851,11 @@ export function renderSummary() {
 
   const tally = (list, key, values) => values.map((v) => {
     const n = list.filter((t) => t[key] === v).length;
-    return `<span class="tally" data-empty="${n === 0}" title="${esc(v)}: ${n}">${
+    // title on a bare <span> is not exposed by most screen readers, so the
+    // type and role breakdown read as "3 5 2 1 0 4" with nothing to attach the
+    // numbers to. role="img" plus a label makes each one a sentence.
+    return `<span class="tally" role="img" aria-label="${esc(v)}: ${n}"
+      data-empty="${n === 0}" title="${esc(v)}: ${n}">${
       key === 'type' ? typeIcon(v) : roleIcon(v)}${n}</span>`;
   }).join('');
 
@@ -884,7 +962,7 @@ function effectTally(group, e, player) {
   const only = e.fromLevel && !e.fromBase;
   const badge = e.fromLevel
     ? `<span class="tally__lv" title="${only
-        ? `Only from a level-up skill — needs levelling to ${e.minLevel}`
+        ? `Only from a level-up skill: needs levelling to ${e.minLevel}`
         : `Also gained from a level-up skill, from level ${e.minLevel}`}">${
         only ? '' : '+'}L${e.minLevel}</span>`
     : '';

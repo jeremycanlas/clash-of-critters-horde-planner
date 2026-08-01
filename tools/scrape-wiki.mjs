@@ -226,7 +226,7 @@ async function parseHordeSkills() {
  * `'''Forked Bolt:''' Attacks have a higher chance...` -> {name, text}
  *
  * The colon lives inside the bold in most rows and outside it in a few, and a
- * handful of skills have a colon in the name itself — "Technique: Veil" — so
+ * handful of skills have a colon in the name itself ("Technique: Veil"), so
  * the name is whatever is emboldened, minus a trailing colon.
  */
 function skillOf(cell) {
@@ -250,9 +250,9 @@ function skillOf(cell) {
  * These describe the base skill. The Horde level-up skills bring their own
  * effects, which are only in their text.
  *
- * Each category page also carries a one-line definition of the effect — "The
- * Skills with ATK Boost effect can buff the ATK stat of the affected ally(s)"
- * — which is the only place the game's vocabulary is actually explained, so it
+ * Each category page also carries a one-line definition of the effect: "The
+ * Skills with ATK Boost effect can buff the ATK stat of the affected ally(s)",
+ * which is the only place the game's vocabulary is actually explained, so it
  * comes back too. Not every category has a page, and those simply have none.
  */
 async function parseSkillTypes() {
@@ -408,8 +408,8 @@ async function fetchSprites(list, thumbs) {
 }
 
 /**
- * Attack-range diagrams. These are in-game screenshots rather than schematics —
- * the Tatari stands at the bottom and the tiles it can hit are lit up — so they
+ * Attack-range diagrams. These are in-game screenshots rather than schematics:
+ * the Tatari stands at the bottom and the tiles it can hit are lit up, so they
  * are shown as pictures rather than turned into a grid overlay. Only about half
  * the roster has one on the wiki; the rest simply go without.
  *

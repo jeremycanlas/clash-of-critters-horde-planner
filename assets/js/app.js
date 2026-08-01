@@ -15,7 +15,9 @@ import { buildPriority, renderPriority } from './priority.js';
 import { buildShare, openShare } from './share.js';
 import { warmSprites } from './card.js';
 import { buildShell, renderShell } from './shell.js';
-import { buildSaves } from './saves.js';
+import { buildSaves, savedById } from './saves.js';
+import { buildSubmit, openSubmit, resumeSubmit } from './submit.js';
+import { isConfigured, readCallback } from './supabase.js';
 import { buildAnalytics, track } from './analytics.js';
 import { importTatari } from './custom.js';
 
@@ -45,16 +47,25 @@ async function main() {
     $('#roster').innerHTML =
       '<p class="hint">Could not load <code>data/tatari.json</code>. ' +
       'If you opened this file directly, serve the folder over HTTP instead ' +
-      '(<code>npx serve</code>) — browsers block <code>fetch</code> on <code>file://</code>.</p>';
+      '(<code>npx serve</code>). Browsers block <code>fetch</code> on <code>file://</code>.</p>';
     console.error(err);
     return;
   }
+
+  /*
+   * Before anything reads location.hash. Coming back from Discord the fragment
+   * holds a session rather than a formation, and store.fromHash() must never
+   * see it — nor should it be left in the address bar, where it looks like a
+   * share link to anyone who copies what is there.
+   */
+  const returned = readCallback();
 
   buildGrid();
   buildPriority();
   buildShare();
   buildShell();
-  buildSaves();
+  buildSaves({ canPost: isConfigured(), onPost: openSubmit });
+  const pending = buildSubmit();
   buildAnalytics();
   buildFilters(() => renderRoster());
 
@@ -65,6 +76,15 @@ async function main() {
   const hash = store.fromHash();
   if (!hash) store.restore();
   renderAll();
+
+  // Signed in mid-post: pick the dialog back up where it was left, rather than
+  // dropping somebody back on the page with nothing to show they succeeded.
+  if (returned === 'signed-in' && pending) {
+    const save = savedById(pending.id);
+    if (save) resumeSubmit(save, pending);
+  } else if (returned === 'failed') {
+    toast('Discord sign-in did not complete', 'error');
+  }
 
   if (hash?.unknown.length) {
     toast(`Skipped ${hash.unknown.length} unknown Tatari from that link`, 'error');
@@ -95,6 +115,23 @@ function countFirstUse() {
     stop();
   });
 }
+
+/**
+ * The way back from anything destructive.
+ *
+ * A snapshot is the whole working state, so restoring one is exact - there is
+ * no partial undo to get subtly wrong. Returns the {label, fn} shape toast()
+ * takes, which also buys the longer timeout: six seconds to notice, rather
+ * than the two and a half a plain message gets.
+ */
+const undoTo = (before) => ({
+  label: 'Undo',
+  fn: () => {
+    store.applySnapshot(before);
+    $('#formation-name').value = store.formation.name;
+    toast('Put back');
+  },
+});
 
 /** Guards the toolbar actions that have nothing to work with yet. */
 function nothingBrought(message) {
@@ -218,10 +255,25 @@ function wireToolbar() {
       : `${store.mode().label} — ${store.fieldCap()} on the field per player`);
   });
 
+  /*
+   * Both Clears are undoable now, and both say what they actually take.
+   *
+   * "Field cleared - benches kept" was true and misleading at once: it named
+   * what survived and stayed quiet about the level-up plan, which does not and
+   * cannot (see store.clearField). A player who had ordered fifteen level-ups
+   * lost them to a button that mentioned benches.
+   *
+   * The snapshot is taken before the change and handed to the toast, which is
+   * the same shape saves.js already uses for loading over unsaved work.
+   */
   $('#btn-clear-field').addEventListener('click', () => {
     if (!store.allPlaced().length) return;
+    const before = store.snapshot();
+    const steps = store.formation.plan.length;
     store.clearField();
-    toast('Field cleared — benches kept');
+    toast(steps
+      ? `Field cleared - benches kept, ${steps} level-up step${steps === 1 ? '' : 's'} gone`
+      : 'Field cleared - benches kept', 'info', undoTo(before));
   });
 
   // In co-op each player has their own plan and their own tab, so this clears
@@ -239,9 +291,10 @@ function wireToolbar() {
   $('#btn-clear').addEventListener('click', () => {
     const anything = store.allPlaced().length || store.benchOf(1).length || store.benchOf(2).length;
     if (!anything) return;
+    const before = store.snapshot();
     store.clearAll();
     history.replaceState(null, '', location.pathname + location.search);
-    toast('Cleared everything');
+    toast('Cleared the field, both benches and the plan', 'info', undoTo(before));
   });
 
   $('#btn-share').addEventListener('click', async () => {
