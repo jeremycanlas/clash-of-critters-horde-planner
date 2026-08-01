@@ -1,42 +1,45 @@
 <!doctype html>
 <html lang="en">
+
 <head>
-<meta charset="utf-8">
-<!-- viewport-fit=cover, or env(safe-area-inset-*) resolves to 0 on iOS and every
+  <meta charset="utf-8">
+  <!-- viewport-fit=cover, or env(safe-area-inset-*) resolves to 0 on iOS and every
      safe-area rule in app.css silently does nothing — which put the app bar
      inside the home-indicator strip on every notched iPhone. -->
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Horde Drafter — Clash of Critters</title>
-<meta name="description" content="Plan your 15-Tatari Horde Invasion formation for Clash of Critters: drag-and-drop grid, type and role filters, and a level-up priority plan.">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='19' font-size='20'>🐾</text></svg>">
-<link rel="stylesheet" href="assets/css/app.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Horde Drafter: Clash of Critters</title>
+  <meta name="description"
+    content="Plan your 15-Tatari Horde Invasion formation for Clash of Critters: drag-and-drop grid, type and role filters, and a level-up priority plan.">
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='19' font-size='20'>🐾</text></svg>">
+  <link rel="stylesheet" href="assets/css/app.css">
 </head>
+
 <body>
 
-<header class="topbar">
-  <div class="topbar__title">
-    <h1>Horde Drafter</h1>
-    <span id="app-version" class="ver-pill"></span>
-    <span class="topbar__sub">Clash&nbsp;of&nbsp;Critters</span>
-  </div>
+  <header class="topbar">
+    <div class="topbar__title">
+      <h1>Horde Drafter</h1>
+      <span id="app-version" class="ver-pill"></span>
+      <span class="topbar__sub">Clash&nbsp;of&nbsp;Critters</span>
+    </div>
 
-  <!-- Sits in the header, not on the field: visible the moment the page opens,
+    <!-- Sits in the header, not on the field: visible the moment the page opens,
        but never inside a screenshot of the grid. -->
-  <span class="byline" title="Created by jacc6475 on Discord">
-    <img class="byline__avatar" src="assets/img/jacc6475.jpg" width="26" height="26"
-         alt="" decoding="async">
-    <span class="byline__text">by <b>jacc6475</b></span>
-  </span>
+    <span class="byline" title="Created by jacc6475 on Discord">
+      <img class="byline__avatar" src="assets/img/jacc6475.jpg" width="26" height="26" alt="" decoding="async">
+      <span class="byline__text">by <b>jacc6475</b></span>
+    </span>
 
-  <input id="formation-name" class="field field--name" type="text"
-         placeholder="Name this formation" aria-label="Formation name" maxlength="60">
+    <input id="formation-name" class="field field--name" type="text" placeholder="Name this formation"
+      aria-label="Formation name" maxlength="60">
 
-  <div id="mode-switch" class="segmented" role="group" aria-label="Number of players">
-    <button class="segmented__btn" type="button" data-mode="solo" aria-pressed="true">Solo</button>
-    <button class="segmented__btn" type="button" data-mode="coop" aria-pressed="false">Co-op</button>
-  </div>
+    <div id="mode-switch" class="segmented" role="group" aria-label="Number of players">
+      <button class="segmented__btn" type="button" data-mode="solo" aria-pressed="true">Solo</button>
+      <button class="segmented__btn" type="button" data-mode="coop" aria-pressed="false">Co-op</button>
+    </div>
 
-  <!--
+    <!--
     All of it in the open, on every screen. These spent a while behind one ⋮
     button, which bought the field a row on a phone and charged every control in
     here its discoverability: a thing you cannot see is a thing most players
@@ -48,8 +51,8 @@
     Order: the two links that leave the page, then the four that act on the
     formation in front of you.
   -->
-  <div class="topbar__actions">
-    <!--
+    <div class="topbar__actions">
+      <!--
       "Community formations", not "Community". On its own the word is a
       category, not a description: in a fan tool it reads just as easily as a
       Discord invite or a wiki, which is a poor showing for the page most
@@ -64,10 +67,10 @@
       Outlined in the accent rather than filled: findable at a glance without
       outbidding Share, which is the action this tool exists to produce.
     -->
-    <a class="btn topbar__community" href="community.html"
-       title="Formations other players have posted">Community formations</a>
+      <a class="btn topbar__community" href="community.html" title="Formations other players have posted">Community
+        formations</a>
 
-    <!--
+      <!--
       The other half of the "72 of 218 ranges recorded" problem. The Ranges
       toggle tells you the data is thin; this is the standing way to do something
       about it, so it sits with the global actions rather than buried in the
@@ -80,59 +83,58 @@
       formation. The moment-of-need ask is #range-gap, under the field; this is
       wayfinding, and wayfinding only has to be findable.
     -->
-    <a class="btn topbar__contribute" href="contribute.html"
-       title="Record a Tatari's attack range or support reach — it takes a couple of minutes and the data is missing for most of the roster"><span
-       class="topbar__contribute-plus" aria-hidden="true">+</span>Record a range</a>
+      <a class="btn topbar__contribute" href="contribute.html"
+        title="Record a Tatari's attack range or support reach — it takes a couple of minutes and the data is missing for most of the roster"><span
+          class="topbar__contribute-plus" aria-hidden="true">+</span>Record a range</a>
 
-    <!-- Phones only, and invisible: forces the row to break here, between the
+      <!-- Phones only, and invisible: forces the row to break here, between the
          two links that leave the page and the three buttons that act on the
          formation, rather than wherever the last label happens to run out of
          width. Nothing on a wide screen, where the row fits on one line. -->
-    <span class="topbar__break" aria-hidden="true"></span>
+      <span class="topbar__break" aria-hidden="true"></span>
 
-    <!-- Wide screens only, and the one exception to bringing everything back:
+      <!-- Wide screens only, and the one exception to bringing everything back:
          on a phone the app bar already carries Share, filled and in a thumb's
          reach, and a second one here would be the same action twice on one
          screen rather than a control anybody had lost. -->
-    <button id="btn-share" class="btn btn--primary topbar__share wide-only" type="button"
-            title="Share this formation as a picture or a link">Share</button>
+      <button id="btn-share" class="btn btn--primary topbar__share wide-only" type="button"
+        title="Share this formation as a picture or a link">Share</button>
 
-    <!-- Was "Save" while a file download was the only way to keep a formation.
+      <!-- Was "Save" while a file download was the only way to keep a formation.
          The in-browser Saved list owns that word now, and a "Save" that writes
          a file next to a "Saved" that does not would be two features wearing
          one name. Export/Import also read as the pair they are. -->
-    <button id="btn-save" class="btn" type="button"
-            title="Download this formation as a file you can open again">Export</button>
+      <button id="btn-save" class="btn" type="button"
+        title="Download this formation as a file you can open again">Export</button>
 
-    <!-- A real label, so the file picker opens on the browser's own activation
+      <!-- A real label, so the file picker opens on the browser's own activation
          rather than a synthetic .click(). Files can also just be dropped on the page. -->
-    <label class="btn" for="import-file"
-           title="Open a saved .json formation, or drop one on the page">Import
-      <input id="import-file" class="sr-only" type="file" accept=".json">
-    </label>
+      <label class="btn" for="import-file" title="Open a saved .json formation, or drop one on the page">Import
+        <input id="import-file" class="sr-only" type="file" accept=".json">
+      </label>
 
-    <button id="btn-clear" class="btn btn--quiet" type="button"
-            title="Empty the field, the benches and the plan. Saved formations are kept.">Clear all</button>
-  </div>
-</header>
+      <button id="btn-clear" class="btn btn--quiet" type="button"
+        title="Empty the field, the benches and the plan. Saved formations are kept.">Clear all</button>
+    </div>
+  </header>
 
-<!-- Narrow screens stack the three panels into one long page, so this is the way
+  <!-- Narrow screens stack the three panels into one long page, so this is the way
      back up. Plain anchors: it must work before any script runs. Hidden on
      desktop, where all three are on screen at once. -->
-<nav class="secnav" aria-label="Jump to a section">
-  <a href="#sec-field">Formation</a>
-  <a href="#sec-roster">Roster</a>
-  <a href="#sec-priority">Plan</a>
-</nav>
+  <nav class="secnav" aria-label="Jump to a section">
+    <a href="#sec-field">Formation</a>
+    <a href="#sec-roster">Roster</a>
+    <a href="#sec-priority">Plan</a>
+  </nav>
 
-<main class="layout">
+  <main class="layout">
 
-  <!-- ------------------------------------------------ battlefield -->
-  <section id="sec-field" class="panel panel--field" aria-labelledby="h-field">
-    <div class="panel__head">
-      <h2 id="h-field">Formation</h2>
-      <div class="panel__tools">
-        <!--
+    <!-- ------------------------------------------------ battlefield -->
+    <section id="sec-field" class="panel panel--field" aria-labelledby="h-field">
+      <div class="panel__head">
+        <h2 id="h-field">Formation</h2>
+        <div class="panel__tools">
+          <!--
           The three switches, on the panel rather than inside a View button.
           Folding them away saved a row and cost more than it saved: a 250px
           panel dropped over the board covering the thing the switches change,
@@ -144,83 +146,81 @@
           worth having once, and not worth a paragraph of standing chrome above
           the field on every visit.
         -->
-        <label class="check"
-               title="Light the tiles a Tatari can hit, and shade the field by how many cover each tile. Only 72 of the 218 Tatari have a recorded range so far, so the picture is incomplete.">
-          <input id="opt-ranges" type="checkbox"> Ranges <span class="wip">WIP</span></label>
-        <label class="check"
-               title="Show where the boss drags your rearmost row. Nothing is moved for real — turn it off and they go back.">
-          <input id="opt-pull" type="checkbox"> Boss pull</label>
-        <label class="check"><input id="opt-glitter" type="checkbox"> <span class="check__text">Glitter art</span></label>
+          <label class="check"
+            title="Light the tiles a Tatari can hit, and shade the field by how many cover each tile. Only 72 of the 218 Tatari have a recorded range so far, so the picture is incomplete.">
+            <input id="opt-ranges" type="checkbox"> Ranges <span class="wip">WIP</span></label>
+          <label class="check"
+            title="Show where the boss drags your rearmost row. Nothing is moved for real — turn it off and they go back.">
+            <input id="opt-pull" type="checkbox"> Boss pull</label>
+          <label class="check"><input id="opt-glitter" type="checkbox"> <span class="check__text">Glitter
+              art</span></label>
 
-        <!-- Desktop's copy. Phones get the one in the app bar instead, where it
+          <!-- Desktop's copy. Phones get the one in the app bar instead, where it
              is always on screen rather than above a field they have scrolled. -->
-        <button class="btn btn--tiny tools-only" type="button" data-clean
-                title="Hide everything except the field, so you can screenshot it">Just the grid</button>
-        <button id="btn-clear-field" class="btn btn--tiny btn--quiet" type="button">Clear field</button>
+          <button class="btn btn--tiny tools-only" type="button" data-clean
+            title="Hide everything except the field, so you can screenshot it">Just the grid</button>
+          <button id="btn-clear-field" class="btn btn--tiny btn--quiet" type="button">Clear field</button>
+        </div>
       </div>
-    </div>
 
-    <div id="player-tabs" class="ptabs" role="group" aria-label="Player being planned" hidden></div>
+      <div id="player-tabs" class="ptabs" role="group" aria-label="Player being planned" hidden></div>
 
-    <!-- Two hints, one shown. Telling a phone to double-click and press Delete
+      <!-- Two hints, one shown. Telling a phone to double-click and press Delete
          describes a keyboard nobody holding it has. -->
-    <p class="hint hint--pointer">Zobos advance from the top. Drag Tatari in from the roster, drag them between
-      cells to rearrange, and double-click or press <kbd>Delete</kbd> to take one off the field.</p>
-    <!-- Short on purpose: this sits between the header and the field on a phone,
+      <p class="hint hint--pointer">Zobos advance from the top. Drag Tatari in from the roster, drag them between
+        cells to rearrange, and double-click or press <kbd>Delete</kbd> to take one off the field.</p>
+      <!-- Short on purpose: this sits between the header and the field on a phone,
          and every line it takes is a line the grid does not get. -->
-    <p class="hint hint--touch">Zobos advance from the top. Tap one on the bench to see where it lands,
-      then tap again to place it. Double-tap to take it off.</p>
+      <p class="hint hint--touch">Zobos advance from the top. Tap one on the bench to see where it lands,
+        then tap again to place it. Double-tap to take it off.</p>
 
-    <!-- Co-op only. Sits inside the frame so a screenshot of the grid carries
+      <!-- Co-op only. Sits inside the frame so a screenshot of the grid carries
          the ask with it, which is how these actually get shared. -->
-    <div id="lf-field" class="lf-input" hidden>
-      <!-- Two lines, one editor. The pair picks which you are adding to; both
+      <div id="lf-field" class="lf-input" hidden>
+        <!-- Two lines, one editor. The pair picks which you are adding to; both
            are drawn on the field, so you can say what you have AND what you
            still want without two sets of controls competing for the row. -->
-      <div id="lf-mode" class="lf-mode" role="group" aria-label="Which line to edit">
-        <button class="lf-mode__btn" type="button" data-side="lf" aria-pressed="true">LF</button>
-        <button class="lf-mode__btn" type="button" data-side="have" aria-pressed="false">HAVE</button>
-      </div>
-      <div id="lf-wants" class="lf-wants"></div>
+        <div id="lf-mode" class="lf-mode" role="group" aria-label="Which line to edit">
+          <button class="lf-mode__btn" type="button" data-side="lf" aria-pressed="true">LF</button>
+          <button class="lf-mode__btn" type="button" data-side="have" aria-pressed="false">HAVE</button>
+        </div>
+        <div id="lf-wants" class="lf-wants"></div>
 
-      <!-- A listbox rather than a <datalist>: the native one cannot draw the
+        <!-- A listbox rather than a <datalist>: the native one cannot draw the
            sprite, and the sprite is what makes a Tatari recognisable at a
            glance. Same search as the roster, so aliases like "toucan" work. -->
-      <div class="lf-search">
-        <input id="lf-pick" class="field field--tiny" type="text" autocomplete="off"
-               role="combobox" aria-expanded="false" aria-controls="lf-suggest"
-               aria-autocomplete="list" placeholder="Add a Tatari…"
-               aria-label="Search the roster by name, animal or nickname">
-        <ul id="lf-suggest" class="lf-suggest" role="listbox" hidden
-            aria-label="Matching Tatari"></ul>
+        <div class="lf-search">
+          <input id="lf-pick" class="field field--tiny" type="text" autocomplete="off" role="combobox"
+            aria-expanded="false" aria-controls="lf-suggest" aria-autocomplete="list" placeholder="Add a Tatari…"
+            aria-label="Search the roster by name, animal or nickname">
+          <ul id="lf-suggest" class="lf-suggest" role="listbox" hidden aria-label="Matching Tatari"></ul>
+        </div>
+
+        <input id="lf" class="field field--tiny lf-input__note" type="text" maxlength="60" autocomplete="off"
+          placeholder="…or anything else, e.g. a healer" aria-label="Anything else to put on the line">
       </div>
 
-      <input id="lf" class="field field--tiny lf-input__note" type="text" maxlength="60"
-             autocomplete="off" placeholder="…or anything else, e.g. a healer"
-             aria-label="Anything else to put on the line">
-    </div>
-
-    <div class="field-frame">
-      <div class="field-frame__enemy">Zobos spawn beyond this line</div>
-      <!-- The row the boss drags your backline into. Sits between the spawn
+      <div class="field-frame">
+        <div class="field-frame__enemy">Zobos spawn beyond this line</div>
+        <!-- The row the boss drags your backline into. Sits between the spawn
            line and the field because that is where they end up: in front of
            everything, in reach. Hidden until the toggle asks for it. -->
-      <!-- No aria-live here: renderGrid() replaces this element's whole innerHTML
+        <!-- No aria-live here: renderGrid() replaces this element's whole innerHTML
            on every placement, move, removal and name keystroke, so a live region
            re-announced six sprite names each time. The pull is described once, in
            the label, which is read on demand rather than shouted. -->
-      <div id="pull-row" class="pull-row" hidden></div>
-      <div id="grid" class="grid" role="grid" aria-label="Formation grid, 6 columns by 6 rows"></div>
-      <p id="field-lf" class="field-frame__lf" hidden></p>
-      <!-- No site URL here. It was on this row to carry the way back when a
+        <div id="pull-row" class="pull-row" hidden></div>
+        <div id="grid" class="grid" role="grid" aria-label="Formation grid, 6 columns by 6 rows"></div>
+        <p id="field-lf" class="field-frame__lf" hidden></p>
+        <!-- No site URL here. It was on this row to carry the way back when a
            screenshot got posted, and posting dropped sharply once it appeared:
            a watermarked grid reads as an advert rather than someone's team. -->
-      <div class="field-frame__base">
-        <span>Your base</span>
+        <div class="field-frame__base">
+          <span>Your base</span>
+        </div>
       </div>
-    </div>
 
-    <!--
+      <!--
       Shown only while the Ranges overlay is on, because that is the one moment
       the missing data is visible rather than theoretical: the shading has holes
       in it and some of them are holes in the data, not in the formation. It says
@@ -231,270 +231,270 @@
       Discord, an ask inside it would ride along in every share, and the row above
       already learned that lesson with the site URL.
     -->
-    <p id="range-gap" class="rangegap" hidden></p>
+      <p id="range-gap" class="rangegap" hidden></p>
 
-    <div id="bench" class="bench"></div>
-    <div id="summary" class="summary"></div>
+      <div id="bench" class="bench"></div>
+      <div id="summary" class="summary"></div>
 
-    <!-- Clean view's own way out. In the flow after the frame rather than a
+      <!-- Clean view's own way out. In the flow after the frame rather than a
          floating toast, so it can never sit on top of the grid it is telling
          you to photograph. -->
-    <p class="clean-hint">Tap anywhere to bring the controls back</p>
-  </section>
+      <p class="clean-hint">Tap anywhere to bring the controls back</p>
+    </section>
 
-  <!-- ------------------------------------------------ priority -->
-  <section id="sec-priority" class="panel panel--priority" aria-labelledby="h-priority">
-    <div class="panel__head">
-      <h2 id="h-priority">Level-up priority</h2>
-      <span id="step-count" class="muted"></span>
-      <button id="btn-clear-plan" class="btn btn--tiny btn--quiet" type="button">Clear steps</button>
-    </div>
-
-    <div id="plan-tabs" class="ptabs" role="group" aria-label="Whose plan to show" hidden></div>
-
-    <form id="step-adder" class="step-adder" hidden>
-      <div class="step-adder__row">
-        <div id="step-picker" class="step-picker" role="group"
-             aria-label="Tatari for this step: pick one or several"></div>
-      </div>
-      <div class="step-adder__row step-adder__row--go">
-        <output id="step-adder-name" class="step-adder__name"></output>
-        <label class="step-adder__level">
-          <span class="sr-only">Target level</span>
-          <select name="level" class="field field--select"></select>
-        </label>
-        <button class="btn btn--primary btn--tiny" type="submit">Add step</button>
-      </div>
-      <div class="step-adder__row">
-        <label class="step-adder__note">
-          <span class="sr-only">Note for this step</span>
-          <input name="note" class="field field--tiny" type="text" maxlength="140"
-                 autocomplete="off" placeholder="Optional note, e.g. max one of these first">
-        </label>
-      </div>
-    </form>
-
-    <ol id="priority" class="priority" aria-label="Level-up steps in order"></ol>
-  </section>
-
-  <!-- ------------------------------------------------ roster -->
-  <section id="sec-roster" class="panel panel--roster" aria-labelledby="h-roster">
-    <div class="panel__head">
-      <h2 id="h-roster">Roster <span id="roster-count" class="muted"></span></h2>
-    </div>
-
-    <div class="filters">
-      <input id="search" class="field" type="search" autocomplete="off"
-             placeholder="Search name, animal, nickname or skill…" aria-label="Search Tatari">
-
-      <div class="filters__row">
-        <div id="filter-types" class="chips" role="group" aria-label="Filter by type"></div>
-        <div id="filter-roles" class="chips" role="group" aria-label="Filter by role"></div>
+    <!-- ------------------------------------------------ priority -->
+    <section id="sec-priority" class="panel panel--priority" aria-labelledby="h-priority">
+      <div class="panel__head">
+        <h2 id="h-priority">Level-up priority</h2>
+        <span id="step-count" class="muted"></span>
+        <button id="btn-clear-plan" class="btn btn--tiny btn--quiet" type="button">Clear steps</button>
       </div>
 
-      <div class="filters__row">
-        <div id="filter-effects" class="chips chips--text" role="group"
-             aria-label="Filter by what they bring besides damage"></div>
+      <div id="plan-tabs" class="ptabs" role="group" aria-label="Whose plan to show" hidden></div>
+
+      <form id="step-adder" class="step-adder" hidden>
+        <div class="step-adder__row">
+          <div id="step-picker" class="step-picker" role="group" aria-label="Tatari for this step: pick one or several">
+          </div>
+        </div>
+        <div class="step-adder__row step-adder__row--go">
+          <output id="step-adder-name" class="step-adder__name"></output>
+          <label class="step-adder__level">
+            <span class="sr-only">Target level</span>
+            <select name="level" class="field field--select"></select>
+          </label>
+          <button class="btn btn--primary btn--tiny" type="submit">Add step</button>
+        </div>
+        <div class="step-adder__row">
+          <label class="step-adder__note">
+            <span class="sr-only">Note for this step</span>
+            <input name="note" class="field field--tiny" type="text" maxlength="140" autocomplete="off"
+              placeholder="Optional note, e.g. max one of these first">
+          </label>
+        </div>
+      </form>
+
+      <ol id="priority" class="priority" aria-label="Level-up steps in order"></ol>
+    </section>
+
+    <!-- ------------------------------------------------ roster -->
+    <section id="sec-roster" class="panel panel--roster" aria-labelledby="h-roster">
+      <div class="panel__head">
+        <h2 id="h-roster">Roster <span id="roster-count" class="muted"></span></h2>
       </div>
 
-      <div class="filters__row filters__row--meta">
-        <div id="filter-tiers" class="chips chips--text" role="group" aria-label="Filter by tier"></div>
-        <label class="check" title="Hide Tatari locked out by an evolution line you are already bringing">
-          <input id="opt-hide-blocked" type="checkbox"> Hide unavailable</label>
-        <label class="sortby">Sort
-          <select id="sort" class="field field--select">
-            <option value="default">Default</option>
-            <option value="name">Name</option>
-            <option value="type">Type</option>
-            <option value="role">Role</option>
-            <option value="tier">Tier</option>
-          </select>
-        </label>
-        <button id="btn-reset-filters" class="btn btn--tiny btn--quiet" type="button">Reset</button>
+      <div class="filters">
+        <input id="search" class="field" type="search" autocomplete="off"
+          placeholder="Search name, animal, nickname or skill…" aria-label="Search Tatari">
+
+        <div class="filters__row">
+          <div id="filter-types" class="chips" role="group" aria-label="Filter by type"></div>
+          <div id="filter-roles" class="chips" role="group" aria-label="Filter by role"></div>
+        </div>
+
+        <div class="filters__row">
+          <div id="filter-effects" class="chips chips--text" role="group"
+            aria-label="Filter by what they bring besides damage"></div>
+        </div>
+
+        <div class="filters__row filters__row--meta">
+          <div id="filter-tiers" class="chips chips--text" role="group" aria-label="Filter by tier"></div>
+          <label class="check" title="Hide Tatari locked out by an evolution line you are already bringing">
+            <input id="opt-hide-blocked" type="checkbox"> Hide unavailable</label>
+          <label class="sortby">Sort
+            <select id="sort" class="field field--select">
+              <option value="default">Default</option>
+              <option value="name">Name</option>
+              <option value="type">Type</option>
+              <option value="role">Role</option>
+              <option value="tier">Tier</option>
+            </select>
+          </label>
+          <button id="btn-reset-filters" class="btn btn--tiny btn--quiet" type="button">Reset</button>
+        </div>
       </div>
-    </div>
 
-    <div id="roster" class="roster" role="list"></div>
-  </section>
-</main>
+      <div id="roster" class="roster" role="list"></div>
+    </section>
+  </main>
 
-<!--
+  <!--
   Phones only. The field owns the screen there, so the roster, the summary and
   the plan are not places you scroll to; they are drawn over it and dismissed.
   Buttons rather than anchors because these open sheets rather than move the
   page; the .secnav anchors above still serve the tablet stack, where all three
   really are further down the page.
 -->
-<nav id="appbar" class="appbar" aria-label="Open a panel">
-  <button class="appbar__btn" type="button" data-sheet="roster">
-    <span class="appbar__label">Add</span>
-    <span id="appbar-bench" class="appbar__n"></span>
-  </button>
-  <button class="appbar__btn" type="button" data-sheet="summary">
-    <span class="appbar__label">Summary</span>
-    <span id="appbar-field" class="appbar__n"></span>
-  </button>
-  <button class="appbar__btn" type="button" data-sheet="priority">
-    <span class="appbar__label">Plan</span>
-    <span id="appbar-steps" class="appbar__n"></span>
-  </button>
-  <button class="appbar__btn" type="button" data-sheet="saves">
-    <span class="appbar__label">Saved</span>
-    <span id="appbar-saves" class="appbar__n"></span>
-  </button>
-  <!-- Sharing is half of what this tool is for and converts at a fraction of
+  <nav id="appbar" class="appbar" aria-label="Open a panel">
+    <button class="appbar__btn" type="button" data-sheet="roster">
+      <span class="appbar__label">Add</span>
+      <span id="appbar-bench" class="appbar__n"></span>
+    </button>
+    <button class="appbar__btn" type="button" data-sheet="summary">
+      <span class="appbar__label">Summary</span>
+      <span id="appbar-field" class="appbar__n"></span>
+    </button>
+    <button class="appbar__btn" type="button" data-sheet="priority">
+      <span class="appbar__label">Plan</span>
+      <span id="appbar-steps" class="appbar__n"></span>
+    </button>
+    <button class="appbar__btn" type="button" data-sheet="saves">
+      <span class="appbar__label">Saved</span>
+      <span id="appbar-saves" class="appbar__n"></span>
+    </button>
+    <!-- Sharing is half of what this tool is for and converts at a fraction of
        drafting, so it sits in the most visible chrome on the phone rather than
        four buttons deep in a header that scrolls away. -->
-  <button class="appbar__btn appbar__btn--go" type="button" data-action="share">
-    <span class="appbar__label">Share</span>
-  </button>
-</nav>
+    <button class="appbar__btn appbar__btn--go" type="button" data-action="share">
+      <span class="appbar__label">Share</span>
+    </button>
+  </nav>
 
-<!-- ------------------------------------------------ saved formations -->
+  <!-- ------------------------------------------------ saved formations -->
 
-<!-- Desktop and tablet: the drawer's tab, pinned to the right edge where it is
+  <!-- Desktop and tablet: the drawer's tab, pinned to the right edge where it is
      always in view without costing the field or the roster a pixel. Phones get
      the Saved button on the app bar instead, and never see this. -->
-<button id="saves-handle" class="saves-handle" type="button"
-        aria-controls="sec-saves" aria-expanded="false"
-        title="Formations saved in this browser">
-  <span class="saves-handle__label">Saved</span>
-  <span id="saves-handle-n" class="saves-handle__n"></span>
-</button>
+  <button id="saves-handle" class="saves-handle" type="button" aria-controls="sec-saves" aria-expanded="false"
+    title="Formations saved in this browser">
+    <span class="saves-handle__label">Saved</span>
+    <span id="saves-handle-n" class="saves-handle__n"></span>
+  </button>
 
-<!-- One element, two homes: a right-edge drawer on desktop, an app-bar sheet on
+  <!-- One element, two homes: a right-edge drawer on desktop, an app-bar sheet on
      a phone. Outside .layout because it never takes part in the page grid. -->
-<section id="sec-saves" class="panel panel--saves" aria-labelledby="h-saves">
-  <div class="panel__head">
-    <h2 id="h-saves">Saved formations <span id="saves-count" class="muted"></span></h2>
-    <!-- Here as well as in the header, because this is where somebody is
+  <section id="sec-saves" class="panel panel--saves" aria-labelledby="h-saves">
+    <div class="panel__head">
+      <h2 id="h-saves">Saved formations <span id="saves-count" class="muted"></span></h2>
+      <!-- Here as well as in the header, because this is where somebody is
          already thinking about whole formations rather than single Tatari,
          and on a phone this panel is a sheet, where the header is not. -->
-    <a class="btn btn--tiny saves__community" href="community.html">Community</a>
-    <!-- Desktop's way out. The phone sheet closes like the others: scrim,
+      <a class="btn btn--tiny saves__community" href="community.html">Community</a>
+      <!-- Desktop's way out. The phone sheet closes like the others: scrim,
          Escape, or its own app-bar button. -->
-    <button id="saves-close" class="btn btn--tiny btn--quiet tools-only" type="button">Close</button>
-  </div>
+      <button id="saves-close" class="btn btn--tiny btn--quiet tools-only" type="button">Close</button>
+    </div>
 
-  <button id="btn-keep" class="btn btn--primary saves__keep" type="button">Save this formation</button>
+    <button id="btn-keep" class="btn btn--primary saves__keep" type="button">Save this formation</button>
 
-  <p id="saves-empty" class="saves__empty">Nothing saved yet. Save a formation and
-    it will be waiting here next visit. These stay in this browser, and
-    <b>Clear all</b> does not touch them.</p>
+    <p id="saves-empty" class="saves__empty">Nothing saved yet. Save a formation and
+      it will be waiting here next visit. These stay in this browser, and
+      <b>Clear all</b> does not touch them.
+    </p>
 
-  <ol id="saves-list" class="saves" aria-label="Saved formations, newest first"></ol>
-</section>
+    <ol id="saves-list" class="saves" aria-label="Saved formations, newest first"></ol>
+  </section>
 
-<!--
+  <!--
   Posting. The board comes first, because you should be able to see what you are
   about to publish rather than take a name's word for it. No consent checkbox:
   this is unreachable except by pressing Post, the disclosure sits directly above
   the confirm, and the confirm says "publicly".
 -->
-<dialog id="dlg-submit" class="modal modal--submit">
-  <h2>Post this formation</h2>
+  <dialog id="dlg-submit" class="modal modal--submit">
+    <h2>Post this formation</h2>
 
-  <div id="submit-map" class="submit__map"></div>
-  <p id="submit-facts" class="hint submit__facts"></p>
+    <div id="submit-map" class="submit__map"></div>
+    <p id="submit-facts" class="hint submit__facts"></p>
 
-  <p id="submit-why" class="submit__why" hidden></p>
+    <p id="submit-why" class="submit__why" hidden></p>
 
-  <label class="submit__field">
-    <span class="summary__label">Name</span>
-    <input id="submit-name" class="field" type="text" maxlength="60" autocomplete="off"
-           placeholder="What is this build called?">
-  </label>
+    <label class="submit__field">
+      <span class="summary__label">Name</span>
+      <input id="submit-name" class="field" type="text" maxlength="60" autocomplete="off"
+        placeholder="What is this build called?">
+    </label>
 
-  <label class="submit__field">
-    <span class="summary__label">What is it for? (optional)</span>
-    <input id="submit-note" class="field" type="text" maxlength="240" autocomplete="off"
-           placeholder="e.g. holds the left lane while the healers catch up">
-  </label>
+    <label class="submit__field">
+      <span class="summary__label">What is it for? (optional)</span>
+      <input id="submit-note" class="field" type="text" maxlength="240" autocomplete="off"
+        placeholder="e.g. holds the left lane while the healers catch up">
+    </label>
 
-  <div class="submit__terms">
-    <p><b>This one does leave your browser.</b></p>
-    <p>Posting sends this formation to a database anyone can read: the layout,
-      the benches, the level-up plan, and the name and note above. Your other
-      saved formations stay where they are.</p>
-    <p>Signing in with Discord tells this site your display name, your account ID
-      and the email on your Discord account. Only the display name is ever shown
-      or stored with a formation. Your password is never involved, and nothing is
-      ever posted to Discord.</p>
-    <p id="submit-who" class="muted"></p>
-  </div>
+    <div class="submit__terms">
+      <p><b>This one does leave your browser.</b></p>
+      <p>Posting sends this formation to a database anyone can read: the layout,
+        the benches, the level-up plan, and the name and note above. Your other
+        saved formations stay where they are.</p>
+      <p>Signing in with Discord tells this site your display name, your account ID
+        and the email on your Discord account. Only the display name is ever shown
+        or stored with a formation. Your password is never involved, and nothing is
+        ever posted to Discord.</p>
+      <p id="submit-who" class="muted"></p>
+    </div>
 
-  <div class="modal__actions">
-    <!-- aria-describedby, so the reason a disabled Post is disabled reaches
+    <div class="modal__actions">
+      <!-- aria-describedby, so the reason a disabled Post is disabled reaches
          somebody who cannot see the paragraph above it. -->
-    <button id="submit-go" class="btn btn--primary" type="button"
-            aria-describedby="submit-why">Post it publicly</button>
-    <button class="btn btn--quiet" type="button" data-close>Cancel</button>
-  </div>
-</dialog>
+      <button id="submit-go" class="btn btn--primary" type="button" aria-describedby="submit-why">Post it
+        publicly</button>
+      <button class="btn btn--quiet" type="button" data-close>Cancel</button>
+    </div>
+  </dialog>
 
-<div id="scrim" class="scrim" hidden></div>
+  <div id="scrim" class="scrim" hidden></div>
 
-<footer class="foot">
-  <span>Data and sprites from the
-    <a href="https://clashofcritters.wiki.gg/wiki/Tatari" target="_blank" rel="noopener">Clash of Critters Wiki</a>.
-    Fan-made, unofficial.</span>
-  <span class="muted">Your formations stay in your browser unless you post one to
-    <a href="community.html">Community</a>. That is the one thing here that sends
-    anything anywhere, and it only happens when you press a button that says so.
-    Otherwise: anonymous visit and button counts only, no cookies, nothing about
-    what you plan.</span>
-  <span id="foot-meta" class="muted"></span>
-  <span class="foot__by">
-    <img class="foot__avatar" src="assets/img/jacc6475.jpg" width="34" height="34"
-         alt="" decoding="async">
-    <span class="foot__byline">
-      Created by <b>jacc6475</b>
-      <span class="muted">on Discord</span>
+  <footer class="foot">
+    <span>Data and sprites from the
+      <a href="https://clashofcritters.wiki.gg/wiki/Tatari" target="_blank" rel="noopener">Clash of Critters Wiki</a>.
+      Fan-made, unofficial.</span>
+    <span class="muted">Your formations stay in your browser unless you post one to
+      <a href="community.html">Community</a>. That is the one thing here that sends
+      anything anywhere, and it only happens when you press a button that says so.
+      Otherwise: anonymous visit and button counts only, no cookies, nothing about
+      what you plan.</span>
+    <span id="foot-meta" class="muted"></span>
+    <span class="foot__by">
+      <img class="foot__avatar" src="assets/img/jacc6475.jpg" width="34" height="34" alt="" decoding="async">
+      <span class="foot__byline">
+        Created by <b>jacc6475</b>
+        <span class="muted">on Discord</span>
+      </span>
     </span>
-  </span>
-</footer>
+  </footer>
 
-<!-- ------------------------------------------------ detail popover -->
-<dialog id="detail" class="modal modal--detail"></dialog>
+  <!-- ------------------------------------------------ detail popover -->
+  <dialog id="detail" class="modal modal--detail"></dialog>
 
-<dialog id="share" class="modal modal--share">
-  <h2>Share this formation</h2>
+  <dialog id="share" class="modal modal--share">
+    <h2>Share this formation</h2>
 
-  <!-- Grid first, because that is what people post. The full card carries the
+    <!-- Grid first, because that is what people post. The full card carries the
        benches and the plan for anyone who wants to hand over a whole build. -->
-  <div id="share-scope" class="segmented" role="group" aria-label="What to include in the picture">
-    <button class="segmented__btn" type="button" data-scope="grid" aria-pressed="true">Grid only</button>
-    <button class="segmented__btn" type="button" data-scope="full" aria-pressed="false">Everything</button>
-  </div>
-  <p id="share-scope-note" class="hint"></p>
+    <div id="share-scope" class="segmented" role="group" aria-label="What to include in the picture">
+      <button class="segmented__btn" type="button" data-scope="grid" aria-pressed="true">Grid only</button>
+      <button class="segmented__btn" type="button" data-scope="full" aria-pressed="false">Everything</button>
+    </div>
+    <p id="share-scope-note" class="hint"></p>
 
-  <div class="share__preview">
-    <img id="share-preview" alt="The formation drawn as a shareable card" hidden>
-    <p id="share-drawing" class="hint">Drawing the card…</p>
-  </div>
+    <div class="share__preview">
+      <img id="share-preview" alt="The formation drawn as a shareable card" hidden>
+      <p id="share-drawing" class="hint">Drawing the card…</p>
+    </div>
 
-  <label class="share__name">
-    <span class="summary__label">Your name (optional, shown on the card)</span>
-    <input id="share-name" class="field" type="text" maxlength="32" autocomplete="off"
-           placeholder="Leave empty to skip">
-  </label>
+    <label class="share__name">
+      <span class="summary__label">Your name (optional, shown on the card)</span>
+      <input id="share-name" class="field" type="text" maxlength="32" autocomplete="off"
+        placeholder="Leave empty to skip">
+    </label>
 
-  <div class="modal__actions">
-    <!-- Only rendered where navigator.canShare accepts a file. On iOS it is the
+    <div class="modal__actions">
+      <!-- Only rendered where navigator.canShare accepts a file. On iOS it is the
          only one of these four that actually reaches Discord: the clipboard is
          unreliable there and a download lands in Files, not Photos. -->
-    <button id="share-native" class="btn btn--primary" type="button" hidden>Share…</button>
-    <button id="share-download" class="btn btn--primary" type="button">Download PNG</button>
-    <button id="share-copy-image" class="btn" type="button">Copy image</button>
-    <button id="share-copy-link" class="btn" type="button">Copy link</button>
-    <button id="share-close" class="btn btn--quiet" type="button">Close</button>
-  </div>
-</dialog>
+      <button id="share-native" class="btn btn--primary" type="button" hidden>Share…</button>
+      <button id="share-download" class="btn btn--primary" type="button">Download PNG</button>
+      <button id="share-copy-image" class="btn" type="button">Copy image</button>
+      <button id="share-copy-link" class="btn" type="button">Copy link</button>
+      <button id="share-close" class="btn btn--quiet" type="button">Close</button>
+    </div>
+  </dialog>
 
-<div id="drop-hint" class="drophint" hidden>Drop a formation <code>.json</code> to load it</div>
+  <div id="drop-hint" class="drophint" hidden>Drop a formation <code>.json</code> to load it</div>
 
-<div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-<script type="module" src="assets/js/app.js"></script>
+  <script type="module" src="assets/js/app.js"></script>
 </body>
+
 </html>
