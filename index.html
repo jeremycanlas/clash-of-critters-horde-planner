@@ -71,6 +71,26 @@
         formations</a>
 
       <!--
+      Beside Community formations, because what it explains is how a formation
+      gets there. A player who posted one told us it "wasn't immediately obvious"
+      how, and asked for exactly this.
+
+      A question mark rather than a word: the row above is already the widest
+      thing on a 411px phone, and every character here costs another wrap. The
+      accessible name and the tooltip carry the meaning that the glyph cannot,
+      and it is quiet, because help is the one control in this row nobody should
+      be reading past the thing they came to do.
+
+      Worth saying: this is the second answer, not the first. The first is that
+      Share now offers Post, so the path exists whether or not anybody presses
+      this. A help page is a poor substitute for a findable button, and a fine
+      companion to one.
+    -->
+      <button id="btn-help" class="btn btn--quiet topbar__help" type="button"
+        aria-label="How saving, posting and finding formations work"
+        title="How saving, posting and finding formations work">?</button>
+
+      <!--
       The other half of the "72 of 218 ranges recorded" problem. The Ranges
       toggle tells you the data is thin; this is the standing way to do something
       about it, so it sits with the global actions rather than buried in the
@@ -379,7 +399,8 @@
 
     <p id="saves-empty" class="saves__empty">Nothing saved yet. Save a formation and
       it will be waiting here next visit. These stay in this browser, and
-      <b>Clear all</b> does not touch them.
+      <b>Clear all</b> does not touch them. Each one gets a <b>Post</b> button for
+      putting it in <a href="community.html">Community formations</a>.
     </p>
 
     <ol id="saves-list" class="saves" aria-label="Saved formations, newest first"></ol>
@@ -429,6 +450,56 @@
       <button id="submit-go" class="btn btn--primary" type="button" aria-describedby="submit-why">Post it
         publicly</button>
       <button class="btn btn--quiet" type="button" data-close>Cancel</button>
+    </div>
+  </dialog>
+
+  <!--
+    How this works.
+
+    Four steps and a caveat, in the order somebody actually meets them. It is
+    deliberately not a tour of the whole tool: dragging a Tatari onto a field is
+    self-evident and nobody asked about it. What was asked about is the part that
+    is not — that a formation has to exist somewhere before it can be published,
+    and where it goes afterwards.
+
+    Written as prose with the control names in bold rather than as screenshots.
+    Screenshots of an interface that moves are a maintenance debt that quietly
+    starts lying, and every name in bold below is a string you can search this
+    page for.
+  -->
+  <dialog id="dlg-help" class="modal modal--help">
+    <h2>Saving, posting and finding formations</h2>
+
+    <ol class="help__steps">
+      <li>
+        <b>Save this formation</b> keeps what is on the field — both benches and the
+        level-up plan with it — in this browser. Nothing leaves the page. Find your
+        saved formations under <b>Saved</b>: the tab on the right edge on a computer,
+        the button on the bottom bar on a phone.
+      </li>
+      <li>
+        <b>Post to Community</b> publishes one. It is at the bottom of the
+        <b>Share</b> sheet, and on each row of your <b>Saved</b> list. Either way it
+        saves a copy here first, so a post is always something you still have.
+      </li>
+      <li>
+        Posting asks you to <b>sign in with Discord</b> once, so the formation has a
+        name on it and so you can delete it later. You are brought straight back to
+        where you were.
+      </li>
+      <li>
+        You land on your formation in <b>Community formations</b> as soon as it
+        posts, at an address you can copy and send. To find it again later, open
+        that page and pick <b>Yours</b>.
+      </li>
+    </ol>
+
+    <p class="hint">Only posting sends anything anywhere, and only when you press the
+      button that says so. Everything else here — the field, the plan, your saved
+      formations — stays in this browser.</p>
+
+    <div class="modal__actions">
+      <button class="btn btn--primary" type="button" data-close>Got it</button>
     </div>
   </dialog>
 
@@ -487,6 +558,27 @@
       <button id="share-copy-image" class="btn" type="button">Copy image</button>
       <button id="share-copy-link" class="btn" type="button">Copy link</button>
       <button id="share-close" class="btn btn--quiet" type="button">Close</button>
+    </div>
+
+    <!--
+      Posting, here, because this is the button people press when they want other
+      people to see a formation. It used to live only on a saved row inside the
+      Saved drawer, which meant the path to it was: know that saving is a thing,
+      open the drawer, save, then notice a tiny Post. A player told us they found
+      it eventually and that it "wasn't immediately obvious" — this is that.
+
+      Below the four routes and behind a rule, not among them. Those four hand
+      you a copy to take somewhere; this one publishes under your name, to a list
+      anybody can read. Sitting them in one row would make the only one with
+      consequences the easiest to hit by accident.
+
+      Hidden outright on a fork with no database configured, rather than
+      disabled: a button that can never work is worse than one that never was.
+    -->
+    <div id="share-post-row" class="share__post" hidden>
+      <button id="share-post" class="btn" type="button">Post to Community</button>
+      <p class="hint">Adds it to the public list other players browse, under your Discord
+        name. Keeps a copy in <b>Saved</b> on the way, so you can find it again.</p>
     </div>
   </dialog>
 

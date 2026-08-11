@@ -30,6 +30,9 @@ import { toFragment } from './hash.js';
 import {
   isConfigured, rest, forgetCache, readCallback, signedIn, signIn, signOut, token, whoAmI,
 } from './supabase.js';
+// The list of what this browser posted, from the module that writes it. Nothing
+// else in submit.js runs on import — the dialog it owns is on the other page.
+import { posted } from './submit.js';
 import { buildAnalytics, track } from './analytics.js';
 
 /**
@@ -61,7 +64,11 @@ let loading = false;
  * press away, and score ties break on recency, so a gallery with no votes in it
  * still reads newest-first.
  */
-const view = { sort: 'top', mode: '', patch: '', tier: '' };
+const view = {
+  sort: 'top', mode: '', patch: '', tier: '',
+  /** '' for everyone's, '1' for only what this browser posted. See mineWhere(). */
+  mine: '',
+};
 
 /** Formations this account has already kept. Empty when signed out. */
 let mine = new Set();
@@ -120,6 +127,45 @@ function tierWhere(tier) {
     : has;
 }
 
+/**
+ * "Only the ones this browser posted", as a query.
+ *
+ * The gallery has no way to ask the database "which of these are mine". The view
+ * publishes no `author_id` — 006 withheld it on purpose — and PostgREST cannot
+ * filter on a column the caller has no select grant for, so the question cannot
+ * be asked even indirectly.
+ *
+ * What this browser does have is the list submit.js writes every time a post
+ * succeeds: the ids it created. That is a narrower claim than "yours" — it is
+ * "yours, from here" — and it is the honest one. Posting from a phone and
+ * looking on a laptop shows nothing, which is why the control stays hidden until
+ * this list has something in it, and why nothing else on the page was moved onto
+ * it: whether a row is yours to delete still comes from the signed-in account.
+ *
+ * The alternative was matching `author_avatar` against the session's, the way
+ * ownedByMe() does. It would survive a change of device and it would be wrong:
+ * an account with no picture of its own gets one of Discord's numbered defaults,
+ * and that URL is the same string for everybody who has it. A filter called
+ * Yours that answers with a stranger's formations is worse than one that only
+ * knows about this browser.
+ *
+ * Capped at 60 ids. That is a query string of about 2.2KB, comfortably inside
+ * what PostgREST accepts, and further back than anybody scrolls looking for
+ * something they posted.
+ */
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function mineWhere() {
+  const ids = posted()
+    .map((p) => String(p?.id ?? ''))
+    .filter((id) => UUID.test(id))
+    .slice(0, 60);
+  // No ids at all cannot happen while the control is hidden, but a filter that
+  // silently means "everyone" would be the wrong way to be wrong about it.
+  if (!ids.length) return '&id=is.null';
+  return `&id=in.(${ids.join(',')})`;
+}
+
 async function loadMore({ append = true } = {}) {
   if (loading) return;
   loading = true;
@@ -135,6 +181,7 @@ async function loadMore({ append = true } = {}) {
     view.mode ? `&mode=eq.${view.mode}` : '',
     view.patch ? `&patch_id=eq.${encodeURIComponent(view.patch)}` : '',
     tierWhere(view.tier),
+    view.mine ? mineWhere() : '',
   ].join('');
 
   const res = await rest(
@@ -214,8 +261,22 @@ function skeleton() {
  * through the one host this page already talks to would remove both, and is
  * the right next move if either matters.
  */
+/**
+ * The name to credit a formation to.
+ *
+ * `||` rather than `??`, because the empty case is an empty string and not a
+ * null. `author_name` is `not null default ''`, and a poster whose Discord
+ * account has never been given a display name arrives with `global_name` set to
+ * `""` — which the trigger's coalesce chain accepts, coalesce guarding against
+ * null and not against blank. 009 fixes that where it starts; this keeps the
+ * byline honest for everything posted before it runs, which would otherwise be
+ * drawn with no byline at all rather than with the "Someone" the rest of the
+ * page already says.
+ */
+const authorOf = (row) => row.author_name?.trim() || 'Someone';
+
 function facePart(row) {
-  const name = row.author_name || 'Someone';
+  const name = authorOf(row);
   // Upper-case first, then escape. The other order turns `&lt;` into `&LT;`,
   // which is still a legal HTML5 entity and renders as a bare `<` — harmless
   // on its own, but escaping that a later edit can undo is not escaping.
@@ -261,10 +322,23 @@ function facePart(row) {
  * nothing to compare — so this only ever suppresses a press that was going to
  * fail, and `noteRefusal()` below catches the rest from the server's answer.
  */
+/**
+ * A picture Discord hands out rather than one somebody chose.
+ *
+ * An account with no avatar of its own is served one of a handful of numbered
+ * defaults from `/embed/avatars/`, and that URL is character-for-character the
+ * same for everyone who has it. Comparing it proves nothing, so the check below
+ * refuses to draw a conclusion from one — otherwise two players who have both
+ * left their picture unset would each see the other's formations labelled Yours,
+ * with a Delete button the server would then refuse.
+ */
+const isSharedAvatar = (url) => /^https:\/\/cdn\.discordapp\.com\/embed\/avatars\//.test(url || '');
+
 function ownedByMe(row) {
   if (row.mine === true) return true;
   const me = whoAmI();
   const a = row.author_avatar || '';
+  if (isSharedAvatar(a)) return false;
   return !!me && !!a && a === me.avatar;
 }
 
@@ -390,7 +464,24 @@ async function onVote(id) {
     ? await rest(`/votes?formation_id=eq.${encodeURIComponent(id)}`, { method: 'DELETE', auth: true })
     : await rest('/votes', {
       method: 'POST', auth: true, body: { formation_id: id },
-      headers: { Prefer: 'resolution=ignore-duplicates,return=minimal' },
+      /*
+       * `return=minimal` only. `resolution=ignore-duplicates` used to be here
+       * too, and it made every upvote fail with 42501 — "permission denied for
+       * table votes" — which the toast reports as the list being set up wrong.
+       *
+       * That preference turns the insert into `ON CONFLICT DO NOTHING`, and
+       * Postgres checks SELECT on the arbiter columns before it can decide
+       * whether a row conflicts. The arbiter here is the primary key,
+       * (formation_id, voter_id), and 002 grants select on (formation_id,
+       * created_at) — so the one column the conflict is decided on is the one
+       * column the voter cannot read, and the statement is refused before any
+       * policy is consulted.
+       *
+       * Nothing is lost by dropping it: a second insert of the same vote comes
+       * back 409 instead of 200, and the check below already treats 409 as the
+       * thing having happened, because it has.
+       */
+      headers: { Prefer: 'return=minimal' },
     });
 
   if (res.ok || res.status === 409) {
@@ -503,7 +594,7 @@ async function paintShot(img) {
        * wrong thing to browse.
        */
       view: viewOf(row.snapshot), full: true, stacked: stackedHere(), scale: 1,
-      username: row.author_name || '',
+      username: authorOf(row),
       avatar: row.author_avatar || '',
       note: row.note || '',
     });
@@ -654,7 +745,7 @@ async function openPeek(id, { push = true } = {}) {
   dlg.innerHTML = `
     <h2>${esc(row.name)}</h2>
     <p class="hint peek__by">${facePart(row)}
-      Posted by <b>${esc(row.author_name || 'Someone')}</b> · ${esc(fmtWhen(row.submitted_at))}</p>
+      Posted by <b>${esc(authorOf(row))}</b> · ${esc(fmtWhen(row.submitted_at))}</p>
     <div class="peek__card"><p class="hint" id="peek-wait">Drawing the card…</p></div>
     <div class="modal__actions">
       <a class="btn btn--primary" href="${esc(drafterLink(row))}" data-open="${esc(row.id)}">Open in the drafter</a>
@@ -696,7 +787,7 @@ async function openPeek(id, { push = true } = {}) {
     // list already did.
     canvas = await drawCard({
       view: viewOf(row.snapshot ?? {}), full: true, stacked: stackedHere(), scale: 2,
-      username: row.author_name || '',
+      username: authorOf(row),
       avatar: row.author_avatar || '',
       note: row.note || '',
     });
@@ -985,6 +1076,19 @@ function pick(host, attr, value) {
  */
 function sayIfEmpty() {
   if (rows.length || saying()) return;
+  /*
+   * Yours gets its own sentence. "Try widening it" is the right advice for a
+   * tier or a patch and useless for this one: the reason is not that the filter
+   * is narrow, it is that this browser has no record of the post — most likely
+   * because it was made from a different one, or because storage was cleared.
+   * Saying so is the difference between a filter and a missing formation.
+   */
+  if (view.mine) {
+    say('Nothing here that this browser posted. Posts made on another device, or '
+      + 'before this browser\'s storage was cleared, are still in the gallery — '
+      + 'they are just not on this list.');
+    return;
+  }
   say(view.mode || view.patch || view.tier
     ? 'Nothing posted matches that yet. Try widening it.'
     : 'Nothing has been posted yet.');
@@ -1097,6 +1201,21 @@ async function main() {
     refine({ tier: btn.dataset.tier });
   });
 
+  /*
+   * Shown only once this browser has posted something. Before that the control
+   * has exactly one honest answer and it is an empty list, which on this page
+   * reads as a fault rather than as a filter.
+   */
+  const mineHost = $('#mine-filter');
+  mineHost.hidden = posted().length === 0;
+  mineHost.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-mine]');
+    if (!btn || btn.dataset.mine === view.mine) return;
+    pick(mineHost, 'mine', btn.dataset.mine);
+    track(btn.dataset.mine ? 'community-mine' : 'community-filtered');
+    refine({ mine: btn.dataset.mine });
+  });
+
   $('#patch-filter').addEventListener('click', (e) => {
     const btn = e.target.closest('[data-patch]');
     if (!btn || btn.dataset.patch === view.patch) return;
@@ -1161,6 +1280,7 @@ async function main() {
     pick($('#sort-switch'), 'sort', view.sort);
     pick($('#mode-filter'), 'mode', view.mode);
     pick($('#tier-filter'), 'tier', view.tier);
+    if (!$('#mine-filter').hidden) pick($('#mine-filter'), 'mine', view.mine);
     if (!$('#patch-filter').hidden) pick($('#patch-filter'), 'patch', view.patch);
   }
 

@@ -1481,6 +1481,39 @@ button.tally--effect { font: inherit; font-size: 11px; font-weight: 600; cursor:
 .share__name { display: grid; gap: 5px; }
 .share__name input { width: 100%; }
 
+/*
+ * Posting, below the four ways of taking a copy away and separated from them by
+ * a rule. Those four are reversible by closing a tab; this one puts a formation
+ * in front of strangers under your name. The line is the whole point: it says
+ * "different kind of thing" before a single word of the label is read, and it
+ * costs a mis-click a deliberate crossing rather than a stray thumb.
+ */
+.share__post {
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2) var(--s3);
+  margin-top: var(--s4);
+  padding-top: var(--s4);
+  border-top: 1px solid var(--line-soft);
+}
+/* The hint takes the rest of the row on a wide sheet and its own line on a
+   narrow one, rather than squeezing the button to fit beside it. */
+.share__post .hint { flex: 1 1 16rem; margin: 0; }
+
+/* help */
+.modal--help { width: min(620px, calc(100vw - 2 * var(--s4))); overflow-y: auto; }
+.help__steps {
+  display: grid; gap: var(--s3);
+  margin: var(--s3) 0 var(--s4);
+  padding-left: var(--s5);
+  color: var(--text);
+  line-height: 1.55;
+}
+.help__steps li { padding-left: var(--s1); }
+.help__steps b { color: var(--text); font-weight: 650; }
+
+/* A question mark is a small target at button width, so it is squared off
+   deliberately rather than left as a wide button with one character in it. */
+.topbar__help { min-width: 2.25rem; padding-inline: var(--s2); font-weight: 650; }
+
 /* detail sheet */
 .detail__head { display: flex; align-items: center; gap: var(--s3); margin-bottom: var(--s3); }
 .detail__art {

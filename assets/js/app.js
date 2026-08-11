@@ -15,7 +15,7 @@ import { buildPriority, renderPriority } from './priority.js';
 import { buildShare, openShare } from './share.js';
 import { warmSprites } from './card.js';
 import { buildShell, renderShell } from './shell.js';
-import { buildSaves, savedById } from './saves.js';
+import { buildSaves, savedById, keepQuietly } from './saves.js';
 import { buildSubmit, openSubmit, resumeSubmit } from './submit.js';
 import { isConfigured, readCallback } from './supabase.js';
 import { buildAnalytics, track } from './analytics.js';
@@ -62,9 +62,10 @@ async function main() {
 
   buildGrid();
   buildPriority();
-  buildShare();
+  buildShare({ canPost: isConfigured(), onPost: postCurrent });
   buildShell();
   buildSaves({ canPost: isConfigured(), onPost: openSubmit });
+  buildHelp();
   const pending = buildSubmit();
   buildAnalytics();
   buildFilters(() => renderRoster());
@@ -99,6 +100,36 @@ async function main() {
 
   wireToolbar();
   wireDragAutoScroll();
+}
+
+/**
+ * Posting straight from the Share sheet.
+ *
+ * A post is made from a saved formation — that is what lets a sign-in halfway
+ * through find its way back to the right one — and somebody who pressed Post
+ * did not press Save. So this takes the step they skipped instead of refusing
+ * them for not knowing it existed, and the Share sheet says it will.
+ *
+ * A refusal (nothing on the field, storage full) has already been said by
+ * keepQuietly, so there is nothing to add here.
+ */
+function postCurrent() {
+  const save = keepQuietly();
+  if (save) openSubmit(save);
+}
+
+/** The "how does this work" dialog, which is only ever opened by hand. */
+function buildHelp() {
+  const dlg = $('#dlg-help');
+  if (!dlg) return;
+  $('#btn-help').addEventListener('click', () => {
+    dlg.showModal();
+    track('help-opened');
+  });
+  dlg.addEventListener('click', (e) => {
+    // The backdrop is the dialog element itself; anything visible is a child.
+    if (e.target.closest('[data-close]') || e.target === dlg) dlg.close();
+  });
 }
 
 /**

@@ -84,6 +84,25 @@
           <button class="segmented__btn" type="button" data-tier="4" aria-pressed="false">T4</button>
         </div>
 
+        <!--
+          Yours. Hidden until this browser has actually posted something, for the
+          same reason the patch filter is: a filter with no values can only
+          disappoint, and "Yours" answering with an empty list is the single most
+          alarming thing this page could say to somebody who just published.
+
+          It filters on the ids this browser recorded when it posted, which is
+          the only claim of ownership it can make without asking the server a
+          question the schema will not answer — `author_id` is deliberately not
+          published. So this is exact and it is local: clear the browser's
+          storage, or post from your phone and look on your laptop, and the list
+          will not know. The gallery still labels those rows Yours, and still
+          offers Delete on them, because that runs off the signed-in account.
+        -->
+        <div id="mine-filter" class="segmented" role="group" aria-label="Whose formations to show" hidden>
+          <button class="segmented__btn" type="button" data-mine="" aria-pressed="true">Everyone</button>
+          <button class="segmented__btn" type="button" data-mine="1" aria-pressed="false">Yours</button>
+        </div>
+
         <!-- Only rendered once the patches table has anything in it. A filter
              with no values can only disappoint. -->
         <div id="patch-filter" class="segmented" role="group" aria-label="Filter by game update" hidden></div>

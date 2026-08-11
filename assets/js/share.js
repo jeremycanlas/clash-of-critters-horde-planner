@@ -1,9 +1,13 @@
 /**
- * The share sheet: a preview of the card, an optional name on it, and the three
- * ways out - download the image, copy the image, copy the link.
+ * The share sheet: a preview of the card, an optional name on it, and the ways
+ * out - download the image, copy the image, copy the link, post it publicly.
  *
  * The name is remembered locally rather than kept in the formation: it is who
  * you are, not part of the plan, and it should not ride along in an export.
+ *
+ * Posting is injected rather than imported, the same way saves.js takes its
+ * Post: this module draws a card and hands out copies of it, and it has no
+ * business knowing that a database exists.
  */
 
 import * as store from './store.js';
@@ -39,7 +43,22 @@ const SCOPE_NOTE = {
   full: 'The field, both benches, the level-up plan and what the formation brings.',
 };
 
-export function buildShare() {
+/**
+ * @param {{canPost?: boolean, onPost?: () => void}} [opts]
+ *   `canPost` reveals the Post row; `onPost` is called with the sheet already
+ *   closed, so the dialog it opens is not the second modal on screen.
+ */
+export function buildShare(opts = {}) {
+  if (opts.canPost && opts.onPost) {
+    $('#share-post-row').hidden = false;
+    $('#share-post').addEventListener('click', () => {
+      // Closed first. Two stacked modals put the formation's picture behind a
+      // second backdrop, and Escape then closes the wrong one.
+      dialog.close();
+      opts.onPost();
+    });
+  }
+
   $('#share-scope').addEventListener('click', (e) => {
     const btn = e.target.closest('[data-scope]');
     if (!btn || btn.dataset.scope === scope) return;
