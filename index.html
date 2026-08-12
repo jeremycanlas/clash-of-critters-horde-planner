@@ -120,6 +120,22 @@
       <button id="btn-share" class="btn btn--primary topbar__share wide-only" type="button"
         title="Share this formation as a picture or a link">Share</button>
 
+      <!--
+      Next to Share, because it answers the same question with a different
+      tense. Share hands somebody the formation as it is now; this hands them
+      the formation as it keeps being — a link that puts you both on one board.
+
+      Not btn--primary. Share is still the thing this tool exists to produce,
+      and two filled buttons side by side would make the row argue with itself
+      about which one you came for.
+
+      The dot beside it is who is here, and it only exists during a session, so
+      on every other visit this is one word and nothing else.
+    -->
+      <button id="btn-live" class="btn topbar__live" type="button"
+        title="Edit this formation together with somebody else, live">Live</button>
+      <span id="live-who" class="who-strip" hidden></span>
+
       <!-- Was "Save" while a file download was the only way to keep a formation.
          The in-browser Saved list owns that word now, and a "Save" that writes
          a file next to a "Saved" that does not would be two features wearing
@@ -579,6 +595,100 @@
       <button id="share-post" class="btn" type="button">Post to Community</button>
       <p class="hint">Adds it to the public list other players browse, under your Discord
         name. Keeps a copy in <b>Saved</b> on the way, so you can find it again.</p>
+    </div>
+  </dialog>
+
+  <!--
+    Live sessions.
+
+    One sheet in two states rather than two dialogs, because before and during
+    are the same idea at different moments: here is a link that puts us on one
+    board, and here is that link now that it exists. `data-state` on the dialog
+    swaps which half is shown; both are in the markup so neither has to be built
+    in JavaScript.
+
+    What it does not say anywhere is "host" or "guest". Everybody in a room can
+    move everybody's Tatari and switch between P1 and P2 — the only thing that
+    stays yours is which tab you happen to be looking at. Naming a host would
+    describe a hierarchy the feature does not have.
+  -->
+  <dialog id="dlg-live" class="modal modal--live" data-state="off">
+    <div class="live__off">
+      <h2>Edit together</h2>
+      <p class="hint">Start a session and you get a link. Anyone who opens it lands on
+        this formation and can move it around with you — you will see each other's
+        pointers as you go. Both of you can place either player's Tatari, so co-op
+        works the way it always has, with two people instead of one.</p>
+      <p class="hint">Nothing is published and nothing is saved to the community list.
+        The session lives only as long as the link is open, and the formation stays
+        in <b>Saved</b> and on your own machine exactly as it does now.</p>
+
+      <!-- The caption is one element, not a text node beside a span: the label is
+           a grid, and grid makes an anonymous item of every stray run of text —
+           which put "(optional)" on a line of its own. -->
+      <label class="live__name"><span>Your name in the session <span class="muted">(optional)</span></span>
+        <input id="live-name" type="text" maxlength="24" placeholder="Guest" autocomplete="nickname"
+          spellcheck="false">
+      </label>
+
+      <div class="modal__actions">
+        <button id="live-start" class="btn btn--primary" type="button">Start a live session</button>
+        <button class="btn btn--quiet" type="button" data-close>Not now</button>
+      </div>
+    </div>
+
+    <!--
+      Arriving on somebody's link. Asked before anything connects, so nobody
+      turns up in the room as an unnamed nobody and gets renamed a second later.
+
+      Leaving the name blank is a real choice with a real answer — you become
+      Guest, and the next unnamed arrival is Guest 2 — rather than a validation
+      error standing between somebody and the board a friend just sent them.
+    -->
+    <div class="live__ask">
+      <h2>Join this session?</h2>
+      <p class="hint">Somebody shared a live formation with you. You will both be able to move
+        every Tatari on it, and you will see each other's pointers while you work.</p>
+      <p class="hint">What is on your field now will be replaced by theirs. There is an
+        <b>Undo</b> on the way in if that was not what you wanted.</p>
+
+      <label class="live__name"><span>Your name <span class="muted">(optional)</span></span>
+        <input id="live-ask-name" type="text" maxlength="24" placeholder="Guest" autocomplete="nickname"
+          spellcheck="false" aria-describedby="live-ask-note">
+      </label>
+      <p id="live-ask-note" class="hint">Leave it empty and you will show up as <b>Guest</b>.</p>
+
+      <div class="modal__actions">
+        <button id="live-join" class="btn btn--primary" type="button">Join</button>
+        <button id="live-decline" class="btn btn--quiet" type="button">Stay on my own</button>
+      </div>
+    </div>
+
+    <div class="live__on">
+      <h2>Edit together</h2>
+      <p id="live-count" class="hint"></p>
+
+      <!-- Who is here, and the only place a host can remove somebody. Kept out of
+           the topbar strip: removing a person is rare and irreversible from their
+           side, and a button for it beside their initial invites an accident. -->
+      <ul id="live-peers" class="peers"></ul>
+
+      <label class="live__link">Session link
+        <input id="live-link" type="text" readonly spellcheck="false" aria-describedby="live-link-note">
+      </label>
+      <p id="live-link-note" class="hint">Anyone with this link can edit. It is the only thing
+        guarding the session, so treat it like the door key it is.</p>
+
+      <label class="live__name">Your name in the session
+        <input id="live-name-on" type="text" maxlength="24" placeholder="Guest" autocomplete="nickname"
+          spellcheck="false">
+      </label>
+
+      <div class="modal__actions">
+        <button id="live-copy" class="btn btn--primary" type="button">Copy link</button>
+        <button id="live-leave" class="btn" type="button">Leave session</button>
+        <button class="btn btn--quiet" type="button" data-close>Close</button>
+      </div>
     </div>
   </dialog>
 

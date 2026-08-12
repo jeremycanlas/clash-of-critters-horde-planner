@@ -19,7 +19,7 @@
  */
 
 import { load, state } from './data.js';
-import { $, artHTML, esc, typeIcon, roleIcon, toast, copyText } from './ui.js';
+import { $, artHTML, esc, typeIcon, roleIcon, toast, copyText, dismissOnBackdrop } from './ui.js';
 import { buildFilters, renderRoster } from './roster.js';
 import { bringsEffect } from './effects.js';
 import { buildShell, closeSheet } from './shell.js';
@@ -360,9 +360,7 @@ function wireImport() {
     $('#import-text').focus();
   });
 
-  dialog.addEventListener('click', (e) => {
-    if (e.target.closest('[data-close]') || e.target === dialog) dialog.close();
-  });
+  dismissOnBackdrop(dialog);
 
   $('#import-file').addEventListener('change', async (e) => {
     const file = e.target.files?.[0];

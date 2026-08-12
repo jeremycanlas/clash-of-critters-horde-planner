@@ -1514,6 +1514,117 @@ button.tally--effect { font: inherit; font-size: 11px; font-weight: 600; cursor:
    deliberately rather than left as a wide button with one character in it. */
 .topbar__help { min-width: 2.25rem; padding-inline: var(--s2); font-weight: 650; }
 
+/* ============================================================ live sessions */
+
+/*
+ * The Live button carries a dot only while a session is running, so the row
+ * reads exactly as it always did on every visit that is not a shared one. The
+ * dot is drawn on the button rather than beside it because the two are one
+ * statement — this control, currently on.
+ */
+.topbar__live { display: inline-flex; align-items: center; gap: var(--s2); }
+body.is-live .topbar__live { border-color: var(--accent); color: var(--accent); }
+body.is-live .topbar__live::before {
+  content: "";
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+/* Reconnecting. Hollow rather than a second colour: the session is not gone,
+   so it should not read as an error, only as not-quite-now. */
+body.is-live-down .topbar__live::before { background: transparent; box-shadow: inset 0 0 0 1px var(--accent); }
+
+/*
+ * Who is here, as initials. Small enough to sit in the action row without
+ * taking a line from it, and only ever visible during a session.
+ */
+.who-strip { display: inline-flex; align-items: center; gap: calc(var(--s1) * -1); }
+.who-strip[hidden] { display: none; }
+.who {
+  display: grid; place-items: center;
+  width: 22px; height: 22px;
+  border: 1px solid var(--surface);
+  border-radius: 50%;
+  background: hsl(var(--hue) 45% 42%);
+  color: #fff;
+  font-size: 11px; font-weight: 650; line-height: 1;
+}
+body.is-live-down .who-strip { opacity: .45; }
+
+.modal--live { width: min(540px, calc(100vw - 2 * var(--s4))); }
+/* One sheet, three panels; the dialog's state says which. All three are in the
+   markup so none has to be assembled in JavaScript. */
+.modal--live .live__off, .modal--live .live__ask, .modal--live .live__on { display: none; }
+.modal--live[data-state="off"] .live__off,
+.modal--live[data-state="ask"] .live__ask,
+.modal--live[data-state="on"] .live__on { display: block; }
+
+/*
+ * Who is in the room. A list rather than a row of initials, because this is the
+ * one place a name has to be readable rather than merely distinguishable — it is
+ * where you decide whether the person called Guest 2 is somebody you meant to
+ * invite.
+ */
+.peers { display: grid; gap: var(--s1); margin: var(--s3) 0 var(--s4); padding: 0; list-style: none; }
+.peer {
+  display: flex; align-items: center; gap: var(--s2);
+  padding: var(--s1) var(--s2);
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+}
+.peer__name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.peer .muted { font-size: 11px; }
+.live__link, .live__name { display: grid; gap: 5px; margin-top: var(--s4); }
+.live__link input, .live__name input { width: 100%; }
+.live__link input { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; }
+
+/*
+ * Remote pointers.
+ *
+ * Fixed and body-level, following .drag-ghost above, for the same two reasons:
+ * .field-frame clips its overflow and .grid is not a positioned ancestor, so
+ * anything drawn inside the field would be cut off at its edge. Above the drag
+ * ghost would put somebody else's pointer over the token you are carrying, so
+ * it sits just below it.
+ */
+.cursors { position: fixed; inset: 0; z-index: calc(var(--z-drag) - 1); pointer-events: none; }
+.cursor {
+  position: absolute; top: 0; left: 0;
+  display: flex; align-items: flex-start; gap: var(--s1);
+  /* Only the position animates. A peer's pointer moves one square at a time
+     now rather than arriving as a stream of coordinates, so this is what turns
+     a hop between cells into something that reads as a hand crossing them. It
+     is eased rather than linear for the same reason: a discrete jump wants to
+     look like it was travelled, not cut to. */
+  transition: transform 130ms var(--ease-out);
+  will-change: transform;
+}
+.cursor[hidden] { display: none; }
+.cursor svg { width: 14px; height: 20px; fill: hsl(var(--hue) 55% 55%); flex: none; }
+.cursor__name {
+  padding: 2px var(--s2);
+  border-radius: var(--r-sm);
+  background: hsl(var(--hue) 45% 40%);
+  color: #fff;
+  font-size: 11px; font-weight: 600; line-height: 1.5;
+  white-space: nowrap;
+}
+
+/*
+ * The square somebody else is over. A class on the cell and an ::after rather
+ * than an injected element, because renderGrid() rewrites every filled cell's
+ * innerHTML — a child node would survive until the next paint and no longer.
+ * Dashed, to read as somebody's intention rather than as your own is-over,
+ * which is solid.
+ */
+.cell.is-peer-over::after {
+  content: "";
+  position: absolute; inset: 2px;
+  border: 2px dashed var(--accent);
+  border-radius: 4px;
+  pointer-events: none;
+}
+
 /* detail sheet */
 .detail__head { display: flex; align-items: center; gap: var(--s3); margin-bottom: var(--s3); }
 .detail__art {

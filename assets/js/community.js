@@ -20,7 +20,7 @@
  */
 
 import { load, state } from './data.js';
-import { $, esc, toast, copyText, downloadBlob, slugFilename } from './ui.js';
+import { $, esc, toast, copyText, downloadBlob, slugFilename, dismissOnBackdrop } from './ui.js';
 // mapHTML and statsOf are gone from here: the row is a drawn card now, not a
 // stamp and a line of facts. saves.js and submit.js still use both.
 import { fmtWhen, missingNote } from './formation-card.js';
@@ -1226,10 +1226,9 @@ async function main() {
 
   const dlg = $('#peek');
   dlg.addEventListener('click', (e) => {
-    if (e.target.closest('[data-open]')) { track('community-loaded'); return; }
-    // A click on the backdrop lands on the dialog itself; anything visible is a child.
-    if (e.target.closest('[data-close]') || e.target === dlg) closePeek();
+    if (e.target.closest('[data-open]')) track('community-loaded');
   });
+  dismissOnBackdrop(dlg, closePeek);
   // Escape closes it natively, which must still put the address back.
   dlg.addEventListener('close', () => {
     if (location.hash.startsWith('#f=')) history.pushState(null, '', location.pathname + location.search);

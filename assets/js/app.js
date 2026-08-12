@@ -4,7 +4,7 @@ import { load, state } from './data.js';
 import * as store from './store.js';
 import {
   $, $$, glitterOn, toast, downloadJSON, readJSONFile, slugFilename, dragScrollVelocity,
-  APP_VERSION,
+  dismissOnBackdrop, APP_VERSION,
 } from './ui.js';
 import {
   buildGrid, renderGrid, renderBench, renderPlayerTabs, renderSummary,
@@ -17,6 +17,8 @@ import { warmSprites } from './card.js';
 import { buildShell, renderShell } from './shell.js';
 import { buildSaves, savedById, keepQuietly } from './saves.js';
 import { buildSubmit, openSubmit, resumeSubmit } from './submit.js';
+import { buildSession } from './session.js';
+import { roomInHash } from './hash.js';
 import { isConfigured, readCallback } from './supabase.js';
 import { buildAnalytics, track } from './analytics.js';
 import { importTatari } from './custom.js';
@@ -78,6 +80,16 @@ async function main() {
   if (!hash) store.restore();
   renderAll();
 
+  /*
+   * After the formation, not with the other builders, and the one place in this
+   * function where that order matters. A live link carries both halves — the
+   * formation it started from and the room it is happening in — and joining
+   * publishes whatever is on the field as the state to reconcile against. Wiring
+   * this up top would offer an empty board to the room a beat before the link's
+   * own formation had loaded into it.
+   */
+  buildSession();
+
   // Signed in mid-post: pick the dialog back up where it was left, rather than
   // dropping somebody back on the page with nothing to show they succeeded.
   if (returned === 'signed-in' && pending) {
@@ -126,10 +138,7 @@ function buildHelp() {
     dlg.showModal();
     track('help-opened');
   });
-  dlg.addEventListener('click', (e) => {
-    // The backdrop is the dialog element itself; anything visible is a child.
-    if (e.target.closest('[data-close]') || e.target === dlg) dlg.close();
-  });
+  dismissOnBackdrop(dlg);
 }
 
 /**
@@ -324,7 +333,12 @@ function wireToolbar() {
     if (!anything) return;
     const before = store.snapshot();
     store.clearAll();
-    history.replaceState(null, '', location.pathname + location.search);
+    // The formation leaves the address bar; the room does not. Clearing the
+    // field is an edit everyone in a session should see, not a way to walk out
+    // of it — and dropping the room here would leave the tab still connected
+    // with a link that no longer says so.
+    const room = roomInHash(location.hash);
+    history.replaceState(null, '', location.pathname + location.search + (room ? `#live=${room}` : ''));
     toast('Cleared the field, both benches and the plan', 'info', undoTo(before));
   });
 

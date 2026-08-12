@@ -41,6 +41,16 @@ let carried = null;
  */
 const cellEls = [];
 
+/**
+ * One cell element, by cell number.
+ *
+ * Exported for session.js, which marks the square a peer is dragging over. It
+ * has to reach the element rather than the index because renderGrid() rewrites
+ * `cell.innerHTML` — so a remote highlight cannot be a child node that survives
+ * the next paint, only a class on the cell itself.
+ */
+export const cellElement = (i) => cellEls[i] ?? null;
+
 export function buildGrid() {
   grid.innerHTML = '';
   cellEls.length = 0;

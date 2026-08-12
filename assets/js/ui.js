@@ -57,6 +57,65 @@ export const APP_AUTHOR = 'jacc6475';
 
 export { typeIcon, roleIcon };
 
+// ---------------------------------------------------------------- dialogs
+
+/**
+ * Closing a dialog on its backdrop, without closing it by accident.
+ *
+ * Every sheet in this project used to do it the obvious way — close when a click
+ * reports the dialog element itself as its target, since anything visible inside
+ * is a child of it. That is right until a dialog holds text somebody wants to
+ * select, and then it is quietly wrong: a `click` is dispatched to the nearest
+ * common ancestor of where the pointer went *down* and where it came *up*, so
+ * dragging across the session link and releasing a few pixels past the edge of
+ * the sheet names the dialog as the target and shuts it mid-selection. The Share
+ * sheet's name box and the submit notes had the same flaw and nobody had tried
+ * to select them.
+ *
+ * So the press has to land on the backdrop as well as the release. `pointerdown`
+ * rather than `mousedown` because a touch that begins on a control and slides
+ * off should not count either.
+ *
+ * ## Where the backdrop actually is
+ *
+ * "The target is the dialog" is the usual test for a backdrop click and it is
+ * not precise enough, because it is true of two different places. The backdrop
+ * reports the dialog, and so does the dialog's own padding — the band of empty
+ * space between its border and its contents. Pressing beside a heading is
+ * therefore indistinguishable from pressing outside the sheet, which made
+ * `padding` a quarter-inch border of "close me" around every dialog in the app.
+ *
+ * So the question is asked geometrically instead: is the pointer outside the
+ * dialog's box? That is the thing "backdrop" actually means, and padding is
+ * inside it.
+ *
+ * `[data-close]` anywhere inside still closes, which is how the action rows do
+ * it, and Escape is left to the browser.
+ *
+ * `dismiss` is for the one sheet that has more to do than shut — the gallery's
+ * peek puts the address back as it goes.
+ */
+export function dismissOnBackdrop(dlg, dismiss = null) {
+  if (!dlg) return;
+
+  const outside = (e) => {
+    const r = dlg.getBoundingClientRect();
+    return e.clientX < r.left || e.clientX > r.right
+        || e.clientY < r.top || e.clientY > r.bottom;
+  };
+
+  let pressedOutside = false;
+  dlg.addEventListener('pointerdown', (e) => { pressedOutside = outside(e); });
+  dlg.addEventListener('click', (e) => {
+    // `detail` is 0 for the click a keyboard makes, which carries no coordinates
+    // — every one of them would otherwise read as a press at (0, 0), outside the
+    // dialog, and Enter on a focused control would dismiss the sheet.
+    const backdrop = pressedOutside && e.detail > 0 && outside(e);
+    pressedOutside = false;
+    if (backdrop || e.target.closest('[data-close]')) (dismiss ?? (() => dlg.close()))();
+  });
+}
+
 // ---------------------------------------------------------------- toast
 
 let toastTimer;

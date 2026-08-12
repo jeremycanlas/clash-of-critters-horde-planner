@@ -185,3 +185,53 @@ export function fromFragment(hash) {
     unknown,
   };
 }
+
+// ---------------------------------------------------------------- live rooms
+
+/**
+ * The room half of the fragment.
+ *
+ * A live link is `#v6=<formation>&live=<room>` — the formation the session
+ * started from, and the room to join to catch up with where it has got to since.
+ * Both halves are wanted. The room alone would leave somebody staring at an
+ * empty field for as long as the handshake takes, and on a room that has gone
+ * quiet since, forever; the formation alone is the share link we already had.
+ *
+ * Nothing here needed a change to the grammar. `FRAGMENT` stops at the first
+ * `&` on purpose (see toFragment), and readCallback() already reads the hash as
+ * `&`-separated pairs on the way back from Discord, so `live=` is a parameter
+ * the format was built to accept rather than a second thing bolted beside it.
+ */
+const ROOM = /(?:^|&)live=([a-z2-9]{16})(?:&|$)/;
+
+/** @returns {string|null} the room in a fragment, or null if it holds none */
+export function roomInHash(hash) {
+  const m = ROOM.exec(String(hash ?? '').replace(/^#/, ''));
+  return m ? m[1] : null;
+}
+
+/** Everything in a fragment except the room, in order, as `&`-joined parts. */
+const partsWithoutRoom = (hash) => String(hash ?? '')
+  .replace(/^#/, '')
+  .split('&')
+  .filter((part) => part && !/^live=/.test(part));
+
+/**
+ * The same address, carrying this room. Any formation already in the fragment
+ * is left exactly as it is, so stamping a room onto a link never rewrites the
+ * build somebody is looking at.
+ */
+export function withRoom(href, room) {
+  const url = new URL(href);
+  const parts = partsWithoutRoom(url.hash);
+  if (room) parts.push(`live=${room}`);
+  url.hash = parts.join('&');
+  return url.toString();
+}
+
+/** The same address with the room taken out, and nothing else disturbed. */
+export function withoutRoom(href) {
+  const url = new URL(href);
+  url.hash = partsWithoutRoom(url.hash).join('&');
+  return url.toString();
+}

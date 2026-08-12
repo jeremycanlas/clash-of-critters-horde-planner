@@ -13,7 +13,7 @@
  * "publicly". A checkbox on top of that would be theatre.
  */
 
-import { $, toast, APP_VERSION } from './ui.js';
+import { $, toast, dismissOnBackdrop, APP_VERSION } from './ui.js';
 import { mapHTML, statsOf, unknownSlugs } from './formation-card.js';
 import { isConfigured, signedIn, signIn, whoAmI, rest, forgetCache } from './supabase.js';
 import { track } from './analytics.js';
@@ -196,10 +196,7 @@ export function buildSubmit() {
 
   $('#submit-go').addEventListener('click', post);
 
-  dlg.addEventListener('click', (e) => {
-    // The backdrop is the dialog element itself; anything visible is a child.
-    if (e.target.closest('[data-close]') || e.target === dlg) dlg.close();
-  });
+  dismissOnBackdrop(dlg);
 
   // Came back from Discord mid-post. readCallback() has already consumed the
   // fragment by now — app.js calls it before this runs.

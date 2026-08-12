@@ -11,8 +11,9 @@
  */
 
 import * as store from './store.js';
-import { $, toast, copyText, downloadBlob, slugFilename } from './ui.js';
+import { $, toast, copyText, downloadBlob, slugFilename, dismissOnBackdrop } from './ui.js';
 import { drawCard, canvasBlob } from './card.js';
+import { roomInHash, withRoom } from './hash.js';
 import { track } from './analytics.js';
 
 const NAME_KEY = 'coc.sharename';
@@ -135,7 +136,18 @@ export function buildShare(opts = {}) {
 
   $('#share-copy-link').addEventListener('click', async () => {
     const url = store.shareUrl();
-    history.replaceState(null, '', url);
+    /*
+     * The copied link carries the formation and not the room, which is the
+     * distinction between the two features: a share link hands somebody the
+     * build to take away, and dragging a stranger into a live session because
+     * they were sent a picture is not what either of them asked for.
+     *
+     * The address bar is the other way round. shareUrl() rebuilds the fragment
+     * from scratch, so writing it here would quietly drop the room from the
+     * address of a session that is still running — and the next person to copy
+     * what is in the bar, or to reload, would find themselves alone.
+     */
+    history.replaceState(null, '', withRoom(url, roomInHash(location.hash)));
     toast(await copyText(url)
       ? 'Share link copied'
       : 'Link is in the address bar. Copy it from there', 'ok');
@@ -145,9 +157,7 @@ export function buildShare(opts = {}) {
   $('#share-close').addEventListener('click', () => dialog.close());
 
   // Click the backdrop to dismiss, matching the detail sheet.
-  dialog.addEventListener('click', (e) => {
-    if (e.target === dialog) dialog.close();
-  });
+  dismissOnBackdrop(dialog);
   dialog.addEventListener('close', releasePreview);
 }
 
