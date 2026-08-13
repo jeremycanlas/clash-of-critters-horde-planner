@@ -34,6 +34,10 @@ ROOT = Path(__file__).resolve().parent.parent
 PROFILES = [
     (ROOT / "data/images/tatari", 200, 176),
     (ROOT / "data/images/glitter", 200, 176),
+    # Zobos share the field with Tatari, so they have to share their sizing —
+    # the wiki serves them at assorted heights, and an enemy a third taller than
+    # the Tatari standing next to it reads as a boss when it is not.
+    (ROOT / "data/images/zobo", 200, 176),
     # Type and role icons are already self-contained badges: they arrive at
     # assorted sizes but want no padding of their own, only a common box.
     (ROOT / "data/images/icons", 64, 64),

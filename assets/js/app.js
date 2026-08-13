@@ -8,7 +8,7 @@ import {
 } from './ui.js';
 import {
   buildGrid, renderGrid, renderBench, renderPlayerTabs, renderSummary,
-  renderRanges, rangesOn, renderLfSuggestions, bossPullOn,
+  renderRanges, rangesOn, renderLfSuggestions, bossPullOn, secondPullOn, refreshPull,
 } from './grid.js';
 import { buildFilters, renderRoster } from './roster.js';
 import { buildPriority, renderPriority } from './priority.js';
@@ -38,6 +38,20 @@ function renderAll() {
   }
   document.body.dataset.mode = store.formation.mode;
   document.body.dataset.activePlayer = String(store.formation.activePlayer);
+
+  /*
+   * The Sandbox box follows the formation rather than only driving it, and this
+   * is the one place that has to be true: the flag arrives from a share link, a
+   * restored autosave, an Undo and a live peer as well as from the checkbox, and
+   * in every one of those cases nobody clicked it. Syncing here rather than in
+   * each of those handlers means a path added later cannot forget to.
+   */
+  const sandbox = $('#opt-sandbox');
+  if (sandbox) sandbox.checked = store.isSandbox();
+  document.body.dataset.sandbox = String(store.isSandbox());
+  const zobo = $('#opt-zobo');
+  if (zobo) zobo.checked = store.isZoboGround();
+  document.body.dataset.zobo = String(store.isZoboGround());
 }
 
 async function main() {
@@ -233,14 +247,107 @@ function wireToolbar() {
     renderRanges();
   });
 
+  /*
+   * Both pull toggles take the snapshot again; nothing else does. That is the
+   * whole of "the pull holds still": the rule runs on the board as it is at the
+   * moment you flip a switch, and every edit after that is yours to make without
+   * the boss changing its mind about who it grabbed.
+   */
   $('#opt-pull').addEventListener('change', (e) => {
     bossPullOn.value = e.target.checked;
+    refreshPull();
     renderGrid();
   });
 
-  $('#opt-glitter').addEventListener('change', (e) => {
-    glitterOn.value = e.target.checked;
-    renderAll();
+  $('#opt-pull-2').addEventListener('change', (e) => {
+    secondPullOn.value = e.target.checked;
+    refreshPull();
+    renderGrid();
+  });
+
+  /*
+   * Glitter has two switches: the one in the field toolbar and the one in the
+   * roster, which is the only reachable copy on a phone. Whichever moves, the
+   * other follows — a checkbox showing the opposite of what the art is doing is
+   * worse than not offering the second one at all.
+   */
+  const glitterBoxes = $$('#opt-glitter, #opt-glitter-roster');
+  for (const box of glitterBoxes) {
+    box.addEventListener('change', (e) => {
+      glitterOn.value = e.target.checked;
+      for (const other of glitterBoxes) other.checked = e.target.checked;
+      renderAll();
+    });
+  }
+
+  /*
+   * Sandbox, and the one interaction in this file that asks before it acts.
+   *
+   * Turning it on is free: the caps lift, 42 more cells become reachable, and
+   * nothing already placed moves. Turning it off is the direction that can lose
+   * work, and unlike every other trim here the amount is unbounded — a 30-strong
+   * bench loses half of itself, and no toast is adequate warning for that after
+   * the fact.
+   *
+   * So the toast has to say what happened rather than that something did, and
+   * carry the way back. Only `dropped` is a real loss — Tatari that come off the
+   * board are still on their bench.
+   */
+  /*
+   * The Zobo ground, which needs none of Sandbox's ceremony. Closing it unplaces
+   * whatever was standing out there and keeps every one of them — anything on the
+   * board is on its owner's bench already — so there is nothing to warn about and
+   * nothing to undo beyond putting them back where you had them.
+   */
+  $('#opt-zobo').addEventListener('change', (e) => {
+    const before = store.snapshot();
+    const { unplaced } = store.setZoboGround(e.target.checked);
+    /*
+     * Silent unless something actually moved.
+     *
+     * The checkbox shows its own state and the seven rows appear or vanish under
+     * it, so a toast saying what you just watched happen is noise on a control
+     * people flick back and forth. The one case still worth a word is closing it
+     * with Tatari standing out there: their positions are gone, and the toast is
+     * the only place Undo can live.
+     */
+    if (unplaced) {
+      toast(`Zobo ground closed — benched ${unplaced}`, 'info', undoTo(before));
+    }
+  });
+
+  const sandboxBox = $('#opt-sandbox');
+  sandboxBox.addEventListener('change', (e) => {
+    const on = e.target.checked;
+
+    if (on) {
+      store.setSandbox(true);
+      toast('Sandbox on — caps off');
+      return;
+    }
+
+    const before = store.snapshot();
+    const got = store.setSandbox(false);
+
+    /*
+     * Said plainly, and undoable, rather than confirmed in advance.
+     *
+     * A confirm was the first instinct, and Clear all is the argument against
+     * it: it destroys strictly more than this does and still just acts, because
+     * the toast carries Undo for six seconds and that is a better deal than a
+     * modal. Two paths to the same kind of loss should not behave differently,
+     * and a native confirm would be the only one in the app besides being a
+     * dialog that blocks the page under it.
+     *
+     * What the toast owes in exchange is precision. "Sandbox off" alone would
+     * hide the removal; the counts are separated because they are different
+     * events — benched Tatari are still yours, removed ones are not.
+     */
+    const said = [];
+    if (got.unplaced) said.push(`benched ${got.unplaced}`);
+    if (got.dropped) said.push(`removed ${got.dropped} that would not fit`);
+    toast(said.length ? `Sandbox off — ${said.join(', ')}` : 'Sandbox off — caps are back',
+      got.dropped ? 'warn' : 'info', said.length ? undoTo(before) : null);
   });
 
   $('#mode-switch').addEventListener('click', (e) => {

@@ -1,27 +1,27 @@
 {
   "source": "https://clashofcritters.wiki.gg/wiki/Tatari",
-  "scrapedAt": "2026-07-26",
+  "scrapedAt": "2026-08-13",
   "counts": {
-    "tatari": 218,
-    "families": 62,
+    "tatari": 224,
+    "families": 63,
     "byType": {
-      "Fire": 46,
+      "Fire": 47,
       "Grass": 46,
-      "Lightning": 42,
+      "Lightning": 47,
       "Rock": 42,
       "Water": 42
     },
     "byRole": {
-      "DPS": 86,
+      "DPS": 91,
       "Guardian": 45,
       "Healer": 20,
       "Specialist": 19,
       "Support": 27,
-      "Tank": 21
+      "Tank": 22
     },
     "byRarity": {
       "Common": 20,
-      "Rare": 198
+      "Rare": 204
     }
   },
   "types": [
@@ -62,13 +62,13 @@
     }
   },
   "skillTypeInfo": {
-    "AoE": "The AoE (Area of Effect) attack inflicts damages to multiple enemies in the range at once. This skill type usually comes with wider attack range or/and longer attack distance, but also with slower attack speed.",
     "ATK Boost": "The Skills with ATK Boost effect can buff the ATK stat of the affected ally(s).",
+    "AoE": "The AoE (Area of Effect) attack inflicts damages to multiple enemies in the range at once. This skill type usually comes with wider attack range or/and longer attack distance, but also with slower attack speed.",
     "Burn": "The Skills with Burn effect inflict Fire type damage over time.",
     "Chain": "The Chain attack inflicts damages to multiple enemies as the strike bounces to another nearby enemy across lanes multiple times.",
-    "Damage Boost": "The Skills with Damage Boost effect can buff the final damage of the affected ally(s).",
     "DEF Boost": "The Skills with DEF Boost effect can buff the Defense stat of the affected ally(s).",
     "DMG Boost": "The Skills with Damage Boost effect can buff the final damage of the affected ally(s).",
+    "Damage Boost": "The Skills with Damage Boost effect can buff the final damage of the affected ally(s).",
     "Fragile": "The Skills with Fragile effect are known to reduce the target's DEF.",
     "Heal": "The Skills with Heal effects can recover HP for the user or allies.",
     "Invincible": "The Skills with Invincible effect grant the user to take no damages from enemies' attacks.",
@@ -76,6 +76,7 @@
     "Paralyze": "The Skills with Paralyze effect inflict Lightning type damage over time and delay the target's movement.",
     "Pierce": "The Pierce attack fires a projectile that can go through the target multiple times on hit, dealing damages to multiple targets similar to AoE.",
     "Planting": "The Skills with Planting type summon object(s) with special effect(s) on the board.",
+    "Pull": "The Pull tag denotes skills that displace targets toward the user. Generally does not affect other Tataris.",
     "Self Heal": "The Skills with Self Heal effects recover the user itself.",
     "Slow": "The Skills with Slow effects can lower the movement speed of affected targets.",
     "Split": "The Split attack fires a projectile that splits into multiple projectiles on hit.",

@@ -19,7 +19,10 @@
  */
 
 import { state } from './data.js';
-import { COLS, ROWS, CELLS, MAX_LEVEL, MODES } from './rules.js';
+import {
+  COLS, ROWS, CELLS, MAX_LEVEL, MODES,
+  ALL_CELLS, ENEMY_ROWS, ENEMY_FIRST, isEnemyCell, cellDisplayRow,
+} from './rules.js';
 
 /** Mirrors store.js, so a caller can read either without knowing which it has. */
 export const LF_LABELS = { lf: 'LF:', have: 'HAVE:' };
@@ -30,11 +33,36 @@ export const LF_LABELS = { lf: 'LF:', have: 'HAVE:' };
  */
 export function viewOf(snap) {
   const mode = MODES[snap?.mode] ? snap.mode : 'solo';
-  const cells = Array(CELLS).fill(null);
-  (Array.isArray(snap?.cells) ? snap.cells : []).slice(0, CELLS).forEach((occ, i) => {
+  /*
+   * The whole board, not just the field.
+   *
+   * This used to stop at CELLS and coerce every player to at least 1, which
+   * quietly threw away the two things that can now stand past the contact line:
+   * a Zobo, which belongs to player 0, and a Tatari the boss pull dragged out
+   * there. Both were simply missing from the card, and a Zobo that survived
+   * would have been drawn as one of your own.
+   */
+  const cells = Array(ALL_CELLS).fill(null);
+  (Array.isArray(snap?.cells) ? snap.cells : []).slice(0, ALL_CELLS).forEach((occ, i) => {
     const slug = typeof occ === 'string' ? occ : occ?.slug;
-    if (slug) cells[i] = { slug, player: Number(occ?.player) || 1 };
+    if (!slug) return;
+    const zobo = occ?.kind === 'zobo' || Number(occ?.player) === 0;
+    cells[i] = zobo
+      ? { slug, player: 0, kind: 'zobo' }
+      : { slug, player: Number(occ?.player) || 1 };
   });
+
+  /*
+   * How many rows past the line the card has to draw. All of them when the Zobo
+   * ground is open; otherwise however many the boss pull opened, which the
+   * snapshot carries. Falls back to what is actually standing out there, so a
+   * hand-written or older snapshot still draws everything it contains.
+   */
+  const occupiedDepth = cells.reduce((deep, occ, i) =>
+    (occ && isEnemyCell(i) ? Math.max(deep, -cellDisplayRow(i)) : deep), 0);
+  const beyondRows = snap?.zoboGround
+    ? ENEMY_ROWS
+    : Math.max(Number(snap?.pullRows) || 0, occupiedDepth);
 
   const playerCount = MODES[mode].players;
   const players = () => Array.from({ length: playerCount }, (_, i) => i + 1);
@@ -52,7 +80,8 @@ export function viewOf(snap) {
     }
   }
   cells.forEach((occ) => {
-    if (occ && bench[occ.player] && !bench[occ.player].includes(occ.slug)) {
+    // Zobos are player 0 and belong on nobody's bench.
+    if (occ && occ.player > 0 && bench[occ.player] && !bench[occ.player].includes(occ.slug)) {
       bench[occ.player].push(occ.slug);
     }
   });
@@ -99,6 +128,13 @@ export function viewOf(snap) {
   return {
     // constants, so a caller never has to import two modules to draw a grid
     COLS, ROWS, CELLS, MAX_LEVEL, MODES, LF_LABELS,
+    ALL_CELLS, ENEMY_ROWS, ENEMY_FIRST,
+    /** Rows drawn past the contact line, 0 when there is nothing out there. */
+    beyondRows: () => beyondRows,
+    /** The cell index for a display row, negative rows being past the line. */
+    cellAtRow: (row, col) => (row >= 0
+      ? row * COLS + col
+      : ENEMY_FIRST + (row + ENEMY_ROWS) * COLS + col),
 
     formation,
     players,
@@ -109,7 +145,7 @@ export function viewOf(snap) {
     fieldCap: () => MODES[mode].field,
 
     benchOf: (player) => [...(bench[player] ?? [])],
-    placedCount: (player) => cells.filter((o) => o && o.player === player).length,
+    placedCount: (player) => cells.filter((o) => o && o.player === player && o.player > 0).length,
     cellOf,
     allPlaced,
 

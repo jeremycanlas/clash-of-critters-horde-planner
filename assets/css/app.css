@@ -327,6 +327,15 @@ img { -webkit-user-drag: none; }
   white-space: nowrap;
 }
 .check input { accent-color: var(--accent); margin: 0; }
+
+/*
+ * `body[data-sandbox]` and `body[data-zobo]` are stamped by renderAll() for
+ * anything that needs to style against either state. Nothing is hidden on them:
+ * every one of these toggles is worth reaching for on its own, which is the
+ * point of having split them. A .sandbox-only class lived here briefly and gated
+ * the second pull, which turned out to be useful without Sandbox — most lanes are
+ * deep enough that both rounds land on the field.
+ */
 .check:hover { color: var(--text); }
 
 /* Marks a feature whose data is still being filled in, so nobody reads a gap
@@ -364,6 +373,18 @@ img { -webkit-user-drag: none; }
 .panel--roster.is-returning {
   border-color: color-mix(in srgb, var(--danger) 60%, var(--line));
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--danger) 30%, transparent);
+}
+
+/*
+ * The bench accepting a drop. Deliberately the accent and not the danger colour
+ * the roster uses: dropping here keeps a Tatari, and the two targets sit inches
+ * apart during the same drag — one taking it away and one keeping it — so they
+ * must not look alike.
+ */
+.bench__player.is-taking {
+  border-radius: var(--r-sm);
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--accent) 55%, transparent);
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
 }
 
 @media (max-width: 1000px) {
@@ -441,34 +462,32 @@ img { -webkit-user-drag: none; }
 .field-frame__base > span { white-space: nowrap; }
 
 /*
- * Where the boss drags your rearmost row. Drawn as an extension of the spawn
- * band above it rather than as another row of the field, because it is not
- * ground you choose to stand on — the dashes carry over from the empty cells
- * below, so it still reads as part of the same board.
+ * The rows the boss pull opens past the contact line.
+ *
+ * These are Zobo-ground rows borrowed one at a time — real cells, so what stands
+ * on them can be dragged, dropped on and moved along like anything else. The
+ * tint is what says they are not ordinary ground: it is the danger colour the
+ * old pull strip wore, kept because it is the same event, and it stops at the
+ * rows the pull actually opened so an untouched Zobo row never wears it.
+ *
+ * Not applied when the Zobo ground is open on its own: then those rows are just
+ * ground you chose to use, and colouring them for a pull that may not have
+ * happened would be a warning about nothing.
  */
-.pull-row {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: var(--s1);
-  padding: var(--s2);
-  border-bottom: 1px solid color-mix(in srgb, var(--danger) 45%, var(--line-soft));
-  background: color-mix(in srgb, var(--danger) 13%, var(--surface-2));
-}
-.pull-cell {
-  position: relative;
-  aspect-ratio: 1;
-  display: grid; place-items: center;
-  border: 1px dashed color-mix(in srgb, var(--danger) 45%, transparent);
-  border-radius: var(--r-sm);
-}
-.pull-cell.is-filled {
+.grid__row--pull > .cell {
   border-style: solid;
+  border-color: color-mix(in srgb, var(--danger) 45%, var(--line-soft));
+  background: color-mix(in srgb, var(--danger) 10%, var(--surface-2));
+}
+/* The cell the boss actually put somebody in, as against the row it opened to
+   do it. Stronger, so a pull into an already-open Zobo row still reads. */
+.cell.is-pulled {
   border-color: color-mix(in srgb, var(--danger) 70%, transparent);
   background: color-mix(in srgb, var(--danger) 18%, transparent);
 }
-/* One continuous band: a grey rule between the spawn line and the pull row
-   would read as two separate things. */
-.field-frame:has(#pull-row:not([hidden])) .field-frame__enemy {
+/* One continuous band: a grey rule between the spawn line and a pull row above
+   it would read as two separate things. */
+.field-frame:has(.grid__row--pull) .field-frame__enemy {
   border-bottom-color: color-mix(in srgb, var(--danger) 45%, var(--line-soft));
 }
 
@@ -658,6 +677,63 @@ img { -webkit-user-drag: none; }
   grid-template-columns: repeat(6, 1fr);
   gap: var(--s1);
   padding: var(--s2);
+}
+
+/*
+ * Sandbox's extra ground, beyond the contact line.
+ *
+ * Hatched with the same stripes contribute.css uses for the same piece of
+ * ground, so the two pages agree about what it is, and so it reads as one band
+ * with the "Zobos spawn beyond this line" strip immediately below it.
+ *
+ * Where this deliberately parts company with contribute is the cursor. There,
+ * hovering a Zobo tile is refused, because a range recorded from the wrong side
+ * of the line is recorded against the wrong origin. Here the whole point is
+ * that you can stand on it, so the tiles take the same hover and drop states as
+ * any other cell and only the ground under them looks borrowed.
+ *
+ * The bottom padding is dropped so the last Zobo row sits tight against the
+ * line, rather than floating a gap above the thing it is supposed to be
+ * touching.
+ */
+.grid--enemy {
+  padding-bottom: 0;
+  background:
+    repeating-linear-gradient(-45deg,
+      color-mix(in srgb, var(--text-mute) 16%, transparent) 0 6px,
+      transparent 6px 12px),
+    var(--surface-2);
+}
+
+/* Solid rather than the field's dashed outline: these tiles are real ground in
+   Sandbox, they are just not yours. */
+.cell--enemy {
+  border-style: solid;
+  border-color: color-mix(in srgb, var(--line) 65%, transparent);
+  background: color-mix(in srgb, var(--bg) 45%, transparent);
+}
+
+/*
+ * A tile the boss has dragged someone onto.
+ *
+ * Wears the danger tint the old pull strip did, because it is the same event —
+ * the colour is the only thing left carrying "the boss put them here" now that
+ * they are standing in ordinary cells.
+ *
+ * On field cells as well as Zobo ones: a pull lands in front of the frontmost
+ * Tatari in its lane, which is usually a row of the field and only reaches past
+ * the spawn line when that lane's front rank is already at row 0. Listed after
+ * .cell--enemy so it wins on the tiles that have their own background.
+ *
+ * Still a drop target. The pull is held rather than re-derived now, so the board
+ * stays editable underneath it, and a drop here lands on the cell as it really
+ * is — the marker belongs to a Tatari standing somewhere else.
+ */
+.cell.is-pulled,
+.cell--enemy.is-pulled {
+  border-style: solid;
+  border-color: color-mix(in srgb, var(--danger) 45%, var(--line-soft));
+  background: color-mix(in srgb, var(--danger) 13%, var(--surface-2));
 }
 
 .cell {
@@ -892,7 +968,15 @@ body[data-mode="coop"] .bench__player[data-active="true"] {
   transition: background-color 140ms var(--ease-out), color 140ms var(--ease-out);
 }
 .segmented__btn:hover { color: var(--text); }
-.segmented__btn[aria-pressed="true"] {
+/*
+ * Both attributes, because the same control says "on" two different ways. A
+ * group of toggle buttons uses aria-pressed; a tablist uses aria-selected, and
+ * the roster's Tatari/Zobos pair is a real tablist. Styling only the first left
+ * the selected tab looking exactly like the unselected one — the state was in
+ * the accessibility tree and nowhere on screen.
+ */
+.segmented__btn[aria-pressed="true"],
+.segmented__btn[aria-selected="true"] {
   background: var(--surface-3);
   color: var(--text);
   box-shadow: inset 0 0 0 1px var(--line);
@@ -1286,7 +1370,71 @@ button.tally--effect { font: inherit; font-size: 11px; font-weight: 600; cursor:
 .filters__row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s3); }
 .filters__row--meta { gap: var(--s4); }
 
+/*
+ * Zobos answer none of the drafting questions — they have no role, no tier, no
+ * bench and bring no heals — so those controls go while their tab is up rather
+ * than sitting there doing nothing. The element chips and the search stay,
+ * because "show me the Lightning ones" is worth asking of either list.
+ */
+/*
+ * The mirror of the rules below: a control that only means something on the
+ * Zobo tab.
+ *
+ * Written as "hide unless" rather than "show when", because these elements also
+ * carry .chips, which sets display:flex further down the file and beats a bare
+ * .zobo-only at equal specificity — the chip stayed visible on the Tatari tab.
+ * The :not() carries the extra weight without needing !important.
+ */
+body:not([data-roster-list="zobos"]) .zobo-only { display: none; }
+
+body[data-roster-list="zobos"] #filter-roles,
+body[data-roster-list="zobos"] #filter-effects,
+body[data-roster-list="zobos"] #filter-tiers,
+body[data-roster-list="zobos"] .filters__row--meta .check,
+body[data-roster-list="zobos"] .filters__row--meta .sortby { display: none; }
+
+/* Tabs, not a mode switch: same control, but it selects a view rather than
+   changing what a formation is. */
+/*
+ * Louder than the Solo/Co-op switch next to it, and deliberately so.
+ *
+ * Those two pick a setting you already know you chose. These two swap the list
+ * under them for a completely different one, and if you cannot tell at a glance
+ * which is showing then a roster of 50 enemies where you expected 224 Tatari
+ * reads as the search being broken. The grey-on-grey treatment the shared
+ * component gives was enough for a setting and not for a place.
+ *
+ * So the selected tab takes the accent rather than a surface tint, and the pair
+ * gets a little more room to be seen.
+ */
+.segmented--tabs { margin-left: auto; }
+.segmented--tabs .segmented__btn { padding: 5px var(--s4); }
+.segmented--tabs .segmented__btn[aria-selected="true"] {
+  background: var(--accent);
+  color: var(--accent-ink);
+  box-shadow: none;
+}
+.segmented--tabs .segmented__btn[aria-selected="true"]:hover { color: var(--accent-ink); }
+
 .chips { display: flex; gap: var(--s1); }
+
+/*
+ * A Zobo card. Same size and grid as a Tatari's, because the two lists swap in
+ * the same panel and a different card size would make the panel jump.
+ */
+.card--zobo .card__meta { justify-content: center; gap: var(--s1); }
+
+.card__boss, .token__boss {
+  color: var(--warn, var(--accent));
+  font-size: 11px; line-height: 1;
+}
+.token__boss { position: absolute; top: 2px; right: 2px; }
+/* Marked as not-yours in the same language the Zobo ground uses: solid outline,
+   borrowed background. It is the other side of the board standing on your tiles. */
+.cell[data-zobo] {
+  border-style: solid;
+  border-color: color-mix(in srgb, var(--danger) 35%, var(--line));
+}
 .chip {
   display: inline-grid; place-items: center;
   width: 30px; height: 26px;
@@ -1322,6 +1470,30 @@ button.tally--effect { font: inherit; font-size: 11px; font-weight: 600; cursor:
 .chip--effect[data-value="heal"][aria-pressed="true"]   { border-color: var(--ok); color: var(--ok); }
 .chip--effect[data-value="buff"][aria-pressed="true"]   { border-color: var(--accent); color: var(--accent); }
 .chip--effect[data-value="debuff"][aria-pressed="true"] { border-color: var(--danger); color: var(--danger); }
+
+/*
+ * Two things in one chip, so it needs .chip--effect's layout rather than the
+ * base chip's.
+ *
+ * `.chip` is an inline-grid sized to a 30x26 icon box, which is right for a
+ * single glyph and wrong for a glyph beside a word: the star and the label
+ * became two grid rows and spilled out of a box that was never going to grow.
+ * Flex puts them on one line and the height follows the content.
+ *
+ * Wears the star it filters for, so the chip and the badge on the card read as
+ * the same thing rather than two conventions.
+ */
+.chip--boss {
+  display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+  width: auto; height: auto; min-height: 26px;
+  padding: 3px var(--s2);
+  font-size: 11.5px; font-weight: 650; line-height: 1.2;
+  white-space: nowrap;
+}
+.chip--boss[aria-pressed="true"] {
+  border-color: var(--accent);
+  color: var(--accent);
+}
 
 .roster {
   display: grid;
@@ -2049,8 +2221,50 @@ body.is-dragging-active {
   .field--tiny { padding: 7px var(--s2); }
   .check { min-height: 44px; padding: 4px 0; }
   .check input { width: 20px; height: 20px; }
-  .chip { min-height: 44px; }
   .segmented__btn { min-height: 44px; }
+
+  /*
+   * The filter chips are the exception to the 44px rule above, and the reason is
+   * that on a phone they compete with the roster rather than sit beside it.
+   * Four rows of them at 44px came to 316px of filters above a 309px roster:
+   * more screen spent describing the list than showing it, and about three rows
+   * of Tatari visible at a time.
+   *
+   * 32px is the trade. It clears WCAG 2.5.8 (AA, 24x24) with room to spare and
+   * gives up 2.5.5 (AAA, 44x44), which is the same call the rest of this file
+   * already makes for .card__info and .benchchip__x. A chip is also a far more
+   * forgiving target than those: mistapping Fire for Grass costs one more tap,
+   * and the row it sits in has no destructive control anywhere near it.
+   *
+   * The controls that keep their 44px are the ones where a mistap costs
+   * something — Reset throws away every filter you set, and the sort select
+   * opens a native picker.
+   */
+  .chip { min-height: 28px; width: 28px; }
+  .chips { gap: 3px; }
+  .chips--text .chip { width: auto; padding: 0 6px; }
+  .chip--effect { min-height: 28px; padding: 2px 6px; gap: 4px; }
+
+  /*
+   * 28px rather than 30 is not cosmetic. The five element chips and the six role
+   * chips came to 374px side by side in a 364px sheet — ten pixels over, so the
+   * roles wrapped to a second line and the row cost 72px to show eleven things
+   * that fit in 32. Two pixels off each chip brings the pair to 352 and the
+   * wrap goes away.
+   */
+  .filters__row { gap: var(--s2); }
+  .filters__row--meta { gap: var(--s2); }
+  .filters { gap: 6px; margin-bottom: var(--s2); }
+  .panel--roster .panel__head { margin-bottom: var(--s2); }
+
+  /*
+   * The word "Sort" goes, the select stays. Hide unavailable, Glitter, the
+   * label and the select and Reset came to 374px on a 364px row — ten over, and
+   * a wrap costs 52px of roster to show four controls that nearly fit on one
+   * line. The select keeps an aria-label, so the control is still named for
+   * anyone who cannot see that it sits in a row of filters.
+   */
+  .sortby__label { display: none; }
   .secnav a { padding: 12px var(--s2); }
 
   .card__info, .benchchip__x, .prio__notebtn, .prio__artx {
@@ -2610,6 +2824,10 @@ body.is-clean .clean-hint {
 /* A phone gets the whole width; a desktop does not need a metre-wide grid. */
 @media (min-width: 760.02px) {
   body.is-clean .field-frame { max-width: 820px; margin-inline: auto; }
+
+  /* The roster's copy of Glitter art. See the note at the end of this file for
+     why the breakpoint is 760.02 and not 761. */
+  .touch-only { display: none; }
 }
 
 /* ============================================================ motion */
@@ -2667,11 +2885,20 @@ body.is-clean .clean-hint {
 }
 
 /*
- * (A .touch-only counterpart lived here, under `min-width: 760.02px` — 760.02
- * and not 761, because at a fractional viewport width, which a zoomed or scaled
- * browser produces routinely, 760.5px matches neither `max-width: 760px` nor
- * `min-width: 761px` and both classes render. It went with the phone's copy of
- * Share, which the app bar carries instead. The .wide-only side is safe against
- * that gap: at 760.5px the app bar is gone too, so the header's Share is the
- * only one on screen. Worth remembering if a .touch-only ever comes back.)
+ * .touch-only is hidden under `min-width: 760.02px`, up beside the clean-crop
+ * rule. 760.02 and not 761, because at a fractional viewport width — which a
+ * zoomed or scaled browser produces routinely — 760.5px matches neither
+ * `max-width: 760px` nor `min-width: 761px`, and a class hidden only above 761
+ * would render alongside its wide-screen twin in that gap.
+ *
+ * It carries the roster's copy of Glitter art. Two checkboxes for one setting
+ * is a duplicate worth having: the original is in the field toolbar, which on a
+ * phone is behind the roster sheet, and glitter is a decision you make while
+ * looking at the thumbnails it changes. app.js keeps the pair in sync in both
+ * directions, so neither can be left showing the wrong state.
+ *
+ * The earlier occupant was the phone's copy of Share, which the app bar carries
+ * instead. The .wide-only side is safe against the fractional gap for a
+ * different reason: at 760.5px the app bar is gone too, so the header's Share
+ * is the only one on screen either way.
  */

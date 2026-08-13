@@ -1,0 +1,952 @@
+[
+ {
+  "name": "Ordinary Zobo",
+  "slug": "ordinary-zobo",
+  "kind": "zobo",
+  "type": null,
+  "description": "A smelly Ordinary Zobo.",
+  "flavour": "Your average 9-to-5 Zobo that shambles into battle with the same energy as clocking in on Monday.",
+  "skill": {
+   "name": "Basic Attack",
+   "text": "Claws at enemies, dealing damage."
+  },
+  "attackRange": "1/4",
+  "moveSpeed": "2/4",
+  "boss": false,
+  "notes": null,
+  "sourceFile": "Ordinary Zobo.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos",
+  "image": "data/images/zobo/ordinary-zobo.png"
+ },
+ {
+  "name": "Two-Headed Zobo",
+  "slug": "two-headed-zobo",
+  "kind": "zobo",
+  "type": null,
+  "description": "A stronger Ordinary Zobo.",
+  "flavour": "Sure, a two-headed Zobo's scary stuff. But a solo Zobo? Pfft, barely tough!",
+  "skill": {
+   "name": "Clobbering Club",
+   "text": "Swings it's club forcefully, dealing damage."
+  },
+  "attackRange": "1/4",
+  "moveSpeed": "1/4",
+  "boss": true,
+  "notes": "Boss",
+  "sourceFile": "Two Headed Zobo.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos",
+  "image": "data/images/zobo/two-headed-zobo.png"
+ },
+ {
+  "name": "Tumbleweed Zobo",
+  "slug": "tumbleweed-zobo",
+  "kind": "zobo",
+  "type": "Grass",
+  "description": "A Grass Zobo whose head keeps fighting even after it's destroyed.",
+  "flavour": "\"Let's split up!\" - These were the last words he said to his buddies before he turned into a Zobo.",
+  "skill": {
+   "name": "Splitting Heads",
+   "text": "Throws punches, dealing damage. Upon being knocked down, it's head survives and attacks with it's teeth."
+  },
+  "attackRange": "1/4",
+  "moveSpeed": "2/4",
+  "boss": false,
+  "notes": null,
+  "sourceFile": "Tumbleweed Zobo.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos",
+  "image": "data/images/zobo/tumbleweed-zobo.png"
+ },
+ {
+  "name": "Plant Zobo",
+  "slug": "plant-zobo",
+  "kind": "zobo",
+  "type": "Grass",
+  "description": "A Grass Zobo who attacks from a distance.",
+  "flavour": "\"A Zobo fused with plants to achieve photosynthesis. Now it sunbathes to live forever!\" - Dr. C's Log",
+  "skill": {
+   "name": "Veggie Volley",
+   "text": "Tosses veggie baskets, dealing damage."
+  },
+  "attackRange": "3/4",
+  "moveSpeed": "1/4",
+  "boss": false,
+  "notes": null,
+  "sourceFile": "Basketcase Zobo.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos",
+  "image": "data/images/zobo/plant-zobo.png"
+ },
+ {
+  "name": "Clerk Zobo",
+  "slug": "clerk-zobo",
+  "kind": "zobo",
+  "type": "Grass",
+  "description": "A Grass Zobo that jumps to a neighboring row when hit a certain number of times.",
+  "flavour": "Unlike the other Zobos, this one is smart enough that it might get promoted to Manager Zobo.",
+  "skill": {
+   "name": "Getaway Strike",
+   "text": "Claws at enemies, dealing damage. After being attacked a certain number of times, leaps to another row."
+  },
+  "attackRange": "1/4",
+  "moveSpeed": "2/4",
+  "boss": false,
+  "notes": "Gets summoned by the Manager Zobo.",
+  "sourceFile": "Clerk Zobo.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos",
+  "image": "data/images/zobo/clerk-zobo.png"
+ },
+ {
+  "name": "Shotgun Zobo",
+  "slug": "shotgun-zobo",
+  "kind": "zobo",
+  "type": "Grass",
+  "description": "A Grass Zobo who deals AoE attacks to enemies in front of it with it's weapon.",
+  "flavour": "Brought a dusty old gun to a Tatari fight? Seriously? Ten shots won't even scratch Rockzilla.",
+  "skill": {
+   "name": "Scattershot",
+   "text": "Shoots forward, dealing AoE damage."
+  },
+  "attackRange": "3/4",
+  "moveSpeed": "1/4",
+  "boss": false,
+  "notes": null,
+  "sourceFile": "Shotgun Zobo.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos",
+  "image": "data/images/zobo/shotgun-zobo.png"
+ },
+ {
+  "name": "Chemist Zobo",
+  "slug": "chemist-zobo",
+  "kind": "zobo",
+  "type": "Grass",
+  "description": "A melee Grass Zobo that throws bottles on the ground to heal allies.",
+  "flavour": "Chemist Zobo abhors machinery. Only alchemy-- or modern chemistry-- is reliable. Isn't that how Garden Zobo was made?",
+  "skill": {
+   "name": "Poison Medic",
+   "text": "Attacks with a vial to deal damage. Spends HP to smash a flask, healing allies in range."
+  },
+  "attackRange": "2/4",
+  "moveSpeed": "2/4",
+  "boss": false,
+  "notes": "First Zobo to heal other Zobos.",
+  "sourceFile": "Chemist Zobo.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos",
+  "image": "data/images/zobo/chemist-zobo.png"
+ },
+ {
+  "name": "Slingshot Zobo",
+  "slug": "slingshot-zobo",
+  "kind": "zobo",
+  "type": "Grass",
+  "description": "A ranged Grass Zobo that shoots deflecting bullets.",
+  "flavour": "Slingshot Zobo is obsessed with achieving the perfect parabola. Before every projectile attack, it performs lengthy formula calculations to optimize its trajectory. Teaches other Zobos physics as a hobby.",
+  "skill": {
+   "name": "Ricochet Shot",
+   "text": "Shoots bullets to deal damage. On hit, bullets ricochet once to hit another enemy in range."
+  },
+  "attackRange": "3/4",
+  "moveSpeed": "1/4",
+  "boss": false,
+  "notes": null,
+  "sourceFile": "Slingshot Zobo.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos",
+  "image": "data/images/zobo/slingshot-zobo.png"
+ },
+ {
+  "name": "Manager Zobo",
+  "slug": "manager-zobo",
+  "kind": "zobo",
+  "type": "Grass",
+  "description": "A powerful Grass Zobo that can summon Clerk Zobos.",
+  "flavour": "Work your way up to this Zobo, and you'll have an endless brain buffet plus all the pinballs you want!",
+  "skill": {
+   "name": "Bloodbound Allies",
+   "text": "Hurls flower vases, dealing damage. Summons Clerk Zobos. Loses HP when it's summons are knocked down."
+  },
+  "attackRange": "4/4",
+  "moveSpeed": "1/4",
+  "boss": true,
+  "notes": "Boss; also in Boss Challenge rotation line-up. In the Boss Challenge, they are instead referred to as \"Dean Zobo.\"",
+  "sourceFile": "Dean Zobo.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos",
+  "image": "data/images/zobo/manager-zobo.png"
+ },
+ {
+  "name": "Shaman Zobo",
+  "slug": "shaman-zobo",
+  "kind": "zobo",
+  "type": "Grass",
+  "description": "A powerful Grass Zobo who gains shields and calls Hanger-On Zobos to it's aid.",
+  "flavour": "A traditionalist who won't spend two mana every turn summoning just a random totem. Relax.",
+  "skill": {
+   "name": "Ritual Dance",
+   "text": "Swings bone clubs, dealing damage. Summons Hanger-On Zobos and grants itself Hanger-On: Shield. The shield value decreases when the Hanger-On Zobos die."
+  },
+  "attackRange": "1/4",
+  "moveSpeed": "1/4",
+  "boss": true,
+  "notes": "Boss; the minions that it summons cannot be fought elsewhere.",
+  "sourceFile": "Shaman Zobo.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos",
+  "image": "data/images/zobo/shaman-zobo.png"
+ },
+ {
+  "name": "Garden Zobo",
+  "slug": "garden-zobo",
+  "kind": "zobo",
+  "type": "Grass",
+  "description": "A powerful Grass Zobo who entangles enemies.",
+  "flavour": "Its lab coat looks eerily similar to one worn by a certain researcher, except its pocket is marked with a P, not an A",
+  "skill": {
+   "name": "Vine Tangle",
+   "text": "Shoots seeds, dealing damage. Tosses vines to inflict Garden- Entangled on enemies."
+  },
+  "attackRange": "4/4",
+  "moveSpeed": "1/4",
+  "boss": true,
+  "notes": "Boss",
+  "sourceFile": "Garden Zobo.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos",
+  "image": "data/images/zobo/garden-zobo.png"
+ },
+ {
+  "name": "Knight Zobo",
+  "slug": "knight-zobo",
+  "kind": "zobo",
+  "type": "Grass",
+  "description": "A Powerful Grass Zobo that does charge attacks.",
+  "flavour": "The giant! It's making it's final charge towards the giant ahead!",
+  "skill": {
+   "name": "Windmill Charge",
+   "text": "Continuously gains Haste while moving. Its first attack after gaining Haste inflicts Stun and deals massive damage."
+  },
+  "attackRange": "2/4",
+  "moveSpeed": "3/4",
+  "boss": true,
+  "notes": "Boss",
+  "sourceFile": "Knight Zobo.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos",
+  "image": "data/images/zobo/knight-zobo.png"
+ },
+ {
+  "name": "Fisherman Zobo",
+  "slug": "fisherman-zobo",
+  "kind": "zobo",
+  "type": "Water",
+  "description": "A Water Zobo who attacks from a distance.",
+  "flavour": "There he goes again. Flaunting that fish he caught last year like it's still fresh! (FYI: It's not.)",
+  "skill": {
+   "name": "Fish Toss",
+   "text": "Throws fish, dealing damage."
+  },
+  "attackRange": "3/4",
+  "moveSpeed": "1/4",
+  "boss": false,
+  "notes": null,
+  "sourceFile": "Fisherman Zobo.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos",
+  "image": "data/images/zobo/fisherman-zobo.png"
+ },
+ {
+  "name": "Junker Zobo",
+  "slug": "junker-zobo",
+  "kind": "zobo",
+  "type": "Water",
+  "description": "A Water Zobo who takes less ranged damage.",
+  "flavour": "\"What sets Zobos apart from regular Tatari? They can use car doors as weapons.\" - Zobo Researcher Chuck",
+  "skill": {
+   "name": "Door Smash",
+   "text": "Smashes with its car door, dealing damage. Takes less damage from ranged attacks."
+  },
+  "attackRange": "1/4",
+  "moveSpeed": "2/4",
+  "boss": false,
+  "notes": null,
+  "sourceFile": "Junker Zobo.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos",
+  "image": "data/images/zobo/junker-zobo.png"
+ },
+ {
+  "name": "Patient Zobo",
+  "slug": "patient-zobo",
+  "kind": "zobo",
+  "type": "Water",
+  "description": "A Water Zobo that shakes in place when encountering it's enemies.",
+  "flavour": "This Zobo just shivers in place. Never moves an inch! He's Nurse Zobo's favorite patient to patch up!",
+  "skill": {
+   "name": "Fearful Infusion",
+   "text": "Swings an IV bag, dealing damage. Upon seeing an enemy, trembles with fear."
+  },
+  "attackRange": "1/4",
+  "moveSpeed": "1/4",
+  "boss": false,
+  "notes": null,
+  "sourceFile": "Patient Zobo.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos",
+  "image": "data/images/zobo/patient-zobo.png"
+ },
+ {
+  "name": "Bugler Zobo",
+  "slug": "bugler-zobo",
+  "kind": "zobo",
+  "type": "Water",
+  "description": "A Water Zobo who grants buffs to it's allies.",
+  "flavour": "It just single-handedly tanked team morale. I need the name of the Zobo who brought it on board. Now!",
+  "skill": {
+   "name": "Echo Tones",
+   "text": "Sounds a horn, granting allies ATK Boost."
+  },
+  "attackRange": "3/4",
+  "moveSpeed": "1/4",
+  "boss": false,
+  "notes": null,
+  "sourceFile": "Bugler Zobo.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos",
+  "image": "data/images/zobo/bugler-zobo.png"
+ },
+ {
+  "name": "Surfer Zobo",
+  "slug": "surfer-zobo",
+  "kind": "zobo",
+  "type": "Water",
+  "description": "A Water Zobo that moves quickly upon spawning and can stun enemies.",
+  "flavour": "One of 'em might be Hydro Zobo's ex. You never know.",
+  "skill": {
+   "name": "Hang Ten",
+   "text": "Stomps with its surfboard to deal damage. After appearing, moves quickly to attack and inflict Stun before bouncing back."
+  },
+  "attackRange": "1/4",
+  "moveSpeed": "3/4",
+  "boss": false,
+  "notes": null,
+  "sourceFile": "Surfer Zobo.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos",
+  "image": "data/images/zobo/surfer-zobo.png"
+ },
+ {
+  "name": "Yeti Zobo",
+  "slug": "yeti-zobo",
+  "kind": "zobo",
+  "type": "Water",
+  "description": "A powerful water Zobo who freezes enemies.",
+  "flavour": "Left fist hits hard, right fist hits harder. Yeti Zobo is ready for yet another fight!",
+  "skill": {
+   "name": "Ice Fury",
+   "text": "Attacks alternate between light and heavy punches. Heavy punches inflict AoE damage and Freeze. When entering the battlefield, summons a blizzard that deals wide-range AoE damage."
+  },
+  "attackRange": "1/4",
+  "moveSpeed": "1/4",
+  "boss": true,
+  "notes": "Boss",
+  "sourceFile": "Yeti Zobo.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos",
+  "image": "data/images/zobo/yeti-zobo.png"
+ },
+ {
+  "name": "Sailor Zobo",
+  "slug": "sailor-zobo",
+  "kind": "zobo",
+  "type": "Water",
+  "description": "A powerful Water Zobo who summons barrels.",
+  "flavour": "Maybe this Zobo was possessed by a Kraken-like creature? Otherwise, how did an octopus turn from \"dinner\" into \"killer\"?",
+  "skill": {
+   "name": "Barrel Army",
+   "text": "Rolls barrels, dealing AoE damage. Summons multiple barrels to deal AoE damage."
+  },
+  "attackRange": "4/4",
+  "moveSpeed": "1/4",
+  "boss": true,
+  "notes": "Boss",
+  "sourceFile": "Sailor Zobo.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos",
+  "image": "data/images/zobo/sailor-zobo.png"
+ },
+ {
+  "name": "Goonch Zobo",
+  "slug": "goonch-zobo",
+  "kind": "zobo",
+  "type": "Water",
+  "description": "A water Zobo that jumps between routes to keep you on your toes.",
+  "flavour": "Looney's \"zombies hate water\" theory just got fish-slapped by this Zobo. Now pool parties are ruined forever.",
+  "skill": {
+   "name": "Slippery Fish",
+   "text": "Launches an orb of water, dealing damage. Teleports to other rows."
+  },
+  "attackRange": "3/4",
+  "moveSpeed": "1/4",
+  "boss": true,
+  "notes": "Boss; also in Boss Challenge rotation line-up. In the Boss Challenge, they are instead referred to as \"Frankenfish.\"",
+  "sourceFile": "Frankenfish.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos",
+  "image": "data/images/zobo/goonch-zobo.png"
+ },
+ {
+  "name": "Rocker Zobo",
+  "slug": "rocker-zobo",
+  "kind": "zobo",
+  "type": "Lightning",
+  "description": "A Lightning Zobo that speeds up when it's weak.",
+  "flavour": "Those \"headphones\"? Yeah... they're actually zappy motivators. Who knew zombies could run this fast?",
+  "skill": {
+   "name": "Mad Dash",
+   "text": "Throws punches, dealing damage. At low HP, movement speed is increased."
+  },
+  "attackRange": "1/4",
+  "moveSpeed": "3/4",
+  "boss": false,
+  "notes": "Gets summoned by the Popstar Zobo.",
+  "sourceFile": "Rocker Zobo.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos",
+  "image": "data/images/zobo/rocker-zobo.png"
+ },
+ {
+  "name": "Hockey Zobo",
+  "slug": "hockey-zobo",
+  "kind": "zobo",
+  "type": "Lightning",
+  "description": "A Lightning Zobo that jumps frequently and jumps over Critters after attacking.",
+  "flavour": "Heads up! This Zobo is playing brain hockey, and your skull's the puck!",
+  "skill": {
+   "name": "Ice Waltz",
+   "text": "Swipes its hockey stick, dealing damage. Periodically leaps to another row."
+  },
+  "attackRange": "1/4",
+  "moveSpeed": "3/4",
+  "boss": false,
+  "notes": null,
+  "sourceFile": "Hockey Zobo.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos",
+  "image": "data/images/zobo/hockey-zobo.png"
+ },
+ {
+  "name": "Nurse Zobo",
+  "slug": "nurse-zobo",
+  "kind": "zobo",
+  "type": "Lightning",
+  "description": "A Lightning Zobo that throws syringes to paralyze its targets.",
+  "flavour": "When a Zobo starts to regain their sanity, this one gives 'em a lil' jab to keep 'em nice and brain-dead!",
+  "skill": {
+   "name": "Stunning Syringe",
+   "text": "Throws syringes, dealing damage and inflicting Paralysis."
+  },
+  "attackRange": "4/4",
+  "moveSpeed": "1/4",
+  "boss": false,
+  "notes": "She attacks the target 2 blocks away, unlike most ranged Zobos attack the target 1 block away.",
+  "sourceFile": "Nurse Zobo.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos",
+  "image": "data/images/zobo/nurse-zobo.png"
+ },
+ {
+  "name": "Battery Zobo",
+  "slug": "battery-zobo",
+  "kind": "zobo",
+  "type": "Lightning",
+  "description": "A Lightning Zobo who attacks from afar, but switches to melee when weakened.",
+  "flavour": "It's real job is stealing e-bikes. Before flipping them for cash, it removes the batteries to use as weapons.",
+  "skill": {
+   "name": "Low Power",
+   "text": "Fires small lightning bolts, dealing damage. When at low health, swings a power plug, dealing damage."
+  },
+  "attackRange": "3/4",
+  "moveSpeed": "1/4",
+  "boss": false,
+  "notes": null,
+  "sourceFile": "Battery Zobo.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos",
+  "image": "data/images/zobo/battery-zobo.png"
+ },
+ {
+  "name": "Arc Punch Zobo",
+  "slug": "arc-punch-zobo",
+  "kind": "zobo",
+  "type": "Lightning",
+  "description": "A Lightning Zobo that strikes with its fists and unleashes a piercing AoE punch.",
+  "flavour": "\"Referee! I demand a glove inspection!\" This Zobo has received a flood of complaints during boxing matches. With high-voltage cables wired to the insides of the gloves, you can guess what happens to the opponents.",
+  "skill": {
+   "name": "Lightning Fist",
+   "text": "Attacks with fists to deal damage. Occasionally throws a piercing punch."
+  },
+  "attackRange": "2/4",
+  "moveSpeed": "2/4",
+  "boss": false,
+  "notes": null,
+  "sourceFile": "Arc Punch Zobo.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos",
+  "image": "data/images/zobo/arc-punch-zobo.png"
+ },
+ {
+  "name": "Dagger Zobo",
+  "slug": "dagger-zobo",
+  "kind": "zobo",
+  "type": "Lightning",
+  "description": "A Lightning Zobo that throws two daggers at a time. though both can miss.",
+  "flavour": "Dagger Zobo can't juggle, but can show you a pretty cool (and lethal) knife trick.",
+  "skill": {
+   "name": "Knife Trick",
+   "text": "Throws 2 daggers that often hit different targets to deal damage."
+  },
+  "attackRange": "3/4",
+  "moveSpeed": "1/4",
+  "boss": false,
+  "notes": null,
+  "sourceFile": "Dagger Zobo.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos",
+  "image": "data/images/zobo/dagger-zobo.png"
+ },
+ {
+  "name": "Clown Zobo",
+  "slug": "clown-zobo",
+  "kind": "zobo",
+  "type": "Lightning",
+  "description": "A powerful Lightning Zobo who can leap over enemies as it moves.",
+  "flavour": "\"Sorry, the Zobo you have called is currently piloting a Helicopter. Please call again later.\"",
+  "skill": {
+   "name": "Clown Show",
+   "text": "Flies onto the battlefield. After landing, uses dual blades to deal damage."
+  },
+  "attackRange": "1/4",
+  "moveSpeed": "1/4",
+  "boss": true,
+  "notes": "Boss",
+  "sourceFile": "Clown Zobo.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos",
+  "image": "data/images/zobo/clown-zobo.png"
+ },
+ {
+  "name": "Popstar Zobo",
+  "slug": "popstar-zobo",
+  "kind": "zobo",
+  "type": "Lightning",
+  "description": "A Lightning Zobo that summons a mob of crazed fans.",
+  "flavour": "This about this. Rocker Zobos just have to dance. Pop Star Zobos have to preform.",
+  "skill": {
+   "name": "Superstar",
+   "text": "Swings it's microphone, dealing damage. Summons Rocker Zobos."
+  },
+  "attackRange": "2/4",
+  "moveSpeed": "1/4",
+  "boss": true,
+  "notes": "Boss; also in Boss Challenge rotation line-up.",
+  "sourceFile": "Pop Star.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos",
+  "image": "data/images/zobo/popstar-zobo.png"
+ },
+ {
+  "name": "Shocker Zobo",
+  "slug": "shocker-zobo",
+  "kind": "zobo",
+  "type": "Lightning",
+  "description": "A powerful Lightning Zobo that can electrify a large area.",
+  "flavour": "This Zobo will give troublemakers, unruly Tatari, and even you a jolt-tastic wake-up call!",
+  "skill": {
+   "name": "Quick Charge",
+   "text": "Swipes with a defibrillator, dealing damage. Unleashes multiple electric shocks over and increasing distance, dealing AoE damage."
+  },
+  "attackRange": "1/4",
+  "moveSpeed": "1/4",
+  "boss": true,
+  "notes": "Boss; he releases a large diamond-shaped AoE attack every third attack.",
+  "sourceFile": "Doctor Zobo.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos",
+  "image": "data/images/zobo/shocker-zobo.png"
+ },
+ {
+  "name": "Laser Zobo",
+  "slug": "laser-zobo",
+  "kind": "zobo",
+  "type": "Lightning",
+  "description": "",
+  "flavour": "Muhaha, fallen Zobos are just what I need to power my reactor, Instant fuel! Max output now!",
+  "skill": {
+   "name": "Power Surge",
+   "text": "Periodically generates cogs nearby, occasionally firing a piercing laser. Collects cogs on the field to increase the laser's duration. When present, other Zobos will drop cogs when they die."
+  },
+  "attackRange": "4/4",
+  "moveSpeed": "1/4",
+  "boss": true,
+  "notes": "Boss",
+  "sourceFile": "Laser Zobo.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos",
+  "image": "data/images/zobo/laser-zobo.png"
+ },
+ {
+  "name": "Cowboy Zobo",
+  "slug": "cowboy-zobo",
+  "kind": "zobo",
+  "type": "Rock",
+  "description": "A Rock Zobo who attacks from a distance.",
+  "flavour": "Even Zobos can't escape their past. This one's still repping the Vanderlinde Logo!",
+  "skill": {
+   "name": "Busy Stones",
+   "text": "Throws stones, dealing damage."
+  },
+  "attackRange": "3/4",
+  "moveSpeed": "1/4",
+  "boss": false,
+  "notes": null,
+  "sourceFile": "Cowboy Zobo.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos",
+  "image": "data/images/zobo/cowboy-zobo.png"
+ },
+ {
+  "name": "Miner Zobo",
+  "slug": "miner-zobo",
+  "kind": "zobo",
+  "type": "Rock",
+  "description": "A Rock Zobo that digs tunnels to sneak up behind you.",
+  "flavour": "Miner mischief! Digging way off the beaten path.",
+  "skill": {
+   "name": "Shovel Smash",
+   "text": "Attacks with a shovel, dealing damage. Upon first meeting an enemy, moves behind it."
+  },
+  "attackRange": "1/4",
+  "moveSpeed": "2/4",
+  "boss": false,
+  "notes": null,
+  "sourceFile": "Shoveler Zobo.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos",
+  "image": "data/images/zobo/miner-zobo.png"
+ },
+ {
+  "name": "Digger Zobo",
+  "slug": "digger-zobo",
+  "kind": "zobo",
+  "type": "Rock",
+  "description": "A Rock Zobo that digs a large ditch in front of itself upon spawning.",
+  "flavour": "\"This Zobo can drive mine carts. Will they be driving monster trucks next?!\" - Dr. C's Log",
+  "skill": {
+   "name": "Tunnel Run",
+   "text": "Attacks with a pickaxe, dealing damage. After appearing, uses tunnels to quickly move a certain distance."
+  },
+  "attackRange": "1/4",
+  "moveSpeed": "1/4",
+  "boss": false,
+  "notes": null,
+  "sourceFile": "Miner Zobo.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos",
+  "image": "data/images/zobo/digger-zobo.png"
+ },
+ {
+  "name": "Brick Zobo",
+  "slug": "brick-zobo",
+  "kind": "zobo",
+  "type": "Rock",
+  "description": "A Rock Zobo with a long attack range who keeps pushing forward.",
+  "flavour": "Where does it even pull that many bricks from? The sled it's riding sure isn't a pocket dimension.",
+  "skill": {
+   "name": "Paved Path",
+   "text": "Tosses bricks, dealing damage. Movement is replaced by a forward slide."
+  },
+  "attackRange": "4/4",
+  "moveSpeed": "1/4",
+  "boss": false,
+  "notes": null,
+  "sourceFile": "Brick Zobo.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos",
+  "image": "data/images/zobo/brick-zobo.png"
+ },
+ {
+  "name": "Trekker Zobo",
+  "slug": "trekker-zobo",
+  "kind": "zobo",
+  "type": "Rock",
+  "description": "A ranged Rock Zobo that speeds up its allies.",
+  "flavour": "\"It's been observed through Trekker Zobo that calorie-dense foods allow Zobos to sprint a short distance.\" --Unnamed Log",
+  "skill": {
+   "name": "Chocolate Mountain",
+   "text": "Throws a trekking pole to deal damage. Tosses chocolate to allies, granting them Haste."
+  },
+  "attackRange": "4/4",
+  "moveSpeed": "1/4",
+  "boss": false,
+  "notes": null,
+  "sourceFile": "Trekker Zobo.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos",
+  "image": "data/images/zobo/trekker-zobo.png"
+ },
+ {
+  "name": "Ripper Zobo",
+  "slug": "ripper-zobo",
+  "kind": "zobo",
+  "type": "Rock",
+  "description": "A Rock Zobo that heals itself through attacks.",
+  "flavour": "To stay warm on chilly peaks, hiking enthusiast Ripper Zobo wraps itself tight like a mummy, leaving only the eyes exposed. Ice axes just might be too annoying to use on the cliffs though. How about a massive fanged jaw to latch onto things?",
+  "skill": {
+   "name": "Leeching Bite",
+   "text": "Chomps down to deal damage. Heals itself based on the damage dealt."
+  },
+  "attackRange": "1/4",
+  "moveSpeed": "2/4",
+  "boss": false,
+  "notes": null,
+  "sourceFile": "Ripper Zobo.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos",
+  "image": "data/images/zobo/ripper-zobo.png"
+ },
+ {
+  "name": "Sandworm Zobo",
+  "slug": "sandworm-zobo",
+  "kind": "zobo",
+  "type": "Rock",
+  "description": "A powerful Rock Zobo who relocates the enemy.",
+  "flavour": "Everyone thought Zobos would always be humanoid. Until this one slithered in. Ah, natural wonders.",
+  "skill": {
+   "name": "Sand Control",
+   "text": "Spits mud bullets, dealing damage. Uses quicksand to reposition enemies."
+  },
+  "attackRange": "4/4",
+  "moveSpeed": "1/4",
+  "boss": true,
+  "notes": "Boss",
+  "sourceFile": "Sandworm Zobo.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos",
+  "image": "data/images/zobo/sandworm-zobo.png"
+ },
+ {
+  "name": "Climber Zobo",
+  "slug": "climber-zobo",
+  "kind": "zobo",
+  "type": "Rock",
+  "description": "A powerful Rock Zobo who can target multiple zones.",
+  "flavour": "It could once hook a Tatari with its axe over for a beatdown. Devs removed the skill... for the bigger picture.",
+  "skill": {
+   "name": "Tremor",
+   "text": "Swings a pickaxe, dealing damage and causing the ground to shake, periodically dealing AoE damage."
+  },
+  "attackRange": "1/4",
+  "moveSpeed": "1/4",
+  "boss": true,
+  "notes": "Boss",
+  "sourceFile": "Climber Zobo.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos",
+  "image": "data/images/zobo/climber-zobo.png"
+ },
+ {
+  "name": "Roadhog Zobo",
+  "slug": "roadhog-zobo",
+  "kind": "zobo",
+  "type": "Rock",
+  "description": "A Rock Zobo that smashes through everything in its way.",
+  "flavour": "Count yourself lucky that he's only coming at you with a tire. It could've been a whole truck!",
+  "skill": {
+   "name": "Tire Swing",
+   "text": "Swings a heavy tire, dealing AoE damage. Unleashes a three-hit combo to smash enemies."
+  },
+  "attackRange": "1/4",
+  "moveSpeed": "1/4",
+  "boss": true,
+  "notes": "Boss; also in Boss Challenge rotation line-up. Can use 1-time-only ability to damage and bypass a Tatari blocking his way. In the Boss Challenge, they are instead referred to as \"Road Bully.\"",
+  "sourceFile": "Road Bully.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos",
+  "image": "data/images/zobo/roadhog-zobo.png"
+ },
+ {
+  "name": "Pharaoh Zobo",
+  "slug": "pharaoh-zobo",
+  "kind": "zobo",
+  "type": "Rock",
+  "description": "A powerful Rock Zobo whose attacks become more devastating over time.",
+  "flavour": "\"Doesn't it get tired from shooting beams all day?\" \"That's how it was designed. No stopping until you die!\" --Dev Chat",
+  "skill": {
+   "name": "Death Curse",
+   "text": "Summons multiple attackable coffins and appears from the last one destroyed. Applies a death curse which repeatedly inflicts Fragile that stacks."
+  },
+  "attackRange": "4/4",
+  "moveSpeed": "1/4",
+  "boss": true,
+  "notes": "Boss, is also the first Boss Zobo that can spawn from any 5 lanes.",
+  "sourceFile": "Pharaoh Zobo.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos",
+  "image": "data/images/zobo/pharaoh-zobo.png"
+ },
+ {
+  "name": "Firehead Zobo",
+  "slug": "firehead-zobo",
+  "kind": "zobo",
+  "type": "Fire",
+  "description": "A Fire Zobo that runs fast but slows down when weakened.",
+  "flavour": "This Zobos's life goals: (1) Hoard pinballs (2) Buy a bike (3) Legally change name to \"Johnny Blazer.\"",
+  "skill": {
+   "name": "Draining Blow",
+   "text": "Swings forcefully, dealing damage. At low HP, Movement Speed is reduced."
+  },
+  "attackRange": "1/4",
+  "moveSpeed": "3/4",
+  "boss": false,
+  "notes": null,
+  "sourceFile": "Spry Zobo.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos",
+  "image": "data/images/zobo/firehead-zobo.png"
+ },
+ {
+  "name": "Matchstick Zobo",
+  "slug": "matchstick-zobo",
+  "kind": "zobo",
+  "type": "Fire",
+  "description": "A Fire Zobo that explodes when destroyed.",
+  "flavour": "\"ART IS A BLAZING BOOM!\"",
+  "skill": {
+   "name": "Spark Tome",
+   "text": "Slashes with a matchstick, dealing damage. Detonates upon being knocked down, dealing limited AoE damage."
+  },
+  "attackRange": "1/4",
+  "moveSpeed": "2/4",
+  "boss": false,
+  "notes": "Gets summoned by the Tipsy Zobo.",
+  "sourceFile": "Matchstick Zobo.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos",
+  "image": "data/images/zobo/matchstick-zobo.png"
+ },
+ {
+  "name": "Landlady Zobo",
+  "slug": "landlady-zobo",
+  "kind": "zobo",
+  "type": "Fire",
+  "description": "A Fire Zobo that attacks from a distance.",
+  "flavour": "\"Oh honey, turning into a Zobo doesn't mean that rent's free. HEY! WHO THREW A DANG FIRE EXTINGUISHER?!\"",
+  "skill": {
+   "name": "Fire Control",
+   "text": "Tosses fire extinguishers, dealing damage."
+  },
+  "attackRange": "3/4",
+  "moveSpeed": "1/4",
+  "boss": false,
+  "notes": "May inflict Burn status to Tatari.",
+  "sourceFile": "Landlady Zobo.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos",
+  "image": "data/images/zobo/landlady-zobo.png"
+ },
+ {
+  "name": "Kindling Zobo",
+  "slug": "kindling-zobo",
+  "kind": "zobo",
+  "type": "Fire",
+  "description": "A Fire Zobo who tosses hot stones and flaming stones that inflict Burning.",
+  "flavour": "Throwing rocks still hurts? Well... Nurse Zobos use syringes, so this makes sense.",
+  "skill": {
+   "name": "Hot Stones",
+   "text": "Tosses hot stones, dealing damage. After a certain number of attacks, tosses flaming stones, inflicting damage and Burning."
+  },
+  "attackRange": "3/4",
+  "moveSpeed": "1/4",
+  "boss": false,
+  "notes": null,
+  "sourceFile": "Kindling Zobo.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos",
+  "image": "data/images/zobo/kindling-zobo.png"
+ },
+ {
+  "name": "Bombard Zobo",
+  "slug": "bombard-zobo",
+  "kind": "zobo",
+  "type": "Fire",
+  "description": "A Fire Zobo that throws bombs to deal damage.",
+  "flavour": "Bombard Zobo saves the best part for last by cooking a bomb and throwing it in one second before detonation. This exhilarating game of gamble has cost Bombard Zobo more than a few teammates.",
+  "skill": {
+   "name": "Blaze Bomb",
+   "text": "Throws a bomb that detonates after a delay."
+  },
+  "attackRange": "3/4",
+  "moveSpeed": "1/4",
+  "boss": false,
+  "notes": null,
+  "sourceFile": "Bombard Zobo.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos",
+  "image": "data/images/zobo/bombard-zobo.png"
+ },
+ {
+  "name": "Barrel Zobo",
+  "slug": "barrel-zobo",
+  "kind": "zobo",
+  "type": "Fire",
+  "description": "A Fire Zobo that hides inside a barrel to avoid danger.",
+  "flavour": "The world outside is too chaotic, and the Zobo Horde is just overwhelming. Only inside a barrel does Barrel Zobo find peace.",
+  "skill": {
+   "name": "Barrel Barrier",
+   "text": "Attacks with its fists to deal damage. When HP is low, hides inside a barrel for a while and gains DEF Boost."
+  },
+  "attackRange": "1/4",
+  "moveSpeed": "2/4",
+  "boss": false,
+  "notes": null,
+  "sourceFile": "Barrel Zobo.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos",
+  "image": "data/images/zobo/barrel-zobo.png"
+ },
+ {
+  "name": "Volcano Zobo",
+  "slug": "volcano-zobo",
+  "kind": "zobo",
+  "type": "Fire",
+  "description": "A powerful Fire Zobo who explodes multiple times and revives.",
+  "flavour": "\"ART IS...\" Wait, that line's been taken, and it's a big, active VOLCANO, you know. \"ART IS AN EXPLOSION!\"",
+  "skill": {
+   "name": "Magma Slam",
+   "text": "Swings stone fists, dealing AoE damage. Upon being destroyed the first few times, explodes to deal AoE damage, then resurrects."
+  },
+  "attackRange": "1/4",
+  "moveSpeed": "1/4",
+  "boss": true,
+  "notes": "Boss; explodes 3 times, reviving twice.",
+  "sourceFile": "Volcano Zobo.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos",
+  "image": "data/images/zobo/volcano-zobo.png"
+ },
+ {
+  "name": "Forge Zobo",
+  "slug": "forge-zobo",
+  "kind": "zobo",
+  "type": "Fire",
+  "description": "A powerful Fire Zobo who launches other zobos.",
+  "flavour": "The limits and constraints imposed by ordinary feeble bodies are simply unacceptable. Glorious Evolution!",
+  "skill": {
+   "name": "Flame Toss",
+   "text": "Launches fireballs, dealing damage. Pulls allies, then launches them."
+  },
+  "attackRange": "4/4",
+  "moveSpeed": "1/4",
+  "boss": true,
+  "notes": "Boss",
+  "sourceFile": "Forge Zobo.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos",
+  "image": "data/images/zobo/forge-zobo.png"
+ },
+ {
+  "name": "Tipsy Zobo",
+  "slug": "tipsy-zobo",
+  "kind": "zobo",
+  "type": "Fire",
+  "description": "A powerful Fire Zobo who buffs other Zobos.",
+  "flavour": "Zobologist Billy Babbo discovered that Zobos are much bolder after a drink because of their DNA.",
+  "skill": {
+   "name": "Brothers All",
+   "text": "Hurls wine bottles, dealing damage. Inspires all Zobos, granting Haste and DMG Boost."
+  },
+  "attackRange": "4/4",
+  "moveSpeed": "1/4",
+  "boss": true,
+  "notes": "Boss; also in Boss Challenge rotation line-up.",
+  "sourceFile": "Tipsy Zobo.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos",
+  "image": "data/images/zobo/tipsy-zobo.png"
+ },
+ {
+  "name": "Captain Zobo",
+  "slug": "captain-zobo",
+  "kind": "zobo",
+  "type": "Fire",
+  "description": "A Fire Zobo that can switch between attack modes.",
+  "flavour": "For Captain Zobo, not all treasure is silver and gold.",
+  "skill": {
+   "name": "Pistol Diplomacy",
+   "text": "Fires its weapon to attack at range, generating gold coins. When coins are picked up, recovers HP and gains ATK Boost, before switching to a blade for melee attacks."
+  },
+  "attackRange": "3/4",
+  "moveSpeed": "1/4",
+  "boss": true,
+  "notes": "Boss, also seems to appear every x-80 level in each chapter.",
+  "sourceFile": "Captain Zobo.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos",
+  "image": "data/images/zobo/captain-zobo.png"
+ }
+]

@@ -23,7 +23,7 @@
  */
 
 import { state } from './data.js';
-import { CELLS, MODES } from './rules.js';
+import { CELLS, ALL_CELLS, MODES } from './rules.js';
 
 export const HASH_VERSION = 'v6';
 
@@ -42,6 +42,9 @@ const encodeNote = (note) => encodeURIComponent(encodeURIComponent(note));
 function safeDecode(text) {
   try { return decodeURIComponent(text); } catch { return text; }
 }
+
+/** Lazily, because data.js fills this in after its fetch resolves. */
+const zoboSlugs = () => state.zoboBySlug ?? new Map();
 
 const playersIn = (mode) => Array.from(
   { length: MODES[mode]?.players ?? 1 }, (_, i) => i + 1);
@@ -69,6 +72,20 @@ export function toFragment(snap) {
       if (!placed.has(slug)) tokens.push(`${player}.${slug}@-`);
     }
   }
+
+  /*
+   * Zobos ride in the same list under player 0, which the grammar already
+   * allows — a token is `<player>.<slug>@<cell>` and nothing ever said the
+   * player had to be 1 or 2. They are written after both players so a reader
+   * that stops at the players it knows still gets a whole formation.
+   *
+   * There is no `@-` half for them: a Zobo is either standing somewhere or it
+   * is not part of the picture. Nobody benches an enemy.
+   */
+  for (const [cell, occ] of cells.entries()) {
+    if (occ?.kind === 'zobo') tokens.push(`0.${occ.slug}@${cell}`);
+  }
+
   if (!tokens.length) return '';
 
   const plan = (Array.isArray(snap.plan) ? snap.plan : []).map((s) => {
@@ -86,6 +103,23 @@ export function toFragment(snap) {
   if (lf.wants?.length) meta.push(`w=${lf.wants.join('+')}`);
   if (have.note?.trim()) meta.push(`hn=${encodeNote(have.note.trim())}`);
   if (have.wants?.length) meta.push(`hw=${have.wants.join('+')}`);
+  /*
+   * Sandbox rides in the meta segment rather than beside the mode, because it is
+   * not one: `sandbox/` where `solo/` goes would have to be spelled
+   * `sandbox-coop/` to say the other half, and a reader older than this line
+   * would fall back to solo and silently drop player 2.
+   *
+   * As a meta field it degrades the right way instead. An older build ignores
+   * `sb=1` — every key it does not know is skipped — reads the mode it
+   * understands, and rejects the cells past 35 on the bound it already has. It
+   * draws the field half of a Sandbox formation, trimmed to its caps, which is
+   * the most honest thing it could do with a board it cannot represent.
+   */
+  if (snap.sandbox) meta.push('sb=1');
+  // The ground past the line, carried separately because it is a separate
+  // question: a link can open the Zobo rows inside a legal 15, or lift the caps
+  // without them, and both have to survive being pasted.
+  if (snap.zoboGround) meta.push('zg=1');
 
   return `${HASH_VERSION}=${mode}/${tokens.join(',')};${plan};${meta.join('~')}`;
 }
@@ -109,7 +143,14 @@ export function fromFragment(hash) {
   const mode = slash === -1 ? 'solo' : raw.slice(0, slash);
   const [layoutPart = '', planPart = '', metaPart = ''] = raw.slice(slash + 1).split(';');
 
-  const cells = Array(CELLS).fill(null);
+  /*
+   * Allocated at full size and bounded by what the link says, not by what this
+   * reader would allow. A link without `sb=1` cannot contain a cell above 35 in
+   * the first place — nothing writes one — so the narrower bound is enforced
+   * where it belongs: reconcile() clears anything beyond the line whenever
+   * Sandbox is off, including from a hand-edited link that put it there.
+   */
+  const cells = Array(ALL_CELLS).fill(null);
   const bench = { 1: [], 2: [] };
   const unknown = [];
 
@@ -117,16 +158,38 @@ export function fromFragment(hash) {
     const at = token.lastIndexOf('@');
     if (at === -1) continue;
     const dot = token.indexOf('.');
-    const player = Number(token.slice(0, dot)) || 1;
+    /*
+     * `|| 1` would be wrong now: 0 is a real player number here, the one that
+     * means "a Zobo, owned by nobody". Only a genuinely unparseable prefix
+     * defaults to player 1, which is what that fallback was ever for.
+     */
+    const parsed = Number(token.slice(0, dot));
+    const player = Number.isInteger(parsed) && parsed >= 0 ? parsed : 1;
     const slug = token.slice(dot + 1, at);
     const where = token.slice(at + 1);
     if (!slug) continue;
+
+    /*
+     * Player 0 is a Zobo. Checked before the roster lookup, and before the bench
+     * back-fill below — an enemy must never end up in somebody's 15, and a link
+     * naming a Zobo this build has not heard of is a skipped token rather than
+     * an unknown Tatari.
+     */
+    if (player === 0 || zoboSlugs().has(slug)) {
+      if (!zoboSlugs().has(slug)) { unknown.push(slug); continue; }
+      const at = Number(where);
+      if (Number.isInteger(at) && at >= 0 && at < ALL_CELLS && !cells[at]) {
+        cells[at] = { slug, player: 0, kind: 'zobo' };
+      }
+      continue;
+    }
+
     if (!state.bySlug.has(slug)) { unknown.push(slug); continue; }
     if (!bench[player]) continue;
     if (!bench[player].includes(slug)) bench[player].push(slug);
     if (where === '-') continue;
     const cell = Number(where);
-    if (!Number.isInteger(cell) || cell < 0 || cell >= CELLS || cells[cell]) continue;
+    if (!Number.isInteger(cell) || cell < 0 || cell >= ALL_CELLS || cells[cell]) continue;
     cells[cell] = { slug, player };
   }
 
@@ -157,6 +220,8 @@ export function fromFragment(hash) {
   let lfMode;
   let haveNote;
   let haveWants;
+  let sandbox = false;
+  let zoboGround = false;
   for (const field of metaPart.split('~')) {
     const eq = field.indexOf('=');
     if (eq === -1) continue;
@@ -167,6 +232,8 @@ export function fromFragment(hash) {
     else if (key === 'w') lfWants = value.split('+').filter(Boolean);
     else if (key === 'hn') haveNote = safeDecode(value);
     else if (key === 'hw') haveWants = value.split('+').filter(Boolean);
+    else if (key === 'sb') sandbox = value === '1';
+    else if (key === 'zg') zoboGround = value === '1';
     // v6 links written before the two lines existed said which side they meant.
     else if (key === 'm') lfMode = value;
   }
@@ -181,7 +248,7 @@ export function fromFragment(hash) {
     : undefined;
 
   return {
-    blob: { mode, cells, bench, plan, name, lf, lfWants, lfMode, lines },
+    blob: { mode, sandbox, zoboGround, cells, bench, plan, name, lf, lfWants, lfMode, lines },
     unknown,
   };
 }

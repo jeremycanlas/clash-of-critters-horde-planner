@@ -65,6 +65,18 @@ field, HAVE above LF.
 
 ## Changelog
 
+### 1.5.0
+
+#### Changes:
+- Added the new Tatari and it's evolutions
+- Added a background img tool, all tataris and it's glitter variants should be backgroundless from now on
+- Added a Zobo roster 
+- Added a zobo ground toggle to bring out the 7x7 grid above the placeable 6x6 grid.
+- Sandbox - Suggested by glenthern from discord. Uncapped Tataris on the field
+- Boss pull toggle rebuilt - built the first version when i was a noob idk how it worked HAHAHA but it works now hopefully, thanks to everyone who answered my inquiries in discord.
+- Also added a second boss pull toggle
+
+
 ### 1.4.0
 
 #### Summary:

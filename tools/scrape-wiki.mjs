@@ -190,6 +190,100 @@ function groupFamilies(list) {
   return runs.length;
 }
 
+// ---------------------------------------------------------------- zobos
+
+/**
+ * The other half of a battle.
+ *
+ * Zobos are what a formation is drafted *against*, and the wiki keeps them on
+ * one page in one table. They are not Tatari and are deliberately not shaped
+ * like them: no evolution line, no tier, no bench, no glitter art. What they do
+ * carry is what a drafter needs — an element to counter, a reach and a move
+ * speed — so those are pulled out of the combined "Attack Range and Move Speed"
+ * cell into fields of their own rather than left as prose.
+ *
+ * `type` is null for the ones the wiki lists as None, matching how the roster
+ * already treats an absent element, rather than inventing a "None" element the
+ * type chart would then have to know about.
+ */
+function parseZobos(text) {
+  const rows = tableRows(text, '! Battle Description');
+  const list = [];
+  const seen = new Set();
+
+  for (const row of rows) {
+    const c = splitCells(row);
+    if (c.length < 7) continue;
+
+    const name = plain(c[1]);
+    if (!name) continue;
+    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    // A couple of Zobos are listed twice; the first listing is the canonical one.
+    if (!slug || seen.has(slug)) continue;
+    seen.add(slug);
+
+    // Attack Range and Move Speed share one cell, each as "3/4".
+    const reach = plain(c[6]);
+    const range = reach.match(/Attack Range:\s*(\d+\s*\/\s*\d+)/i);
+    const speed = reach.match(/Move Speed:\s*(\d+\s*\/\s*\d+)/i);
+
+    const notes = plain(c[7] ?? '');
+    /*
+     * One Zobo (Laser Zobo) is filed under "Electric" where every other page on
+     * the wiki says "Lightning". Left alone it would miss the type icon, sit
+     * outside the type chart and never match a Lightning filter — a one-word
+     * typo that reads as a sixth element. Anything that is not one of the five
+     * after this is dropped to null rather than invented.
+     */
+    const raw = element(plain(c[2]));
+    const named = raw === 'Electric' ? 'Lightning' : raw;
+    const type = ELEMENTS.includes(named) ? named : null;
+
+    list.push({
+      name,
+      slug,
+      kind: 'zobo',
+      type,
+      description: plain(c[3]),
+      flavour: plain(c[4]),
+      skill: skillOf(c[5]),
+      attackRange: range ? range[1].replace(/\s/g, '') : null,
+      moveSpeed: speed ? speed[1].replace(/\s/g, '') : null,
+      /*
+       * "Boss" is the first word of the Notes cell when it applies, and it is
+       * the one flag worth lifting out of that prose: it changes how you draft
+       * against one far more than the rest of the sentence does.
+       */
+      boss: /(^|[,;\s])boss\b/i.test(notes),
+      notes: notes || null,
+      sourceFile: fileName(c[0]),
+      wikiUrl: `${WIKI}/wiki/Zobos`,
+    });
+  }
+  return list;
+}
+
+async function fetchZoboSprites(list, thumbs) {
+  const dir = path.join(ROOT, 'data/images/zobo');
+  await mkdir(dir, { recursive: true });
+
+  let got = 0;
+  const missing = [];
+  for (const z of list) {
+    const url = z.sourceFile && thumbs.get(z.sourceFile);
+    if (!url) { missing.push(z.name); continue; }
+    const dest = path.join(dir, `${z.slug}.png`);
+    try {
+      await stat(dest);                     // already on disk: leave it alone
+    } catch {
+      await download(url, dest);
+    }
+    z.image = `data/images/zobo/${z.slug}.png`;
+    got++;
+  }
+  return { got, missing };
+}
+
 // ---------------------------------------------------------------- horde skills
 
 /**
@@ -569,6 +663,29 @@ async function main() {
 
   await mkdir(path.join(ROOT, 'data'), { recursive: true });
   await writeFile(path.join(ROOT, 'data/tatari.json'), JSON.stringify(ordered, null, 1) + '\n');
+
+  /*
+   * Zobos, in a file of their own rather than folded into tatari.json.
+   *
+   * They share almost no fields with a Tatari — no tier, no evolution line, no
+   * role, no bench — so merging them would mean half the roster carrying nulls
+   * for the other half's columns, and every consumer testing `kind` before it
+   * could trust anything. A separate file also means a page that only wants the
+   * drafting roster pays nothing for them.
+   */
+  console.log('Fetching Zobos...');
+  const zobos = parseZobos(await wikitext('Zobos'));
+  console.log(`  ${zobos.length} Zobos, ${zobos.filter((z) => z.boss).length} of them bosses`);
+
+  if (withImages) {
+    const zoboThumbs = await resolveThumbs(zobos.map((z) => z.sourceFile).filter(Boolean));
+    const { got, missing } = await fetchZoboSprites(zobos, zoboThumbs);
+    console.log(`  sprites: ${got}/${zobos.length}`);
+    if (missing.length) console.log(`  no image on the wiki: ${missing.join(', ')}`);
+  } else {
+    for (const z of zobos) if (z.sourceFile) z.image = `data/images/zobo/${z.slug}.png`;
+  }
+  await writeFile(path.join(ROOT, 'data/zobos.json'), JSON.stringify(zobos, null, 1) + '\n');
 
   const meta = {
     source: `${WIKI}/wiki/Tatari`,

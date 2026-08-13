@@ -16,3 +16,7 @@ __pycache__/
 skills-lock.json
 .DS_Store
 Thumbs.db
+
+# Browser-automation artifacts: page snapshots and console logs written while
+# testing. Debris from a session, never part of the site.
+.playwright-mcp/
