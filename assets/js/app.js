@@ -322,7 +322,6 @@ function wireToolbar() {
 
     if (on) {
       store.setSandbox(true);
-      toast('Sandbox on — caps off');
       return;
     }
 
@@ -330,24 +329,26 @@ function wireToolbar() {
     const got = store.setSandbox(false);
 
     /*
-     * Said plainly, and undoable, rather than confirmed in advance.
+     * Silent unless something actually went.
      *
-     * A confirm was the first instinct, and Clear all is the argument against
-     * it: it destroys strictly more than this does and still just acts, because
-     * the toast carries Undo for six seconds and that is a better deal than a
-     * modal. Two paths to the same kind of loss should not behave differently,
-     * and a native confirm would be the only one in the app besides being a
-     * dialog that blocks the page under it.
+     * Turning Sandbox on says nothing at all: the checkbox shows its own state
+     * and the bench count beside the field switches from a limit to a plain
+     * number, so a toast narrating it is noise on a switch people flip back and
+     * forth while trying things out.
      *
-     * What the toast owes in exchange is precision. "Sandbox off" alone would
-     * hide the removal; the counts are separated because they are different
-     * events — benched Tatari are still yours, removed ones are not.
+     * Turning it off is different only when it costs something. The counts are
+     * kept separate because they are separate events — benched Tatari are still
+     * yours, removed ones are not — and the toast is the only place Undo can
+     * live, which is the real reason it survives at all. Nothing lost, nothing
+     * said.
      */
     const said = [];
     if (got.unplaced) said.push(`benched ${got.unplaced}`);
     if (got.dropped) said.push(`removed ${got.dropped} that would not fit`);
-    toast(said.length ? `Sandbox off — ${said.join(', ')}` : 'Sandbox off — caps are back',
-      got.dropped ? 'warn' : 'info', said.length ? undoTo(before) : null);
+    if (!said.length) return;
+
+    toast(`Sandbox off — ${said.join(', ')}`,
+      got.dropped ? 'warn' : 'info', undoTo(before));
   });
 
   $('#mode-switch').addEventListener('click', (e) => {
