@@ -8,7 +8,7 @@
  * Sprites are same-origin, so the canvas stays untainted and can be exported.
  */
 
-import { state } from './data.js';
+import { state, pieceBySlug } from './data.js';
 import * as store from './store.js';
 import { artOf } from './ui.js';
 import { effectsOf, GROUP_LABELS } from './effects.js';
@@ -166,7 +166,7 @@ const spriteKey = (slug, src) => `${slug}\n${src}`;
  */
 export function warmSprites(slugs = cardSlugs()) {
   for (const slug of new Set(slugs)) {
-    const src = artOf(state.bySlug.get(slug) ?? {});
+    const src = artOf(pieceBySlug(slug) ?? {});
     if (!src) continue;
     const key = spriteKey(slug, src);
     if (warmed.has(key)) continue;
@@ -202,7 +202,7 @@ async function loadSprites(slugs) {
   warmSprites(slugs);
 
   await Promise.all([...new Set(slugs)].map(async (slug) => {
-    const src = artOf(state.bySlug.get(slug) ?? {});
+    const src = artOf(pieceBySlug(slug) ?? {});
     if (!src) return;
 
     const img = await Promise.race([
@@ -269,9 +269,123 @@ function planLines(view, player) {
 
 // ---------------------------------------------------------------- drawing
 
+/**
+ * One tile of the board.
+ *
+ * Lifted out of drawField's double loop so the rows past the contact line can be
+ * drawn by exactly the same code as the field: a pulled Tatari out there has to
+ * look like the Tatari it is, badge and owner colour and all, and a Zobo has to
+ * look like nothing you brought.
+ */
+function drawCell(ctx, colours, sprites, view, cx, cy, cell, coop) {
+  const occ = view.formation.cells[cell];
+
+    if (!occ) {
+      fill(ctx, colours.bg, cx, cy, CELL, CELL, 8);
+      ctx.strokeStyle = colours.line;
+      ctx.lineWidth = 1;
+      roundRect(ctx, cx + 0.5, cy + 0.5, CELL - 1, CELL - 1, 8);
+      ctx.stroke();
+      return;
+    }
+    // Tatari or Zobo: the field takes both and the card has to draw both.
+    const tatari = pieceBySlug(occ.slug);
+    const isZobo = occ.kind === 'zobo';
+    const typeColour = colours.type[tatari?.type] ?? colours.line;
+
+    const done = tint(ctx, typeColour, 0.18);
+    roundRect(ctx, cx, cy, CELL, CELL, 8);
+    ctx.fill();
+    done();
+
+    ctx.strokeStyle = isZobo ? colours.line
+      : coop ? (occ.player === 1 ? colours.p1 : colours.p2) : typeColour;
+    ctx.lineWidth = 2;
+    roundRect(ctx, cx + 1, cy + 1, CELL - 2, CELL - 2, 7);
+    ctx.stroke();
+
+    const sprite = sprites.get(occ.slug);
+    if (sprite) ctx.drawImage(sprite, cx + 4, cy + 4, CELL - 8, CELL - 8);
+    else {
+      ctx.font = font(11, 600);
+      ctx.fillStyle = colours.dim;
+      ctx.textAlign = 'center';
+      ctx.fillText(fitText(ctx, tatari?.name ?? occ.slug, CELL - 8), cx + CELL / 2, cy + CELL / 2);
+      ctx.textAlign = 'left';
+    }
+
+    /*
+     * The planned level and where it falls in the order — the two numbers
+     * worth reading off a formation at a glance. The step number rides on the
+     * level badge exactly as it does on the token in the app, because a
+     * posted picture is where most people read a plan and "which one first"
+     * is the question a plan answers.
+     */
+    // Nobody levels a Zobo, and nobody owns one.
+    const target = isZobo ? null : view.topLevel(occ.slug, occ.player);
+    const seat = isZobo ? null : view.planPositionOf(occ.slug, occ.player);
+    if (target !== null || seat !== null) {
+      const label = target !== null ? `L${target}` : '';
+      ctx.font = font(12, 800);
+      const labelW = label ? ctx.measureText(label).width : 0;
+      const discW = seat !== null ? 14 : 0;
+      const gap = label && discW ? 4 : 0;
+      const w = labelW + discW + gap + 10;
+      const bx = cx + CELL - w - 4;
+      const by = cy + CELL - 20;
+
+      fill(ctx, colours.accent, bx, by, w, 16, 4);
+
+      let tx = bx + 5;
+      if (seat !== null) {
+        const done = tint(ctx, colours.accentInk, 0.82);
+        roundRect(ctx, tx, by + 2, discW, 12, 6);
+        ctx.fill();
+        done();
+        ctx.fillStyle = colours.accent;
+        ctx.font = font(9.5, 800);
+        ctx.textAlign = 'center';
+        ctx.fillText(String(seat), tx + discW / 2, by + 11.5);
+        ctx.textAlign = 'left';
+        tx += discW + gap;
+      }
+      if (label) {
+        ctx.fillStyle = colours.accentInk;
+        ctx.font = font(12, 800);
+        ctx.fillText(label, tx, by + 12);
+      }
+    }
+    if (coop && !isZobo) {
+      ctx.font = font(11, 800);
+      fill(ctx, occ.player === 1 ? colours.p1 : colours.p2, cx + 4, cy + 4, 22, 15, 4);
+      ctx.fillStyle = colours.ownerInk;
+      ctx.fillText(`P${occ.player}`, cx + 7, cy + 15);
+    }
+}
+
 function drawField(ctx, colours, sprites, view, x, y) {
   const coop = view.isCoop();
   let top = sectionLabel(ctx, colours, 'Field', x, y + 12);
+
+  /*
+   * The ground past the contact line, drawn above the strip because that is
+   * where it is: the Zobo rows when that toggle is on, and the rows a boss pull
+   * opened otherwise. Nothing at all in an ordinary formation, so the card is
+   * unchanged for everyone who has not turned either on.
+   *
+   * Drawn before the line rather than after, so the picture reads top-to-bottom
+   * the way the board does — enemies and anything dragged out, then the line,
+   * then your field.
+   */
+  const beyond = view.beyondRows ? view.beyondRows() : 0;
+  for (let r = beyond; r >= 1; r--) {
+    for (let col = 0; col < view.COLS; col++) {
+      const cx = x + col * (CELL + CELL_GAP);
+      const cy = top + (beyond - r) * (CELL + CELL_GAP);
+      drawCell(ctx, colours, sprites, view, cx, cy, view.cellAtRow(-r, col), coop, true);
+    }
+  }
+  if (beyond) top += beyond * (CELL + CELL_GAP) + CELL_GAP;
 
   // The line Zobos come from, matching the app's own cue.
   fill(ctx, colours.surface2, x, top, GRID_W, 22, 6);
@@ -286,87 +400,9 @@ function drawField(ctx, colours, sprites, view, x, y) {
 
   for (let row = 0; row < view.ROWS; row++) {
     for (let col = 0; col < view.COLS; col++) {
-      const cx = x + col * (CELL + CELL_GAP);
-      const cy = top + row * (CELL + CELL_GAP);
-      const occ = view.formation.cells[row * view.COLS + col];
-
-      if (!occ) {
-        fill(ctx, colours.bg, cx, cy, CELL, CELL, 8);
-        ctx.strokeStyle = colours.line;
-        ctx.lineWidth = 1;
-        roundRect(ctx, cx + 0.5, cy + 0.5, CELL - 1, CELL - 1, 8);
-        ctx.stroke();
-        continue;
-      }
-      const tatari = state.bySlug.get(occ.slug);
-      const typeColour = colours.type[tatari?.type] ?? colours.line;
-
-      const done = tint(ctx, typeColour, 0.18);
-      roundRect(ctx, cx, cy, CELL, CELL, 8);
-      ctx.fill();
-      done();
-
-      ctx.strokeStyle = coop ? (occ.player === 1 ? colours.p1 : colours.p2) : typeColour;
-      ctx.lineWidth = 2;
-      roundRect(ctx, cx + 1, cy + 1, CELL - 2, CELL - 2, 7);
-      ctx.stroke();
-
-      const sprite = sprites.get(occ.slug);
-      if (sprite) ctx.drawImage(sprite, cx + 4, cy + 4, CELL - 8, CELL - 8);
-      else {
-        ctx.font = font(11, 600);
-        ctx.fillStyle = colours.dim;
-        ctx.textAlign = 'center';
-        ctx.fillText(fitText(ctx, tatari?.name ?? occ.slug, CELL - 8), cx + CELL / 2, cy + CELL / 2);
-        ctx.textAlign = 'left';
-      }
-
-      /*
-       * The planned level and where it falls in the order — the two numbers
-       * worth reading off a formation at a glance. The step number rides on the
-       * level badge exactly as it does on the token in the app, because a
-       * posted picture is where most people read a plan and "which one first"
-       * is the question a plan answers.
-       */
-      const target = view.topLevel(occ.slug, occ.player);
-      const seat = view.planPositionOf(occ.slug, occ.player);
-      if (target !== null || seat !== null) {
-        const label = target !== null ? `L${target}` : '';
-        ctx.font = font(12, 800);
-        const labelW = label ? ctx.measureText(label).width : 0;
-        const discW = seat !== null ? 14 : 0;
-        const gap = label && discW ? 4 : 0;
-        const w = labelW + discW + gap + 10;
-        const bx = cx + CELL - w - 4;
-        const by = cy + CELL - 20;
-
-        fill(ctx, colours.accent, bx, by, w, 16, 4);
-
-        let tx = bx + 5;
-        if (seat !== null) {
-          const done = tint(ctx, colours.accentInk, 0.82);
-          roundRect(ctx, tx, by + 2, discW, 12, 6);
-          ctx.fill();
-          done();
-          ctx.fillStyle = colours.accent;
-          ctx.font = font(9.5, 800);
-          ctx.textAlign = 'center';
-          ctx.fillText(String(seat), tx + discW / 2, by + 11.5);
-          ctx.textAlign = 'left';
-          tx += discW + gap;
-        }
-        if (label) {
-          ctx.fillStyle = colours.accentInk;
-          ctx.font = font(12, 800);
-          ctx.fillText(label, tx, by + 12);
-        }
-      }
-      if (coop) {
-        ctx.font = font(11, 800);
-        fill(ctx, occ.player === 1 ? colours.p1 : colours.p2, cx + 4, cy + 4, 22, 15, 4);
-        ctx.fillStyle = colours.ownerInk;
-        ctx.fillText(`P${occ.player}`, cx + 7, cy + 15);
-      }
+      drawCell(ctx, colours, sprites, view,
+        x + col * (CELL + CELL_GAP), top + row * (CELL + CELL_GAP),
+        row * view.COLS + col, coop);
     }
   }
 
@@ -773,7 +809,13 @@ export async function drawCard({
   // The LF band only exists in co-op, and only once something is being asked
   // for; drawField returns past it, so the measure has to agree.
   const lfH = coop ? view.filledLines().length * 48 : 0;
-  const fieldH = 42 + view.ROWS * CELL + (view.ROWS - 1) * CELL_GAP + 24 + lfH;
+  /*
+   * The rows past the contact line are part of the field's height. Left out,
+   * the canvas stayed sized for six rows and the board simply ran off the
+   * bottom of the picture — the one failure mode a share card cannot have.
+   */
+  const beyondH = (view.beyondRows ? view.beyondRows() : 0) * (CELL + CELL_GAP);
+  const fieldH = 42 + beyondH + view.ROWS * CELL + (view.ROWS - 1) * CELL_GAP + 24 + lfH;
 
   // On both cards, so measured for both. drawEffects returns its own bottom,
   // which lets the probe run the measurement rather than duplicating the wrap.
@@ -868,7 +910,9 @@ export async function drawCard({
     'Horde Invasion',
     view.mode().label,
     `${view.COLS} × ${view.ROWS} field`,
-    `${view.allPlaced().length} of ${view.fieldCap() * view.playerCount()} deployed`,
+    // Tatari only: a Zobo is not deployed by anybody and counts against no cap.
+    `${view.allPlaced().filter((p) => p.player > 0).length} of ${
+      view.fieldCap() * view.playerCount()} deployed`,
   ].join('  ·  '), w - PAD * 2), PAD, y);
 
   y += 18;

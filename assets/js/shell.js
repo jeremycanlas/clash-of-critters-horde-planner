@@ -183,12 +183,28 @@ function setSheet(name, { fromPop = false } = {}) {
    * sheets live *inside* <main> — inerting it would disable the sheet being
    * opened. `inert` is inherited and a descendant cannot opt back out, so the
    * only correct move is to never set it on an ancestor of the open panel.
+   *
+   * That last sentence was the rule and the list below broke it. The summary
+   * sheet is `#summary`, which lives inside `.panel--field`, so opening it
+   * inerted its own container: the sheet slid up, looked entirely normal, and
+   * ignored every tap — the taps fell through to the scrim behind it, whose job
+   * is to dismiss, so touching anything in the summary closed it. The roster and
+   * the plan are siblings of the field panel and never showed it.
+   *
+   * So the test is containment rather than identity: nothing that contains the
+   * open sheet may be inerted, whatever its selector says. The cost is that the
+   * field panel stays reachable behind the summary — one panel less trapped than
+   * ideal, against a sheet that does not work at all.
    */
+  const openSel = name ? SHEETS[name] : null;
+  const openEl = openSel ? $(openSel) : null;
   const behind = ['.topbar', '.foot', '.panel--field', ...Object.values(SHEETS)];
   for (const sel of behind) {
     const el = $(sel);
     if (!el) continue;
-    el.inert = !!name && sel !== SHEETS[name];
+    const isOpen = sel === openSel;
+    const wrapsOpen = !!openEl && el !== openEl && el.contains(openEl);
+    el.inert = !!name && !isOpen && !wrapsOpen;
   }
 
   renderShell();

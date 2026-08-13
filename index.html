@@ -152,8 +152,32 @@
           <label class="check"
             title="Show where the boss drags your rearmost row. Nothing is moved for real — turn it off and they go back.">
             <input id="opt-pull" type="checkbox"> Boss pull</label>
+          <!-- Not gated on anything: each round moves one Tatari to just in front
+             of its lane's front rank, so any lane two deep on the field takes
+             both rounds without ever reaching the line. -->
+          <label class="check"
+            title="Run the pull a second time on the board the first one left, so a different Tatari is dragged and it reaches further forward.">
+            <input id="opt-pull-2" type="checkbox"> <span class="check__text">Second pull</span></label>
           <label class="check"><input id="opt-glitter" type="checkbox"> <span class="check__text">Glitter
               art</span></label>
+          <!-- The seven rows beyond the contact line, on a switch of their own.
+             This was part of Sandbox and should not have been: "how much board
+             is there" and "how many may I bring" are separate questions, and
+             standing a few Tatari past the line to read a range is a normal
+             thing to want inside a legal 15. Closing it is lossless — whatever
+             was out there goes back to the bench. -->
+          <label class="check"
+            title="Open the seven rows beyond the spawn line so Tatari can stand on them. Closing it puts whatever is out there back on the bench.">
+            <input id="opt-zobo" type="checkbox"> <span class="check__text">Zobo ground</span></label>
+          <!-- Sandbox takes the caps off: bring as many as you like and place as
+             many as there are cells. A checkbox rather than a third entry in the
+             Solo/Co-op switch because it is not a mode — you can be in Sandbox
+             while planning either, and "sandbox-coop" would have been two ways
+             to say one thing. Turning it off is the lossy direction, so app.js
+             says exactly what it cost and puts Undo on the toast. -->
+          <label class="check"
+            title="Take the caps off — bring any number of Tatari and place as many as there are cells. Turning it back off puts the caps back, benches whatever no longer fits, and offers Undo.">
+            <input id="opt-sandbox" type="checkbox"> <span class="check__text">Sandbox</span></label>
 
           <!-- Desktop's copy. Phones get the one in the app bar instead, where it
              is always on screen rather than above a field they have scrolled. -->
@@ -201,15 +225,16 @@
       </div>
 
       <div class="field-frame">
+        <!-- The ground beyond the line, which only Sandbox can reach. Empty and
+           hidden otherwise, so a normal formation is drawn exactly as before —
+           buildGrid() fills it once and the toggle only shows and hides it.
+
+           Above the spawn-line caption because that is what it is: the seven
+           rows a Zobo walks in across, the same ground contribute.html records
+           attack ranges over. -->
+        <div id="enemy" class="grid grid--enemy" role="grid"
+          aria-label="Zobo ground, 6 columns by 7 rows — Sandbox only" hidden></div>
         <div class="field-frame__enemy">Zobos spawn beyond this line</div>
-        <!-- The row the boss drags your backline into. Sits between the spawn
-           line and the field because that is where they end up: in front of
-           everything, in reach. Hidden until the toggle asks for it. -->
-        <!-- No aria-live here: renderGrid() replaces this element's whole innerHTML
-           on every placement, move, removal and name keystroke, so a live region
-           re-announced six sprite names each time. The pull is described once, in
-           the label, which is read on demand rather than shouted. -->
-        <div id="pull-row" class="pull-row" hidden></div>
         <div id="grid" class="grid" role="grid" aria-label="Formation grid, 6 columns by 6 rows"></div>
         <p id="field-lf" class="field-frame__lf" hidden></p>
         <!-- No site URL here. It was on this row to carry the way back when a
@@ -281,6 +306,17 @@
     <section id="sec-roster" class="panel panel--roster" aria-labelledby="h-roster">
       <div class="panel__head">
         <h2 id="h-roster">Roster <span id="roster-count" class="muted"></span></h2>
+        <!-- Two lists, one panel. Zobos are what you draft against, so they
+             belong beside the roster rather than in a sheet of their own — and
+             a tab keeps the search, the drag and the card layout shared instead
+             of duplicated. -->
+        <div id="roster-tabs" class="segmented segmented--tabs" role="tablist"
+          aria-label="What to show in the roster">
+          <button class="segmented__btn" type="button" role="tab" data-list="tatari"
+            aria-selected="true">Tatari</button>
+          <button class="segmented__btn" type="button" role="tab" data-list="zobos"
+            aria-selected="false">Zobos</button>
+        </div>
       </div>
 
       <div class="filters">
@@ -290,19 +326,36 @@
         <div class="filters__row">
           <div id="filter-types" class="chips" role="group" aria-label="Filter by type"></div>
           <div id="filter-roles" class="chips" role="group" aria-label="Filter by role"></div>
+          <!-- Zobos only. Sits in the row the role chips vacate on that tab, so
+             the filter block keeps its shape when you switch lists. -->
+          <div id="filter-boss" class="chips chips--text zobo-only" role="group"
+            aria-label="Filter by boss"></div>
         </div>
 
+        <!-- Tiers sit beside the effects rather than with the sort controls: both
+             are chips you toggle while browsing, the two groups together are
+             narrower than one phone screen, and on a phone the row that held the
+             tiers alone was mostly empty space above a roster that wanted it. -->
         <div class="filters__row">
           <div id="filter-effects" class="chips chips--text" role="group"
             aria-label="Filter by what they bring besides damage"></div>
+          <div id="filter-tiers" class="chips chips--text" role="group" aria-label="Filter by tier"></div>
         </div>
 
         <div class="filters__row filters__row--meta">
-          <div id="filter-tiers" class="chips chips--text" role="group" aria-label="Filter by tier"></div>
           <label class="check" title="Hide Tatari locked out by an evolution line you are already bringing">
             <input id="opt-hide-blocked" type="checkbox"> Hide unavailable</label>
-          <label class="sortby">Sort
-            <select id="sort" class="field field--select">
+
+          <!-- A phone's second copy of Glitter art. The original is up in the
+             field toolbar, which on a phone is behind the sheet you are looking
+             at — and the roster is where the switch is actually worth having,
+             since it repaints all 224 thumbnails you are currently scrolling
+             through. Kept in sync with #opt-glitter both ways, so whichever one
+             you reach for, the other agrees. -->
+          <label class="check touch-only" title="Show the glitter version of each Tatari's art where the wiki has one">
+            <input id="opt-glitter-roster" type="checkbox"> Glitter</label>
+          <label class="sortby"><span class="sortby__label">Sort</span>
+            <select id="sort" class="field field--select" aria-label="Sort the roster">
               <option value="default">Default</option>
               <option value="name">Name</option>
               <option value="type">Type</option>
