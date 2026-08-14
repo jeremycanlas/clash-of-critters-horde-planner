@@ -1210,6 +1210,24 @@ button.tally--effect { font: inherit; font-size: 11px; font-weight: 600; cursor:
   clip-path: inset(50%); white-space: nowrap;
 }
 
+/*
+ * A step for a Tatari that is brought but not on the field.
+ *
+ * Faded rather than disabled, and deliberately: the step is still yours to
+ * reorder, re-level and annotate, it simply cannot happen until the Tatari is
+ * standing somewhere. Opacity alone would take the text under contrast; the
+ * sprites carry most of the fading and the words stay legible.
+ *
+ * A dashed border rather than a solid one, matching how an empty cell is drawn
+ * on the field: the same "nothing is standing here" the board already uses.
+ */
+.prio.is-benched {
+  border-style: dashed;
+  background: transparent;
+}
+.prio.is-benched .prio__art { opacity: .45; }
+.prio.is-benched .prio__label { color: var(--text-dim); }
+
 .prio {
   /* Past the rank column, so wrapped lines start under the sprites. */
   --prio-indent: 26px;
@@ -1416,6 +1434,28 @@ body[data-roster-list="zobos"] .filters__row--meta .sortby { display: none; }
 }
 .segmented--tabs .segmented__btn[aria-selected="true"]:hover { color: var(--accent-ink); }
 
+/*
+ * The switch-player control, and what the board looks like while it is armed.
+ *
+ * The armed state has to be visible on the *board*, not only on the button: the
+ * next tap does something different from what it usually does, and a mode you
+ * cannot see is a mode that surprises you. Tokens take the accent outline the
+ * rest of the app uses for "this is the thing you are about to act on".
+ */
+.ptabs__switch { margin-left: auto; }
+.ptabs__switch[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 18%, var(--surface-2));
+  color: var(--text);
+}
+body[data-switching="true"] .cell.is-filled,
+body[data-switching="true"] .benchchip {
+  cursor: pointer;
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--accent) 60%, transparent);
+}
+/* A Zobo is nobody's, so it is not one of the things about to change hands. */
+body[data-switching="true"] .cell[data-zobo] { box-shadow: none; cursor: default; }
+
 .chips { display: flex; gap: var(--s1); }
 
 /*
@@ -1600,8 +1640,21 @@ body[data-roster-list="zobos"] .filters__row--meta .sortby { display: none; }
   background: var(--owner); color: var(--owner-ink);
   font-size: 8.5px; font-weight: 800;
 }
-.card.is-blocked { opacity: .42; cursor: not-allowed; }
-.card.is-blocked:hover { transform: none; background: var(--surface-2); }
+/*
+ * "You already have one of these", not "you may not have this".
+ *
+ * These cards used to be .is-blocked: 42% opacity and a not-allowed cursor,
+ * which said the card was inert when in fact it is the one control that can
+ * change your mind about a tier. Dimmed enough to read as secondary, and
+ * clickable, because tapping it swaps the line to this tier and keeps the cell,
+ * the bench slot and the level-up plan.
+ */
+.card.is-swap { opacity: .62; }
+.card.is-swap:hover { opacity: 1; }
+.card.is-swap .card__lock {
+  background: color-mix(in srgb, var(--accent) 22%, var(--surface));
+  color: var(--text);
+}
 .card__lock {
   position: absolute; inset: auto 0 0; padding: 1px 3px;
   background: color-mix(in srgb, var(--bg) 84%, transparent);

@@ -147,6 +147,7 @@ export function viewOf(snap) {
     benchOf: (player) => [...(bench[player] ?? [])],
     placedCount: (player) => cells.filter((o) => o && o.player === player && o.player > 0).length,
     cellOf,
+    isPlaced: (slug, player) => cellOf(slug, player) !== null,
     allPlaced,
 
     filledLines: () => ['have', 'lf']

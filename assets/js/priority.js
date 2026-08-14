@@ -278,6 +278,18 @@ export function renderPriority() {
     const ordinal = single ? nthForStep(index) : 0;
     const unlocks = unlockedSkill(members, step.level);
 
+    /*
+     * A step whose Tatari are brought but not standing anywhere.
+     *
+     * The plan outlives being taken off the field now, which is the point — but
+     * a plan that looks identical whether or not it can happen is a plan you
+     * cannot read. Inactive steps stay in place, keep their order and stay fully
+     * interactable: you can still set the level, write the note, drag them
+     * around. They are only drawn quieter, because the thing they describe is
+     * not on the board at the moment.
+     */
+    const inactive = members.every((m) => !store.isPlaced(m.slug, m.player));
+
     const arts = members.map((m) => `
       <span class="prio__art" data-type="${state.bySlug.get(m.slug).type}">
         ${artHTML(state.bySlug.get(m.slug))}
@@ -288,9 +300,11 @@ export function renderPriority() {
       </span>`).join('');
 
     return `
-      <li class="prio${single ? '' : ' prio--group'}${step.note ? ' has-note' : ''}"
+      <li class="prio${single ? '' : ' prio--group'}${step.note ? ' has-note' : ''}${
+        inactive ? ' is-benched' : ''}"
           data-index="${index}" data-type="${lead.type}" data-player="${members[0].player}"
-          tabindex="0" aria-label="${esc(stepLabel(step, members, position, visible.length))}">
+          tabindex="0" aria-label="${esc(stepLabel(step, members, position, visible.length))}${
+        inactive ? ', on the bench' : ''}">
         <span class="prio__rank">${position + 1}</span>
         <span class="prio__arts">${arts}</span>
         <span class="prio__name">

@@ -211,6 +211,21 @@ export function buildFilters(onChange, { onPick = bringToBench } = {}) {
      * from the roster to the field is a gesture that barely exists on a screen
      * where the two are in separate sheets.
      */
+    /*
+     * Tapping a dimmed card switches the line to that tier rather than doing
+     * nothing. Read off the card so the roster does not have to re-derive which
+     * member of the line is the one being replaced.
+     */
+    const switchFrom = card.dataset.switchFrom;
+    if (switchFrom) {
+      const player = store.formation.activePlayer;
+      const result = store.switchTier(switchFrom, card.dataset.slug, player);
+      if (!result.ok) { toast(result.reason, 'error'); return; }
+      const to = state.bySlug.get(card.dataset.slug);
+      toast(`Switched to ${to?.name ?? card.dataset.slug}${store.isCoop() ? ` (P${player})` : ''}`);
+      return;
+    }
+
     if (card.classList.contains('card--zobo')) {
       const z = state.zoboBySlug.get(card.dataset.slug);
       if (!z) return;
@@ -370,12 +385,22 @@ export function renderRoster() {
       : [];
 
     const state_ = placed ? 'on the field' : benched ? 'on the bench' : null;
+    /*
+     * Another tier of a line you already bring is a switch, not a wall.
+     *
+     * It used to be flatly blocked, which was true to the rule — one per line —
+     * and wrong about what people wanted: the only way to change your mind about
+     * a tier was to remove the one you had, which threw away its cell and its
+     * level-up plan, neither of which was ever about the tier. The card is
+     * dimmed to say "you already have one of these" and tapping it swaps them.
+     */
     return `
       <div class="card${benched ? ' is-benched' : ''}${placed ? ' is-deployed' : ''}${
-        clash ? ' is-blocked' : ''}"
-           role="listitem" tabindex="0" data-slug="${esc(t.slug)}" data-type="${t.type}"
+        clash ? ' is-swap' : ''}"
+           role="listitem" tabindex="0" data-slug="${esc(t.slug)}" data-type="${t.type}"${
+        clash ? ` data-switch-from="${esc(clash.slug)}"` : ''}
            title="${esc(t.name)} — ${t.type} ${t.role}, T${t.tier}${
-             state_ ? `\n${state_}` : ''}${clash ? `\n${clash.name} from the same line is brought` : ''}">
+             state_ ? `\n${state_}` : ''}${clash ? `\nTap to switch from ${clash.name}, keeping its plan` : ''}">
         <!-- Last in the queue: 218 thumbnails will otherwise crowd out the
              dozen sprites the field and the benches are showing right now. -->
         <div class="card__art">${artHTML(t, { priority: 'low' })}${effectMarks(t)}</div>
@@ -387,7 +412,7 @@ export function renderRoster() {
                      title="P${otherPlayer[0]} is bringing this too">P${otherPlayer[0]}</span>` : ''}
         </div>
         <div class="card__name">${esc(t.name)}</div>
-        ${clash ? `<span class="card__lock">${esc(clash.name)} in use</span>` : ''}
+        ${clash ? `<span class="card__lock">Switch from ${esc(clash.name)}</span>` : ''}
         <!-- Focusable. It was tabindex="-1", which took the detail sheet — and
              with it "Place on the field" — off the keyboard entirely. The
              reveal already handles :focus-visible, so it appears when tabbed
@@ -405,8 +430,10 @@ export function renderRoster() {
         const t = state.bySlug.get(slug);
         if (!t) return null;
         const p = store.formation.activePlayer;
-        if (!store.onBench(slug, p) && store.placeBlockedReason(t, p)) return null;
-        return { slug, player: p, from: 'roster' };
+        // A card that would swap a tier is draggable: the drop resolves it.
+        const swapFrom = store.familyConflict(t, p)?.slug ?? null;
+        if (!swapFrom && !store.onBench(slug, p) && store.placeBlockedReason(t, p)) return null;
+        return { slug, player: p, from: 'roster', swapFrom };
       },
       () => {
         const t = state.bySlug.get(slug);
