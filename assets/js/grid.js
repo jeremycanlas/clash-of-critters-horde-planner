@@ -76,7 +76,11 @@ function buildBenchDropZone() {
       if (payload.from !== 'roster') return false;      // bench -> bench is a no-op
       if (store.onBench(payload.slug, player)) return false;
       const t = state.bySlug.get(payload.slug);
-      return !!t && !store.benchBlockedReason(t, player);
+      if (!t) return false;
+      // Swapping a tier onto the bench it already occupies is a rename, not a
+      // second Tatari, so the bench cap and the family rule do not apply.
+      if (payload.swapFrom) return true;
+      return !store.benchBlockedReason(t, player);
     },
     onHover: (target, ok) => target.classList.toggle('is-taking', ok),
     onDrop: (target, payload) => {
@@ -86,6 +90,13 @@ function buildBenchDropZone() {
       if (payload.from === 'field') {
         store.unplace(payload.slug, payload.player);
         toast(`${nameOf(payload.slug)}${who} off the field, still on the bench`);
+        return;
+      }
+
+      if (payload.swapFrom) {
+        const swapped = store.switchTier(payload.swapFrom, payload.slug, player);
+        if (!swapped.ok) { toast(swapped.reason, 'error'); return; }
+        toast(`Switched to ${nameOf(payload.slug)}${who}`);
         return;
       }
 
@@ -190,6 +201,9 @@ export function buildGrid() {
        * itself resolves by replacing what was there.
        */
       if (t.kind === 'zobo') return true;
+      // A tier swap is allowed wherever the Tatari it replaces could go: it is
+      // taking that one's place rather than joining it.
+      if (payload.swapFrom) return true;
       // Already on the field for this player: a move or a swap, always allowed.
       if (store.isPlaced(payload.slug, payload.player)) return true;
       return !store.placeBlockedReason(t, payload.player);
@@ -220,6 +234,16 @@ export function buildGrid() {
         return;
       }
 
+      /*
+       * Dropping another tier of a line you already bring swaps the line to it
+       * first, so what lands is the Tatari you dragged rather than a refusal.
+       * The swap keeps the plan; the place that follows just moves it here.
+       */
+      if (payload.swapFrom) {
+        const swapped = store.switchTier(payload.swapFrom, payload.slug, payload.player);
+        if (!swapped.ok) { toast(swapped.reason, 'error'); return; }
+      }
+
       const result = store.place(payload.slug, to, payload.player);
       if (!result.ok) toast(result.reason, 'error');
     },
@@ -245,6 +269,18 @@ export function buildGrid() {
   });
 
   grid.addEventListener('click', (e) => {
+    /*
+     * While the switch mode is armed a tap changes sides and does nothing else —
+     * before the add-step button and before the armed-chip picker, both of which
+     * would otherwise fire on the same tap.
+     */
+    if (switchingPlayers.value) {
+      const cell = e.target.closest('.cell');
+      const occ = cell && store.formation.cells[Number(cell.dataset.cell)];
+      if (occ && occ.player > 0) { e.preventDefault(); switchOwner(occ.slug, occ.player); return; }
+      if (occ) { toast('A Zobo belongs to nobody', 'error'); return; }
+    }
+
     const add = e.target.closest('[data-add-step]');
     if (add) {
       const occ = store.formation.cells[Number(add.closest('.cell').dataset.cell)];
@@ -298,6 +334,13 @@ export function buildGrid() {
   });
 
   benchHost.addEventListener('click', (e) => {
+    // Same as the field: while armed, a tap on a chip hands it over instead of
+    // doing what it usually does (dropping it in the back).
+    if (switchingPlayers.value) {
+      const chip = e.target.closest('.benchchip');
+      if (chip) { e.preventDefault(); switchOwner(chip.dataset.slug, Number(chip.dataset.player)); return; }
+    }
+
     const clear = e.target.closest('[data-clear-bench]');
     if (clear) {
       const player = Number(clear.dataset.clearBench);
@@ -349,6 +392,11 @@ export function buildGrid() {
   });
 
   tabsHost.addEventListener('click', (e) => {
+    if (e.target.closest('#btn-switch-players')) {
+      switchingPlayers.value = !switchingPlayers.value;
+      renderPlayerTabs();
+      return;
+    }
     const tab = e.target.closest('.ptab');
     if (tab) store.setActivePlayer(Number(tab.dataset.player));
   });
@@ -509,6 +557,20 @@ export const bossPullOn = { value: false };
  * first. See planPull().
  */
 export const secondPullOn = { value: false };
+
+/**
+ * Whether tapping a Tatari hands it to the other player.
+ *
+ * A mode rather than a per-token control, because the alternative is another
+ * button on every token in a co-op formation — thirty of them, for something
+ * done once or twice a session. Arm it, tap what is on the wrong side, turn it
+ * off. Co-op only: with one player there is nowhere to switch to.
+ *
+ * Not in the formation. It is a thing the editor is doing, not a fact about the
+ * board, and a share link that arrived armed would be a link that rewrites
+ * itself the moment somebody taps a sprite.
+ */
+export const switchingPlayers = { value: false };
 
 /**
  * The pull, as an actual move that is undone when you switch it off.
@@ -946,7 +1008,30 @@ export function renderPlayerTabs() {
           <span>bench <b>${bench}</b>${capOf(store.benchCap())}</span>
         </span>
       </button>`;
-  }).join('');
+  }).join('') + `
+      <button id="btn-switch-players" class="btn btn--tiny ptabs__switch" type="button"
+              aria-pressed="${switchingPlayers.value}"
+              title="Hand a Tatari to the other player, keeping its level-up plan. Tap this, then tap a Tatari on the field or a bench.">
+        ${switchingPlayers.value ? 'Tap a Tatari…' : '⇄ Switch player'}
+      </button>`;
+
+  document.body.dataset.switching = String(switchingPlayers.value);
+}
+
+/**
+ * Hands one Tatari to the other player, and says what happened.
+ *
+ * Shared by the field and the bench because both are places you notice the
+ * mistake from, and both should answer the same way.
+ */
+function switchOwner(slug, player) {
+  const result = store.switchPlayer(slug, player);
+  if (!result.ok) { toast(result.reason, 'error'); return; }
+  const name = state.bySlug.get(slug)?.name ?? slug;
+  const to = player === 1 ? 2 : 1;
+  toast(result.swapped
+    ? `${name} swapped — P${to} and P${player} traded, plans included`
+    : `${name} is P${to}'s now, plan and all`);
 }
 
 /**

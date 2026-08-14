@@ -537,6 +537,125 @@ export function placeBlockedReason(tatari, player = formation.activePlayer) {
 
 // ---------------------------------------------------------------- bench
 
+/**
+ * Swaps one Tatari for another from the same evolution line, keeping everything
+ * that was decided about it.
+ *
+ * Changing your mind about which tier to bring used to mean removing the one you
+ * had and adding the other, which threw away its place on the field, its
+ * position on the bench and — worst — the level-up order you had worked out for
+ * it. None of those decisions were about the tier. A T2 planned to reach level 5
+ * second is still planned to reach level 5 second when it becomes a T3.
+ *
+ * So the swap is in-place at every layer: the bench slot keeps its index, the
+ * cell keeps its occupant, and the plan has its member slugs rewritten rather
+ * than dropped. Only the identity changes.
+ *
+ * Refuses across evolution lines, because that is not a change of mind about a
+ * tier, it is a different Tatari — and `addToBench` is already the way to bring
+ * one of those.
+ *
+ * @returns {{ok: true} | {ok: false, reason: string}}
+ */
+export function switchTier(fromSlug, toSlug, player = formation.activePlayer) {
+  if (fromSlug === toSlug) return { ok: true };
+  const from = state.bySlug.get(fromSlug);
+  const to = state.bySlug.get(toSlug);
+  if (!from || !to) return { ok: false, reason: 'Unknown Tatari' };
+  if (from.familyId !== to.familyId) {
+    return { ok: false, reason: `${to.name} is not from ${from.name}'s line` };
+  }
+
+  const at = formation.bench[player]?.indexOf(fromSlug) ?? -1;
+  if (at === -1) return { ok: false, reason: `P${player} is not bringing ${from.name}` };
+  if (onBench(toSlug, player)) return { ok: true };
+
+  formation.bench[player][at] = toSlug;
+
+  const cell = cellOf(fromSlug, player);
+  if (cell !== null) formation.cells[cell] = { slug: toSlug, player };
+
+  formation.plan = formation.plan.map((s) => ({
+    ...s,
+    members: s.members.map((m) => (sameMember(m, fromSlug, player) ? { ...m, slug: toSlug } : m)),
+  }));
+
+  emit();
+  return { ok: true };
+}
+
+/**
+ * Moves a Tatari to the other player, taking its plan with it.
+ *
+ * The mistake this exists for is building a level-up order under the wrong
+ * player and noticing afterwards. Before, the only fix was to remove it and
+ * start again on the other side, which is the same loss the tier switch was
+ * about: the order was never a property of whose it was.
+ *
+ * ## When the other player already brings that line
+ *
+ * They trade sides. It cannot be a plain move — a player holds at most one of
+ * any evolution line — and refusing would leave you doing by hand exactly the
+ * destructive thing this is here to avoid.
+ *
+ * A swap is not the no-op it first looks like, because the plans travel with the
+ * tokens: P1's Poakie planned for L3/L5 and P2's planned for L7 come out as P1
+ * holding the L7 plan and P2 holding L3/L5. That is precisely "this plan is on
+ * the wrong player", fixed, in the case where both of them brought the Tatari.
+ * Field positions go along too, so the board reads the same and only the
+ * ownership has changed hands.
+ *
+ * @returns {{ok: true, swapped: boolean} | {ok: false, reason: string}}
+ */
+export function switchPlayer(slug, from = formation.activePlayer) {
+  if (!isCoop()) return { ok: false, reason: 'Only in co-op' };
+  const tatari = state.bySlug.get(slug);
+  if (!tatari) return { ok: false, reason: 'Unknown Tatari' };
+
+  const to = from === 1 ? 2 : 1;
+  const at = formation.bench[from]?.indexOf(slug) ?? -1;
+  if (at === -1) return { ok: false, reason: `P${from} is not bringing ${tatari.name}` };
+
+  // Whatever the other player holds from this line is what has to come back.
+  const counterpart = familyConflict(tatari, to)?.slug
+    ?? (onBench(slug, to) ? slug : null);
+
+  const cellHere = cellOf(slug, from);
+  const cellThere = counterpart ? cellOf(counterpart, to) : null;
+
+  if (counterpart) {
+    const theirAt = formation.bench[to].indexOf(counterpart);
+    formation.bench[from][at] = counterpart;
+    formation.bench[to][theirAt] = slug;
+  } else {
+    if (formation.bench[to].length >= benchCap()) {
+      return { ok: false, reason: `P${to}'s bench is full (${benchCap()} max)` };
+    }
+    formation.bench[from].splice(at, 1);
+    formation.bench[to].push(slug);
+  }
+
+  if (cellHere !== null) formation.cells[cellHere] = { slug, player: to };
+  if (cellThere !== null) formation.cells[cellThere] = { slug: counterpart, player: from };
+
+  /*
+   * Rewritten in one pass off the originals, so a swap cannot move a member
+   * twice — writing P1 -> P2 and then P2 -> P1 over the top would put both back
+   * where they started.
+   */
+  formation.plan = formation.plan.map((s) => ({
+    ...s,
+    members: s.members.map((m) => {
+      if (sameMember(m, slug, from)) return { ...m, player: to };
+      if (counterpart && sameMember(m, counterpart, to)) return { ...m, player: from };
+      return m;
+    }),
+  }));
+
+  emit();
+  return { ok: true, swapped: !!counterpart };
+}
+
 /** @returns {{ok: true} | {ok: false, reason: string}} */
 export function addToBench(slug, player = formation.activePlayer) {
   const tatari = state.bySlug.get(slug);
@@ -603,8 +722,8 @@ export function place(slug, cell, player = formation.activePlayer) {
    * to "whose bench is this" without either having to learn what a Zobo is.
    */
   if (zobo) {
-    const displaced = formation.cells[cell];
-    if (displaced && displaced.player > 0) dropSteps(displaced.slug, displaced.player);
+    // Whatever was standing here goes back to its bench with its plan intact —
+    // see the plan rule in reconcile().
     formation.cells[cell] = { slug, player: 0, kind: 'zobo' };
     emit();
     return { ok: true };
@@ -626,9 +745,7 @@ export function place(slug, cell, player = formation.activePlayer) {
 
   if (!onBench(slug, player)) formation.bench[player].push(slug);
 
-  const evicted = formation.cells[cell];
-  formation.cells[cell] = { slug, player };
-  if (evicted) dropSteps(evicted.slug, evicted.player);   // it left the field
+  formation.cells[cell] = { slug, player };   // anything evicted keeps its plan
   emit();
   return { ok: true };
 }
@@ -682,12 +799,13 @@ export function autoPlace(slug, player = formation.activePlayer) {
   return place(slug, cell, player);
 }
 
-/** Takes a token off the field. It stays on its owner's bench. */
+/**
+ * Takes a token off the field. It stays on its owner's bench, and so does its
+ * plan — taking something off the board is not a decision to stop levelling it.
+ */
 export function unplaceAt(cell) {
-  const occ = formation.cells[cell];
-  if (!occ) return;
+  if (!formation.cells[cell]) return;
   formation.cells[cell] = null;
-  dropSteps(occ.slug, occ.player);
   emit();
 }
 
@@ -828,12 +946,6 @@ function toStep(raw) {
   return { members, level: normalizeLevel(raw.level) ?? null, note: trimNote(raw.note) };
 }
 
-function dropSteps(slug, player) {
-  formation.plan = formation.plan
-    .map((s) => ({ ...s, members: s.members.filter((m) => !sameMember(m, slug, player)) }))
-    .filter((s) => s.members.length);
-}
-
 /**
  * Whose step this is. Every member of a step belongs to one player - the adder
  * only ever offers one player's Tatari - so the first member speaks for it.
@@ -927,13 +1039,23 @@ export function addStep(members, level = null, note = '') {
   const list = normalizeMembers(members);
   if (!list.length) return { ok: false, reason: 'Pick at least one Tatari' };
 
+  /*
+   * Brought, not placed.
+   *
+   * This asked for a cell, which matched the old rule that a plan died when its
+   * Tatari left the field. That rule is gone — a plan is a decision about
+   * something you are bringing — and leaving this one behind would have made the
+   * two halves disagree: a step could survive being benched but could not be
+   * written for a Tatari already there, which is exactly when you are thinking
+   * about the order.
+   */
   for (const m of list) {
     const tatari = state.bySlug.get(m.slug);
     if (!tatari) return { ok: false, reason: 'Unknown Tatari' };
-    if (cellOf(m.slug, m.player) === null) {
+    if (!onBench(m.slug, m.player)) {
       return {
         ok: false,
-        reason: `${tatari.name} is not on the field${isCoop() ? ` for P${m.player}` : ''}`,
+        reason: `${tatari.name} is not brought${isCoop() ? ` by P${m.player}` : ''}`,
       };
     }
   }
@@ -1065,11 +1187,26 @@ function reconcile() {
     return occ;
   });
 
+  /*
+   * A plan survives being taken off the field, and only dies when you stop
+   * bringing the Tatari at all.
+   *
+   * This used to require a cell, which made the plan a property of a placement
+   * rather than of a decision: lift a Tatari off the board for a moment to try
+   * something and the order you had worked out for it was gone, with no warning
+   * and no way back. Benching is the cheapest thing you do in this tool and it
+   * was quietly the most expensive.
+   *
+   * The bench is the right test because it is what "I am bringing this" means,
+   * and everything on the field is on a bench by invariant — so this only ever
+   * keeps steps, never adds ones that were not valid before. Steps for a benched
+   * Tatari are drawn as inactive in the plan; see renderPriority.
+   */
   // Only one-Tatari steps are deduplicated - see alreadyPlanned().
   const seenSingles = new Set();
   formation.plan = formation.plan.map((s) => ({
     members: normalizeMembers(s.members)
-      .filter((m) => active.includes(m.player) && cellOf(m.slug, m.player) !== null),
+      .filter((m) => active.includes(m.player) && onBench(m.slug, m.player)),
     level: normalizeLevel(s.level) ?? null,
     note: trimNote(s.note),
   })).filter((s) => {

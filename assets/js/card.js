@@ -48,6 +48,9 @@ const PLAN_NOTE_LINE = 20;
 const PLAN_SPRITE = 26;
 const PLAN_SPRITES = 5;
 
+/** What a step whose Tatari are brought but not deployed is labelled. */
+const BENCH_TAG = 'Bench';
+
 const FONT = 'ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif';
 const font = (size, weight = 400) => `${weight} ${size}px ${FONT}`;
 
@@ -264,6 +267,16 @@ function planLines(view, player) {
     who: step.members.map((m) => state.bySlug.get(m.slug)?.name ?? m.slug).join(', '),
     level: step.level === null ? 'Any' : `Lv ${step.level}`,
     note: step.note,
+    /*
+     * Brought, but not standing anywhere — the same test the plan list makes.
+     *
+     * A plan keeps its steps when a Tatari comes off the field, so a card drawn
+     * from one has to say which of them are live. On screen that is a colour and
+     * a dashed border; in a posted PNG it cannot be colour alone, because the
+     * picture gets thumbnailed and recompressed in a chat before anyone reads
+     * it. Hence a word as well as the fade.
+     */
+    benched: step.members.every((m) => !view.isPlaced(m.slug, m.player)),
   }));
 }
 
@@ -481,19 +494,24 @@ function drawField(ctx, colours, sprites, view, x, y) {
 }
 
 /** The sprites on one step, and the width they take. */
-function drawStepSprites(ctx, colours, sprites, members, x, y) {
+function drawStepSprites(ctx, colours, sprites, members, x, y, benched = false) {
   const shown = members.slice(0, PLAN_SPRITES);
   let at = x;
 
   for (const m of shown) {
     const tatari = state.bySlug.get(m.slug);
-    const done = tint(ctx, colours.type[tatari?.type] ?? colours.line, 0.2);
+    const done = tint(ctx, colours.type[tatari?.type] ?? colours.line, benched ? 0.08 : 0.2);
     roundRect(ctx, at, y, PLAN_SPRITE, PLAN_SPRITE, 5);
     ctx.fill();
     done();
 
     const sprite = sprites.get(m.slug);
-    if (sprite) ctx.drawImage(sprite, at + 1, y + 1, PLAN_SPRITE - 2, PLAN_SPRITE - 2);
+    if (sprite) {
+      const alpha = ctx.globalAlpha;
+      if (benched) ctx.globalAlpha = alpha * 0.45;
+      ctx.drawImage(sprite, at + 1, y + 1, PLAN_SPRITE - 2, PLAN_SPRITE - 2);
+      ctx.globalAlpha = alpha;
+    }
     at += PLAN_SPRITE + 3;
   }
 
@@ -532,19 +550,34 @@ function drawPlan(ctx, colours, sprites, view, x, y, width) {
       ctx.fillStyle = colours.mute;
       ctx.fillText(line.rank, x, top + 17);
 
+      // The chips sit at the right edge and are measured leftwards, so whatever
+      // is left over is what the names get.
+      let rightAt = x + width;
+
       ctx.font = font(13, 800);
       const chipW = ctx.measureText(line.level).width + 14;
-      fill(ctx, colours.surface3, x + width - chipW, top + 3, chipW, 19, 5);
+      fill(ctx, colours.surface3, rightAt - chipW, top + 3, chipW, 19, 5);
       ctx.fillStyle = colours.accent;
-      ctx.fillText(line.level, x + width - chipW + 7, top + 17);
+      ctx.fillText(line.level, rightAt - chipW + 7, top + 17);
+      rightAt -= chipW;
 
-      const spritesW = drawStepSprites(ctx, colours, sprites, line.members, x + 20, top);
+      if (line.benched) {
+        ctx.font = font(11, 800);
+        const tagW = ctx.measureText(BENCH_TAG).width + 12;
+        rightAt -= 6;
+        fill(ctx, colours.surface2, rightAt - tagW, top + 4, tagW, 17, 5);
+        ctx.fillStyle = colours.mute;
+        ctx.fillText(BENCH_TAG, rightAt - tagW + 6, top + 16);
+        rightAt -= tagW;
+      }
+
+      const spritesW = drawStepSprites(
+        ctx, colours, sprites, line.members, x + 20, top, line.benched);
 
       ctx.font = font(19, 600);
-      ctx.fillStyle = colours.text;
+      ctx.fillStyle = line.benched ? colours.mute : colours.text;
       const namesAt = x + 20 + spritesW + 6;
-      ctx.fillText(fitText(ctx, line.who, x + width - chipW - 10 - namesAt),
-        namesAt, top + 18);
+      ctx.fillText(fitText(ctx, line.who, rightAt - 10 - namesAt), namesAt, top + 18);
       top += PLAN_SPRITE + 6;
 
       if (line.note) {
