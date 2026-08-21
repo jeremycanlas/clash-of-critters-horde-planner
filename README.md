@@ -65,6 +65,19 @@ field, HAVE above LF.
 
 ## Changelog
 
+### 1.5.2
+
+#### Changes:
+- Sandbox now allows you to put as many copies of a tatari of any tier as you want (adding to glenthern's suggestion)
+- The share grid now shows each Tatari's tier (T1–T4) on the top left of each tatari on the field.
+- The share picture now also includes any toggled worm pull/2nd worm pull and the 7x7 zobo ground.
+- Tier switching! You can now switch a Tatari's tiers without having to remove them to the roster and the priority plan of that tatari persists. (thanks to @mersite for the suggestion)
+- Co-op tatari ownership switch! You can now switch a Tatari's owner from P1 to P2 and vice versa and the priority plan will adjust. (Another one mersite)
+- Added a High Contrast Mode accessibility option and the ability to switch between light and dark mode (thanks to ztkz and dyslexicshowerhead for the suggestions and feedback)
+
+#### Bug Fixes:
+- Sharing a formation with a boss pull on was broken, opening the link will dump all pulled tataris back to the bench. It should work as intended now
+
 ### 1.5.1
 
 #### Changes:
