@@ -244,6 +244,18 @@ export function buildGrid() {
         if (!swapped.ok) { toast(swapped.reason, 'error'); return; }
       }
 
+      /*
+       * Sandbox: a roster or bench drop of a Tatari already on the field is
+       * another copy, not a move of the one standing there. A field-origin drag
+       * is still a move, and a tile that is already taken falls through to
+       * place() so it can swap or reposition as before.
+       */
+      if (store.isSandbox() && payload.from !== 'field'
+          && store.isPlaced(payload.slug, payload.player)) {
+        const copy = store.placeCopy(payload.slug, to, payload.player);
+        if (copy.ok) return;
+      }
+
       const result = store.place(payload.slug, to, payload.player);
       if (!result.ok) toast(result.reason, 'error');
     },
@@ -789,9 +801,35 @@ function ownerBadge(player) {
     : '';
 }
 
+/**
+ * The element as a letter, for anyone who cannot read it off the tint.
+ *
+ * A token says which element it is in exactly one way: a coloured wash and a
+ * coloured ring. That is one channel, and it fails — Fire #e8453c and Rock
+ * #a2762f simulate to the same muddy orange for a deuteranope, dE 8.9, where
+ * anything under about 15 has stopped being two colours. Grass/Lightning and
+ * Water/Grass are nearly as bad for the other two dichromacies.
+ *
+ * So: a shape, in neutral ink, saying the same fact without hue. Not instead of
+ * the colour — alongside it, because two weak channels beat one.
+ *
+ * The initial is enough while there are five elements and no two share one.
+ * A sixth that collided would need a table here; the type chart in meta.json is
+ * the thing to check first.
+ *
+ * aria-hidden because every cell's own label already names the element in full,
+ * and a screen reader reading "W" after "Water" is noise.
+ *
+ * Always in the markup, shown by CSS. The toggle then costs no re-render, and
+ * the board does not permanently gain a badge most people did not ask for.
+ */
+function elemGlyph(type) {
+  return type ? `<span class="token__elem" aria-hidden="true">${type[0]}</span>` : '';
+}
+
 function tokenGhost(t, player) {
   return `<span class="token" data-type="${t.type}" data-player="${player}">${
-    artHTML(t, { lazy: false })}${ownerBadge(player)}</span>`;
+    artHTML(t, { lazy: false })}${elemGlyph(t.type)}${ownerBadge(player)}</span>`;
 }
 
 export function renderGrid() {
@@ -873,6 +911,7 @@ export function renderGrid() {
       cell.innerHTML = `
         <span class="token token--zobo"${t.type ? ` data-type="${t.type}"` : ''}>
           ${artHTML(t, ON_CARD)}
+          ${elemGlyph(t.type)}
           ${t.boss ? '<span class="token__boss" title="Boss">★</span>' : ''}
         </span>`;
       cell.setAttribute('aria-label',
@@ -886,6 +925,7 @@ export function renderGrid() {
     cell.innerHTML = `
       <span class="token" data-type="${t.type}" data-player="${occ.player}">
         ${artHTML(t, ON_CARD)}
+        ${elemGlyph(t.type)}
         <span class="token__tier">T${t.tier}</span>
         <span class="token__role">${roleIcon(t.role)}</span>
         ${ownerBadge(occ.player)}

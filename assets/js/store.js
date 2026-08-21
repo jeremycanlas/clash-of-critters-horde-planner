@@ -138,6 +138,18 @@ export const fieldCap = () => caps().field;
 export const isZoboGround = () => formation.zoboGround === true;
 export const pullRows = () => formation.pullRows;
 
+/*
+ * The two questions card.js asks to draw the ground past the contact line — the
+ * Zobo ground, or the rows a boss or second pull opened. viewOf() answers these
+ * for a snapshot; without them here the *live* Share card (which draws store
+ * directly) fell back to zero and quietly left every beyond-the-line row out.
+ * Same formulas as viewOf, so the live card and a gallery card cannot drift.
+ */
+export const beyondRows = () => (formation.zoboGround ? ENEMY_ROWS : formation.pullRows);
+export const cellAtRow = (row, col) => (row >= 0
+  ? row * COLS + col
+  : ENEMY_FIRST + (row + ENEMY_ROWS) * COLS + col);
+
 /**
  * Whether a cell is part of the board right now.
  *
@@ -520,8 +532,11 @@ export function familyConflict(tatari, player) {
  */
 export function benchBlockedReason(tatari, player = formation.activePlayer) {
   if (onBench(tatari.slug, player)) return null;
+  // Sandbox lets a whole line stand at once — Zapup and the tier above it
+  // together — so the one-per-line rule that a real draft needs is lifted here
+  // exactly the way the bench and field caps already are.
   const clash = familyConflict(tatari, player);
-  if (clash) return `${clash.name} from the same line is already on P${player}'s bench`;
+  if (clash && !isSandbox()) return `${clash.name} from the same line is already on P${player}'s bench`;
   if (benchOf(player).length >= benchCap()) return `P${player}'s bench is full (${benchCap()} max)`;
   return null;
 }
@@ -793,10 +808,43 @@ export function firstFreeZoboCell() {
 }
 
 export function autoPlace(slug, player = formation.activePlayer) {
-  if (isPlaced(slug, player)) return { ok: true };
+  if (isPlaced(slug, player)) {
+    // Already down. Normally that is the whole story; in Sandbox a second tap is
+    // a second copy, dropped like a Zobo rather than moving the one that is
+    // there — so "add more Zapup" is just tapping Zapup again.
+    if (!isSandbox()) return { ok: true };
+    return placeCopy(slug, firstFreeCell(), player);
+  }
   const cell = firstFreeCell();
   if (cell === null) return { ok: false, reason: 'No empty cell' };
   return place(slug, cell, player);
+}
+
+/**
+ * Another copy of a Tatari already on the field, on the tile given (or the first
+ * free one). Sandbox only.
+ *
+ * Modelled on the Zobo: a copy is a plain cell occupant and nothing more. It is
+ * not brought a second time — the bench holds one entry for the line and the
+ * plan keeps one entry for it — so the (slug, player) identity every count,
+ * switch and plan step is keyed on stays single-valued. What the extra copies
+ * are is exactly what a shared link already carries: a slug standing on a tile.
+ *
+ * @returns {{ok: true} | {ok: false, reason: string}}
+ */
+export function placeCopy(slug, cell = firstFreeCell(), player = formation.activePlayer) {
+  if (!isSandbox()) return { ok: false, reason: 'Extra copies are a Sandbox thing' };
+  if (!state.bySlug.has(slug)) return { ok: false, reason: 'Unknown Tatari' };
+  if (cell === null) return { ok: false, reason: 'No empty cell' };
+  if (!cellInPlay(cell)) return { ok: false, reason: 'Off the grid' };
+  if (formation.cells[cell]) return { ok: false, reason: 'That tile is taken' };
+  // reconcile() drops any field occupant whose slug is not on its owner's bench,
+  // so the line has to be brought for its copies to stand. The first copy always
+  // is; this keeps a copy alive even when it is somehow the first of its slug.
+  if (!onBench(slug, player)) formation.bench[player].push(slug);
+  formation.cells[cell] = { slug, player };
+  emit();
+  return { ok: true };
 }
 
 /**
@@ -1142,8 +1190,15 @@ function reconcile() {
     const seenFamilies = new Set();
     formation.bench[player] = (formation.bench[player] ?? []).filter((slug) => {
       const t = state.bySlug.get(slug);
-      if (!t || seenFamilies.has(t.familyId)) return false;
-      seenFamilies.add(t.familyId);
+      if (!t) return false;
+      // Sandbox brings a whole line at once, so the one-per-family cut a real
+      // draft needs is off here — the same lift as the caps and the placement
+      // rules. Without this the tier above a Tatari you already bring is stripped
+      // back off the bench the instant it lands, and its field copy with it.
+      if (!formation.sandbox) {
+        if (seenFamilies.has(t.familyId)) return false;
+        seenFamilies.add(t.familyId);
+      }
       return true;
     }).slice(0, benchCap());
   }

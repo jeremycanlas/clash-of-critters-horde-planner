@@ -74,6 +74,17 @@ function palette() {
     accentInk: read('--accent-ink', '#2a2005'),
     p1: read('--p1', '#4d9dff'),
     p2: read('--p2', '#ff5fa8'),
+    /*
+     * Whether the reader turned High contrast on, read from the same place as
+     * everything else here.
+     *
+     * The five element colours below already arrive swapped when it is on —
+     * prefs.js writes the flag to <html> and the stylesheet points --water and
+     * friends at their high-contrast values, so this read picks up the new ones
+     * with no work. What the flag is needed for is the part CSS cannot do for a
+     * canvas: drawing the element letter.
+     */
+    contrast: document.documentElement.dataset.contrast === 'more',
     type: {
       Water: read('--water', '#37a7e6'),
       Fire: read('--fire', '#e8453c'),
@@ -328,6 +339,56 @@ function drawCell(ctx, colours, sprites, view, cx, cy, cell, coop) {
     }
 
     /*
+     * The tier, top-left, matching the token in the app. It is the one fact
+     * about a Tatari the sprite does not carry, and a stranger reading a posted
+     * board should not have to hunt it in the roster. A chip rather than bare
+     * text so it survives the recompression a PNG takes on the way through a
+     * chat — the same reason the level badge and the element letter have one.
+     */
+    if (!isZobo && tatari?.tier) {
+      const label = `T${tatari.tier}`;
+      ctx.font = font(11, 700);
+      const w = ctx.measureText(label).width + 10;
+      const bx = cx + 4;
+      const by = cy + 4;
+      fill(ctx, colours.surface, bx, by, w, 15, 4);
+      ctx.strokeStyle = colours.line;
+      ctx.lineWidth = 1;
+      roundRect(ctx, bx + 0.5, by + 0.5, w - 1, 14, 4);
+      ctx.stroke();
+      ctx.fillStyle = colours.dim;
+      ctx.fillText(label, bx + 5, by + 11);
+    }
+
+    /*
+     * The element letter, matching the token in the app — top-centre, neutral
+     * ink, on top of the sprite.
+     *
+     * A posted card is the one place this matters most and the one place the
+     * reader cannot fix it themselves. In the app somebody who cannot separate
+     * Fire from Rock can turn this on; in a PNG in a chat they get whatever the
+     * person who posted it had switched on. That is an argument for drawing it,
+     * not against: a card exported with the letters stays readable to everyone
+     * downstream, and the tint underneath still says the same thing in colour.
+     */
+    if (colours.contrast && tatari?.type) {
+      const letter = tatari.type[0];
+      ctx.font = font(12, 800);
+      const w = Math.max(16, ctx.measureText(letter).width + 10);
+      const bx = cx + (CELL - w) / 2;
+      const by = cy + 4;
+      fill(ctx, colours.surface, bx, by, w, 16, 4);
+      ctx.strokeStyle = colours.line;
+      ctx.lineWidth = 1;
+      roundRect(ctx, bx + 0.5, by + 0.5, w - 1, 15, 4);
+      ctx.stroke();
+      ctx.fillStyle = colours.text;
+      ctx.textAlign = 'center';
+      ctx.fillText(letter, cx + CELL / 2, by + 12);
+      ctx.textAlign = 'left';
+    }
+
+    /*
      * The planned level and where it falls in the order — the two numbers
      * worth reading off a formation at a glance. The step number rides on the
      * level badge exactly as it does on the token in the app, because a
@@ -368,11 +429,14 @@ function drawCell(ctx, colours, sprites, view, cx, cy, cell, coop) {
         ctx.fillText(label, tx, by + 12);
       }
     }
+    // Bottom-left, matching the app's own token — and out of the top-left corner
+    // the tier now occupies.
     if (coop && !isZobo) {
+      const by = cy + CELL - 20;
       ctx.font = font(11, 800);
-      fill(ctx, occ.player === 1 ? colours.p1 : colours.p2, cx + 4, cy + 4, 22, 15, 4);
+      fill(ctx, occ.player === 1 ? colours.p1 : colours.p2, cx + 4, by, 22, 15, 4);
       ctx.fillStyle = colours.ownerInk;
-      ctx.fillText(`P${occ.player}`, cx + 7, cy + 15);
+      ctx.fillText(`P${occ.player}`, cx + 7, by + 11);
     }
 }
 

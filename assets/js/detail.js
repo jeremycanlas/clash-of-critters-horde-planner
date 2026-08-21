@@ -111,6 +111,9 @@ export function openDetail(slug) {
         ${placed
           ? `<button class="btn" type="button" data-act="unplace">Take off the field${who}</button>`
           : `<button class="btn btn--primary" type="button" data-act="place">Place on the field${who}</button>`}
+        ${placed && store.isSandbox()
+          ? `<button class="btn btn--primary" type="button" data-act="copy">Place another copy${who}</button>`
+          : ''}
         ${benched
           ? `<button class="btn btn--quiet" type="button" data-act="unbench">Stop bringing${who}</button>`
           : ''}
@@ -121,6 +124,11 @@ export function openDetail(slug) {
 
   dialog.querySelector('[data-act="place"]')?.addEventListener('click', () => {
     const result = store.autoPlace(t.slug, player);
+    if (!result.ok) toast(result.reason, 'error');
+    else dialog.close();
+  });
+  dialog.querySelector('[data-act="copy"]')?.addEventListener('click', () => {
+    const result = store.placeCopy(t.slug, undefined, player);
     if (!result.ok) toast(result.reason, 'error');
     else dialog.close();
   });

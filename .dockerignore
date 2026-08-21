@@ -1,0 +1,16 @@
+# Keep the build context small and secrets out of the image. The tools image
+# only ever needs tools/ and (at run time, bind-mounted) the source; none of
+# the below belongs in it.
+.git
+node_modules
+__pycache__
+.env
+.env.*
+.claude
+.agents
+.impeccable
+.playwright-mcp
+.imgtest
+.playwright-mcp
+infra
+*.md

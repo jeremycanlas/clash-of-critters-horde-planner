@@ -160,6 +160,34 @@
             <input id="opt-pull-2" type="checkbox"> <span class="check__text">Second pull</span></label>
           <label class="check"><input id="opt-glitter" type="checkbox"> <span class="check__text">Glitter
               art</span></label>
+          <!-- An element is said in exactly one way by default: a coloured wash
+             and a coloured ring. Fire and Rock are the same colour to a
+             deuteranope, so that one way is no way at all for roughly one man in
+             twenty. This does two things about it — prints the element as a
+             letter, and swaps the five to a palette spread across lightness
+             rather than hue — because neither is sufficient alone. The letters
+             carry light mode, where a readable palette barely exists; the
+             palette carries the glance, where reading five letters does not.
+             Remembered across visits and across pages, because nobody should
+             have to switch their own eyesight back on every time. -->
+          <label class="check"
+            title="For when the element colours are hard to tell apart: prints each element as a letter on its token, and swaps the five colours for a set that stays distinct without relying on hue.">
+            <input id="opt-contrast" type="checkbox"> <span class="check__text">High
+              contrast</span></label>
+          <!-- Follows the system until told otherwise, which is what Auto means
+             here — the stylesheet answers that case in a media query, so it
+             needs no JavaScript and survives this script never running. The two
+             explicit choices exist because the system setting is not always the
+             right one for a single page: reading a bright field on a phone
+             outdoors is the usual reason to overrule it. -->
+          <div id="theme-switch" class="segmented segmented--mini" role="group" aria-label="Page theme">
+            <button class="segmented__btn" type="button" data-theme-choice="system"
+              title="Follow the light or dark setting of your phone or computer" aria-pressed="true">Auto</button>
+            <button class="segmented__btn" type="button" data-theme-choice="light"
+              title="Always use the light theme on this device" aria-pressed="false">Light</button>
+            <button class="segmented__btn" type="button" data-theme-choice="dark"
+              title="Always use the dark theme on this device" aria-pressed="false">Dark</button>
+          </div>
           <!-- The seven rows beyond the contact line, on a switch of their own.
              This was part of Sandbox and should not have been: "how much board
              is there" and "how many may I bring" are separate questions, and

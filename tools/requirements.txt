@@ -1,0 +1,8 @@
+# Python dependencies for the sprite pipeline under tools/
+# (normalize_images.py, cut_background.py, read-range-diagrams.py).
+#
+# The Node tools alongside these use built-ins only, which is why the repo has
+# no package.json; only the imaging/maths scripts pull real packages.
+pillow>=10.0
+numpy>=1.26
+scipy>=1.11

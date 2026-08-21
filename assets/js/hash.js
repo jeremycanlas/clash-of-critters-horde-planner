@@ -23,7 +23,7 @@
  */
 
 import { state } from './data.js';
-import { CELLS, ALL_CELLS, MODES } from './rules.js';
+import { CELLS, ALL_CELLS, MODES, isEnemyCell, cellDisplayRow } from './rules.js';
 
 export const HASH_VERSION = 'v6';
 
@@ -193,6 +193,19 @@ export function fromFragment(hash) {
     cells[cell] = { slug, player };
   }
 
+  /*
+   * How many rows past the contact line to keep open. The link never writes this
+   * — it is implied by anyone standing out there — so derive it the way viewOf()
+   * does: the deepest occupied enemy row. Without it a boss- or second-pull link
+   * reloads with pullRows at 0, and reconcile() clears every pulled Tatari back
+   * onto the bench, which is the whole bug. Zobo ground opens all rows on its own
+   * and needs nothing here.
+   */
+  let pullRows = 0;
+  cells.forEach((occ, cell) => {
+    if (occ && isEnemyCell(cell)) pullRows = Math.max(pullRows, -cellDisplayRow(cell));
+  });
+
   const plan = [];
   for (const token of planPart.split(',')) {
     if (!token) continue;
@@ -248,7 +261,7 @@ export function fromFragment(hash) {
     : undefined;
 
   return {
-    blob: { mode, sandbox, zoboGround, cells, bench, plan, name, lf, lfWants, lfMode, lines },
+    blob: { mode, sandbox, zoboGround, pullRows, cells, bench, plan, name, lf, lfWants, lfMode, lines },
     unknown,
   };
 }

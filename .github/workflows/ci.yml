@@ -1,0 +1,66 @@
+# Validates the tooling and infrastructure on every change.
+#
+# The site is static and has no build, so there is nothing to compile here; what
+# this guards is the machinery around it. A broken Dockerfile or a malformed IaC
+# template should fail on a pull request, not the first time someone runs
+# `docker build` or `terraform apply`. This does not deploy anything.
+#
+# The separate stats.yml workflow handles the weekly README refresh; the two do
+# not overlap.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  docker:
+    # Proves the data-pipeline image still builds. It is not pushed anywhere.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build the tools image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          tags: horde-tools:ci
+
+  iac:
+    # Lints both IaC definitions without touching Azure: a broken template fails
+    # here rather than at deploy time. az is preinstalled on the runner.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bicep build (lint + compile to ARM)
+        run: az bicep build --file infra/main.bicep --stdout > /dev/null
+      - uses: hashicorp/setup-terraform@v3
+      - name: Terraform validate
+        run: |
+          terraform -chdir=infra init -backend=false
+          terraform -chdir=infra validate
+
+  sonarcloud:
+    # Static analysis of the app JS and the Node/Python tools. Off by default so
+    # the pipeline is green on a fresh clone or a fork; flip it on by setting the
+    # repository variable ENABLE_SONAR to 'true' after creating the SonarCloud
+    # project (org/key in sonar-project.properties) and adding the SONAR_TOKEN
+    # secret. Settings -> Secrets and variables -> Actions.
+    if: ${{ vars.ENABLE_SONAR == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: SonarCloud scan
+        uses: SonarSource/sonarqube-scan-action@v4
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: https://sonarcloud.io

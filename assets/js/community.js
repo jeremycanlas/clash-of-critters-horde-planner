@@ -31,6 +31,11 @@ import {
   isConfigured, rest, forgetCache, readCallback, signedIn, signIn, signOut, token, whoAmI,
 } from './supabase.js';
 import { buildAnalytics, track } from './analytics.js';
+import { applyPrefs } from './prefs.js';
+
+/* No controls on this page, but the settings still hold: someone who chose dark
+   on the drafter should not be handed a white gallery for following a link. */
+applyPrefs();
 
 /**
  * Ten, not twenty.
