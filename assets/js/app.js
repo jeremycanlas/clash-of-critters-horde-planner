@@ -20,6 +20,14 @@ import { buildSubmit, openSubmit, resumeSubmit } from './submit.js';
 import { isConfigured, readCallback } from './supabase.js';
 import { buildAnalytics, track } from './analytics.js';
 import { importTatari } from './custom.js';
+import * as prefs from './prefs.js';
+
+/*
+ * Before anything renders, and before the data load that main() waits on: these
+ * decide what colour the page is, and a page that starts in one theme and
+ * arrives in another is worse than one that takes a moment to appear.
+ */
+prefs.applyPrefs();
 
 function renderAll() {
   // Before the roster asks for its 218 thumbnails, so the dozen sprites the
@@ -264,6 +272,37 @@ function wireToolbar() {
     refreshPull();
     renderGrid();
   });
+
+  /*
+   * The two reader-level settings. prefs.js owns what they mean and where they
+   * are kept; this only has to keep the controls showing the truth.
+   *
+   * Both are already applied by now — applyPrefs() runs before the first paint
+   * of anything — so these handlers are about the controls catching up with the
+   * stored state, not about setting it.
+   */
+  const contrastBox = $('#opt-contrast');
+  contrastBox.checked = prefs.contrast();
+  contrastBox.addEventListener('change', (e) => {
+    prefs.setContrast(e.target.checked);
+    // The palette is CSS and repaints itself; the drawn card is a canvas and
+    // does not, so anything holding one has to be told.
+    renderGrid();
+  });
+
+  const themeSwitch = $('#theme-switch');
+  const renderTheme = () => {
+    for (const btn of themeSwitch.children) {
+      btn.setAttribute('aria-pressed', String(btn.dataset.themeChoice === prefs.theme()));
+    }
+  };
+  themeSwitch.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-theme-choice]');
+    if (!btn) return;
+    prefs.setTheme(btn.dataset.themeChoice);
+    renderTheme();
+  });
+  renderTheme();
 
   /*
    * Glitter has two switches: the one in the field toolbar and the one in the

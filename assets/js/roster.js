@@ -379,7 +379,9 @@ export function renderRoster() {
 
     // A full bench blocks everything at once; dimming all 200+ cards for that
     // just makes the roster look broken. Only a per-Tatari reason is marked.
-    const clash = benched ? null : store.familyConflict(t, player);
+    // Sandbox brings a whole line at once, so a sibling tier is a normal pick
+    // there, not a swap. Everywhere else it stays a switch — see card--swap.
+    const clash = (benched || store.isSandbox()) ? null : store.familyConflict(t, player);
     const otherPlayer = store.isCoop()
       ? store.players().filter((p) => p !== player && store.onBench(t.slug, p))
       : [];
@@ -431,7 +433,7 @@ export function renderRoster() {
         if (!t) return null;
         const p = store.formation.activePlayer;
         // A card that would swap a tier is draggable: the drop resolves it.
-        const swapFrom = store.familyConflict(t, p)?.slug ?? null;
+        const swapFrom = store.isSandbox() ? null : (store.familyConflict(t, p)?.slug ?? null);
         if (!swapFrom && !store.onBench(slug, p) && store.placeBlockedReason(t, p)) return null;
         return { slug, player: p, from: 'roster', swapFrom };
       },

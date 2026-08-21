@@ -290,9 +290,20 @@ export function renderPriority() {
      */
     const inactive = members.every((m) => !store.isPlaced(m.slug, m.player));
 
+    /*
+     * The element letter, the same one the field tokens carry.
+     *
+     * A plan step says which element it is the same single way a token used to:
+     * the sprite's tint and the stripe down the note. Both are hue, and hue is
+     * exactly what fails for the reader this is for — see elemGlyph in grid.js
+     * for the measurements. Hidden by CSS unless High contrast is on.
+     *
+     * aria-hidden: the step's own label already names every member in full.
+     */
     const arts = members.map((m) => `
       <span class="prio__art" data-type="${state.bySlug.get(m.slug).type}">
         ${artHTML(state.bySlug.get(m.slug))}
+        <span class="prio__elem" aria-hidden="true">${state.bySlug.get(m.slug).type[0]}</span>
         ${single ? '' : `<button class="prio__artx" type="button"
                 data-drop-member="${esc(m.slug)}" data-member-player="${m.player}"
                 title="Take ${esc(nameOf(m))} out of this step"

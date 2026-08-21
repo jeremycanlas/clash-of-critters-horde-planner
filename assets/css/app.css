@@ -45,11 +45,54 @@
   --p1: #4d9dff;
   --p2: #ff5fa8;
 
+  /*
+   * The same two for more-contrast mode, and a different problem from the
+   * elements. P1 and P2 are both mid-tone, so the only thing telling one team's
+   * outline from the other's is hue -- blue against pink -- which is the one
+   * channel a reader in this mode is least able to lean on. Hue stays (a blue
+   * team and a pink team is the mental model), but the pair is pulled hard apart
+   * on lightness so the split survives with the hue collapsed: P1 goes notably
+   * light, P2 notably dark. Theme-independent, same as the base pair.
+   *
+   * P2's fill flips to light ink to match -- see [data-contrast="more"].
+   */
+  --hc-p1: #8fc4ff;
+  --hc-p2: #a02363;
+
   --water: #37a7e6;
   --fire: #e8453c;
   --grass: #57c14a;
   --lightning: #f2be16;
   --rock: #a2762f;
+
+  /*
+   * The same five for anyone who cannot tell them apart, dark-theme values.
+   *
+   * The five above are a real accessibility bug, not a matter of taste. Run
+   * through Viénot dichromacy simulation, Fire #e8453c and Rock #a2762f land
+   * 8.9 apart in CIE dE — under about 15 two colours have stopped being two, so
+   * for a deuteranope, roughly one man in twenty, those are one colour. It is
+   * Grass/Lightning at 17.7 for a protanope and Water/Grass at 12.1 for a
+   * tritanope.
+   *
+   * What fixes it is lightness, not hue. Dichromats keep full luminance
+   * perception, so five colours spread across L* stay five things even when hue
+   * collapses. That is why Rock stops being brown and becomes a cool grey: it is
+   * what pulls it off Fire. Worst pair here is 24.9 across all three
+   * dichromacies, and every one clears 6.5:1 on --bg.
+   *
+   * Applied at the bottom of this block, not here — see [data-contrast="more"].
+   */
+  --hc-water: #3aa0f0;
+  --hc-fire: #ff7a5e;
+  --hc-grass: #8ce87a;
+  --hc-lightning: #f5cc2e;
+  --hc-rock: #9fa6b5;
+
+  /* Status ink, same treatment. Heal-green against debuff-red is the textbook
+     red/green pair, so these lift too rather than only the elements. */
+  --hc-ok: #6fe0a4;
+  --hc-danger: #ff8a72;
 
   /* 4px scale */
   --s1: 4px;  --s2: 8px;  --s3: 12px; --s4: 16px;
@@ -67,8 +110,26 @@
   color-scheme: dark;
 }
 
+/*
+ * Light, twice, and it has to be twice.
+ *
+ * The page follows the system by default and can be overridden to either theme,
+ * which is two conditions -- "the system says light and nobody overrode it" and
+ * "somebody chose light" -- and CSS has no way to hang one declaration block off
+ * both. A media query cannot be part of a selector list, and there are no mixins.
+ *
+ * The alternative was to resolve the theme in JavaScript and always write
+ * data-theme, leaving one block here. That trades this duplication for an inline
+ * script in the head of all three pages, and makes the default path depend on JS
+ * running at all. Preferring the duplication keeps the system case pure CSS,
+ * which is the case almost everyone is in.
+ *
+ * >> The two blocks must stay in step. Change a value in one, change it in the
+ *    other. The only difference between them is the selector.
+ */
 @media (prefers-color-scheme: light) {
-  :root {
+  /* The system's answer, unless it has been overruled. */
+  :root:not([data-theme="dark"]) {
     --bg:        #f3f4f8;
     --surface:   #ffffff;
     --surface-2: #f7f8fb;
@@ -85,9 +146,96 @@
     --ok:          #229a5c;
     --lift-1: 0 1px 2px rgb(21 24 34 / .06), 0 2px 8px rgb(21 24 34 / .06);
     --lift-2: 0 2px 6px rgb(21 24 34 / .08), 0 12px 32px rgb(21 24 34 / .12);
+    --hc-water: #0b64a8;
+    --hc-fire: #d63b22;
+    --hc-grass: #358f24;
+    --hc-lightning: #8a5f00;
+    --hc-rock: #4a5160;
+    --hc-ok: #14683c;
+    --hc-danger: #9e2a15;
     color-scheme: light;
   }
 }
+
+/* Chosen outright, whatever the system says. Same values as above. */
+:root[data-theme="light"] {
+  --bg:        #f3f4f8;
+  --surface:   #ffffff;
+  --surface-2: #f7f8fb;
+  --surface-3: #eceef4;
+  --line:      #d9dde7;
+  --line-soft: #e6e9f0;
+  --text:      #1b1e26;
+  --text-dim:  #565d6d;
+  --text-mute: #838b9c;
+  --accent:      #f0ab00;
+  --accent-ink:  #241a00;
+  --accent-ink-on: #a05b00;
+  --danger:      #d1402a;
+  --ok:          #229a5c;
+  --lift-1: 0 1px 2px rgb(21 24 34 / .06), 0 2px 8px rgb(21 24 34 / .06);
+  --lift-2: 0 2px 6px rgb(21 24 34 / .08), 0 12px 32px rgb(21 24 34 / .12);
+  /*
+   * The colourblind-safe five, light-theme values, and the harder half of the
+   * problem. On white every one of them has to be dark enough to hold contrast,
+   * which compresses the lightness range that was doing the work in dark mode:
+   * the best separation available here is 11.3 dE against dark's 24.9. Lightning
+   * becomes a deep amber because a readable yellow on white does not exist.
+   *
+   * That number is why the element letters exist. In light mode the colour is
+   * assisting the glyph rather than the other way round.
+   */
+  --hc-water: #0b64a8;
+  --hc-fire: #d63b22;
+  --hc-grass: #358f24;
+  --hc-lightning: #8a5f00;
+  --hc-rock: #4a5160;
+  --hc-ok: #14683c;
+  --hc-danger: #9e2a15;
+  color-scheme: light;
+}
+
+/*
+ * The swap itself, in one place.
+ *
+ * The five --hc-* values are theme-specific and set by whichever theme block
+ * won above; this only decides whether they are in play. Routing it through
+ * separate names rather than redefining --water in each theme block is what
+ * keeps this free of a specificity fight: nothing else in the file sets --water
+ * beyond the plain :root, so (0,1,1) here beats (0,1,0) there regardless of
+ * source order.
+ */
+:root[data-contrast="more"] {
+  --water: var(--hc-water);
+  --fire: var(--hc-fire);
+  --grass: var(--hc-grass);
+  --lightning: var(--hc-lightning);
+  --rock: var(--hc-rock);
+}
+
+/*
+ * The player pair, swapped by its own switch as well as by High contrast.
+ *
+ * The two teams' outlines separate only on hue, which is the harder half of the
+ * contrast problem to isolate from the other -- so it gets a switch of its own,
+ * data-player-contrast, for testing that half without the element palette and
+ * letters coming along. High contrast still pulls it in, so turning the big
+ * switch on is a superset: nothing here is lost when data-contrast="more".
+ */
+:root[data-contrast="more"],
+:root[data-player-contrast="more"] {
+  --p1: var(--hc-p1);
+  --p2: var(--hc-p2);
+}
+
+/*
+ * P2's contrast colour is dark enough that the near-black owner ink it shares
+ * with P1 stops reading on its filled badges. P1 stays light and keeps the dark
+ * ink; only P2 flips. Scoped under the player attribute so --owner-ink lands on
+ * the same elements --owner does. Both switches carry it, same as the pair above.
+ */
+:root[data-contrast="more"] [data-player="2"],
+:root[data-player-contrast="more"] [data-player="2"] { --owner-ink: #fff2f8; }
 
 [data-player="1"] { --owner: var(--p1); }
 [data-player="2"] { --owner: var(--p2); }
@@ -418,7 +566,7 @@ img { -webkit-user-drag: none; }
   margin-bottom: var(--s2);
 }
 .panel__head h2 { margin-right: auto; }
-.panel__tools { display: flex; align-items: center; flex-wrap: wrap; gap: var(--s2) var(--s3); }
+.panel__tools { display: flex; align-items: center; flex-wrap: wrap; gap: var(--s1) var(--s2); }
 
 /* ============================================================ battlefield */
 
@@ -824,6 +972,102 @@ img { -webkit-user-drag: none; }
 .token__add:hover { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
 .token__role { position: absolute; top: 2px; right: 2px; pointer-events: none; }
 
+/*
+ * The element letter: the half of "which element is this" that is not colour.
+ *
+ * Top-centre because it is the only part of a token nothing else claims. All
+ * four corners are spoken for — tier and role along the top, owner and level
+ * along the bottom — and on a 61px cell the gap between tier and role is 27px,
+ * which fits this with room to spare. It is free on a Zobo too, where the boss
+ * star takes the top-right.
+ *
+ * Neutral ink on a near-opaque chip, deliberately: this exists because hue
+ * failed, so printing the letter in the element's own colour would put it back
+ * on the channel it is meant to replace. The tint and the ring keep saying it in
+ * colour underneath, for everyone who reads that fine.
+ *
+ * Off unless asked for, and set with display so toggling it needs no re-render.
+ */
+.token__elem {
+  position: absolute; top: 2px; left: 50%;
+  transform: translateX(-50%);
+  display: none;
+  min-width: 13px; padding: 0 2px;
+  border-radius: 3px;
+  /*
+   * A definite chip rather than a floating letter. The fill has to be opaque
+   * enough to work over a sprite as well as over the tint — a translucent one
+   * disappeared against pale artwork in light mode — and the hairline is what
+   * keeps a white chip from vanishing into a white token.
+   */
+  background: var(--surface);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--line) 75%, transparent);
+  color: var(--text);
+  font-size: 9px; font-weight: 800; line-height: 13px; letter-spacing: .02em;
+  text-align: center;
+  pointer-events: none;
+}
+:root[data-contrast="more"] .token__elem { display: block; }
+
+/*
+ * The heal / buff / debuff marks, which are the app's one red-versus-green pair.
+ *
+ * The glyphs already carry the meaning without colour — + for a heal, up and
+ * down triangles for a buff and a debuff — and solid versus dashed already says
+ * "has it" versus "gets it later". So the shape work was done. What failed was
+ * legibility: measured at 3.2:1 in light mode, under the 4.5 an 8px glyph needs.
+ *
+ * The cause is structural rather than a badly chosen green. A solid mark fills
+ * itself with 30% of its own ink, so the fill tracks the text and the ratio
+ * stays near 3.2 whatever hue you pick. Lightening the fill is what actually
+ * moves it; the dashed border keeps the base/level distinction intact.
+ *
+ * Buff switches to --accent-ink-on for the reason recorded where that variable
+ * is defined: the accent is a fill colour, and is 1.99:1 as text on white.
+ */
+:root[data-contrast="more"] .card__fx[data-base="true"] {
+  background: color-mix(in srgb, currentColor 12%, var(--surface));
+}
+:root[data-contrast="more"] .card__fx[data-fx="heal"]   { color: var(--hc-ok); }
+:root[data-contrast="more"] .card__fx[data-fx="buff"]   { color: var(--accent-ink-on); }
+:root[data-contrast="more"] .card__fx[data-fx="debuff"] { color: var(--hc-danger); }
+
+/*
+ * A stronger wash to go with the safer palette.
+ *
+ * Swapping the five colours accomplished almost nothing on its own, because a
+ * token shows its element at 16% over the surface — enough to hint at a hue you
+ * can already see, nowhere near enough to carry one you cannot. Fixing the
+ * colours without raising the dose would have been a measurement that never
+ * reached the screen.
+ *
+ * The ring is left alone: in co-op it belongs to the player who brought the
+ * Tatari, and taking that over would trade one reader's problem for another's.
+ */
+:root[data-contrast="more"] .token {
+  background: color-mix(in srgb, var(--type-color, var(--line)) 32%, var(--surface-2));
+}
+/*
+ * The tier badge has to come up with the wash.
+ *
+ * Measured: at 16% the badge is --text-dim on a pale tile and passes; at 32% the
+ * tile has darkened enough to drop it to 3.8:1, under the 4.5 WCAG asks of 9px
+ * text. Raising the wash without raising this would have fixed one reader's
+ * problem by giving them another. --text clears it in both themes.
+ */
+:root[data-contrast="more"] .token__tier { color: var(--text); }
+
+/*
+ * Pre-existing, and only corrected here.
+ *
+ * The version pill is --text-mute on --surface-2, which is 3.2:1 — short of 4.5
+ * for 10.5px text in every theme, with or without this mode. Left alone in
+ * normal mode because "normal mode looks unchanged" was the brief and this is
+ * one of the deliberate de-emphasis choices documented at --text-mute. Anyone
+ * who has asked for more contrast has asked for exactly this, though.
+ */
+:root[data-contrast="more"] .ver-pill { color: var(--text-dim); }
+
 /* Owner marker. Only rendered in co-op, so solo tokens stay uncluttered. */
 .token__owner {
   position: absolute; bottom: 1px; left: 2px;
@@ -981,6 +1225,16 @@ body[data-mode="coop"] .bench__player[data-active="true"] {
   color: var(--text);
   box-shadow: inset 0 0 0 1px var(--line);
 }
+
+/*
+ * A segmented control sized to sit in a row of checkboxes.
+ *
+ * The theme switch shares .panel__tools with six labels on a phone, where that
+ * row is already at 11.5px and 6px of column gap. At full size this one control
+ * would be taller than everything beside it and would force the row to wrap on
+ * its own account.
+ */
+.segmented--mini .segmented__btn { padding: 2px var(--s2); font-size: 11.5px; }
 
 /* ============================================================ badges */
 
@@ -1258,6 +1512,34 @@ button.tally--effect { font: inherit; font-size: 11px; font-weight: 600; cursor:
   background: color-mix(in srgb, var(--type-color, var(--line)) 16%, var(--surface-3));
 }
 .prio__art img { width: 100%; height: 100%; object-fit: contain; }
+
+/*
+ * The element letter on a plan step. Same job as .token__elem, same neutral ink
+ * for the same reason: it exists because hue failed, so it cannot be drawn in
+ * the element's hue.
+ *
+ * Bottom-right rather than the token's top-centre, because a 30px art has no
+ * middle to speak of and the corner is the only part of it that is not sprite.
+ * It sits under .prio__artx, which is a full-bleed overlay on grouped steps —
+ * that button only paints on hover, and covering the letter at the moment
+ * somebody is aiming at a remove button costs nothing.
+ */
+.prio__elem {
+  position: absolute; right: -1px; bottom: -1px;
+  display: none;
+  min-width: 11px; padding: 0 1px;
+  border-radius: 3px;
+  background: var(--surface);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--line) 75%, transparent);
+  color: var(--text);
+  font-size: 8.5px; font-weight: 800; line-height: 12px; text-align: center;
+  pointer-events: none;
+}
+:root[data-contrast="more"] .prio__elem { display: block; }
+/* Same dose as the token, for the same reason. */
+:root[data-contrast="more"] .prio__art {
+  background: color-mix(in srgb, var(--type-color, var(--line)) 32%, var(--surface-3));
+}
 
 /* A step naming several Tatari shows them all, so each one gives up some size,
    and the row it cannot fit them all on gives the names a line of their own. */
@@ -2448,7 +2730,7 @@ body.is-dragging-active {
   .field--name { flex: 1 1 160px; padding: 6px var(--s2); font-size: 13px; }
 
   /* Three checkboxes and a button were wrapping to two rows of their own. */
-  .panel--field .panel__tools { gap: var(--s1) var(--s2); font-size: 12px; }
+  .panel--field .panel__tools { gap: 2px var(--s2); font-size: 12px; }
   /*
    * All four on one line, which needs about 20px it did not have.
    *
@@ -2955,3 +3237,104 @@ body.is-clean .clean-hint {
  * different reason: at 760.5px the app bar is gone too, so the header's Share
  * is the only one on screen either way.
  */
+
+/* ==========================================================================
+ * Contrast Themes
+ *
+ * Windows Contrast Themes — and Edge's Page colors, which is the same thing
+ * scoped to the browser — do not ask the page for a preference the way
+ * prefers-color-scheme does. They throw every author colour away and repaint
+ * the document from a four-colour system palette. Backgrounds, borders and
+ * text are replaced; box-shadow is not replaced, it is simply dropped.
+ *
+ * That last detail is what this block is mostly about. Nine of this app's
+ * states are drawn as an inset box-shadow, which is invisible under a contrast
+ * theme rather than merely recoloured. The fixes below are the ones where the
+ * lost shadow was the only copy of the information; where a border, a glyph or
+ * a word already says the same thing, nothing here touches it. A contrast
+ * theme user asked for a simpler page, so recreating the design in system
+ * colours would be undoing their setting.
+ * ========================================================================== */
+@media (forced-colors: active) {
+  /*
+   * The element letters stop being an option here. Normal mode says the
+   * element with a wash and a ring, and [data-contrast="more"] adds the letter
+   * as a second channel; a contrast theme deletes the wash and the ring
+   * outright, so the letter is not a second channel any more, it is the only
+   * one. Show it whether or not the reader also found the toggle.
+   *
+   * The chips' hairline is a box-shadow, so it goes with everything else — an
+   * outline replaces it. Outline rather than border because these chips are
+   * absolutely positioned against an edge and a border would shift them.
+   */
+  .token__elem,
+  .prio__elem {
+    display: block;
+    outline: 1px solid;
+  }
+
+  /*
+   * Pressed and selected controls. The theme switch, the roster tabs and the
+   * player switch each said "on" with a background fill; all three fills
+   * collapse to Canvas, leaving the selected button identical to its
+   * neighbours. Highlight/HighlightText is the theme's own word for this, so
+   * the control ends up reading the way the rest of the OS does.
+   */
+  .segmented__btn[aria-pressed="true"],
+  .segmented__btn[aria-selected="true"],
+  .segmented--tabs .segmented__btn[aria-selected="true"],
+  .ptabs__switch[aria-pressed="true"] {
+    background: Highlight;
+    color: HighlightText;
+  }
+
+  /*
+   * Two affordances that live entirely in a box-shadow, both of them about
+   * what is actionable right now: which filled tiles a Tatari reaches, and
+   * which tokens are about to change hands mid-switch. An empty in-range tile
+   * still reads, because is-inrange turns the dashed border solid — it is the
+   * filled one that needs this, since is-filled had already made it solid.
+   */
+  .cell.is-inrange.is-filled,
+  body[data-switching="true"] .cell.is-filled,
+  body[data-switching="true"] .benchchip {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
+  body[data-switching="true"] .cell[data-zobo] { outline: none; }
+
+  /*
+   * The two drop targets, which are the worst of the losses: .is-taking is a
+   * box-shadow over a 7% wash and vanishes completely, and .is-returning keeps
+   * a border whose danger colour is forced back to the same CanvasText every
+   * other border gets. They sit inches apart during one drag and they do
+   * opposite things — one keeps the Tatari, one removes it — so a contrast
+   * theme user would be dropping blind between them.
+   *
+   * Told apart by outline-style rather than by colour, since the palette here
+   * is four colours and two of them are already spoken for. Dashed for the
+   * removal reads the same way the empty tiles do.
+   */
+  .panel--roster.is-returning { outline: 3px dashed; outline-offset: -3px; }
+  .bench__player.is-taking { outline: 3px solid Highlight; outline-offset: -3px; }
+
+  /*
+   * Sprites are transparent PNGs and a contrast theme does not recolour image
+   * content, so a token's art is left sitting on whatever the theme decided
+   * Canvas is. On a dark theme the black linework in the art disappears into
+   * it; on a light one the pale fills do. These sprites are how you tell one
+   * Tatari from another, which is the case forced-color-adjust exists for, so
+   * the art keeps the backdrop it was drawn against.
+   *
+   * The colours are set on the img itself and not left to inherit, because
+   * inheritance is exactly what forced-color-adjust: none stops. `color` is
+   * set as well as `background-color`: it is what paints the alt text on the
+   * days the sprite fails to load.
+   */
+  .token img,
+  .prio__art img {
+    forced-color-adjust: none;
+    background-color: var(--surface-2);
+    color: var(--text);
+  }
+}

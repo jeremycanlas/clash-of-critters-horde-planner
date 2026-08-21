@@ -65,6 +65,13 @@ field, HAVE above LF.
 
 ## Changelog
 
+### 1.5.1
+
+#### Changes:
+- Allows users to switch between tatari tiers without removing from the field/bench
+- In coop mode, allows users to switch fielded tatari between players
+- Both changes will keep the priority level up plan for that specific tatari, benched tataris will retain their level up plan it'll just be grayed out.
+
 ### 1.5.0
 
 #### Changes:
