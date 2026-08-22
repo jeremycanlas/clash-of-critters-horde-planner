@@ -26,6 +26,11 @@ import { buildShell, closeSheet } from './shell.js';
 import { rangeStatus } from './range.js';
 import { parseContribution } from './range-import.js';
 import { loadIssues, issueFor } from './issues.js';
+import { applyPrefs } from './prefs.js';
+
+/* As on the gallery: the theme and the contrast setting belong to the reader,
+   so they apply on every page, whether or not that page offers the switch. */
+applyPrefs();
 
 const REPO = 'jeremycanlas/clash-of-critters-horde-planner';
 

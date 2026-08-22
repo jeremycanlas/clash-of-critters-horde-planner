@@ -25,6 +25,12 @@ export const filters = {
   effects: new Set(),
   hideBlocked: false,
   sort: 'default',
+  /*
+   * Zobos only. A plain boolean rather than a Set like the others, because there
+   * is nothing to pick *between*: the roster is bosses and not-bosses, and the
+   * chip asks for the first. Off means everything, the same as an empty Set.
+   */
+  boss: false,
 };
 
 // 'default' is the wiki's own order, which runs family by family - the most
@@ -53,6 +59,14 @@ function buildRosterDropZone() {
     onDrop: (target, payload) => {
       const who = store.isCoop() ? ` (P${payload.player})` : '';
       if (payload.from === 'field') {
+        // By cell for a Zobo: unplace() finds the first cell holding that slug,
+        // which for an enemy standing in several places is rarely the one you
+        // dragged. Nothing is kept either — a Zobo has no bench to return to.
+        if (payload.kind === 'zobo') {
+          store.unplaceAt(payload.cell);
+          toast(`${state.zoboBySlug.get(payload.slug)?.name ?? 'Zobo'} off the field`);
+          return;
+        }
         store.unplace(payload.slug, payload.player);
         toast(`${nameOf(payload.slug)}${who} off the field, still on the bench`);
       } else {
@@ -79,6 +93,48 @@ function bringToBench(slug) {
 
 export function buildFilters(onChange, { onPick = bringToBench } = {}) {
   buildRosterDropZone();
+
+  /*
+   * The two lists share the search box and the element chips, because both
+   * questions apply to both halves — "show me the Lightning ones" is as useful
+   * against Zobos as for Tatari. Everything else in the filter block is about
+   * drafting (role, tier, what a Tatari brings, whose bench is full) and has no
+   * meaning for an enemy, so the body carries a flag and the CSS hides them
+   * rather than each control learning about tabs.
+   */
+  const tabs = $('#roster-tabs');
+  if (tabs) {
+    tabs.addEventListener('click', (e) => {
+      const btn = e.target.closest('.segmented__btn');
+      if (!btn || btn.dataset.list === showing.value) return;
+      showing.value = btn.dataset.list;
+      for (const b of tabs.children) {
+        b.setAttribute('aria-selected', String(b.dataset.list === showing.value));
+      }
+      document.body.dataset.rosterList = showing.value;
+      onChange();
+    });
+    document.body.dataset.rosterList = showing.value;
+  }
+
+  /*
+   * The boss chip. Twenty of the fifty are bosses, and they are the ones a
+   * formation is actually built against — the star was worth adding to the card
+   * and is worth being able to ask for.
+   */
+  const bossHost = $('#filter-boss');
+  if (bossHost) {
+    bossHost.innerHTML = `
+      <button class="chip chip--boss" type="button" aria-pressed="false"
+              title="Show only bosses">★<span>Bosses</span></button>`;
+    bossHost.addEventListener('click', (e) => {
+      const chip = e.target.closest('.chip');
+      if (!chip) return;
+      filters.boss = !filters.boss;
+      chip.setAttribute('aria-pressed', String(filters.boss));
+      onChange();
+    });
+  }
 
   const chips = (host, values, set, kind, label) => {
     host.innerHTML = values.map((v) => `
@@ -144,6 +200,43 @@ export function buildFilters(onChange, { onPick = bringToBench } = {}) {
     }
     const card = e.target.closest('.card');
     if (!card) return;
+
+    /*
+     * A tapped Zobo goes straight to the field, because there is nowhere else
+     * for it to go: onPick brings a Tatari to the bench, and a Zobo has no
+     * bench — which is why tapping one used to answer "Unknown Tatari" from
+     * deep inside toggleBench().
+     *
+     * This is the only way onto the board for most phone users. Dragging a card
+     * from the roster to the field is a gesture that barely exists on a screen
+     * where the two are in separate sheets.
+     */
+    /*
+     * Tapping a dimmed card switches the line to that tier rather than doing
+     * nothing. Read off the card so the roster does not have to re-derive which
+     * member of the line is the one being replaced.
+     */
+    const switchFrom = card.dataset.switchFrom;
+    if (switchFrom) {
+      const player = store.formation.activePlayer;
+      const result = store.switchTier(switchFrom, card.dataset.slug, player);
+      if (!result.ok) { toast(result.reason, 'error'); return; }
+      const to = state.bySlug.get(card.dataset.slug);
+      toast(`Switched to ${to?.name ?? card.dataset.slug}${store.isCoop() ? ` (P${player})` : ''}`);
+      return;
+    }
+
+    if (card.classList.contains('card--zobo')) {
+      const z = state.zoboBySlug.get(card.dataset.slug);
+      if (!z) return;
+      const cell = store.firstFreeZoboCell();
+      if (cell === null) { toast('No empty tile for it', 'error'); return; }
+      const result = store.place(z.slug, cell);
+      if (!result.ok) { toast(result.reason, 'error'); return; }
+      toast(`${z.name} on the field`);
+      return;
+    }
+
     onPick(card.dataset.slug);
   });
 
@@ -213,7 +306,68 @@ function visible(player) {
   return filters.sort === 'default' ? list : list.sort(SORTS[filters.sort]);
 }
 
+/**
+ * Which of the two lists the roster is showing.
+ *
+ * Not persisted and not in the formation: it is a view of the panel, like the
+ * search box, and a share link that silently reopened somebody on the Zobo tab
+ * would be answering a question they did not ask.
+ */
+export const showing = { value: 'tatari' };
+
+/**
+ * The Zobo list.
+ *
+ * Drawn from the same card markup deliberately — same size, same drag, same
+ * search — because the field takes both and a second visual language for the
+ * half you are placing against would make the board harder to read, not easier.
+ * What the card drops is everything a Zobo has no answer for: tier, role,
+ * bench state, evolution clash and the effect marks. What it gains is the boss
+ * star, which is the one thing that changes how you draft against one.
+ */
+function renderZobos() {
+  const host = $('#roster');
+  const q = filters.query;
+  const list = state.zobos.filter((z) => {
+    if (filters.boss && !z.boss) return false;
+    if (filters.types.size && !filters.types.has(z.type)) return false;
+    return !q || z._search.includes(q.toLowerCase());
+  });
+
+  host.innerHTML = list.map((z) => `
+      <div class="card card--zobo" role="listitem" tabindex="0"
+           data-slug="${esc(z.slug)}"${z.type ? ` data-type="${z.type}"` : ''}
+           title="${esc(z.name)}${z.type ? ` — ${z.type}` : ''}${z.boss ? ' — Boss' : ''}${
+  z.skill?.name ? `
+${esc(z.skill.name)}` : ''}">
+        <div class="card__art">${artHTML(z, { priority: 'low' })}</div>
+        <div class="card__meta">
+          ${z.boss ? '<span class="card__boss" title="Boss">★</span>' : ''}
+          ${z.type ? typeIcon(z.type) : ''}
+        </div>
+        <div class="card__name">${esc(z.name)}</div>
+      </div>`).join('');
+
+  for (const card of host.children) {
+    const slug = card.dataset.slug;
+    draggable(
+      card,
+      () => ({ slug, player: 0, from: 'roster', kind: 'zobo' }),
+      () => {
+        const z = state.zoboBySlug.get(slug);
+        return `<span class="token token--zobo"${z.type ? ` data-type="${z.type}"` : ''}>${
+          artHTML(z, { lazy: false })}</span>`;
+      }
+    );
+  }
+
+  $('#roster-count').textContent = list.length === state.zobos.length
+    ? `${state.zobos.length}`
+    : `${list.length} of ${state.zobos.length}`;
+}
+
 export function renderRoster() {
+  if (showing.value === 'zobos') { renderZobos(); return; }
   const player = store.formation.activePlayer;
   const list = visible(player);
   const host = $('#roster');
@@ -225,18 +379,30 @@ export function renderRoster() {
 
     // A full bench blocks everything at once; dimming all 200+ cards for that
     // just makes the roster look broken. Only a per-Tatari reason is marked.
-    const clash = benched ? null : store.familyConflict(t, player);
+    // Sandbox brings a whole line at once, so a sibling tier is a normal pick
+    // there, not a swap. Everywhere else it stays a switch — see card--swap.
+    const clash = (benched || store.isSandbox()) ? null : store.familyConflict(t, player);
     const otherPlayer = store.isCoop()
       ? store.players().filter((p) => p !== player && store.onBench(t.slug, p))
       : [];
 
     const state_ = placed ? 'on the field' : benched ? 'on the bench' : null;
+    /*
+     * Another tier of a line you already bring is a switch, not a wall.
+     *
+     * It used to be flatly blocked, which was true to the rule — one per line —
+     * and wrong about what people wanted: the only way to change your mind about
+     * a tier was to remove the one you had, which threw away its cell and its
+     * level-up plan, neither of which was ever about the tier. The card is
+     * dimmed to say "you already have one of these" and tapping it swaps them.
+     */
     return `
       <div class="card${benched ? ' is-benched' : ''}${placed ? ' is-deployed' : ''}${
-        clash ? ' is-blocked' : ''}"
-           role="listitem" tabindex="0" data-slug="${esc(t.slug)}" data-type="${t.type}"
+        clash ? ' is-swap' : ''}"
+           role="listitem" tabindex="0" data-slug="${esc(t.slug)}" data-type="${t.type}"${
+        clash ? ` data-switch-from="${esc(clash.slug)}"` : ''}
            title="${esc(t.name)} — ${t.type} ${t.role}, T${t.tier}${
-             state_ ? `\n${state_}` : ''}${clash ? `\n${clash.name} from the same line is brought` : ''}">
+             state_ ? `\n${state_}` : ''}${clash ? `\nTap to switch from ${clash.name}, keeping its plan` : ''}">
         <!-- Last in the queue: 218 thumbnails will otherwise crowd out the
              dozen sprites the field and the benches are showing right now. -->
         <div class="card__art">${artHTML(t, { priority: 'low' })}${effectMarks(t)}</div>
@@ -248,7 +414,7 @@ export function renderRoster() {
                      title="P${otherPlayer[0]} is bringing this too">P${otherPlayer[0]}</span>` : ''}
         </div>
         <div class="card__name">${esc(t.name)}</div>
-        ${clash ? `<span class="card__lock">${esc(clash.name)} in use</span>` : ''}
+        ${clash ? `<span class="card__lock">Switch from ${esc(clash.name)}</span>` : ''}
         <!-- Focusable. It was tabindex="-1", which took the detail sheet — and
              with it "Place on the field" — off the keyboard entirely. The
              reveal already handles :focus-visible, so it appears when tabbed
@@ -266,8 +432,10 @@ export function renderRoster() {
         const t = state.bySlug.get(slug);
         if (!t) return null;
         const p = store.formation.activePlayer;
-        if (!store.onBench(slug, p) && store.placeBlockedReason(t, p)) return null;
-        return { slug, player: p, from: 'roster' };
+        // A card that would swap a tier is draggable: the drop resolves it.
+        const swapFrom = store.isSandbox() ? null : (store.familyConflict(t, p)?.slug ?? null);
+        if (!swapFrom && !store.onBench(slug, p) && store.placeBlockedReason(t, p)) return null;
+        return { slug, player: p, from: 'roster', swapFrom };
       },
       () => {
         const t = state.bySlug.get(slug);

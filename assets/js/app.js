@@ -8,7 +8,7 @@ import {
 } from './ui.js';
 import {
   buildGrid, renderGrid, renderBench, renderPlayerTabs, renderSummary,
-  renderRanges, rangesOn, renderLfSuggestions, bossPullOn,
+  renderRanges, rangesOn, renderLfSuggestions, bossPullOn, secondPullOn, refreshPull,
 } from './grid.js';
 import { buildFilters, renderRoster } from './roster.js';
 import { buildPriority, renderPriority } from './priority.js';
@@ -22,6 +22,14 @@ import { roomInHash } from './hash.js';
 import { isConfigured, readCallback } from './supabase.js';
 import { buildAnalytics, track } from './analytics.js';
 import { importTatari } from './custom.js';
+import * as prefs from './prefs.js';
+
+/*
+ * Before anything renders, and before the data load that main() waits on: these
+ * decide what colour the page is, and a page that starts in one theme and
+ * arrives in another is worse than one that takes a moment to appear.
+ */
+prefs.applyPrefs();
 
 function renderAll() {
   // Before the roster asks for its 218 thumbnails, so the dozen sprites the
@@ -40,6 +48,20 @@ function renderAll() {
   }
   document.body.dataset.mode = store.formation.mode;
   document.body.dataset.activePlayer = String(store.formation.activePlayer);
+
+  /*
+   * The Sandbox box follows the formation rather than only driving it, and this
+   * is the one place that has to be true: the flag arrives from a share link, a
+   * restored autosave, an Undo and a live peer as well as from the checkbox, and
+   * in every one of those cases nobody clicked it. Syncing here rather than in
+   * each of those handlers means a path added later cannot forget to.
+   */
+  const sandbox = $('#opt-sandbox');
+  if (sandbox) sandbox.checked = store.isSandbox();
+  document.body.dataset.sandbox = String(store.isSandbox());
+  const zobo = $('#opt-zobo');
+  if (zobo) zobo.checked = store.isZoboGround();
+  document.body.dataset.zobo = String(store.isZoboGround());
 }
 
 async function main() {
@@ -273,14 +295,139 @@ function wireToolbar() {
     renderRanges();
   });
 
+  /*
+   * Both pull toggles take the snapshot again; nothing else does. That is the
+   * whole of "the pull holds still": the rule runs on the board as it is at the
+   * moment you flip a switch, and every edit after that is yours to make without
+   * the boss changing its mind about who it grabbed.
+   */
   $('#opt-pull').addEventListener('change', (e) => {
     bossPullOn.value = e.target.checked;
+    refreshPull();
     renderGrid();
   });
 
-  $('#opt-glitter').addEventListener('change', (e) => {
-    glitterOn.value = e.target.checked;
-    renderAll();
+  $('#opt-pull-2').addEventListener('change', (e) => {
+    secondPullOn.value = e.target.checked;
+    refreshPull();
+    renderGrid();
+  });
+
+  /*
+   * The two reader-level settings. prefs.js owns what they mean and where they
+   * are kept; this only has to keep the controls showing the truth.
+   *
+   * Both are already applied by now — applyPrefs() runs before the first paint
+   * of anything — so these handlers are about the controls catching up with the
+   * stored state, not about setting it.
+   */
+  const contrastBox = $('#opt-contrast');
+  contrastBox.checked = prefs.contrast();
+  contrastBox.addEventListener('change', (e) => {
+    prefs.setContrast(e.target.checked);
+    // The palette is CSS and repaints itself; the drawn card is a canvas and
+    // does not, so anything holding one has to be told.
+    renderGrid();
+  });
+
+  const themeSwitch = $('#theme-switch');
+  const renderTheme = () => {
+    for (const btn of themeSwitch.children) {
+      btn.setAttribute('aria-pressed', String(btn.dataset.themeChoice === prefs.theme()));
+    }
+  };
+  themeSwitch.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-theme-choice]');
+    if (!btn) return;
+    prefs.setTheme(btn.dataset.themeChoice);
+    renderTheme();
+  });
+  renderTheme();
+
+  /*
+   * Glitter has two switches: the one in the field toolbar and the one in the
+   * roster, which is the only reachable copy on a phone. Whichever moves, the
+   * other follows — a checkbox showing the opposite of what the art is doing is
+   * worse than not offering the second one at all.
+   */
+  const glitterBoxes = $$('#opt-glitter, #opt-glitter-roster');
+  for (const box of glitterBoxes) {
+    box.addEventListener('change', (e) => {
+      glitterOn.value = e.target.checked;
+      for (const other of glitterBoxes) other.checked = e.target.checked;
+      renderAll();
+    });
+  }
+
+  /*
+   * Sandbox, and the one interaction in this file that asks before it acts.
+   *
+   * Turning it on is free: the caps lift, 42 more cells become reachable, and
+   * nothing already placed moves. Turning it off is the direction that can lose
+   * work, and unlike every other trim here the amount is unbounded — a 30-strong
+   * bench loses half of itself, and no toast is adequate warning for that after
+   * the fact.
+   *
+   * So the toast has to say what happened rather than that something did, and
+   * carry the way back. Only `dropped` is a real loss — Tatari that come off the
+   * board are still on their bench.
+   */
+  /*
+   * The Zobo ground, which needs none of Sandbox's ceremony. Closing it unplaces
+   * whatever was standing out there and keeps every one of them — anything on the
+   * board is on its owner's bench already — so there is nothing to warn about and
+   * nothing to undo beyond putting them back where you had them.
+   */
+  $('#opt-zobo').addEventListener('change', (e) => {
+    const before = store.snapshot();
+    const { unplaced } = store.setZoboGround(e.target.checked);
+    /*
+     * Silent unless something actually moved.
+     *
+     * The checkbox shows its own state and the seven rows appear or vanish under
+     * it, so a toast saying what you just watched happen is noise on a control
+     * people flick back and forth. The one case still worth a word is closing it
+     * with Tatari standing out there: their positions are gone, and the toast is
+     * the only place Undo can live.
+     */
+    if (unplaced) {
+      toast(`Zobo ground closed — benched ${unplaced}`, 'info', undoTo(before));
+    }
+  });
+
+  const sandboxBox = $('#opt-sandbox');
+  sandboxBox.addEventListener('change', (e) => {
+    const on = e.target.checked;
+
+    if (on) {
+      store.setSandbox(true);
+      return;
+    }
+
+    const before = store.snapshot();
+    const got = store.setSandbox(false);
+
+    /*
+     * Silent unless something actually went.
+     *
+     * Turning Sandbox on says nothing at all: the checkbox shows its own state
+     * and the bench count beside the field switches from a limit to a plain
+     * number, so a toast narrating it is noise on a switch people flip back and
+     * forth while trying things out.
+     *
+     * Turning it off is different only when it costs something. The counts are
+     * kept separate because they are separate events — benched Tatari are still
+     * yours, removed ones are not — and the toast is the only place Undo can
+     * live, which is the real reason it survives at all. Nothing lost, nothing
+     * said.
+     */
+    const said = [];
+    if (got.unplaced) said.push(`benched ${got.unplaced}`);
+    if (got.dropped) said.push(`removed ${got.dropped} that would not fit`);
+    if (!said.length) return;
+
+    toast(`Sandbox off — ${said.join(', ')}`,
+      got.dropped ? 'warn' : 'info', undoTo(before));
   });
 
   $('#mode-switch').addEventListener('click', (e) => {

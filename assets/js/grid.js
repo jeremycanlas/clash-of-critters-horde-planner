@@ -7,7 +7,7 @@
  * active player's 15 that has not landed yet.
  */
 
-import { state, matches } from './data.js';
+import { state, matches, pieceBySlug } from './data.js';
 import * as store from './store.js';
 import { $, artHTML, esc, roleIcon, typeIcon, toast } from './ui.js';
 import { draggable, dropZone } from './dnd.js';
@@ -16,6 +16,8 @@ import { coveredFrom, coverage, hasRange } from './range.js';
 import { effectsOf, GROUP_LABELS, helpFor } from './effects.js';
 
 const grid = $('#grid');
+/** Sandbox's extra ground. Absent on pages that draw a field without one. */
+const enemy = $('#enemy');
 const benchHost = $('#bench');
 const tabsHost = $('#player-tabs');
 
@@ -51,6 +53,70 @@ const cellEls = [];
  */
 export const cellElement = (i) => cellEls[i] ?? null;
 
+/**
+ * The bench as somewhere you can drop things, which it was not.
+ *
+ * Both directions already existed as clicks and had no drag: the roster's cards
+ * bring a Tatari when tapped, and a field token comes off when double-clicked.
+ * But the bench is drawn as a strip of Tatari directly under the field, which
+ * reads as a place, and dragging onto a place that ignores you is the kind of
+ * dead end nobody reports — they just conclude it cannot be done. The roster
+ * already accepts a drag *back* (see buildRosterDropZone), so the gesture was
+ * half-implemented in one direction only.
+ *
+ * `.bench__player` rather than the whole dock, because in co-op there are two of
+ * them side by side and the one you dropped on is the one you meant — the drop
+ * ignores whose turn it is and reads the target's own data-player.
+ *
+ * From the field it is an unplace, not a re-bench: anything on the field is
+ * already on its owner's bench (an invariant store.js enforces), so the drag
+ * means "take this off the board" and the Tatari is kept. Only the owner's own
+ * bench accepts it; dropping P1's token on P2's bench would be a change of
+ * ownership, which is a different gesture and not one anybody asked for.
+ */
+function buildBenchDropZone() {
+  const nameOf = (slug) => state.bySlug.get(slug)?.name ?? slug;
+
+  dropZone({
+    selector: '.bench__player',
+    accepts: (target, payload) => {
+      if (!payload.slug) return false;
+      const player = Number(target.dataset.player);
+      if (payload.from === 'field') return payload.player === player;
+      if (payload.from !== 'roster') return false;      // bench -> bench is a no-op
+      if (store.onBench(payload.slug, player)) return false;
+      const t = state.bySlug.get(payload.slug);
+      if (!t) return false;
+      // Swapping a tier onto the bench it already occupies is a rename, not a
+      // second Tatari, so the bench cap and the family rule do not apply.
+      if (payload.swapFrom) return true;
+      return !store.benchBlockedReason(t, player);
+    },
+    onHover: (target, ok) => target.classList.toggle('is-taking', ok),
+    onDrop: (target, payload) => {
+      const player = Number(target.dataset.player);
+      const who = store.isCoop() ? ` (P${player})` : '';
+
+      if (payload.from === 'field') {
+        store.unplace(payload.slug, payload.player);
+        toast(`${nameOf(payload.slug)}${who} off the field, still on the bench`);
+        return;
+      }
+
+      if (payload.swapFrom) {
+        const swapped = store.switchTier(payload.swapFrom, payload.slug, player);
+        if (!swapped.ok) { toast(swapped.reason, 'error'); return; }
+        toast(`Switched to ${nameOf(payload.slug)}${who}`);
+        return;
+      }
+
+      const result = store.addToBench(payload.slug, player);
+      if (!result.ok) { toast(result.reason, 'error'); return; }
+      toast(`Bringing ${nameOf(payload.slug)}${who}`);
+    },
+  });
+}
+
 export function buildGrid() {
   grid.innerHTML = '';
   cellEls.length = 0;
@@ -70,14 +136,41 @@ export function buildGrid() {
     rows.push(row);
   }
 
-  for (let i = 0; i < store.CELLS; i++) {
+  /*
+   * The Zobo rows are built here too, once, whether or not Sandbox is on. They
+   * are 42 empty divs when it is off, which costs nothing and buys the thing
+   * that matters: cellEls is complete and contiguous from 0 to 77 for the whole
+   * session, so renderGrid(), the drag bindings, the keyboard focus ring and
+   * the live-session cursor all address a cell the same way wherever it is.
+   * Building them on toggle would mean re-binding drag handlers on a board
+   * somebody may be mid-drag over.
+   */
+  if (enemy) {
+    enemy.innerHTML = '';
+    for (let r = 0; r < store.ENEMY_ROWS; r++) {
+      const row = document.createElement('div');
+      row.className = 'grid__row';
+      row.setAttribute('role', 'row');
+      enemy.append(row);
+      rows.push(row);              // indices ROWS..ROWS+ENEMY_ROWS-1
+    }
+  }
+
+  /** Which row element a cell belongs in, and which grid that row is in. */
+  const rowOf = (i) => (store.isEnemyCell(i)
+    ? store.ROWS + Math.floor((i - store.ENEMY_FIRST) / store.COLS)
+    : store.cellRow(i));
+
+  const total = enemy ? store.ALL_CELLS : store.CELLS;
+  for (let i = 0; i < total; i++) {
+    const beyond = store.isEnemyCell(i);
     const cell = document.createElement('div');
-    cell.className = 'cell';
+    cell.className = beyond ? 'cell cell--enemy' : 'cell';
     cell.dataset.cell = String(i);
-    cell.dataset.row = String(store.cellRow(i));
+    cell.dataset.row = String(store.cellDisplayRow(i));
     cell.setAttribute('role', 'gridcell');
     cell.tabIndex = i === 0 ? 0 : -1;
-    rows[store.cellRow(i)].append(cell);
+    rows[rowOf(i)].append(cell);
     cellEls[i] = cell;
 
     // Cell elements live for the whole session, so this binds exactly once.
@@ -85,11 +178,14 @@ export function buildGrid() {
       cell,
       () => {
         const occ = store.formation.cells[i];
-        return occ ? { ...occ, from: 'field' } : null;
+        // `cell` is what makes a Zobo draggable at all: it is the only thing
+        // that distinguishes this one from the five identical ones elsewhere
+        // on the board. Harmless for a Tatari, which is unique anyway.
+        return occ ? { ...occ, from: 'field', cell: i } : null;
       },
       () => {
         const occ = store.formation.cells[i];
-        return tokenGhost(state.bySlug.get(occ.slug), occ.player);
+        return tokenGhost(pieceBySlug(occ.slug), occ.player);
       }
     );
   }
@@ -98,8 +194,26 @@ export function buildGrid() {
     selector: '.cell',
     accepts: (target, payload) => {
       if (!payload.slug) return false;
-      const t = state.bySlug.get(payload.slug);
+      /*
+       * A tile showing a boss-dragged Tatari used to refuse drops, on the
+       * grounds that it was not reporting its own contents. That protected a
+       * board nobody could edit anyway, and the point of holding the pull still
+       * is to edit underneath it — so the drop is allowed and lands where the
+       * cell really is. The pulled marker on that tile belongs to a Tatari
+       * standing somewhere else; it goes when its own source cell empties.
+       */
+      const t = pieceBySlug(payload.slug);
       if (!t) return false;
+      /*
+       * A Zobo is never blocked. It is not brought, so there is no bench to be
+       * full and no evolution line to clash with, and any number may stand at
+       * once — the only limit is that a tile holds one thing, which the drop
+       * itself resolves by replacing what was there.
+       */
+      if (t.kind === 'zobo') return true;
+      // A tier swap is allowed wherever the Tatari it replaces could go: it is
+      // taking that one's place rather than joining it.
+      if (payload.swapFrom) return true;
       // Already on the field for this player: a move or a swap, always allowed.
       if (store.isPlaced(payload.slug, payload.player)) return true;
       return !store.placeBlockedReason(t, payload.player);
@@ -115,10 +229,49 @@ export function buildGrid() {
     },
     onDrop: (target, payload) => {
       clearRangePreview();
-      const result = store.place(payload.slug, Number(target.dataset.cell), payload.player);
+      const to = Number(target.dataset.cell);
+
+      /*
+       * A Zobo already on the board moves; one from the roster is a new one.
+       * Without this the drop wrote the destination and left the original where
+       * it was, so dragging a Zobo across the field bred a second one — place()
+       * cannot tell a move from a copy when the same Zobo may legitimately be
+       * standing in six cells at once.
+       */
+      if (payload.kind === 'zobo' && payload.from === 'field') {
+        const result = store.moveFrom(payload.cell, to);
+        if (!result.ok) toast(result.reason, 'error');
+        return;
+      }
+
+      /*
+       * Dropping another tier of a line you already bring swaps the line to it
+       * first, so what lands is the Tatari you dragged rather than a refusal.
+       * The swap keeps the plan; the place that follows just moves it here.
+       */
+      if (payload.swapFrom) {
+        const swapped = store.switchTier(payload.swapFrom, payload.slug, payload.player);
+        if (!swapped.ok) { toast(swapped.reason, 'error'); return; }
+      }
+
+      /*
+       * Sandbox: a roster or bench drop of a Tatari already on the field is
+       * another copy, not a move of the one standing there. A field-origin drag
+       * is still a move, and a tile that is already taken falls through to
+       * place() so it can swap or reposition as before.
+       */
+      if (store.isSandbox() && payload.from !== 'field'
+          && store.isPlaced(payload.slug, payload.player)) {
+        const copy = store.placeCopy(payload.slug, to, payload.player);
+        if (copy.ok) return;
+      }
+
+      const result = store.place(payload.slug, to, payload.player);
       if (!result.ok) toast(result.reason, 'error');
     },
   });
+
+  buildBenchDropZone();
 
   // A cancelled drag never reaches onDrop, so the preview is cleared here too.
   window.addEventListener('pointerup', clearRangePreview);
@@ -138,6 +291,18 @@ export function buildGrid() {
   });
 
   grid.addEventListener('click', (e) => {
+    /*
+     * While the switch mode is armed a tap changes sides and does nothing else —
+     * before the add-step button and before the armed-chip picker, both of which
+     * would otherwise fire on the same tap.
+     */
+    if (switchingPlayers.value) {
+      const cell = e.target.closest('.cell');
+      const occ = cell && store.formation.cells[Number(cell.dataset.cell)];
+      if (occ && occ.player > 0) { e.preventDefault(); switchOwner(occ.slug, occ.player); return; }
+      if (occ) { toast('A Zobo belongs to nobody', 'error'); return; }
+    }
+
     const add = e.target.closest('[data-add-step]');
     if (add) {
       const occ = store.formation.cells[Number(add.closest('.cell').dataset.cell)];
@@ -191,6 +356,13 @@ export function buildGrid() {
   });
 
   benchHost.addEventListener('click', (e) => {
+    // Same as the field: while armed, a tap on a chip hands it over instead of
+    // doing what it usually does (dropping it in the back).
+    if (switchingPlayers.value) {
+      const chip = e.target.closest('.benchchip');
+      if (chip) { e.preventDefault(); switchOwner(chip.dataset.slug, Number(chip.dataset.player)); return; }
+    }
+
     const clear = e.target.closest('[data-clear-bench]');
     if (clear) {
       const player = Number(clear.dataset.clearBench);
@@ -242,6 +414,11 @@ export function buildGrid() {
   });
 
   tabsHost.addEventListener('click', (e) => {
+    if (e.target.closest('#btn-switch-players')) {
+      switchingPlayers.value = !switchingPlayers.value;
+      renderPlayerTabs();
+      return;
+    }
     const tab = e.target.closest('.ptab');
     if (tab) store.setActivePlayer(Number(tab.dataset.player));
   });
@@ -393,52 +570,144 @@ export const rangesOn = { value: false };
 export const bossPullOn = { value: false };
 
 /**
- * The rearmost Tatari in each column, and the cells they leave behind.
+ * A second helping of the same pull.
  *
- * Per column, not per row: the boss reaches down every lane and takes whoever
- * is standing at the back of it, so a formation with a ragged back edge loses
- * one from each lane rather than one tidy row. Row 0 faces the spawn line, so
- * "back of the lane" is the highest row index holding anything.
+ * Available whatever else is on. Each round moves one Tatari to just in front of
+ * its lane's front rank, so a lane two deep on the field takes both rounds
+ * without ever reaching the line — and a lane whose front rank is already at row
+ * 0 simply opens a second row past it, the same way the first round opened the
+ * first. See planPull().
  */
-function pulled() {
-  const taken = new Map();   // column -> occupant now standing in the pull row
-  const from = new Set();    // cells they vacated
-  if (!bossPullOn.value) return { taken, from };
+export const secondPullOn = { value: false };
+
+/**
+ * Whether tapping a Tatari hands it to the other player.
+ *
+ * A mode rather than a per-token control, because the alternative is another
+ * button on every token in a co-op formation — thirty of them, for something
+ * done once or twice a session. Arm it, tap what is on the wrong side, turn it
+ * off. Co-op only: with one player there is nowhere to switch to.
+ *
+ * Not in the formation. It is a thing the editor is doing, not a fact about the
+ * board, and a share link that arrived armed would be a link that rewrites
+ * itself the moment somebody taps a sprite.
+ */
+export const switchingPlayers = { value: false };
+
+/**
+ * The pull, as an actual move that is undone when you switch it off.
+ *
+ * Three versions of this were wrong before it settled here, and the reasons are
+ * worth keeping:
+ *
+ *   1. Recomputed every render, so the board argued with you — drop a Tatari in
+ *      a lane and the boss instantly grabbed a different one.
+ *   2. Held still, but as an overlay: the source cell only *looked* empty, so
+ *      placing into it evicted the Tatari that was supposedly standing further
+ *      forward, and the pull vanished.
+ *   3. Drawn past the line in a strip outside the grid, which meant the Tatari
+ *      out there were in no cell at all — undraggable, unaddressable, and
+ *      unable to hold a second row when a second pull needed one.
+ *
+ * So the pull moves them for real, into real cells, and remembers where each one
+ * came from. Everything else follows: the vacated cell is genuinely free, the
+ * moved Tatari drags like any other, and the rows past the line are ordinary
+ * ground that the store opens one at a time as the pull needs them.
+ *
+ * @type {{from: number, to: number, slug: string, player: number}[]}
+ */
+let pullMoves = [];
+
+/** A display row back to a cell index; the inverse of store.cellDisplayRow. */
+const cellAtRow = (row, col) => (row >= 0
+  ? row * store.COLS + col
+  : store.ENEMY_FIRST + (row + store.ENEMY_ROWS) * store.COLS + col);
+
+/**
+ * Works out the moves without making them, so the store can be told how much
+ * ground to open before anything is placed on it.
+ *
+ * Per lane the boss takes whoever is furthest back and drops them immediately in
+ * front of that lane's front rank; a second round then runs on the board the
+ * first one left, so a different Tatari moves and lands a row further forward.
+ *
+ * A lane may reach past the contact line, and how far it may go depends on what
+ * can exist out there: all seven rows when the Zobo ground is open, and
+ * otherwise as many as the rounds themselves can justify — one round can open
+ * one row, two rounds two. That is the answer to "it should create a second row
+ * above": the ground is not fixed at one row, it is however many the pull needs.
+ */
+function planPull(rounds) {
+  const open = store.isZoboGround();
+  const reach = open ? store.ENEMY_ROWS : rounds;
+  const frontmostRow = open ? -store.ENEMY_ROWS : 0;
+  const floor = -reach;
+
+  const moves = [];
+  let deepest = 0;
 
   for (let col = 0; col < store.COLS; col++) {
-    for (let row = store.ROWS - 1; row >= 0; row--) {
-      const i = row * store.COLS + col;
-      const occ = store.formation.cells[i];
-      if (!occ) continue;
-      taken.set(col, occ);
-      from.add(i);
-      break;
+    let lane = [];
+    for (let row = frontmostRow; row < store.ROWS; row++) {
+      const cell = cellAtRow(row, col);
+      const occ = store.formation.cells[cell];
+      if (occ) lane.push({ row, occ, home: cell });
+    }
+    if (!lane.length) continue;
+
+    for (let r = 0; r < rounds; r++) {
+      const destRow = lane[0].row - 1;
+      if (destRow < floor) break;
+      const back = lane[lane.length - 1];
+      lane = [{ ...back, row: destRow }, ...lane.slice(0, -1)];
+      if (destRow < 0) deepest = Math.max(deepest, -destRow);
+      // A Tatari moved twice keeps one move, from its original cell.
+      const already = moves.find((m) => m.from === back.home);
+      if (already) already.to = cellAtRow(destRow, col);
+      else {
+        moves.push({
+          from: back.home,
+          to: cellAtRow(destRow, col),
+          slug: back.occ.slug,
+          player: back.occ.player,
+        });
+      }
     }
   }
-  return { taken, from };
+  return { moves, deepest };
 }
 
-/** The dragged row, drawn between the spawn line and the field. */
-function renderPullRow(taken) {
-  const host = $('#pull-row');
-  host.hidden = !bossPullOn.value;
-  if (!bossPullOn.value) { host.innerHTML = ''; return; }
+/** The cells the pull dropped somebody into, for marking them. */
+const pullDestinations = () => pullMoves.map((m) => m.to);
 
-  host.innerHTML = Array.from({ length: store.COLS }, (_, col) => {
-    const occ = taken.get(col);
-    if (!occ) return '<div class="pull-cell"></div>';
-    const t = state.bySlug.get(occ.slug);
-    if (!t) return '<div class="pull-cell"></div>';
-    return `<div class="pull-cell is-filled">
-      <span class="token" data-type="${t.type}" data-player="${occ.player}">
-        ${artHTML(t, ON_CARD)}${ownerBadge(occ.player)}
-      </span></div>`;
-  }).join('');
+/** Puts everything the pull moved back where it came from. */
+export function releasePull() {
+  const moves = pullMoves;
+  pullMoves = [];
+  if (moves.length) store.restorePositions(moves);
+  /*
+   * Then clear out whatever is left past the line, which restorePositions
+   * deliberately will not touch: anything you moved yourself is no longer the
+   * pull's to put back, but it is standing on ground that only exists while the
+   * pull is on. Unconditional rather than guarded on `moves`, because the thing
+   * being cleaned up is by definition not in that list.
+   */
+  store.evacuatePullRows();
+}
 
-  host.setAttribute('aria-label', taken.size
-    ? `Boss pull: ${[...taken.values()]
-      .map(({ slug }) => state.bySlug.get(slug)?.name ?? slug).join(', ')} dragged to the front`
-    : 'Boss pull: nothing on the field to drag');
+/**
+ * Takes the pull. Called when a pull toggle changes, and nowhere else — which is
+ * what keeps it still while you edit underneath it.
+ */
+export function refreshPull() {
+  releasePull();
+  if (!bossPullOn.value) return;
+
+  const { moves, deepest } = planPull(secondPullOn.value ? 2 : 1);
+  if (!moves.length) return;
+
+  // The ground and the move together: see movePositions().
+  pullMoves = store.movePositions(moves, deepest);
 }
 
 // ---------------------------------------------------------------- arming
@@ -542,22 +811,74 @@ function ownerBadge(player) {
     : '';
 }
 
+/**
+ * The element as a letter, for anyone who cannot read it off the tint.
+ *
+ * A token says which element it is in exactly one way: a coloured wash and a
+ * coloured ring. That is one channel, and it fails — Fire #e8453c and Rock
+ * #a2762f simulate to the same muddy orange for a deuteranope, dE 8.9, where
+ * anything under about 15 has stopped being two colours. Grass/Lightning and
+ * Water/Grass are nearly as bad for the other two dichromacies.
+ *
+ * So: a shape, in neutral ink, saying the same fact without hue. Not instead of
+ * the colour — alongside it, because two weak channels beat one.
+ *
+ * The initial is enough while there are five elements and no two share one.
+ * A sixth that collided would need a table here; the type chart in meta.json is
+ * the thing to check first.
+ *
+ * aria-hidden because every cell's own label already names the element in full,
+ * and a screen reader reading "W" after "Water" is noise.
+ *
+ * Always in the markup, shown by CSS. The toggle then costs no re-render, and
+ * the board does not permanently gain a badge most people did not ask for.
+ */
+function elemGlyph(type) {
+  return type ? `<span class="token__elem" aria-hidden="true">${type[0]}</span>` : '';
+}
+
 function tokenGhost(t, player) {
   return `<span class="token" data-type="${t.type}" data-player="${player}">${
-    artHTML(t, { lazy: false })}${ownerBadge(player)}</span>`;
+    artHTML(t, { lazy: false })}${elemGlyph(t.type)}${ownerBadge(player)}</span>`;
 }
 
 export function renderGrid() {
-  const { taken, from } = pulled();
-  renderPullRow(taken);
+  /*
+   * How much ground past the line is drawn. The Zobo toggle shows all seven; a
+   * boss pull shows only the rows it opened, counting outwards from the line, so
+   * a single-round pull adds one row and a second round adds another.
+   *
+   * Row visibility rather than one flag on the whole grid, because the two
+   * sources disagree about how much to show and the store already knows the
+   * answer per cell.
+   */
+  const openRows = store.isZoboGround() ? store.ENEMY_ROWS : store.pullRows();
+  if (enemy) {
+    enemy.hidden = openRows === 0;
+    // Rows are laid out outermost first, so the open ones are the last N.
+    [...enemy.children].forEach((row, r) => {
+      const shown = r >= store.ENEMY_ROWS - openRows;
+      row.hidden = !shown;
+      row.classList.toggle('grid__row--pull', shown && !store.isZoboGround());
+    });
+  }
+
+  // Where the boss put things, so those cells can be marked. Nothing is drawn
+  // from this — the Tatari really are in these cells now.
+  const landed = new Set(pullDestinations());
 
   for (const cell of cellEls) {
     const i = Number(cell.dataset.cell);
-    // Anyone the boss has dragged is drawn in the pull row instead, so their
-    // own cell reads as empty — which is the point of looking.
-    const occ = from.has(i) ? null : store.formation.cells[i];
-    const t = occ ? state.bySlug.get(occ.slug) : null;
-    const where = `Row ${store.cellRow(i) + 1}, column ${store.cellCol(i) + 1}`;
+    const occ = store.formation.cells[i];
+    const t = occ ? pieceBySlug(occ.slug) : null;
+    const isZobo = occ?.kind === 'zobo';
+    cell.classList.toggle('is-pulled', !!t && landed.has(i));
+    // Beyond the line the rows run outwards from the field, so they are named
+    // for what they are rather than given a row number that collides with the
+    // field's own: "Zobo row 3" and "Row 3" are different places.
+    const where = store.isEnemyCell(i)
+      ? `Zobo row ${-store.cellDisplayRow(i)}, column ${store.cellCol(i) + 1}`
+      : `Row ${store.cellRow(i) + 1}, column ${store.cellCol(i) + 1}`;
 
     cell.classList.toggle('is-filled', !!t);
     cell.classList.toggle('is-carried', carried === i);
@@ -567,6 +888,7 @@ export function renderGrid() {
       cell.innerHTML = '';
       delete cell.dataset.type;
       delete cell.dataset.player;
+      delete cell.dataset.zobo;
       cell.setAttribute('aria-label', `${where}, empty`);
       continue;
     }
@@ -585,11 +907,35 @@ export function renderGrid() {
       ? `<b class="token__seq">${seat}</b>`
       : '';
 
+    if (isZobo) {
+      /*
+       * No tier, no role, no owner badge and no plan button: a Zobo has none of
+       * those, and the ones it does not have are exactly the controls that would
+       * offer to level it up or file it under a player. What is worth showing is
+       * that it is an enemy and which element, so the type still drives the tint
+       * and `data-zobo` carries the rest.
+       */
+      cell.dataset.zobo = '1';
+      if (t.type) cell.dataset.type = t.type; else delete cell.dataset.type;
+      delete cell.dataset.player;
+      cell.innerHTML = `
+        <span class="token token--zobo"${t.type ? ` data-type="${t.type}"` : ''}>
+          ${artHTML(t, ON_CARD)}
+          ${elemGlyph(t.type)}
+          ${t.boss ? '<span class="token__boss" title="Boss">★</span>' : ''}
+        </span>`;
+      cell.setAttribute('aria-label',
+        `${where}: ${t.name}, Zobo${t.type ? `, ${t.type}` : ''}${t.boss ? ', boss' : ''}`);
+      continue;
+    }
+    delete cell.dataset.zobo;
+
     cell.dataset.type = t.type;
     cell.dataset.player = String(occ.player);
     cell.innerHTML = `
       <span class="token" data-type="${t.type}" data-player="${occ.player}">
         ${artHTML(t, ON_CARD)}
+        ${elemGlyph(t.type)}
         <span class="token__tier">T${t.tier}</span>
         <span class="token__role">${roleIcon(t.role)}</span>
         ${ownerBadge(occ.player)}
@@ -601,7 +947,7 @@ export function renderGrid() {
             `aria-label="Plan a level-up for ${esc(t.name)}" title="Plan a level-up">+</button>`}
       </span>`;
     cell.setAttribute('aria-label',
-      `${where}: ${t.name}, ${who}${t.type} ${t.role}, tier ${t.tier}, ${plan}${
+      `${where}${landed.has(i) ? ', dragged here by the boss' : ''}: ${t.name}, ${who}${t.type} ${t.role}, tier ${t.tier}, ${plan}${
         seat ? `, step ${seat} of the plan` : ''}`);
   }
   renderRanges();
@@ -709,16 +1055,49 @@ export function renderPlayerTabs() {
         <span class="ptab__who" data-player="${player}">P${player}</span>
         <span class="ptab__nums">
           <span>field <b>${field}</b>/${store.fieldCap()}</span>
-          <span>bench <b>${bench}</b>/${store.benchCap()}</span>
+          <span>bench <b>${bench}</b>${capOf(store.benchCap())}</span>
         </span>
       </button>`;
-  }).join('');
+  }).join('') + `
+      <button id="btn-switch-players" class="btn btn--tiny ptabs__switch" type="button"
+              aria-pressed="${switchingPlayers.value}"
+              title="Hand a Tatari to the other player, keeping its level-up plan. Tap this, then tap a Tatari on the field or a bench.">
+        ${switchingPlayers.value ? 'Tap a Tatari…' : '⇄ Switch player'}
+      </button>`;
+
+  document.body.dataset.switching = String(switchingPlayers.value);
+}
+
+/**
+ * Hands one Tatari to the other player, and says what happened.
+ *
+ * Shared by the field and the bench because both are places you notice the
+ * mistake from, and both should answer the same way.
+ */
+function switchOwner(slug, player) {
+  const result = store.switchPlayer(slug, player);
+  if (!result.ok) { toast(result.reason, 'error'); return; }
+  const name = state.bySlug.get(slug)?.name ?? slug;
+  const to = player === 1 ? 2 : 1;
+  toast(result.swapped
+    ? `${name} swapped — P${to} and P${player} traded, plans included`
+    : `${name} is P${to}'s now, plan and all`);
 }
 
 /**
  * Every player's bench, not just the active one, so a co-op planner can drag
  * either teammate's Tatari straight onto the field.
  */
+/**
+ * "6/15" normally, and just "6" when there is no ceiling.
+ *
+ * Sandbox lifts the bench cap to Infinity, which is the right value to compute
+ * with and the wrong one to print — the count read "6/Infinity brought". A
+ * missing denominator says "no limit" better than any symbol would, and better
+ * than picking a large number to pretend there is one.
+ */
+const capOf = (cap, sep = '/') => (Number.isFinite(cap) ? `${sep}${cap}` : '');
+
 export function renderBench() {
   const coop = store.isCoop();
 
@@ -763,9 +1142,9 @@ export function renderBench() {
                      title="Plan for P${player}">P${player} bench</button>`
     : '<span class="summary__label">Bench</span>'}
           <span class="bench__count"
-                title="${bench.length} of ${store.benchCap()} on the bench, ${
+                title="${bench.length}${capOf(store.benchCap(), ' of ')} on the bench, ${
   bench.length - waiting.length} of ${store.fieldCap()} on the field"><b>${
-  bench.length}</b>/${store.benchCap()} brought,
+  bench.length}</b>${capOf(store.benchCap())} brought,
             <b>${bench.length - waiting.length}</b>/${store.fieldCap()} placed</span>
           ${active
     ? `<button class="btn btn--tiny bench__clean" type="button" data-clean
@@ -793,6 +1172,23 @@ export function renderBench() {
 
 // ---------------------------------------------------------------- keyboard
 
+/*
+ * One top-to-bottom sequence over whatever is on screen: the Zobo rows first
+ * when Sandbox is on, then the field. Outside Sandbox the sequence is just the
+ * field, so nothing can be focused that is not drawn.
+ */
+const toDisplay = (i) => (store.isEnemyCell(i)
+  ? i - store.ENEMY_FIRST
+  : i + (store.isZoboGround() ? store.ENEMY_CELLS : 0));
+
+function fromDisplay(d) {
+  const offset = store.isZoboGround() ? store.ENEMY_CELLS : 0;
+  if (d < 0) return null;
+  if (d < offset) return store.ENEMY_FIRST + d;
+  const cell = d - offset;
+  return cell < store.CELLS ? cell : null;
+}
+
 function onKeydown(e) {
   const cell = e.target.closest('.cell');
   if (!cell) return;
@@ -800,9 +1196,18 @@ function onKeydown(e) {
 
   const step = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -store.COLS, ArrowDown: store.COLS }[e.key];
   if (step !== undefined) {
-    const next = i + step;
-    const staysInRow = Math.abs(step) !== 1 || store.cellRow(next) === store.cellRow(i);
-    if (next >= 0 && next < store.CELLS && staysInRow) {
+    /*
+     * Navigated in display order, not in index order, because in Sandbox the two
+     * disagree. The Zobo rows are drawn above the field and numbered after it,
+     * so Up from the field's front row is not `i - 6` — it is the last row of a
+     * block 36 higher. Mapping both blocks onto one top-to-bottom sequence makes
+     * every arrow a step of 1 or COLS again, and the seam between the two grids
+     * stops being a special case.
+     */
+    const next = fromDisplay(toDisplay(i) + step);
+    const staysInRow = Math.abs(step) !== 1
+      || (next !== null && Math.floor(toDisplay(next) / store.COLS) === Math.floor(toDisplay(i) / store.COLS));
+    if (next !== null && staysInRow) {
       e.preventDefault();
       focusCell(next);
     }

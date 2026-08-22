@@ -15,6 +15,18 @@ export const state = {
   all: [],
   /** @type {Map<string, Tatari>} by slug */
   bySlug: new Map(),
+  /**
+   * @type {Zobo[]} the enemies, kept apart from the roster on purpose.
+   *
+   * A Zobo shares almost nothing with a Tatari — no tier, no evolution line, no
+   * role, and above all no bench — so folding them into `all` would mean every
+   * consumer of the roster testing `kind` before it could trust a field. The one
+   * place they do meet is the field itself, and `pieceBySlug` is what resolves an
+   * occupant there without either side needing to know about the other.
+   */
+  zobos: [],
+  /** @type {Map<string, Zobo>} by slug */
+  zoboBySlug: new Map(),
   /** @type {Map<string|number, Tatari[]>} members of each evolution family */
   families: new Map(),
   /** family name -> extra search terms */
@@ -160,9 +172,12 @@ export function matches(t, query) {
 // ---------------------------------------------------------------- boot
 
 export async function load() {
-  const [meta, roster, aliases, ranges, effectRanges] = await Promise.all([
+  const [meta, roster, zobos, aliases, ranges, effectRanges] = await Promise.all([
     fetch('data/meta.json').then((r) => r.json()),
     fetch('data/tatari.json').then((r) => r.json()),
+    // A copy without the Zobo file still drafts; it simply has no enemies to
+    // place, which is what every build before this one did.
+    fetch('data/zobos.json').then((r) => r.json()).catch(() => []),
     fetch('data/aliases.json').then((r) => r.json()).catch(() => ({})),
     fetch('data/ranges.json').then((r) => r.json()).catch(() => ({})),
     fetch('data/effect-ranges.json').then((r) => r.json()).catch(() => ({})),
@@ -174,8 +189,31 @@ export async function load() {
   state.ranges = ranges;
   state.effectRanges = effectRanges;
   state.all = [...roster, ...loadCustom().map(normalizeCustom)];
+  state.zobos = Array.isArray(zobos) ? zobos : [];
+  for (const z of state.zobos) {
+    z.kind = 'zobo';
+    z._search = [z.name, z.slug.replace(/-/g, ' '), z.type ?? '', z.boss ? 'boss' : '',
+      z.skill?.name ?? '', z.skill?.text ?? '', z.description ?? '']
+      .join(' ').toLowerCase();
+  }
+  state.zoboBySlug = new Map(state.zobos.map((z) => [z.slug, z]));
   reindex();
   return state;
+}
+
+/**
+ * Whatever can stand on the field, by slug — Tatari or Zobo.
+ *
+ * The field holds both and does not want to care which: renderGrid, the share
+ * card and the live session all ask "what is this occupant" and want a name, a
+ * type and a sprite back. Anything that needs the difference reads `.kind`.
+ *
+ * Slugs cannot collide, because a Zobo's always ends in `-zobo`; if the wiki
+ * ever produces a Tatari that does, the Tatari wins here and the Zobo becomes
+ * unplaceable rather than silently replacing it on somebody's board.
+ */
+export function pieceBySlug(slug) {
+  return state.bySlug.get(slug) ?? state.zoboBySlug.get(slug) ?? null;
 }
 
 export function setCustom(list) {

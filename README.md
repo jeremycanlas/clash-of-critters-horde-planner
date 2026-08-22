@@ -65,6 +65,38 @@ field, HAVE above LF.
 
 ## Changelog
 
+### 1.5.2
+
+#### Changes:
+- Sandbox now allows you to put as many copies of a tatari of any tier as you want (adding to glenthern's suggestion)
+- The share grid now shows each Tatari's tier (T1–T4) on the top left of each tatari on the field.
+- The share picture now also includes any toggled worm pull/2nd worm pull and the 7x7 zobo ground.
+- Tier switching! You can now switch a Tatari's tiers without having to remove them to the roster and the priority plan of that tatari persists. (thanks to @mersite for the suggestion)
+- Co-op tatari ownership switch! You can now switch a Tatari's owner from P1 to P2 and vice versa and the priority plan will adjust. (Another one mersite)
+- Added a High Contrast Mode accessibility option and the ability to switch between light and dark mode (thanks to ztkz and dyslexicshowerhead for the suggestions and feedback)
+
+#### Bug Fixes:
+- Sharing a formation with a boss pull on was broken, opening the link will dump all pulled tataris back to the bench. It should work as intended now
+
+### 1.5.1
+
+#### Changes:
+- Allows users to switch between tatari tiers without removing from the field/bench
+- In coop mode, allows users to switch fielded tatari between players
+- Both changes will keep the priority level up plan for that specific tatari, benched tataris will retain their level up plan it'll just be grayed out.
+
+### 1.5.0
+
+#### Changes:
+- Added the new Tatari and it's evolutions
+- Added a background img tool, all tataris and it's glitter variants should be backgroundless from now on
+- Added a Zobo roster 
+- Added a zobo ground toggle to bring out the 7x7 grid above the placeable 6x6 grid.
+- Sandbox - Suggested by glenthern from discord. Uncapped Tataris on the field
+- Boss pull toggle rebuilt - built the first version when i was a noob idk how it worked HAHAHA but it works now hopefully, thanks to everyone who answered my inquiries in discord.
+- Also added a second boss pull toggle
+
+
 ### 1.4.0
 
 #### Summary:

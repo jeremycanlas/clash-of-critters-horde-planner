@@ -45,11 +45,54 @@
   --p1: #4d9dff;
   --p2: #ff5fa8;
 
+  /*
+   * The same two for more-contrast mode, and a different problem from the
+   * elements. P1 and P2 are both mid-tone, so the only thing telling one team's
+   * outline from the other's is hue -- blue against pink -- which is the one
+   * channel a reader in this mode is least able to lean on. Hue stays (a blue
+   * team and a pink team is the mental model), but the pair is pulled hard apart
+   * on lightness so the split survives with the hue collapsed: P1 goes notably
+   * light, P2 notably dark. Theme-independent, same as the base pair.
+   *
+   * P2's fill flips to light ink to match -- see [data-contrast="more"].
+   */
+  --hc-p1: #8fc4ff;
+  --hc-p2: #a02363;
+
   --water: #37a7e6;
   --fire: #e8453c;
   --grass: #57c14a;
   --lightning: #f2be16;
   --rock: #a2762f;
+
+  /*
+   * The same five for anyone who cannot tell them apart, dark-theme values.
+   *
+   * The five above are a real accessibility bug, not a matter of taste. Run
+   * through Viénot dichromacy simulation, Fire #e8453c and Rock #a2762f land
+   * 8.9 apart in CIE dE — under about 15 two colours have stopped being two, so
+   * for a deuteranope, roughly one man in twenty, those are one colour. It is
+   * Grass/Lightning at 17.7 for a protanope and Water/Grass at 12.1 for a
+   * tritanope.
+   *
+   * What fixes it is lightness, not hue. Dichromats keep full luminance
+   * perception, so five colours spread across L* stay five things even when hue
+   * collapses. That is why Rock stops being brown and becomes a cool grey: it is
+   * what pulls it off Fire. Worst pair here is 24.9 across all three
+   * dichromacies, and every one clears 6.5:1 on --bg.
+   *
+   * Applied at the bottom of this block, not here — see [data-contrast="more"].
+   */
+  --hc-water: #3aa0f0;
+  --hc-fire: #ff7a5e;
+  --hc-grass: #8ce87a;
+  --hc-lightning: #f5cc2e;
+  --hc-rock: #9fa6b5;
+
+  /* Status ink, same treatment. Heal-green against debuff-red is the textbook
+     red/green pair, so these lift too rather than only the elements. */
+  --hc-ok: #6fe0a4;
+  --hc-danger: #ff8a72;
 
   /* 4px scale */
   --s1: 4px;  --s2: 8px;  --s3: 12px; --s4: 16px;
@@ -67,8 +110,26 @@
   color-scheme: dark;
 }
 
+/*
+ * Light, twice, and it has to be twice.
+ *
+ * The page follows the system by default and can be overridden to either theme,
+ * which is two conditions -- "the system says light and nobody overrode it" and
+ * "somebody chose light" -- and CSS has no way to hang one declaration block off
+ * both. A media query cannot be part of a selector list, and there are no mixins.
+ *
+ * The alternative was to resolve the theme in JavaScript and always write
+ * data-theme, leaving one block here. That trades this duplication for an inline
+ * script in the head of all three pages, and makes the default path depend on JS
+ * running at all. Preferring the duplication keeps the system case pure CSS,
+ * which is the case almost everyone is in.
+ *
+ * >> The two blocks must stay in step. Change a value in one, change it in the
+ *    other. The only difference between them is the selector.
+ */
 @media (prefers-color-scheme: light) {
-  :root {
+  /* The system's answer, unless it has been overruled. */
+  :root:not([data-theme="dark"]) {
     --bg:        #f3f4f8;
     --surface:   #ffffff;
     --surface-2: #f7f8fb;
@@ -85,9 +146,96 @@
     --ok:          #229a5c;
     --lift-1: 0 1px 2px rgb(21 24 34 / .06), 0 2px 8px rgb(21 24 34 / .06);
     --lift-2: 0 2px 6px rgb(21 24 34 / .08), 0 12px 32px rgb(21 24 34 / .12);
+    --hc-water: #0b64a8;
+    --hc-fire: #d63b22;
+    --hc-grass: #358f24;
+    --hc-lightning: #8a5f00;
+    --hc-rock: #4a5160;
+    --hc-ok: #14683c;
+    --hc-danger: #9e2a15;
     color-scheme: light;
   }
 }
+
+/* Chosen outright, whatever the system says. Same values as above. */
+:root[data-theme="light"] {
+  --bg:        #f3f4f8;
+  --surface:   #ffffff;
+  --surface-2: #f7f8fb;
+  --surface-3: #eceef4;
+  --line:      #d9dde7;
+  --line-soft: #e6e9f0;
+  --text:      #1b1e26;
+  --text-dim:  #565d6d;
+  --text-mute: #838b9c;
+  --accent:      #f0ab00;
+  --accent-ink:  #241a00;
+  --accent-ink-on: #a05b00;
+  --danger:      #d1402a;
+  --ok:          #229a5c;
+  --lift-1: 0 1px 2px rgb(21 24 34 / .06), 0 2px 8px rgb(21 24 34 / .06);
+  --lift-2: 0 2px 6px rgb(21 24 34 / .08), 0 12px 32px rgb(21 24 34 / .12);
+  /*
+   * The colourblind-safe five, light-theme values, and the harder half of the
+   * problem. On white every one of them has to be dark enough to hold contrast,
+   * which compresses the lightness range that was doing the work in dark mode:
+   * the best separation available here is 11.3 dE against dark's 24.9. Lightning
+   * becomes a deep amber because a readable yellow on white does not exist.
+   *
+   * That number is why the element letters exist. In light mode the colour is
+   * assisting the glyph rather than the other way round.
+   */
+  --hc-water: #0b64a8;
+  --hc-fire: #d63b22;
+  --hc-grass: #358f24;
+  --hc-lightning: #8a5f00;
+  --hc-rock: #4a5160;
+  --hc-ok: #14683c;
+  --hc-danger: #9e2a15;
+  color-scheme: light;
+}
+
+/*
+ * The swap itself, in one place.
+ *
+ * The five --hc-* values are theme-specific and set by whichever theme block
+ * won above; this only decides whether they are in play. Routing it through
+ * separate names rather than redefining --water in each theme block is what
+ * keeps this free of a specificity fight: nothing else in the file sets --water
+ * beyond the plain :root, so (0,1,1) here beats (0,1,0) there regardless of
+ * source order.
+ */
+:root[data-contrast="more"] {
+  --water: var(--hc-water);
+  --fire: var(--hc-fire);
+  --grass: var(--hc-grass);
+  --lightning: var(--hc-lightning);
+  --rock: var(--hc-rock);
+}
+
+/*
+ * The player pair, swapped by its own switch as well as by High contrast.
+ *
+ * The two teams' outlines separate only on hue, which is the harder half of the
+ * contrast problem to isolate from the other -- so it gets a switch of its own,
+ * data-player-contrast, for testing that half without the element palette and
+ * letters coming along. High contrast still pulls it in, so turning the big
+ * switch on is a superset: nothing here is lost when data-contrast="more".
+ */
+:root[data-contrast="more"],
+:root[data-player-contrast="more"] {
+  --p1: var(--hc-p1);
+  --p2: var(--hc-p2);
+}
+
+/*
+ * P2's contrast colour is dark enough that the near-black owner ink it shares
+ * with P1 stops reading on its filled badges. P1 stays light and keeps the dark
+ * ink; only P2 flips. Scoped under the player attribute so --owner-ink lands on
+ * the same elements --owner does. Both switches carry it, same as the pair above.
+ */
+:root[data-contrast="more"] [data-player="2"],
+:root[data-player-contrast="more"] [data-player="2"] { --owner-ink: #fff2f8; }
 
 [data-player="1"] { --owner: var(--p1); }
 [data-player="2"] { --owner: var(--p2); }
@@ -327,6 +475,15 @@ img { -webkit-user-drag: none; }
   white-space: nowrap;
 }
 .check input { accent-color: var(--accent); margin: 0; }
+
+/*
+ * `body[data-sandbox]` and `body[data-zobo]` are stamped by renderAll() for
+ * anything that needs to style against either state. Nothing is hidden on them:
+ * every one of these toggles is worth reaching for on its own, which is the
+ * point of having split them. A .sandbox-only class lived here briefly and gated
+ * the second pull, which turned out to be useful without Sandbox — most lanes are
+ * deep enough that both rounds land on the field.
+ */
 .check:hover { color: var(--text); }
 
 /* Marks a feature whose data is still being filled in, so nobody reads a gap
@@ -366,6 +523,18 @@ img { -webkit-user-drag: none; }
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--danger) 30%, transparent);
 }
 
+/*
+ * The bench accepting a drop. Deliberately the accent and not the danger colour
+ * the roster uses: dropping here keeps a Tatari, and the two targets sit inches
+ * apart during the same drag — one taking it away and one keeping it — so they
+ * must not look alike.
+ */
+.bench__player.is-taking {
+  border-radius: var(--r-sm);
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--accent) 55%, transparent);
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+}
+
 @media (max-width: 1000px) {
   .layout {
     grid-template-columns: minmax(0, 1fr);
@@ -397,7 +566,7 @@ img { -webkit-user-drag: none; }
   margin-bottom: var(--s2);
 }
 .panel__head h2 { margin-right: auto; }
-.panel__tools { display: flex; align-items: center; flex-wrap: wrap; gap: var(--s2) var(--s3); }
+.panel__tools { display: flex; align-items: center; flex-wrap: wrap; gap: var(--s1) var(--s2); }
 
 /* ============================================================ battlefield */
 
@@ -441,34 +610,32 @@ img { -webkit-user-drag: none; }
 .field-frame__base > span { white-space: nowrap; }
 
 /*
- * Where the boss drags your rearmost row. Drawn as an extension of the spawn
- * band above it rather than as another row of the field, because it is not
- * ground you choose to stand on — the dashes carry over from the empty cells
- * below, so it still reads as part of the same board.
+ * The rows the boss pull opens past the contact line.
+ *
+ * These are Zobo-ground rows borrowed one at a time — real cells, so what stands
+ * on them can be dragged, dropped on and moved along like anything else. The
+ * tint is what says they are not ordinary ground: it is the danger colour the
+ * old pull strip wore, kept because it is the same event, and it stops at the
+ * rows the pull actually opened so an untouched Zobo row never wears it.
+ *
+ * Not applied when the Zobo ground is open on its own: then those rows are just
+ * ground you chose to use, and colouring them for a pull that may not have
+ * happened would be a warning about nothing.
  */
-.pull-row {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: var(--s1);
-  padding: var(--s2);
-  border-bottom: 1px solid color-mix(in srgb, var(--danger) 45%, var(--line-soft));
-  background: color-mix(in srgb, var(--danger) 13%, var(--surface-2));
-}
-.pull-cell {
-  position: relative;
-  aspect-ratio: 1;
-  display: grid; place-items: center;
-  border: 1px dashed color-mix(in srgb, var(--danger) 45%, transparent);
-  border-radius: var(--r-sm);
-}
-.pull-cell.is-filled {
+.grid__row--pull > .cell {
   border-style: solid;
+  border-color: color-mix(in srgb, var(--danger) 45%, var(--line-soft));
+  background: color-mix(in srgb, var(--danger) 10%, var(--surface-2));
+}
+/* The cell the boss actually put somebody in, as against the row it opened to
+   do it. Stronger, so a pull into an already-open Zobo row still reads. */
+.cell.is-pulled {
   border-color: color-mix(in srgb, var(--danger) 70%, transparent);
   background: color-mix(in srgb, var(--danger) 18%, transparent);
 }
-/* One continuous band: a grey rule between the spawn line and the pull row
-   would read as two separate things. */
-.field-frame:has(#pull-row:not([hidden])) .field-frame__enemy {
+/* One continuous band: a grey rule between the spawn line and a pull row above
+   it would read as two separate things. */
+.field-frame:has(.grid__row--pull) .field-frame__enemy {
   border-bottom-color: color-mix(in srgb, var(--danger) 45%, var(--line-soft));
 }
 
@@ -660,6 +827,63 @@ img { -webkit-user-drag: none; }
   padding: var(--s2);
 }
 
+/*
+ * Sandbox's extra ground, beyond the contact line.
+ *
+ * Hatched with the same stripes contribute.css uses for the same piece of
+ * ground, so the two pages agree about what it is, and so it reads as one band
+ * with the "Zobos spawn beyond this line" strip immediately below it.
+ *
+ * Where this deliberately parts company with contribute is the cursor. There,
+ * hovering a Zobo tile is refused, because a range recorded from the wrong side
+ * of the line is recorded against the wrong origin. Here the whole point is
+ * that you can stand on it, so the tiles take the same hover and drop states as
+ * any other cell and only the ground under them looks borrowed.
+ *
+ * The bottom padding is dropped so the last Zobo row sits tight against the
+ * line, rather than floating a gap above the thing it is supposed to be
+ * touching.
+ */
+.grid--enemy {
+  padding-bottom: 0;
+  background:
+    repeating-linear-gradient(-45deg,
+      color-mix(in srgb, var(--text-mute) 16%, transparent) 0 6px,
+      transparent 6px 12px),
+    var(--surface-2);
+}
+
+/* Solid rather than the field's dashed outline: these tiles are real ground in
+   Sandbox, they are just not yours. */
+.cell--enemy {
+  border-style: solid;
+  border-color: color-mix(in srgb, var(--line) 65%, transparent);
+  background: color-mix(in srgb, var(--bg) 45%, transparent);
+}
+
+/*
+ * A tile the boss has dragged someone onto.
+ *
+ * Wears the danger tint the old pull strip did, because it is the same event —
+ * the colour is the only thing left carrying "the boss put them here" now that
+ * they are standing in ordinary cells.
+ *
+ * On field cells as well as Zobo ones: a pull lands in front of the frontmost
+ * Tatari in its lane, which is usually a row of the field and only reaches past
+ * the spawn line when that lane's front rank is already at row 0. Listed after
+ * .cell--enemy so it wins on the tiles that have their own background.
+ *
+ * Still a drop target. The pull is held rather than re-derived now, so the board
+ * stays editable underneath it, and a drop here lands on the cell as it really
+ * is — the marker belongs to a Tatari standing somewhere else.
+ */
+.cell.is-pulled,
+.cell--enemy.is-pulled {
+  border-style: solid;
+  border-color: color-mix(in srgb, var(--danger) 45%, var(--line-soft));
+  background: color-mix(in srgb, var(--danger) 13%, var(--surface-2));
+}
+
 .cell {
   position: relative;
   aspect-ratio: 1;
@@ -747,6 +971,102 @@ img { -webkit-user-drag: none; }
 }
 .token__add:hover { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
 .token__role { position: absolute; top: 2px; right: 2px; pointer-events: none; }
+
+/*
+ * The element letter: the half of "which element is this" that is not colour.
+ *
+ * Top-centre because it is the only part of a token nothing else claims. All
+ * four corners are spoken for — tier and role along the top, owner and level
+ * along the bottom — and on a 61px cell the gap between tier and role is 27px,
+ * which fits this with room to spare. It is free on a Zobo too, where the boss
+ * star takes the top-right.
+ *
+ * Neutral ink on a near-opaque chip, deliberately: this exists because hue
+ * failed, so printing the letter in the element's own colour would put it back
+ * on the channel it is meant to replace. The tint and the ring keep saying it in
+ * colour underneath, for everyone who reads that fine.
+ *
+ * Off unless asked for, and set with display so toggling it needs no re-render.
+ */
+.token__elem {
+  position: absolute; top: 2px; left: 50%;
+  transform: translateX(-50%);
+  display: none;
+  min-width: 13px; padding: 0 2px;
+  border-radius: 3px;
+  /*
+   * A definite chip rather than a floating letter. The fill has to be opaque
+   * enough to work over a sprite as well as over the tint — a translucent one
+   * disappeared against pale artwork in light mode — and the hairline is what
+   * keeps a white chip from vanishing into a white token.
+   */
+  background: var(--surface);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--line) 75%, transparent);
+  color: var(--text);
+  font-size: 9px; font-weight: 800; line-height: 13px; letter-spacing: .02em;
+  text-align: center;
+  pointer-events: none;
+}
+:root[data-contrast="more"] .token__elem { display: block; }
+
+/*
+ * The heal / buff / debuff marks, which are the app's one red-versus-green pair.
+ *
+ * The glyphs already carry the meaning without colour — + for a heal, up and
+ * down triangles for a buff and a debuff — and solid versus dashed already says
+ * "has it" versus "gets it later". So the shape work was done. What failed was
+ * legibility: measured at 3.2:1 in light mode, under the 4.5 an 8px glyph needs.
+ *
+ * The cause is structural rather than a badly chosen green. A solid mark fills
+ * itself with 30% of its own ink, so the fill tracks the text and the ratio
+ * stays near 3.2 whatever hue you pick. Lightening the fill is what actually
+ * moves it; the dashed border keeps the base/level distinction intact.
+ *
+ * Buff switches to --accent-ink-on for the reason recorded where that variable
+ * is defined: the accent is a fill colour, and is 1.99:1 as text on white.
+ */
+:root[data-contrast="more"] .card__fx[data-base="true"] {
+  background: color-mix(in srgb, currentColor 12%, var(--surface));
+}
+:root[data-contrast="more"] .card__fx[data-fx="heal"]   { color: var(--hc-ok); }
+:root[data-contrast="more"] .card__fx[data-fx="buff"]   { color: var(--accent-ink-on); }
+:root[data-contrast="more"] .card__fx[data-fx="debuff"] { color: var(--hc-danger); }
+
+/*
+ * A stronger wash to go with the safer palette.
+ *
+ * Swapping the five colours accomplished almost nothing on its own, because a
+ * token shows its element at 16% over the surface — enough to hint at a hue you
+ * can already see, nowhere near enough to carry one you cannot. Fixing the
+ * colours without raising the dose would have been a measurement that never
+ * reached the screen.
+ *
+ * The ring is left alone: in co-op it belongs to the player who brought the
+ * Tatari, and taking that over would trade one reader's problem for another's.
+ */
+:root[data-contrast="more"] .token {
+  background: color-mix(in srgb, var(--type-color, var(--line)) 32%, var(--surface-2));
+}
+/*
+ * The tier badge has to come up with the wash.
+ *
+ * Measured: at 16% the badge is --text-dim on a pale tile and passes; at 32% the
+ * tile has darkened enough to drop it to 3.8:1, under the 4.5 WCAG asks of 9px
+ * text. Raising the wash without raising this would have fixed one reader's
+ * problem by giving them another. --text clears it in both themes.
+ */
+:root[data-contrast="more"] .token__tier { color: var(--text); }
+
+/*
+ * Pre-existing, and only corrected here.
+ *
+ * The version pill is --text-mute on --surface-2, which is 3.2:1 — short of 4.5
+ * for 10.5px text in every theme, with or without this mode. Left alone in
+ * normal mode because "normal mode looks unchanged" was the brief and this is
+ * one of the deliberate de-emphasis choices documented at --text-mute. Anyone
+ * who has asked for more contrast has asked for exactly this, though.
+ */
+:root[data-contrast="more"] .ver-pill { color: var(--text-dim); }
 
 /* Owner marker. Only rendered in co-op, so solo tokens stay uncluttered. */
 .token__owner {
@@ -892,11 +1212,29 @@ body[data-mode="coop"] .bench__player[data-active="true"] {
   transition: background-color 140ms var(--ease-out), color 140ms var(--ease-out);
 }
 .segmented__btn:hover { color: var(--text); }
-.segmented__btn[aria-pressed="true"] {
+/*
+ * Both attributes, because the same control says "on" two different ways. A
+ * group of toggle buttons uses aria-pressed; a tablist uses aria-selected, and
+ * the roster's Tatari/Zobos pair is a real tablist. Styling only the first left
+ * the selected tab looking exactly like the unselected one — the state was in
+ * the accessibility tree and nowhere on screen.
+ */
+.segmented__btn[aria-pressed="true"],
+.segmented__btn[aria-selected="true"] {
   background: var(--surface-3);
   color: var(--text);
   box-shadow: inset 0 0 0 1px var(--line);
 }
+
+/*
+ * A segmented control sized to sit in a row of checkboxes.
+ *
+ * The theme switch shares .panel__tools with six labels on a phone, where that
+ * row is already at 11.5px and 6px of column gap. At full size this one control
+ * would be taller than everything beside it and would force the row to wrap on
+ * its own account.
+ */
+.segmented--mini .segmented__btn { padding: 2px var(--s2); font-size: 11.5px; }
 
 /* ============================================================ badges */
 
@@ -1126,6 +1464,24 @@ button.tally--effect { font: inherit; font-size: 11px; font-weight: 600; cursor:
   clip-path: inset(50%); white-space: nowrap;
 }
 
+/*
+ * A step for a Tatari that is brought but not on the field.
+ *
+ * Faded rather than disabled, and deliberately: the step is still yours to
+ * reorder, re-level and annotate, it simply cannot happen until the Tatari is
+ * standing somewhere. Opacity alone would take the text under contrast; the
+ * sprites carry most of the fading and the words stay legible.
+ *
+ * A dashed border rather than a solid one, matching how an empty cell is drawn
+ * on the field: the same "nothing is standing here" the board already uses.
+ */
+.prio.is-benched {
+  border-style: dashed;
+  background: transparent;
+}
+.prio.is-benched .prio__art { opacity: .45; }
+.prio.is-benched .prio__label { color: var(--text-dim); }
+
 .prio {
   /* Past the rank column, so wrapped lines start under the sprites. */
   --prio-indent: 26px;
@@ -1156,6 +1512,34 @@ button.tally--effect { font: inherit; font-size: 11px; font-weight: 600; cursor:
   background: color-mix(in srgb, var(--type-color, var(--line)) 16%, var(--surface-3));
 }
 .prio__art img { width: 100%; height: 100%; object-fit: contain; }
+
+/*
+ * The element letter on a plan step. Same job as .token__elem, same neutral ink
+ * for the same reason: it exists because hue failed, so it cannot be drawn in
+ * the element's hue.
+ *
+ * Bottom-right rather than the token's top-centre, because a 30px art has no
+ * middle to speak of and the corner is the only part of it that is not sprite.
+ * It sits under .prio__artx, which is a full-bleed overlay on grouped steps —
+ * that button only paints on hover, and covering the letter at the moment
+ * somebody is aiming at a remove button costs nothing.
+ */
+.prio__elem {
+  position: absolute; right: -1px; bottom: -1px;
+  display: none;
+  min-width: 11px; padding: 0 1px;
+  border-radius: 3px;
+  background: var(--surface);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--line) 75%, transparent);
+  color: var(--text);
+  font-size: 8.5px; font-weight: 800; line-height: 12px; text-align: center;
+  pointer-events: none;
+}
+:root[data-contrast="more"] .prio__elem { display: block; }
+/* Same dose as the token, for the same reason. */
+:root[data-contrast="more"] .prio__art {
+  background: color-mix(in srgb, var(--type-color, var(--line)) 32%, var(--surface-3));
+}
 
 /* A step naming several Tatari shows them all, so each one gives up some size,
    and the row it cannot fit them all on gives the names a line of their own. */
@@ -1286,7 +1670,93 @@ button.tally--effect { font: inherit; font-size: 11px; font-weight: 600; cursor:
 .filters__row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s3); }
 .filters__row--meta { gap: var(--s4); }
 
+/*
+ * Zobos answer none of the drafting questions — they have no role, no tier, no
+ * bench and bring no heals — so those controls go while their tab is up rather
+ * than sitting there doing nothing. The element chips and the search stay,
+ * because "show me the Lightning ones" is worth asking of either list.
+ */
+/*
+ * The mirror of the rules below: a control that only means something on the
+ * Zobo tab.
+ *
+ * Written as "hide unless" rather than "show when", because these elements also
+ * carry .chips, which sets display:flex further down the file and beats a bare
+ * .zobo-only at equal specificity — the chip stayed visible on the Tatari tab.
+ * The :not() carries the extra weight without needing !important.
+ */
+body:not([data-roster-list="zobos"]) .zobo-only { display: none; }
+
+body[data-roster-list="zobos"] #filter-roles,
+body[data-roster-list="zobos"] #filter-effects,
+body[data-roster-list="zobos"] #filter-tiers,
+body[data-roster-list="zobos"] .filters__row--meta .check,
+body[data-roster-list="zobos"] .filters__row--meta .sortby { display: none; }
+
+/* Tabs, not a mode switch: same control, but it selects a view rather than
+   changing what a formation is. */
+/*
+ * Louder than the Solo/Co-op switch next to it, and deliberately so.
+ *
+ * Those two pick a setting you already know you chose. These two swap the list
+ * under them for a completely different one, and if you cannot tell at a glance
+ * which is showing then a roster of 50 enemies where you expected 224 Tatari
+ * reads as the search being broken. The grey-on-grey treatment the shared
+ * component gives was enough for a setting and not for a place.
+ *
+ * So the selected tab takes the accent rather than a surface tint, and the pair
+ * gets a little more room to be seen.
+ */
+.segmented--tabs { margin-left: auto; }
+.segmented--tabs .segmented__btn { padding: 5px var(--s4); }
+.segmented--tabs .segmented__btn[aria-selected="true"] {
+  background: var(--accent);
+  color: var(--accent-ink);
+  box-shadow: none;
+}
+.segmented--tabs .segmented__btn[aria-selected="true"]:hover { color: var(--accent-ink); }
+
+/*
+ * The switch-player control, and what the board looks like while it is armed.
+ *
+ * The armed state has to be visible on the *board*, not only on the button: the
+ * next tap does something different from what it usually does, and a mode you
+ * cannot see is a mode that surprises you. Tokens take the accent outline the
+ * rest of the app uses for "this is the thing you are about to act on".
+ */
+.ptabs__switch { margin-left: auto; }
+.ptabs__switch[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 18%, var(--surface-2));
+  color: var(--text);
+}
+body[data-switching="true"] .cell.is-filled,
+body[data-switching="true"] .benchchip {
+  cursor: pointer;
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--accent) 60%, transparent);
+}
+/* A Zobo is nobody's, so it is not one of the things about to change hands. */
+body[data-switching="true"] .cell[data-zobo] { box-shadow: none; cursor: default; }
+
 .chips { display: flex; gap: var(--s1); }
+
+/*
+ * A Zobo card. Same size and grid as a Tatari's, because the two lists swap in
+ * the same panel and a different card size would make the panel jump.
+ */
+.card--zobo .card__meta { justify-content: center; gap: var(--s1); }
+
+.card__boss, .token__boss {
+  color: var(--warn, var(--accent));
+  font-size: 11px; line-height: 1;
+}
+.token__boss { position: absolute; top: 2px; right: 2px; }
+/* Marked as not-yours in the same language the Zobo ground uses: solid outline,
+   borrowed background. It is the other side of the board standing on your tiles. */
+.cell[data-zobo] {
+  border-style: solid;
+  border-color: color-mix(in srgb, var(--danger) 35%, var(--line));
+}
 .chip {
   display: inline-grid; place-items: center;
   width: 30px; height: 26px;
@@ -1322,6 +1792,30 @@ button.tally--effect { font: inherit; font-size: 11px; font-weight: 600; cursor:
 .chip--effect[data-value="heal"][aria-pressed="true"]   { border-color: var(--ok); color: var(--ok); }
 .chip--effect[data-value="buff"][aria-pressed="true"]   { border-color: var(--accent); color: var(--accent); }
 .chip--effect[data-value="debuff"][aria-pressed="true"] { border-color: var(--danger); color: var(--danger); }
+
+/*
+ * Two things in one chip, so it needs .chip--effect's layout rather than the
+ * base chip's.
+ *
+ * `.chip` is an inline-grid sized to a 30x26 icon box, which is right for a
+ * single glyph and wrong for a glyph beside a word: the star and the label
+ * became two grid rows and spilled out of a box that was never going to grow.
+ * Flex puts them on one line and the height follows the content.
+ *
+ * Wears the star it filters for, so the chip and the badge on the card read as
+ * the same thing rather than two conventions.
+ */
+.chip--boss {
+  display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+  width: auto; height: auto; min-height: 26px;
+  padding: 3px var(--s2);
+  font-size: 11.5px; font-weight: 650; line-height: 1.2;
+  white-space: nowrap;
+}
+.chip--boss[aria-pressed="true"] {
+  border-color: var(--accent);
+  color: var(--accent);
+}
 
 .roster {
   display: grid;
@@ -1428,8 +1922,21 @@ button.tally--effect { font: inherit; font-size: 11px; font-weight: 600; cursor:
   background: var(--owner); color: var(--owner-ink);
   font-size: 8.5px; font-weight: 800;
 }
-.card.is-blocked { opacity: .42; cursor: not-allowed; }
-.card.is-blocked:hover { transform: none; background: var(--surface-2); }
+/*
+ * "You already have one of these", not "you may not have this".
+ *
+ * These cards used to be .is-blocked: 42% opacity and a not-allowed cursor,
+ * which said the card was inert when in fact it is the one control that can
+ * change your mind about a tier. Dimmed enough to read as secondary, and
+ * clickable, because tapping it swaps the line to this tier and keeps the cell,
+ * the bench slot and the level-up plan.
+ */
+.card.is-swap { opacity: .62; }
+.card.is-swap:hover { opacity: 1; }
+.card.is-swap .card__lock {
+  background: color-mix(in srgb, var(--accent) 22%, var(--surface));
+  color: var(--text);
+}
 .card__lock {
   position: absolute; inset: auto 0 0; padding: 1px 3px;
   background: color-mix(in srgb, var(--bg) 84%, transparent);
@@ -2193,8 +2700,50 @@ body.is-dragging-active {
   .field--tiny { padding: 7px var(--s2); }
   .check { min-height: 44px; padding: 4px 0; }
   .check input { width: 20px; height: 20px; }
-  .chip { min-height: 44px; }
   .segmented__btn { min-height: 44px; }
+
+  /*
+   * The filter chips are the exception to the 44px rule above, and the reason is
+   * that on a phone they compete with the roster rather than sit beside it.
+   * Four rows of them at 44px came to 316px of filters above a 309px roster:
+   * more screen spent describing the list than showing it, and about three rows
+   * of Tatari visible at a time.
+   *
+   * 32px is the trade. It clears WCAG 2.5.8 (AA, 24x24) with room to spare and
+   * gives up 2.5.5 (AAA, 44x44), which is the same call the rest of this file
+   * already makes for .card__info and .benchchip__x. A chip is also a far more
+   * forgiving target than those: mistapping Fire for Grass costs one more tap,
+   * and the row it sits in has no destructive control anywhere near it.
+   *
+   * The controls that keep their 44px are the ones where a mistap costs
+   * something — Reset throws away every filter you set, and the sort select
+   * opens a native picker.
+   */
+  .chip { min-height: 28px; width: 28px; }
+  .chips { gap: 3px; }
+  .chips--text .chip { width: auto; padding: 0 6px; }
+  .chip--effect { min-height: 28px; padding: 2px 6px; gap: 4px; }
+
+  /*
+   * 28px rather than 30 is not cosmetic. The five element chips and the six role
+   * chips came to 374px side by side in a 364px sheet — ten pixels over, so the
+   * roles wrapped to a second line and the row cost 72px to show eleven things
+   * that fit in 32. Two pixels off each chip brings the pair to 352 and the
+   * wrap goes away.
+   */
+  .filters__row { gap: var(--s2); }
+  .filters__row--meta { gap: var(--s2); }
+  .filters { gap: 6px; margin-bottom: var(--s2); }
+  .panel--roster .panel__head { margin-bottom: var(--s2); }
+
+  /*
+   * The word "Sort" goes, the select stays. Hide unavailable, Glitter, the
+   * label and the select and Reset came to 374px on a 364px row — ten over, and
+   * a wrap costs 52px of roster to show four controls that nearly fit on one
+   * line. The select keeps an aria-label, so the control is still named for
+   * anyone who cannot see that it sits in a row of filters.
+   */
+  .sortby__label { display: none; }
   .secnav a { padding: 12px var(--s2); }
 
   .card__info, .benchchip__x, .prio__notebtn, .prio__artx {
@@ -2325,7 +2874,7 @@ body.is-dragging-active {
   .field--name { flex: 1 1 160px; padding: 6px var(--s2); font-size: 13px; }
 
   /* Three checkboxes and a button were wrapping to two rows of their own. */
-  .panel--field .panel__tools { gap: var(--s1) var(--s2); font-size: 12px; }
+  .panel--field .panel__tools { gap: 2px var(--s2); font-size: 12px; }
   /*
    * All four on one line, which needs about 20px it did not have.
    *
@@ -2754,6 +3303,10 @@ body.is-clean .clean-hint {
 /* A phone gets the whole width; a desktop does not need a metre-wide grid. */
 @media (min-width: 760.02px) {
   body.is-clean .field-frame { max-width: 820px; margin-inline: auto; }
+
+  /* The roster's copy of Glitter art. See the note at the end of this file for
+     why the breakpoint is 760.02 and not 761. */
+  .touch-only { display: none; }
 }
 
 /* ============================================================ motion */
@@ -2811,11 +3364,121 @@ body.is-clean .clean-hint {
 }
 
 /*
- * (A .touch-only counterpart lived here, under `min-width: 760.02px` — 760.02
- * and not 761, because at a fractional viewport width, which a zoomed or scaled
- * browser produces routinely, 760.5px matches neither `max-width: 760px` nor
- * `min-width: 761px` and both classes render. It went with the phone's copy of
- * Share, which the app bar carries instead. The .wide-only side is safe against
- * that gap: at 760.5px the app bar is gone too, so the header's Share is the
- * only one on screen. Worth remembering if a .touch-only ever comes back.)
+ * .touch-only is hidden under `min-width: 760.02px`, up beside the clean-crop
+ * rule. 760.02 and not 761, because at a fractional viewport width — which a
+ * zoomed or scaled browser produces routinely — 760.5px matches neither
+ * `max-width: 760px` nor `min-width: 761px`, and a class hidden only above 761
+ * would render alongside its wide-screen twin in that gap.
+ *
+ * It carries the roster's copy of Glitter art. Two checkboxes for one setting
+ * is a duplicate worth having: the original is in the field toolbar, which on a
+ * phone is behind the roster sheet, and glitter is a decision you make while
+ * looking at the thumbnails it changes. app.js keeps the pair in sync in both
+ * directions, so neither can be left showing the wrong state.
+ *
+ * The earlier occupant was the phone's copy of Share, which the app bar carries
+ * instead. The .wide-only side is safe against the fractional gap for a
+ * different reason: at 760.5px the app bar is gone too, so the header's Share
+ * is the only one on screen either way.
  */
+
+/* ==========================================================================
+ * Contrast Themes
+ *
+ * Windows Contrast Themes — and Edge's Page colors, which is the same thing
+ * scoped to the browser — do not ask the page for a preference the way
+ * prefers-color-scheme does. They throw every author colour away and repaint
+ * the document from a four-colour system palette. Backgrounds, borders and
+ * text are replaced; box-shadow is not replaced, it is simply dropped.
+ *
+ * That last detail is what this block is mostly about. Nine of this app's
+ * states are drawn as an inset box-shadow, which is invisible under a contrast
+ * theme rather than merely recoloured. The fixes below are the ones where the
+ * lost shadow was the only copy of the information; where a border, a glyph or
+ * a word already says the same thing, nothing here touches it. A contrast
+ * theme user asked for a simpler page, so recreating the design in system
+ * colours would be undoing their setting.
+ * ========================================================================== */
+@media (forced-colors: active) {
+  /*
+   * The element letters stop being an option here. Normal mode says the
+   * element with a wash and a ring, and [data-contrast="more"] adds the letter
+   * as a second channel; a contrast theme deletes the wash and the ring
+   * outright, so the letter is not a second channel any more, it is the only
+   * one. Show it whether or not the reader also found the toggle.
+   *
+   * The chips' hairline is a box-shadow, so it goes with everything else — an
+   * outline replaces it. Outline rather than border because these chips are
+   * absolutely positioned against an edge and a border would shift them.
+   */
+  .token__elem,
+  .prio__elem {
+    display: block;
+    outline: 1px solid;
+  }
+
+  /*
+   * Pressed and selected controls. The theme switch, the roster tabs and the
+   * player switch each said "on" with a background fill; all three fills
+   * collapse to Canvas, leaving the selected button identical to its
+   * neighbours. Highlight/HighlightText is the theme's own word for this, so
+   * the control ends up reading the way the rest of the OS does.
+   */
+  .segmented__btn[aria-pressed="true"],
+  .segmented__btn[aria-selected="true"],
+  .segmented--tabs .segmented__btn[aria-selected="true"],
+  .ptabs__switch[aria-pressed="true"] {
+    background: Highlight;
+    color: HighlightText;
+  }
+
+  /*
+   * Two affordances that live entirely in a box-shadow, both of them about
+   * what is actionable right now: which filled tiles a Tatari reaches, and
+   * which tokens are about to change hands mid-switch. An empty in-range tile
+   * still reads, because is-inrange turns the dashed border solid — it is the
+   * filled one that needs this, since is-filled had already made it solid.
+   */
+  .cell.is-inrange.is-filled,
+  body[data-switching="true"] .cell.is-filled,
+  body[data-switching="true"] .benchchip {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
+  body[data-switching="true"] .cell[data-zobo] { outline: none; }
+
+  /*
+   * The two drop targets, which are the worst of the losses: .is-taking is a
+   * box-shadow over a 7% wash and vanishes completely, and .is-returning keeps
+   * a border whose danger colour is forced back to the same CanvasText every
+   * other border gets. They sit inches apart during one drag and they do
+   * opposite things — one keeps the Tatari, one removes it — so a contrast
+   * theme user would be dropping blind between them.
+   *
+   * Told apart by outline-style rather than by colour, since the palette here
+   * is four colours and two of them are already spoken for. Dashed for the
+   * removal reads the same way the empty tiles do.
+   */
+  .panel--roster.is-returning { outline: 3px dashed; outline-offset: -3px; }
+  .bench__player.is-taking { outline: 3px solid Highlight; outline-offset: -3px; }
+
+  /*
+   * Sprites are transparent PNGs and a contrast theme does not recolour image
+   * content, so a token's art is left sitting on whatever the theme decided
+   * Canvas is. On a dark theme the black linework in the art disappears into
+   * it; on a light one the pale fills do. These sprites are how you tell one
+   * Tatari from another, which is the case forced-color-adjust exists for, so
+   * the art keeps the backdrop it was drawn against.
+   *
+   * The colours are set on the img itself and not left to inherit, because
+   * inheritance is exactly what forced-color-adjust: none stops. `color` is
+   * set as well as `background-color`: it is what paints the alt text on the
+   * days the sprite fails to load.
+   */
+  .token img,
+  .prio__art img {
+    forced-color-adjust: none;
+    background-color: var(--surface-2);
+    color: var(--text);
+  }
+}
