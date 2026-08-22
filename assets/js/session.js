@@ -19,9 +19,11 @@
  * accident. You can be drafting P1 while somebody else drafts P2 on the same
  * board.
  *
- * That also means a session is not limited to two people. A third and a fourth
- * are spectators only by habit — nothing stops them editing, and for a planning
- * call that is usually what you want.
+ * A room is capped at two people — see enforceCap() and MAX_PEERS. Two is what
+ * the planning call this is for needs, and it keeps the cost bounded: a broadcast
+ * fans out to everyone else in the room, so a third person turns every cursor
+ * move from one message into two, and an afternoon-long four-way room is how a
+ * month's Realtime allowance disappears.
  *
  * ## Why there is no CRDT here
  *
@@ -48,7 +50,7 @@
  */
 
 import * as store from './store.js';
-import { CELLS } from './rules.js';
+import { ALL_CELLS } from './rules.js';
 import { $, esc, toast, copyText, dismissOnBackdrop } from './ui.js';
 import { cellElement } from './grid.js';
 import { joinRoom, newRoom, isRoom } from './live.js';
@@ -93,12 +95,21 @@ const LIVE_ENABLED = true;
  * sent per square rather than per frame, so nobody reaches this by collaborating
  * normally. It is a stop for the case that is not normal — an afternoon-long
  * room, or a hand resting somewhere that keeps changing its mind — so that no
- * single session can quietly spend a month's allowance.
+ * single session can quietly spend a month's allowance. Set low deliberately:
+ * 1,500 is far above real use and still caps a runaway room at a fraction of a
+ * percent of the monthly free tier.
  *
  * Editing is never cut off. Losing sight of somebody's pointer is a shame;
  * losing the ability to move a Tatari is the feature not working.
  */
-const CURSOR_BUDGET = 4_000;
+const CURSOR_BUDGET = 1_500;
+
+/**
+ * A live room is two people, enforced by everyone in it — see enforceCap().
+ * Raising this raises the Realtime cost more than linearly (every broadcast fans
+ * out to each other peer), so it is a deliberate ceiling, not a default.
+ */
+const MAX_PEERS = 2;
 
 /** How long a peer's pointer stays on screen after it stops arriving. */
 const CURSOR_IDLE_MS = 8_000;
@@ -108,6 +119,8 @@ let fields = null;               // the shared view: field name -> value
 let version = new Map();         // field name -> [count, peer]
 let applying = false;            // suppresses the echo while a remote edit lands
 let caughtUp = false;            // the room has answered our first hello
+let committed = false;           // we have seen the room had space for us — see enforceCap()
+let preJoin = null;              // the board we had before joining, restored if the room turns us away
 let spentOnCursors = 0;          // pointer messages this session — see CURSOR_BUDGET
 let invited = null;              // a room from a link, held until the arrival is answered
 let peers = new Map();           // peer key -> {name, colour, ...}
@@ -155,24 +168,35 @@ let hosting = false;
 /**
  * A snapshot as a flat map of independently-versioned fields.
  *
- * The 36 cells are separate entries and everything else is whole. That split is
- * the entire conflict story: two people placing Tatari in different squares are
- * writing different keys and cannot collide, while two people reordering the
- * same plan are writing one key and the later write wins — which is the only
- * behaviour that makes sense for an ordered list nobody can merge blind.
+ * Every cell is a separate entry — all 78 of them, the 6×6 field and the Zobo
+ * ground beyond the contact line that Sandbox and a boss pull reach into — and
+ * everything else is whole. That split is the entire conflict story: two people
+ * placing Tatari in different squares are writing different keys and cannot
+ * collide, while two people reordering the same plan are writing one key and the
+ * later write wins — the only behaviour that makes sense for an ordered list
+ * nobody can merge blind.
+ *
+ * `sandbox`, `zoboGround` and `pullRows` ride as whole fields of their own. They
+ * are what opens the ground past the line, so without them a peer's Zobo lands
+ * on a row the other browser has not opened and reconcile() sweeps it straight
+ * back to the bench — the same class of bug the share link had before it carried
+ * pullRows.
  */
 function flatten(snap) {
   const out = {
     mode: snap.mode,
     name: snap.name,
     lfMode: snap.lfMode,
+    sandbox: snap.sandbox,
+    zoboGround: snap.zoboGround,
+    pullRows: snap.pullRows,
     b1: snap.bench[1],
     b2: snap.bench[2],
     plan: snap.plan,
     llf: snap.lines.lf,
     lhave: snap.lines.have,
   };
-  for (let i = 0; i < CELLS; i++) out[`c${i}`] = snap.cells[i] ?? null;
+  for (let i = 0; i < ALL_CELLS; i++) out[`c${i}`] = snap.cells[i] ?? null;
   return out;
 }
 
@@ -182,10 +206,13 @@ function toSnapshot(f) {
     mode: f.mode,
     name: f.name,
     lfMode: f.lfMode,
+    sandbox: f.sandbox,
+    zoboGround: f.zoboGround,
+    pullRows: f.pullRows,
     bench: { 1: f.b1 ?? [], 2: f.b2 ?? [] },
     plan: f.plan ?? [],
     lines: { lf: f.llf ?? { wants: [], note: '' }, have: f.lhave ?? { wants: [], note: '' } },
-    cells: Array.from({ length: CELLS }, (_, i) => f[`c${i}`] ?? null),
+    cells: Array.from({ length: ALL_CELLS }, (_, i) => f[`c${i}`] ?? null),
   };
 }
 
@@ -599,9 +626,69 @@ function onMessage(event, payload, from) {
 
 function onPeers(list) {
   peers = new Map(list.map((p) => [p.key, p]));
+  if (enforceCap()) return;              // we stepped out of a room that was full
   for (const key of [...cursors.keys()]) if (!peers.has(key)) dropCursor(key);
   settleGuestName();
   renderPresence();
+}
+
+/**
+ * Keeping a room to two people, without a server to keep it for us.
+ *
+ * Presence tells everyone who is here, so the room can police its own size the
+ * same cooperative way kick() moves people: whoever arrives to find it already
+ * full steps back out, and if two people race into the last seat at once the
+ * excess is decided by the same id-sort the field versions use — arbitrary, but
+ * identical on every browser, so nobody has to be asked.
+ *
+ * `committed` is the "I already fit" latch. Set the first time we see the room
+ * with room to spare, it stops an established peer from ejecting itself the
+ * moment a third person's presence arrives — that third person is the one whose
+ * own check fails, not us.
+ *
+ * Like kick(), this keeps an honest guest out and a runaway room off the
+ * Realtime bill; it is not a security boundary, because presence is whatever a
+ * client says about itself and a modified one could lie. See the note on kick().
+ *
+ * @returns {boolean} true when it ended the session, so the caller stops.
+ */
+function enforceCap() {
+  if (!link) return false;
+  const others = [...peers.keys()].filter((k) => k !== link.id).length;
+
+  if (!committed) {
+    if (others >= MAX_PEERS) { leaveFull(); return true; }
+    if (peers.size <= MAX_PEERS) {
+      committed = true;
+      // Now that we know we are staying, it is safe to say we joined — and to
+      // offer back the board the join replaced.
+      if (preJoin) announceJoined();
+    }
+  }
+
+  // A simultaneous over-join: everyone ranks the same list and the ones past the
+  // cap leave. The host is never one of them — it opened the room.
+  if (committed && peers.size > MAX_PEERS && !hosting) {
+    const keep = new Set([...peers.keys()].sort().slice(0, MAX_PEERS));
+    if (!keep.has(link.id)) { leaveFull(); return true; }
+  }
+  return false;
+}
+
+function leaveFull() {
+  const restore = preJoin;
+  endSession({ quiet: true });            // clears preJoin
+  if (restore) store.applySnapshot(restore);
+  toast('That live session is full — it is limited to two people. Your formation is safe.', 'error');
+  track('live-room-full');
+}
+
+/** The join announcement, held back until enforceCap() knows we are staying. */
+function announceJoined() {
+  toast('Joined a live session', 'ok', {
+    label: 'Undo',
+    fn: () => { if (preJoin) { store.applySnapshot(preJoin); toast('Put your formation back'); } },
+  });
 }
 
 // ---------------------------------------------------------------- names
@@ -675,8 +762,9 @@ export function startSession(room = newRoom(), { joining = false, quiet = false 
   if (!isRoom(room)) return false;
   if (link) endSession({ quiet: true });
   spentOnCursors = 0;
+  committed = false;
 
-  const before = joining && !quiet ? store.snapshot() : null;
+  preJoin = joining && !quiet ? store.snapshot() : null;
 
   if (!joining) rememberHosted(room);
   hosting = hostedRooms().has(room);
@@ -734,12 +822,9 @@ export function startSession(room = newRoom(), { joining = false, quiet = false 
   history.replaceState(null, '', withRoom(location.href, room));
   paintDialog();
 
-  if (before) {
-    toast('Joined a live session', 'ok', {
-      label: 'Undo',
-      fn: () => { store.applySnapshot(before); toast('Put your formation back'); },
-    });
-  }
+  // The "Joined" toast and its Undo wait until enforceCap() has confirmed the
+  // room had space for us — a join that is about to be turned away should not
+  // first announce itself or leave the other board in place. See announceJoined().
   if (!quiet) track(joining ? 'live-joined' : 'live-started');
   return true;
 }
@@ -749,6 +834,8 @@ export function endSession({ quiet = false } = {}) {
   link = null;
   fields = null;
   caughtUp = false;
+  committed = false;
+  preJoin = null;
   hosting = false;
   version = new Map();
   unsubscribe?.();
