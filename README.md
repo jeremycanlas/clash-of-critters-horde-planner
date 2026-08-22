@@ -65,6 +65,13 @@ field, HAVE above LF.
 
 ## Changelog
 
+### 1.6.0
+
+#### (Experimental) Changes:
+- Live sessions! You can now build a formation together with someone in real time. Hit the new Live button on the upper right corner, send them the link, and you'll both be dragging the same board around, you'll even see each other's pointers as you move through the field.
+- Everything syncs: placements, benches, the level-up plan, sandbox, the zobo ground and both boss pulls all update live on both screens.
+- Sessions are capped at 2 people for now. If you open a link to a session that's already full, it just tells you and leaves your own formation exactly as it was.
+
 ### 1.5.2
 
 #### Changes:
