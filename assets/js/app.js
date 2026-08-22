@@ -4,7 +4,7 @@ import { load, state } from './data.js';
 import * as store from './store.js';
 import {
   $, $$, glitterOn, toast, downloadJSON, readJSONFile, slugFilename, dragScrollVelocity,
-  APP_VERSION,
+  dismissOnBackdrop, APP_VERSION,
 } from './ui.js';
 import {
   buildGrid, renderGrid, renderBench, renderPlayerTabs, renderSummary,
@@ -15,8 +15,10 @@ import { buildPriority, renderPriority } from './priority.js';
 import { buildShare, openShare } from './share.js';
 import { warmSprites } from './card.js';
 import { buildShell, renderShell } from './shell.js';
-import { buildSaves, savedById } from './saves.js';
+import { buildSaves, savedById, keepQuietly } from './saves.js';
 import { buildSubmit, openSubmit, resumeSubmit } from './submit.js';
+import { buildSession } from './session.js';
+import { roomInHash } from './hash.js';
 import { isConfigured, readCallback } from './supabase.js';
 import { buildAnalytics, track } from './analytics.js';
 import { importTatari } from './custom.js';
@@ -84,9 +86,10 @@ async function main() {
 
   buildGrid();
   buildPriority();
-  buildShare();
+  buildShare({ canPost: isConfigured(), onPost: postCurrent });
   buildShell();
   buildSaves({ canPost: isConfigured(), onPost: openSubmit });
+  buildHelp();
   const pending = buildSubmit();
   buildAnalytics();
   buildFilters(() => renderRoster());
@@ -98,6 +101,16 @@ async function main() {
   const hash = store.fromHash();
   if (!hash) store.restore();
   renderAll();
+
+  /*
+   * After the formation, not with the other builders, and the one place in this
+   * function where that order matters. A live link carries both halves — the
+   * formation it started from and the room it is happening in — and joining
+   * publishes whatever is on the field as the state to reconcile against. Wiring
+   * this up top would offer an empty board to the room a beat before the link's
+   * own formation had loaded into it.
+   */
+  buildSession();
 
   // Signed in mid-post: pick the dialog back up where it was left, rather than
   // dropping somebody back on the page with nothing to show they succeeded.
@@ -121,6 +134,33 @@ async function main() {
 
   wireToolbar();
   wireDragAutoScroll();
+}
+
+/**
+ * Posting straight from the Share sheet.
+ *
+ * A post is made from a saved formation — that is what lets a sign-in halfway
+ * through find its way back to the right one — and somebody who pressed Post
+ * did not press Save. So this takes the step they skipped instead of refusing
+ * them for not knowing it existed, and the Share sheet says it will.
+ *
+ * A refusal (nothing on the field, storage full) has already been said by
+ * keepQuietly, so there is nothing to add here.
+ */
+function postCurrent() {
+  const save = keepQuietly();
+  if (save) openSubmit(save);
+}
+
+/** The "how does this work" dialog, which is only ever opened by hand. */
+function buildHelp() {
+  const dlg = $('#dlg-help');
+  if (!dlg) return;
+  $('#btn-help').addEventListener('click', () => {
+    dlg.showModal();
+    track('help-opened');
+  });
+  dismissOnBackdrop(dlg);
 }
 
 /**
@@ -440,7 +480,12 @@ function wireToolbar() {
     if (!anything) return;
     const before = store.snapshot();
     store.clearAll();
-    history.replaceState(null, '', location.pathname + location.search);
+    // The formation leaves the address bar; the room does not. Clearing the
+    // field is an edit everyone in a session should see, not a way to walk out
+    // of it — and dropping the room here would leave the tab still connected
+    // with a link that no longer says so.
+    const room = roomInHash(location.hash);
+    history.replaceState(null, '', location.pathname + location.search + (room ? `#live=${room}` : ''));
     toast('Cleared the field, both benches and the plan', 'info', undoTo(before));
   });
 

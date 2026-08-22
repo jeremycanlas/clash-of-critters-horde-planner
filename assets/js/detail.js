@@ -2,7 +2,7 @@
 
 import { state } from './data.js';
 import * as store from './store.js';
-import { $, artHTML, esc, typeIcon, roleIcon, toast } from './ui.js';
+import { $, artHTML, esc, typeIcon, roleIcon, toast, dismissOnBackdrop } from './ui.js';
 import { groupOf, helpFor } from './effects.js';
 
 const dialog = $('#detail');
@@ -145,6 +145,4 @@ export function openDetail(slug) {
 }
 
 // Close on backdrop click as well as the button and Escape.
-dialog.addEventListener('click', (e) => {
-  if (e.target.closest('[data-close]') || e.target === dialog) dialog.close();
-});
+dismissOnBackdrop(dialog);

@@ -71,6 +71,26 @@
         formations</a>
 
       <!--
+      Beside Community formations, because what it explains is how a formation
+      gets there. A player who posted one told us it "wasn't immediately obvious"
+      how, and asked for exactly this.
+
+      A question mark rather than a word: the row above is already the widest
+      thing on a 411px phone, and every character here costs another wrap. The
+      accessible name and the tooltip carry the meaning that the glyph cannot,
+      and it is quiet, because help is the one control in this row nobody should
+      be reading past the thing they came to do.
+
+      Worth saying: this is the second answer, not the first. The first is that
+      Share now offers Post, so the path exists whether or not anybody presses
+      this. A help page is a poor substitute for a findable button, and a fine
+      companion to one.
+    -->
+      <button id="btn-help" class="btn btn--quiet topbar__help" type="button"
+        aria-label="How saving, posting and finding formations work"
+        title="How saving, posting and finding formations work">?</button>
+
+      <!--
       The other half of the "72 of 218 ranges recorded" problem. The Ranges
       toggle tells you the data is thin; this is the standing way to do something
       about it, so it sits with the global actions rather than buried in the
@@ -99,6 +119,22 @@
          screen rather than a control anybody had lost. -->
       <button id="btn-share" class="btn btn--primary topbar__share wide-only" type="button"
         title="Share this formation as a picture or a link">Share</button>
+
+      <!--
+      Next to Share, because it answers the same question with a different
+      tense. Share hands somebody the formation as it is now; this hands them
+      the formation as it keeps being — a link that puts you both on one board.
+
+      Not btn--primary. Share is still the thing this tool exists to produce,
+      and two filled buttons side by side would make the row argue with itself
+      about which one you came for.
+
+      The dot beside it is who is here, and it only exists during a session, so
+      on every other visit this is one word and nothing else.
+    -->
+      <button id="btn-live" class="btn topbar__live" type="button"
+        title="Edit this formation together with somebody else, live">Live</button>
+      <span id="live-who" class="who-strip" hidden></span>
 
       <!-- Was "Save" while a file download was the only way to keep a formation.
          The in-browser Saved list owns that word now, and a "Save" that writes
@@ -460,7 +496,8 @@
 
     <p id="saves-empty" class="saves__empty">Nothing saved yet. Save a formation and
       it will be waiting here next visit. These stay in this browser, and
-      <b>Clear all</b> does not touch them.
+      <b>Clear all</b> does not touch them. Each one gets a <b>Post</b> button for
+      putting it in <a href="community.html">Community formations</a>.
     </p>
 
     <ol id="saves-list" class="saves" aria-label="Saved formations, newest first"></ol>
@@ -510,6 +547,56 @@
       <button id="submit-go" class="btn btn--primary" type="button" aria-describedby="submit-why">Post it
         publicly</button>
       <button class="btn btn--quiet" type="button" data-close>Cancel</button>
+    </div>
+  </dialog>
+
+  <!--
+    How this works.
+
+    Four steps and a caveat, in the order somebody actually meets them. It is
+    deliberately not a tour of the whole tool: dragging a Tatari onto a field is
+    self-evident and nobody asked about it. What was asked about is the part that
+    is not — that a formation has to exist somewhere before it can be published,
+    and where it goes afterwards.
+
+    Written as prose with the control names in bold rather than as screenshots.
+    Screenshots of an interface that moves are a maintenance debt that quietly
+    starts lying, and every name in bold below is a string you can search this
+    page for.
+  -->
+  <dialog id="dlg-help" class="modal modal--help">
+    <h2>Saving, posting and finding formations</h2>
+
+    <ol class="help__steps">
+      <li>
+        <b>Save this formation</b> keeps what is on the field — both benches and the
+        level-up plan with it — in this browser. Nothing leaves the page. Find your
+        saved formations under <b>Saved</b>: the tab on the right edge on a computer,
+        the button on the bottom bar on a phone.
+      </li>
+      <li>
+        <b>Post to Community</b> publishes one. It is at the bottom of the
+        <b>Share</b> sheet, and on each row of your <b>Saved</b> list. Either way it
+        saves a copy here first, so a post is always something you still have.
+      </li>
+      <li>
+        Posting asks you to <b>sign in with Discord</b> once, so the formation has a
+        name on it and so you can delete it later. You are brought straight back to
+        where you were.
+      </li>
+      <li>
+        You land on your formation in <b>Community formations</b> as soon as it
+        posts, at an address you can copy and send. To find it again later, open
+        that page and pick <b>Yours</b>.
+      </li>
+    </ol>
+
+    <p class="hint">Only posting sends anything anywhere, and only when you press the
+      button that says so. Everything else here — the field, the plan, your saved
+      formations — stays in this browser.</p>
+
+    <div class="modal__actions">
+      <button class="btn btn--primary" type="button" data-close>Got it</button>
     </div>
   </dialog>
 
@@ -568,6 +655,114 @@
       <button id="share-copy-image" class="btn" type="button">Copy image</button>
       <button id="share-copy-link" class="btn" type="button">Copy link</button>
       <button id="share-close" class="btn btn--quiet" type="button">Close</button>
+    </div>
+
+    <!--
+      Posting, here, because this is the button people press when they want other
+      people to see a formation. It used to live only on a saved row inside the
+      Saved drawer, which meant the path to it was: know that saving is a thing,
+      open the drawer, save, then notice a tiny Post. A player told us they found
+      it eventually and that it "wasn't immediately obvious" — this is that.
+
+      Below the four routes and behind a rule, not among them. Those four hand
+      you a copy to take somewhere; this one publishes under your name, to a list
+      anybody can read. Sitting them in one row would make the only one with
+      consequences the easiest to hit by accident.
+
+      Hidden outright on a fork with no database configured, rather than
+      disabled: a button that can never work is worse than one that never was.
+    -->
+    <div id="share-post-row" class="share__post" hidden>
+      <button id="share-post" class="btn" type="button">Post to Community</button>
+      <p class="hint">Adds it to the public list other players browse, under your Discord
+        name. Keeps a copy in <b>Saved</b> on the way, so you can find it again.</p>
+    </div>
+  </dialog>
+
+  <!--
+    Live sessions.
+
+    One sheet in two states rather than two dialogs, because before and during
+    are the same idea at different moments: here is a link that puts us on one
+    board, and here is that link now that it exists. `data-state` on the dialog
+    swaps which half is shown; both are in the markup so neither has to be built
+    in JavaScript.
+
+    What it does not say anywhere is "host" or "guest". Everybody in a room can
+    move everybody's Tatari and switch between P1 and P2 — the only thing that
+    stays yours is which tab you happen to be looking at. Naming a host would
+    describe a hierarchy the feature does not have.
+  -->
+  <dialog id="dlg-live" class="modal modal--live" data-state="off">
+    <div class="live__off">
+      <h2>Edit together</h2>
+
+      <!-- The caption is one element, not a text node beside a span: the label is
+           a grid, and grid makes an anonymous item of every stray run of text —
+           which put "(optional)" on a line of its own. -->
+      <label class="live__name"><span>Your name in the session <span class="muted">(optional)</span></span>
+        <input id="live-name" type="text" maxlength="24" placeholder="Guest" autocomplete="nickname"
+          spellcheck="false">
+      </label>
+
+      <div class="modal__actions">
+        <button id="live-start" class="btn btn--primary" type="button">Start a live session</button>
+        <button class="btn btn--quiet" type="button" data-close>Not now</button>
+      </div>
+    </div>
+
+    <!--
+      Arriving on somebody's link. Asked before anything connects, so nobody
+      turns up in the room as an unnamed nobody and gets renamed a second later.
+
+      Leaving the name blank is a real choice with a real answer — you become
+      Guest, and the next unnamed arrival is Guest 2 — rather than a validation
+      error standing between somebody and the board a friend just sent them.
+    -->
+    <div class="live__ask">
+      <h2>Join this session?</h2>
+      <p class="hint">Somebody shared a live formation with you. You will both be able to move
+        every Tatari on it, and you will see each other's pointers while you work.</p>
+      <p class="hint">What is on your field now will be replaced by theirs. There is an
+        <b>Undo</b> on the way in if that was not what you wanted.</p>
+
+      <label class="live__name"><span>Your name <span class="muted">(optional)</span></span>
+        <input id="live-ask-name" type="text" maxlength="24" placeholder="Guest" autocomplete="nickname"
+          spellcheck="false" aria-describedby="live-ask-note">
+      </label>
+      <p id="live-ask-note" class="hint">Leave it empty and you will show up as <b>Guest</b>.</p>
+
+      <div class="modal__actions">
+        <button id="live-join" class="btn btn--primary" type="button">Join</button>
+        <button id="live-decline" class="btn btn--quiet" type="button">Stay on my own</button>
+      </div>
+    </div>
+
+    <div class="live__on">
+      <h2>Edit together</h2>
+      <p id="live-count" class="hint"></p>
+
+      <!-- Who is here, and the only place a host can remove somebody. Kept out of
+           the topbar strip: removing a person is rare and irreversible from their
+           side, and a button for it beside their initial invites an accident. -->
+      <ul id="live-peers" class="peers"></ul>
+
+      <label class="live__link">Session link
+        <input id="live-link" type="text" readonly spellcheck="false" aria-describedby="live-link-note">
+      </label>
+      <p id="live-link-note" class="hint">Anyone with this link can edit. It is the only thing
+        guarding the session, so treat it like the door key it is.</p>
+
+      <label class="live__name">Your name in the session
+        <input id="live-name-on" type="text" maxlength="24" placeholder="Guest" autocomplete="nickname"
+          spellcheck="false">
+      </label>
+
+      <div class="modal__actions">
+        <button id="live-copy" class="btn btn--primary" type="button">Copy link</button>
+        <button id="live-leave" class="btn" type="button">Leave session</button>
+        <button class="btn btn--quiet" type="button" data-close>Close</button>
+      </div>
     </div>
   </dialog>
 

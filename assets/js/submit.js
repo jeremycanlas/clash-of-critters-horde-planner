@@ -13,7 +13,7 @@
  * "publicly". A checkbox on top of that would be theatre.
  */
 
-import { $, toast, APP_VERSION } from './ui.js';
+import { $, toast, dismissOnBackdrop, APP_VERSION } from './ui.js';
 import { mapHTML, statsOf, unknownSlugs } from './formation-card.js';
 import { isConfigured, signedIn, signIn, whoAmI, rest, forgetCache } from './supabase.js';
 import { track } from './analytics.js';
@@ -159,6 +159,29 @@ async function post() {
 
   $('#dlg-submit').close();
   track('community-posted');
+
+  /*
+   * Straight to the formation, not to a toast offering to take you there.
+   *
+   * "Uploaded a formation. Wasn't immediately obvious how to find it though" is
+   * what a player said about the old ending, and both halves of why are real. A
+   * toast is gone in six seconds and takes its only link with it. And the link
+   * it carried went to the gallery, which sorts by upvotes — so a formation
+   * posted a second ago, with none, is not at the top and may not be on the
+   * first page at all. The one thing that could not happen was the thing
+   * expected: seeing it.
+   *
+   * `#f=<id>` is the address of that one formation, and community.js fetches a
+   * row by id when it is not in the page it loaded — so this works whether the
+   * post landed first or hundredth. It is also the link worth copying, which is
+   * the next thing anybody does after posting.
+   */
+  if (row?.id) {
+    location.href = `community.html#f=${encodeURIComponent(row.id)}`;
+    return;
+  }
+
+  // No id came back, so there is nowhere specific to go. The row did post.
   toast(`Posted "${name}"`, 'ok', {
     label: 'See it',
     fn: () => { location.href = 'community.html'; },
@@ -173,10 +196,7 @@ export function buildSubmit() {
 
   $('#submit-go').addEventListener('click', post);
 
-  dlg.addEventListener('click', (e) => {
-    // The backdrop is the dialog element itself; anything visible is a child.
-    if (e.target.closest('[data-close]') || e.target === dlg) dlg.close();
-  });
+  dismissOnBackdrop(dlg);
 
   // Came back from Discord mid-post. readCallback() has already consumed the
   // fragment by now — app.js calls it before this runs.

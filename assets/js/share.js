@@ -1,14 +1,19 @@
 /**
- * The share sheet: a preview of the card, an optional name on it, and the three
- * ways out - download the image, copy the image, copy the link.
+ * The share sheet: a preview of the card, an optional name on it, and the ways
+ * out - download the image, copy the image, copy the link, post it publicly.
  *
  * The name is remembered locally rather than kept in the formation: it is who
  * you are, not part of the plan, and it should not ride along in an export.
+ *
+ * Posting is injected rather than imported, the same way saves.js takes its
+ * Post: this module draws a card and hands out copies of it, and it has no
+ * business knowing that a database exists.
  */
 
 import * as store from './store.js';
-import { $, toast, copyText, downloadBlob, slugFilename } from './ui.js';
+import { $, toast, copyText, downloadBlob, slugFilename, dismissOnBackdrop } from './ui.js';
 import { drawCard, canvasBlob } from './card.js';
+import { roomInHash, withRoom } from './hash.js';
 import { track } from './analytics.js';
 
 const NAME_KEY = 'coc.sharename';
@@ -39,7 +44,22 @@ const SCOPE_NOTE = {
   full: 'The field, both benches, the level-up plan and what the formation brings.',
 };
 
-export function buildShare() {
+/**
+ * @param {{canPost?: boolean, onPost?: () => void}} [opts]
+ *   `canPost` reveals the Post row; `onPost` is called with the sheet already
+ *   closed, so the dialog it opens is not the second modal on screen.
+ */
+export function buildShare(opts = {}) {
+  if (opts.canPost && opts.onPost) {
+    $('#share-post-row').hidden = false;
+    $('#share-post').addEventListener('click', () => {
+      // Closed first. Two stacked modals put the formation's picture behind a
+      // second backdrop, and Escape then closes the wrong one.
+      dialog.close();
+      opts.onPost();
+    });
+  }
+
   $('#share-scope').addEventListener('click', (e) => {
     const btn = e.target.closest('[data-scope]');
     if (!btn || btn.dataset.scope === scope) return;
@@ -116,7 +136,18 @@ export function buildShare() {
 
   $('#share-copy-link').addEventListener('click', async () => {
     const url = store.shareUrl();
-    history.replaceState(null, '', url);
+    /*
+     * The copied link carries the formation and not the room, which is the
+     * distinction between the two features: a share link hands somebody the
+     * build to take away, and dragging a stranger into a live session because
+     * they were sent a picture is not what either of them asked for.
+     *
+     * The address bar is the other way round. shareUrl() rebuilds the fragment
+     * from scratch, so writing it here would quietly drop the room from the
+     * address of a session that is still running — and the next person to copy
+     * what is in the bar, or to reload, would find themselves alone.
+     */
+    history.replaceState(null, '', withRoom(url, roomInHash(location.hash)));
     toast(await copyText(url)
       ? 'Share link copied'
       : 'Link is in the address bar. Copy it from there', 'ok');
@@ -126,9 +157,7 @@ export function buildShare() {
   $('#share-close').addEventListener('click', () => dialog.close());
 
   // Click the backdrop to dismiss, matching the detail sheet.
-  dialog.addEventListener('click', (e) => {
-    if (e.target === dialog) dialog.close();
-  });
+  dismissOnBackdrop(dialog);
   dialog.addEventListener('close', releasePreview);
 }
 

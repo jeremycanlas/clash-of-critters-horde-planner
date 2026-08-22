@@ -44,6 +44,16 @@ let carried = null;
 const cellEls = [];
 
 /**
+ * One cell element, by cell number.
+ *
+ * Exported for session.js, which marks the square a peer is dragging over. It
+ * has to reach the element rather than the index because renderGrid() rewrites
+ * `cell.innerHTML` — so a remote highlight cannot be a child node that survives
+ * the next paint, only a class on the cell itself.
+ */
+export const cellElement = (i) => cellEls[i] ?? null;
+
+/**
  * The bench as somewhere you can drop things, which it was not.
  *
  * Both directions already existed as clicks and had no drag: the roster's cards

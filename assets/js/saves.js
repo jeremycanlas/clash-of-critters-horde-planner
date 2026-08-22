@@ -87,10 +87,24 @@ function autoName(when) {
  * Saves the current state. A save whose name matches an existing one replaces
  * it, which is how you iterate on a build, and moves it to the top, because
  * the list is newest-first and it just became the newest.
+ *
+ * Returns the entry, or null if there was nothing to keep or the browser
+ * refused to keep it. Posting from the Share sheet needs the entry back: a post
+ * is made from a *saved* formation, so that signing in halfway through can find
+ * it again by id on the way back from Discord.
+ *
+ * `quiet` skips the toast for that caller, and only for it. A modal dialog opens
+ * on top of the toast — showModal() puts the dialog in the top layer, above
+ * everything including the message that would be explaining itself — so the
+ * toast would not be a quieter confirmation, it would be an invisible one. The
+ * Share sheet says "saves it here first" in the open instead.
+ *
+ * @param {{quiet?: boolean}} [opts]
+ * @returns {Save|null}
  */
-function saveCurrent() {
+function saveCurrent({ quiet = false } = {}) {
   const snap = store.snapshot();
-  if (!hasAnything(snap)) { toast('Bring some Tatari first'); return; }
+  if (!hasAnything(snap)) { toast('Bring some Tatari first'); return null; }
 
   const now = Date.now();
   const name = snap.name.trim() || autoName(now);
@@ -98,7 +112,7 @@ function saveCurrent() {
 
   if (at === -1 && saves.length >= CAP) {
     toast(`Saved formations are full (${CAP}). Delete a few first`, 'error');
-    return;
+    return null;
   }
 
   const entry = at === -1
@@ -110,12 +124,22 @@ function saveCurrent() {
   if (!write()) {
     saves = read();
     toast('Could not save. Browser storage is full or blocked', 'error');
-    return;
+    return null;
   }
-  toast(at === -1 ? `Saved "${name}"` : `Updated "${name}"`, 'ok');
+  if (!quiet) toast(at === -1 ? `Saved "${name}"` : `Updated "${name}"`, 'ok');
   track('save-kept');
   renderSaves();
+  return entry;
 }
+
+/**
+ * Save what is on the field and hand the entry back, without saying so.
+ *
+ * For the Share sheet's Post: posting needs a saved formation and somebody who
+ * pressed Post did not press Save, so this does the step they skipped rather
+ * than refusing them for not knowing about it.
+ */
+export const keepQuietly = () => saveCurrent({ quiet: true });
 
 /**
  * Loads a save into the working state. Whatever was there is offered back
@@ -270,7 +294,9 @@ export function buildSaves(opts = {}) {
   canPost = !!opts.canPost;
   onPost = opts.onPost ?? null;
 
-  $('#btn-keep').addEventListener('click', saveCurrent);
+  // Wrapped rather than passed straight in: the listener would hand saveCurrent
+  // the click event as its options object.
+  $('#btn-keep').addEventListener('click', () => saveCurrent());
   $('#saves-handle').addEventListener('click', () => setDrawer(!drawerOpen));
   $('#saves-close').addEventListener('click', () => setDrawer(false));
 
