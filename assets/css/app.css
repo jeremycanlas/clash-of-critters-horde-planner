@@ -2643,9 +2643,25 @@ body.is-dragging-active {
 }
 .foot span:last-child { margin-left: auto; }
 
-.foot__by { display: inline-flex; align-items: center; gap: var(--s2); }
+/* margin-left:auto here, not on span:last-child, because the support link now
+   follows the byline — this keeps the credit pushed to the right regardless. */
+.foot__by { display: inline-flex; align-items: center; gap: var(--s2); margin-left: auto; }
 .foot__by b { color: var(--text); font-weight: 650; }
 .foot__byline { display: inline-flex; align-items: baseline; gap: 5px; }
+
+/* Optional tip jar. Reuses the .btn base; a warm accent border so it reads as a
+   friendly ask, not a primary action competing with the tool's own controls. */
+.foot__support {
+  align-self: center;
+  gap: 7px;
+  --btn-bg: transparent;
+  border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+}
+.foot__support svg { flex: none; color: var(--accent-ink-on); }
+.foot__support:hover {
+  --btn-bg: color-mix(in srgb, var(--accent) 14%, transparent);
+  border-color: var(--accent);
+}
 
 /* Round, with a hairline so a pale photo still reads as a disc against the
    page rather than bleeding into it. */
