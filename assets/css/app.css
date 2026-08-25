@@ -337,6 +337,33 @@ img { -webkit-user-drag: none; }
   object-fit: cover;
   border: 1px solid var(--line);
 }
+
+/* The tip jar riding the credit. Text-dim and borderless at rest so it reads as
+   the tail of "by jacc6475" rather than a ninth control in a header that
+   already has eight; the accent is spent on the cup alone, and the rest of it
+   only warms up once someone has actually pointed at it. */
+.byline__tip {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 6px;
+  border-radius: var(--r-sm);
+  color: var(--text-dim);
+  text-decoration: none;
+  transition: background-color 120ms ease, color 120ms ease;
+}
+/* A hairline, not a bullet: enough to stop "jacc6475" and "Say thanks" reading
+   as one run-on phrase, without adding a character to a 12px line. */
+.byline__tip::before {
+  content: "";
+  width: 1px; height: 12px;
+  margin-right: 3px;
+  background: var(--line);
+}
+.byline__tip svg { flex: none; color: var(--accent-ink-on); }
+.byline__tip:hover,
+.byline__tip:focus-visible {
+  color: var(--text);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+}
 .topbar__sub { color: var(--text-mute); font-size: 11.5px; text-transform: uppercase; letter-spacing: .08em; }
 .topbar__actions { display: flex; align-items: center; gap: var(--s2); margin-left: auto; flex-wrap: wrap; }
 
@@ -373,6 +400,30 @@ img { -webkit-user-drag: none; }
      not worth the line being tall. */
   .byline { font-size: 11.5px; gap: 5px; }
   .byline__avatar { width: 22px; height: 22px; }
+  /*
+   * The label stays on phones too.
+   *
+   * It was hidden here first, on the assumption that a 390px title row could not
+   * spare the words. Measured, it can: at the 11.5px this block sets, "Say
+   * thanks" costs the byline 59px and the row count does not change. A cup on
+   * its own is a guess the reader has to make, and most of the traffic is here,
+   * so the guess is worth 59px.
+   */
+  .byline__tip { padding: 5px 7px; position: relative; }
+  /*
+   * The tap target, grown without growing the header.
+   *
+   * The link is 29px tall, under any thumb and well under the 44px the rest of
+   * this bar is held to. Raising min-height would work and would also drag the
+   * title row taller on the screen that can least spare the height, so the
+   * target is stretched by an overlay instead: no box changes size, and the
+   * finger gets its 44px. ::before is the hairline, so this is ::after.
+   */
+  .byline__tip::after {
+    content: "";
+    position: absolute;
+    inset: -8px -6px;
+  }
   /*
    * Three rows: title + mode, the name field, then the actions on a line of
    * their own. Five controls cannot share a line with the name field without
@@ -2643,25 +2694,9 @@ body.is-dragging-active {
 }
 .foot span:last-child { margin-left: auto; }
 
-/* margin-left:auto here, not on span:last-child, because the support link now
-   follows the byline — this keeps the credit pushed to the right regardless. */
-.foot__by { display: inline-flex; align-items: center; gap: var(--s2); margin-left: auto; }
+.foot__by { display: inline-flex; align-items: center; gap: var(--s2); }
 .foot__by b { color: var(--text); font-weight: 650; }
 .foot__byline { display: inline-flex; align-items: baseline; gap: 5px; }
-
-/* Optional tip jar. Reuses the .btn base; a warm accent border so it reads as a
-   friendly ask, not a primary action competing with the tool's own controls. */
-.foot__support {
-  align-self: center;
-  gap: 7px;
-  --btn-bg: transparent;
-  border-color: color-mix(in srgb, var(--accent) 50%, transparent);
-}
-.foot__support svg { flex: none; color: var(--accent-ink-on); }
-.foot__support:hover {
-  --btn-bg: color-mix(in srgb, var(--accent) 14%, transparent);
-  border-color: var(--accent);
-}
 
 /* Round, with a hairline so a pale photo still reads as a disc against the
    page rather than bleeding into it. */

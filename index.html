@@ -29,6 +29,27 @@
     <span class="byline" title="Created by jacc6475 on Discord">
       <img class="byline__avatar" src="assets/img/jacc6475.jpg" width="26" height="26" alt="" decoding="async">
       <span class="byline__text">by <b>jacc6475</b></span>
+      <!--
+        The tip jar, in the one place on this page that is on screen the whole
+        time. It rides the credit rather than joining the row of actions on the
+        right, because six buttons that do something to your formation and a
+        seventh that asks you for money is the arrangement that would make this
+        read as a storefront. Attached to the name instead, it is part of who
+        made this.
+
+        A link, deliberately, not a .btn: the header already has eight of those,
+        and the footer deliberately has none of this -- one ask, in one place,
+        is the whole design. The tooltip carries the reassurance that the tool
+        is free, which is the question anyone hesitating here is actually asking.
+      -->
+      <a class="byline__tip" href="https://ko-fi.com/jacc6475" target="_blank" rel="noopener"
+         title="Horde Drafter is free and always will be. This is just a tip jar."
+         aria-label="Say thanks: tip jar on Ko-fi">
+        <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" focusable="false">
+          <path fill="currentColor" d="M2 21h18v-2H2v2ZM20 8h-2V5H4v8a4 4 0 0 0 4 4h6a4 4 0 0 0 3.9-3.1A3 3 0 0 0 20 8Zm-2 4.9V10h1a1 1 0 0 1 0 2 3 3 0 0 1-1 .9Z"/>
+        </svg>
+        <span class="byline__tip-text">Say thanks</span>
+      </a>
     </span>
 
     <input id="formation-name" class="field field--name" type="text" placeholder="Name this formation"
@@ -619,20 +640,6 @@
         <span class="muted">on Discord</span>
       </span>
     </span>
-    <!--
-      Support link. The tool is free; this is an optional tip jar, so it sits in
-      the footer where it is out of the way and never inside a grid screenshot.
-
-      TO GO LIVE: replace YOUR_KOFI in the href with your Ko-fi username — the tail
-      of your page address, ko-fi.com/<name>. This href is the only thing to change.
-    -->
-    <a class="btn foot__support" href="https://ko-fi.com/YOUR_KOFI"
-       target="_blank" rel="noopener" title="Support Horde Drafter on Ko-fi">
-      <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false">
-        <path fill="currentColor" d="M2 21h18v-2H2v2ZM20 8h-2V5H4v8a4 4 0 0 0 4 4h6a4 4 0 0 0 3.9-3.1A3 3 0 0 0 20 8Zm-2 4.9V10h1a1 1 0 0 1 0 2 3 3 0 0 1-1 .9Z"/>
-      </svg>
-      Buy me a coffee
-    </a>
   </footer>
 
   <!-- ------------------------------------------------ detail popover -->
