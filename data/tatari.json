@@ -5207,7 +5207,7 @@
    "DMG Reduction"
   ],
   "image": "data/images/tatari/technocan.png",
-  "glitterImage": null,
+  "glitterImage": "data/images/glitter/technocan.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Technocan"
  },
  {
@@ -6094,7 +6094,7 @@
     "text": "Periodically launches 3 zap waves, dealing large AoE damage with a chance to inflict Slow, Bind, or Stun."
    }
   },
-  "rangeImage": null,
+  "rangeImage": "data/images/range/cheerstella.jpg",
   "skillTypes": [
    "ATK Boost",
    "AoE",
@@ -6270,10 +6270,7 @@
    }
   },
   "rangeImage": "data/images/range/lullelly.jpg",
-  "skillTypes": [
-   "AoE",
-   "Heal"
-  ],
+  "skillTypes": [],
   "image": "data/images/tatari/lullelly.png",
   "glitterImage": "data/images/glitter/lullelly.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Lullelly"
@@ -7417,7 +7414,7 @@
    "AoE"
   ],
   "image": "data/images/tatari/blastniff.png",
-  "glitterImage": null,
+  "glitterImage": "data/images/glitter/blastniff.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Blastniff"
  },
  {
@@ -7428,12 +7425,13 @@
   "tier": 1,
   "family": "Taptail",
   "familyId": 48,
-  "stages": 3,
+  "stages": 4,
   "rarity": "Rare",
   "evolutionLine": [
    "Taptail",
    "Rattlecoil",
-   "Clangnaga"
+   "Clangnaga",
+   "Dharmadder"
   ],
   "battleRow": null,
   "previousRole": "Same",
@@ -7470,12 +7468,13 @@
   "tier": 2,
   "family": "Taptail",
   "familyId": 48,
-  "stages": 3,
+  "stages": 4,
   "rarity": "Rare",
   "evolutionLine": [
    "Taptail",
    "Rattlecoil",
-   "Clangnaga"
+   "Clangnaga",
+   "Dharmadder"
   ],
   "battleRow": null,
   "previousRole": "Same",
@@ -7513,12 +7512,13 @@
   "tier": 3,
   "family": "Taptail",
   "familyId": 48,
-  "stages": 3,
+  "stages": 4,
   "rarity": "Rare",
   "evolutionLine": [
    "Taptail",
    "Rattlecoil",
-   "Clangnaga"
+   "Clangnaga",
+   "Dharmadder"
   ],
   "battleRow": null,
   "previousRole": "Same",
@@ -7548,6 +7548,47 @@
   "image": "data/images/tatari/clangnaga.png",
   "glitterImage": "data/images/glitter/clangnaga.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Clangnaga"
+ },
+ {
+  "name": "Dharmadder",
+  "slug": "dharmadder",
+  "type": "Rock",
+  "role": "DPS",
+  "tier": 4,
+  "family": "Taptail",
+  "familyId": 48,
+  "stages": 4,
+  "rarity": "Rare",
+  "evolutionLine": [
+   "Taptail",
+   "Rattlecoil",
+   "Clangnaga",
+   "Dharmadder"
+  ],
+  "battleRow": null,
+  "previousRole": "Same",
+  "etymology": null,
+  "skill": "Karmic Barrage: Slowly fires a few sound waves, then rapidly fires several. The rapid waves can pierce enemies, with a chance to inflict Stun. Dharmadder carries Aura: Rock whenever on the field.",
+  "description": "What is karma exactly? Dharmadder knows it's not erasing the past, but making better choices for the future. When the mallet drops, the hollow echo can bring serenity to all listeners. Tap tap, Dharmadder's got plenty of patience.",
+  "hordeSkills": {
+   "level3": {
+    "name": "Karmic Sharing",
+    "text": "Attacks have a chance to heal an ally for 1 HP and boost their ATK Speed."
+   },
+   "level5": {
+    "name": "Karmic Ricochet",
+    "text": "Periodically fires 3 sound waves that bounce across the battlefield."
+   },
+   "level7": {
+    "name": "Karmic Gains",
+    "text": "Continuously fires sound waves of various sizes in a fan-shaped area to the front."
+   }
+  },
+  "rangeImage": null,
+  "skillTypes": [],
+  "image": "data/images/tatari/dharmadder.png",
+  "glitterImage": "data/images/glitter/dharmadder.png",
+  "wikiUrl": null
  },
  {
   "name": "Kittazap",
@@ -7814,12 +7855,13 @@
   "tier": 1,
   "family": "Dumbopus",
   "familyId": 51,
-  "stages": 3,
+  "stages": 4,
   "rarity": "Rare",
   "evolutionLine": [
    "Dumbopus",
    "Dazopus",
-   "Fishopus"
+   "Fishopus",
+   "Lordopus"
   ],
   "battleRow": null,
   "previousRole": "Same",
@@ -7857,12 +7899,13 @@
   "tier": 2,
   "family": "Dumbopus",
   "familyId": 51,
-  "stages": 3,
+  "stages": 4,
   "rarity": "Rare",
   "evolutionLine": [
    "Dumbopus",
    "Dazopus",
-   "Fishopus"
+   "Fishopus",
+   "Lordopus"
   ],
   "battleRow": null,
   "previousRole": "Same",
@@ -7900,12 +7943,13 @@
   "tier": 3,
   "family": "Dumbopus",
   "familyId": 51,
-  "stages": 3,
+  "stages": 4,
   "rarity": "Rare",
   "evolutionLine": [
    "Dumbopus",
    "Dazopus",
-   "Fishopus"
+   "Fishopus",
+   "Lordopus"
   ],
   "battleRow": null,
   "previousRole": "Same",
@@ -7934,6 +7978,47 @@
   "image": "data/images/tatari/fishopus.png",
   "glitterImage": "data/images/glitter/fishopus.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Fishopus"
+ },
+ {
+  "name": "Lordopus",
+  "slug": "lordopus",
+  "type": "Water",
+  "role": "DPS",
+  "tier": 4,
+  "family": "Dumbopus",
+  "familyId": 51,
+  "stages": 4,
+  "rarity": "Rare",
+  "evolutionLine": [
+   "Dumbopus",
+   "Dazopus",
+   "Fishopus",
+   "Lordopus"
+  ],
+  "battleRow": null,
+  "previousRole": "Same",
+  "etymology": null,
+  "skill": "The King's Fish: Launches a water orb and sometimes a large water orb that deals small AoE damage. Can summon an Octobuddy that deals large AoE damage when knocked down. Lordopus carries Aura: Water whenever on the battlefield.",
+  "description": "The king is crowned, and the chaotic tentacles of the past are now the throne of the sovereign. With just one thought, Lordopus can command the ebb and flow of all the seas.",
+  "hordeSkills": {
+   "level3": {
+    "name": "Ink Splatter",
+    "text": "Attacks have a chance to launch an extra ink bomb, dealing AoE damage with a chance to inflict Blind."
+   },
+   "level5": {
+    "name": "Force Field",
+    "text": "Periodically creates an expanding force field, granting DMG Reduction to allies in range."
+   },
+   "level7": {
+    "name": "Octo-Nuke",
+    "text": "Drops an octopus nuke that deals large AoE damage. Prioritizes attacking the weakest boss and deals extra damage to the center of the battlefield."
+   }
+  },
+  "rangeImage": null,
+  "skillTypes": [],
+  "image": "data/images/tatari/lordopus.png",
+  "glitterImage": null,
+  "wikiUrl": null
  },
  {
   "name": "Flameow",
@@ -9728,7 +9813,119 @@
    "Pierce"
   ],
   "image": "data/images/tatari/gigagnash.png",
-  "glitterImage": null,
+  "glitterImage": "data/images/glitter/gigagnash.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Gigagnash"
+ },
+ {
+  "name": "Snowcub",
+  "slug": "snowcub",
+  "type": "Water",
+  "role": "Tank",
+  "tier": 1,
+  "family": "Snowcub",
+  "familyId": 63,
+  "stages": 4,
+  "rarity": "Rare",
+  "evolutionLine": [
+   "Snowcub",
+   "Polarpaw",
+   "Blizzgrizz",
+   "Anglerbear"
+  ],
+  "battleRow": null,
+  "previousRole": "None",
+  "etymology": null,
+  "skill": "Fish Ahoy: Throws 3 fish in turn to deal AoE damage. Carries Foodie: Fragile. When in Danger, eats 1 fish to recover HP and dispell all other debuffs.",
+  "description": "Snowcub has a great appetite but not so great hunting skills. After finally catching one fish, Snowcub now brings it everywhere as a bluff to cover the fact that there's no catching another one any time soon.",
+  "hordeSkills": null,
+  "rangeImage": null,
+  "skillTypes": [],
+  "image": "data/images/tatari/snowcub.png",
+  "glitterImage": "data/images/glitter/snowcub.png",
+  "wikiUrl": null
+ },
+ {
+  "name": "Polarpaw",
+  "slug": "polarpaw",
+  "type": "Water",
+  "role": "Tank",
+  "tier": 2,
+  "family": "Snowcub",
+  "familyId": 63,
+  "stages": 4,
+  "rarity": "Rare",
+  "evolutionLine": [
+   "Snowcub",
+   "Polarpaw",
+   "Blizzgrizz",
+   "Anglerbear"
+  ],
+  "battleRow": null,
+  "previousRole": "None",
+  "etymology": null,
+  "skill": "Fish Delish: Throws 4 fish in turn to deal AoE damage. Carries Foodie: Fragile. When in Danger, eats 1 fish to recover HP and dispell all other debuffs.",
+  "description": "Polarpaw is gradually learning to discern the distinct smell of fish, the flow of currents, and movement patterns beneath the ice. Although sometimes the prey turns out to be seaweed, random sticks of wood, and even Polarpaw's own shadow, this is all part of the master plan. At least, that's what Polarpaw would tell you.",
+  "hordeSkills": null,
+  "rangeImage": null,
+  "skillTypes": [],
+  "image": "data/images/tatari/polarpaw.png",
+  "glitterImage": "data/images/glitter/polarpaw.png",
+  "wikiUrl": null
+ },
+ {
+  "name": "Blizzgrizz",
+  "slug": "blizzgrizz",
+  "type": "Water",
+  "role": "Tank",
+  "tier": 3,
+  "family": "Snowcub",
+  "familyId": 63,
+  "stages": 4,
+  "rarity": "Rare",
+  "evolutionLine": [
+   "Snowcub",
+   "Polarpaw",
+   "Blizzgrizz",
+   "Anglerbear"
+  ],
+  "battleRow": null,
+  "previousRole": "None",
+  "etymology": null,
+  "skill": "Fish Feast: Throws 4 fish in turn to deal AoE damage. Carries Foodie: Fragile. When in Danger, shares 1 fish with an ally to recover HP and dispell all other debuffs.",
+  "description": "Having adapted to the harsh environments, Blizzgrizz's hunting abilities are steadily improving. The catch of the day is carefully collected into the creel, then brought to the kitchen at camp. While acting like it's nothing special, Blizzgrizz will always secretly look out for a nod of approval.",
+  "hordeSkills": null,
+  "rangeImage": null,
+  "skillTypes": [],
+  "image": "data/images/tatari/blizzgrizz.png",
+  "glitterImage": null,
+  "wikiUrl": null
+ },
+ {
+  "name": "Anglerbear",
+  "slug": "anglerbear",
+  "type": "Water",
+  "role": "Tank",
+  "tier": 4,
+  "family": "Snowcub",
+  "familyId": 63,
+  "stages": 4,
+  "rarity": "Rare",
+  "evolutionLine": [
+   "Snowcub",
+   "Polarpaw",
+   "Blizzgrizz",
+   "Anglerbear"
+  ],
+  "battleRow": null,
+  "previousRole": "None",
+  "etymology": null,
+  "skill": "Fish Bonanza: Throws 4 fish in turn to deal AoE damage. Carries Foodie: Fragile. When in Danger, shares 1 fish with an ally to recover HP and dispell all other debuffs. Anglerbear carries Aura: Water whenever on field.",
+  "description": "The searing snow is Anglerbear's playground, and hunting is as easy as a game. An entertaining one, too, especially if the prey are cunning enough to attempt escape.",
+  "hordeSkills": null,
+  "rangeImage": null,
+  "skillTypes": [],
+  "image": "data/images/tatari/anglerbear.png",
+  "glitterImage": null,
+  "wikiUrl": null
  }
 ]

@@ -228,6 +228,24 @@
   "image": "data/images/zobo/knight-zobo.png"
  },
  {
+  "name": "Botanical Zobo",
+  "slug": "botanical-zobo",
+  "kind": "zobo",
+  "type": "Grass",
+  "description": "",
+  "flavour": "",
+  "skill": {
+   "name": null,
+   "text": "Growth Spurt: Shoots strange seeds that deal AoE damage. Both arms and the body can be attacked."
+  },
+  "attackRange": "3/4",
+  "moveSpeed": "1/4",
+  "boss": true,
+  "notes": "Boss",
+  "sourceFile": null,
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos"
+ },
+ {
   "name": "Fisherman Zobo",
   "slug": "fisherman-zobo",
   "kind": "zobo",
@@ -321,6 +339,24 @@
   "sourceFile": "Surfer Zobo.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos",
   "image": "data/images/zobo/surfer-zobo.png"
+ },
+ {
+  "name": "Spritz Zobo",
+  "slug": "spritz-zobo",
+  "kind": "zobo",
+  "type": "Water",
+  "description": "",
+  "flavour": "",
+  "skill": {
+   "name": null,
+   "text": "Hydro Jet: Launches water bombs to deal damage. Sprays water continuously to deal damage while moving slowly, then stops after a certain duration."
+  },
+  "attackRange": "3/1",
+  "moveSpeed": "1/1",
+  "boss": false,
+  "notes": null,
+  "sourceFile": null,
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos"
  },
  {
   "name": "Yeti Zobo",
@@ -494,6 +530,24 @@
   "image": "data/images/zobo/dagger-zobo.png"
  },
  {
+  "name": "Retriever Zobo",
+  "slug": "retriever-zobo",
+  "kind": "zobo",
+  "type": "Lightning",
+  "description": "",
+  "flavour": "",
+  "skill": {
+   "name": null,
+   "text": "Flyer: Throws golf balls back and forth in turn to either deal damage or teleport to the ball's location."
+  },
+  "attackRange": "4/4",
+  "moveSpeed": "3/4",
+  "boss": false,
+  "notes": null,
+  "sourceFile": null,
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos"
+ },
+ {
   "name": "Clown Zobo",
   "slug": "clown-zobo",
   "kind": "zobo",
@@ -568,6 +622,24 @@
   "sourceFile": "Laser Zobo.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos",
   "image": "data/images/zobo/laser-zobo.png"
+ },
+ {
+  "name": "Golf Zobo",
+  "slug": "golf-zobo",
+  "kind": "zobo",
+  "type": "Lightning",
+  "description": "",
+  "flavour": "",
+  "skill": {
+   "name": null,
+   "text": "Hook and Slice: Swings a golf club to deal damage. Sometimes launches a specialized piercing ball that deals damage in it's path and ricochets across edges of the map."
+  },
+  "attackRange": "4/4",
+  "moveSpeed": "1/4",
+  "boss": true,
+  "notes": "Boss",
+  "sourceFile": null,
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos"
  },
  {
   "name": "Cowboy Zobo",
@@ -760,6 +832,24 @@
   "image": "data/images/zobo/pharaoh-zobo.png"
  },
  {
+  "name": "Totem Zobo",
+  "slug": "totem-zobo",
+  "kind": "zobo",
+  "type": "Rock",
+  "description": "",
+  "flavour": "",
+  "skill": {
+   "name": null,
+   "text": "Path of Devotion: Generates and deals damage to neardy enemies, while grating neardy Zobos Haste and DEF Boost. Won't stop before reaching the edge of the map."
+  },
+  "attackRange": "2/4",
+  "moveSpeed": "1/4",
+  "boss": true,
+  "notes": "Boss",
+  "sourceFile": null,
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos"
+ },
+ {
   "name": "Firehead Zobo",
   "slug": "firehead-zobo",
   "kind": "zobo",
@@ -948,5 +1038,23 @@
   "sourceFile": "Captain Zobo.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos",
   "image": "data/images/zobo/captain-zobo.png"
+ },
+ {
+  "name": "Chef Zobo",
+  "slug": "chef-zobo",
+  "kind": "zobo",
+  "type": "Fire",
+  "description": "",
+  "flavour": "",
+  "skill": {
+   "name": null,
+   "text": "Bon Appétit: Wields skewers to deal small AoE damage. Sprinkles salt to season skewers for greater range and additional Burn."
+  },
+  "attackRange": "3/4",
+  "moveSpeed": "1/4",
+  "boss": true,
+  "notes": "Boss",
+  "sourceFile": null,
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos"
  }
 ]

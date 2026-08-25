@@ -65,6 +65,14 @@ field, HAVE above LF.
 
 ## Changelog
 
+### 1.6.1
+
+#### Changes:
+- Added the new Tatari: the polar bear line (Snowcub, Polarpaw, Blizzgrizz and Anglerbear), plus two new T4s — Dharmadder now caps the Taptail line and Lordopus caps the Dumbopus line. The roster is 230 now.
+- Added the six new Zobos: Botanical, Chef, Golf and Totem (bosses), plus Spritz and Retriever. The wiki has no art for them yet, so they show up without pictures for now.
+- Picked up glitter art for Blastniff, Gigagnash and Technocan, and an attack range for Cheerstella.
+- There's a small "Say thanks" link next to my name in the header now. The tool is free and always will be — hosting costs nothing, so it's only there if you feel like it.
+
 ### 1.6.0
 
 #### (Experimental) Changes:
