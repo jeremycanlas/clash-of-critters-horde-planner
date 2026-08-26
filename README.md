@@ -78,15 +78,15 @@ field, HAVE above LF.
 
 #### Bug Fixes:
 - You could never drag to reorder the level-up plan on a phone. The browser was reading the gesture as a scroll before the drag even started. Grab the step number and it moves now.
-- With a boss pull on (or the Zobo ground open), double-clicking a Tatari out past the contact line didn't send it back to the bench. Turns out nothing worked out there except dragging — you couldn't click a bench chip into those rows either, and the arrow keys stopped at the line. All of it works now.
+- With a boss pull on (or the Zobo ground open), double-clicking a Tatari out past the contact line didn't send it back to the bench. Turns out nothing worked out there except dragging: you couldn't click a bench chip into those rows either, and the arrow keys stopped at the line. All of it works now.
 
 ### 1.6.1
 
 #### Changes:
-- Added the new Tatari: the polar bear line (Snowcub, Polarpaw, Blizzgrizz and Anglerbear), plus two new T4s — Dharmadder now caps the Taptail line and Lordopus caps the Dumbopus line. The roster is 230 now.
+- Added the new Tatari: the polar bear line (Snowcub, Polarpaw, Blizzgrizz and Anglerbear), plus two new T4s. Dharmadder now caps the Taptail line and Lordopus caps the Dumbopus line. The roster is 230 now.
 - Added the six new Zobos: Botanical, Chef, Golf and Totem (bosses), plus Spritz and Retriever. The wiki has no art for them yet, so they show up without pictures for now.
 - Picked up glitter art for Blastniff, Gigagnash and Technocan, and an attack range for Cheerstella.
-- There's a small "Say thanks" link next to my name in the header now. The tool is free and always will be — hosting costs nothing, so it's only there if you feel like it.
+- There's a small "Say thanks" link next to my name in the header now. The tool is free and always will be. Hosting costs nothing, so it's only there if you feel like it.
 
 ### 1.6.0
 
@@ -199,7 +199,7 @@ read its name.
 - The save that exactly matches what is on the field is marked **On the field**.
 - **Clear all does not touch saved formations.** Coming back to a kept draft
   after wiping the field is the point of keeping one.
-- The header's *Save* button is now called **Export** — it still downloads the
+- The header's *Save* button is now called **Export**. It still downloads the
   same `.json` file, but "Save" belongs to the in-browser list now, and
   Export/Import read as the pair they are.
 - Nothing new leaves the browser: saved formations are `localStorage` only, and
@@ -442,7 +442,7 @@ repo, running Python over a screenshot and hand-editing JSON.
 
 So there is a page for it: **[Record a range](https://jeremycanlas.github.io/clash-of-critters-horde-planner/contribute.html)**.
 Pick a Tatari, stand it where your screenshot had it, click what it reached, and
-it hands you the entry — copy it, download it, or let it open a filled-in issue
+it hands you the entry: copy it, download it, or let it open a filled-in issue
 for you. It writes nothing and uploads nothing.
 
 It also records **heal, buff and debuff reach**, which is not documented
@@ -462,7 +462,7 @@ something.
 Every roster card says two things at once, on two channels, because they are two
 different questions.
 
-Along the bottom, one bar per reach that Tatari can have — attack always, then a
+Along the bottom, one bar per reach that Tatari can have: attack always, then a
 heal, buff or debuff bar only if it has one, since "no heal reach recorded" is not
 a gap on something that has never healed. Each bar is empty for nothing recorded,
 grey for on file, and solid for checked by hand; the bar for the reach you are
@@ -558,15 +558,15 @@ imports a module and checks its return value passes all three.
 under 760px this stops being the same app: the field takes the whole screen, the
 three panels become sheets over it, and a fixed bar along the bottom is the only
 way into any of them. Three quarters of the people who use this never see the
-layout `apptest.html` checks. It walks the phone's own path end to end — tap a
-card, tap the chip, tap a square — and times the redraws that a thumb waits
+layout `apptest.html` checks. It walks the phone's own path end to end (tap a
+card, tap the chip, tap a square) and times the redraws that a thumb waits
 through.
 
 One thing it cannot do is pretend to be a touchscreen. `@media (hover: none)`
-never matches in a desktop browser at any width, so the rules in that block —
-the drag grip on the plan, the 28px targets, the effect row that scrolls instead
-of wrapping — are read out of the stylesheet rather than watched applying, and
-the checks say so in their names. That is still worth having: the grip shipped
+never matches in a desktop browser at any width, so the rules in that block
+(the drag grip on the plan, the 28px targets, the effect row that scrolls
+instead of wrapping) are read out of the stylesheet rather than watched
+applying, and the checks say so in their names. That is still worth having: the grip shipped
 broken because `.prio` was missing from exactly that block.
 
 Both restore whatever was in `localStorage` when they finish, so running them

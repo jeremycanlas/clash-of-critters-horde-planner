@@ -24,7 +24,7 @@ const out = document.getElementById('log');
 let pass = 0, fail = 0;
 const ok = (name, cond, detail) => {
   if (cond) { pass++; out.innerHTML += `<div style="color:#7c7">ok   ${name}</div>`; }
-  else { fail++; out.innerHTML += `<div style="color:#f77">FAIL ${name}${detail ? ' — ' + detail : ''}</div>`; }
+  else { fail++; out.innerHTML += `<div style="color:#f77">FAIL ${name}${detail ? ': ' + detail : ''}</div>`; }
 };
 const eq = (name, got, want) =>
   ok(name, got === want, `got ${JSON.stringify(got)}, wanted ${JSON.stringify(want)}`);
@@ -180,7 +180,7 @@ ok('and no two chips share one',
    new Set(book.chips.map(iconFor)).size === book.chips.length);
 
 out.innerHTML += `<div style="margin-top:12px">${pass} passed, ${fail} failed`
-  + ` &mdash; ${book.chips.length} chips, ${book.chips.filter((c) => scoreOne(c, mixed)).length} of them scored`
+  + `. ${book.chips.length} chips, ${book.chips.filter((c) => scoreOne(c, mixed)).length} of them scored`
   + ` against a board of ${mixed.length}</div>`;
 window.__done = { pass, fail };
 </script>

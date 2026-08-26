@@ -240,7 +240,7 @@ export function renderAdder() {
     <button class="step-pick" type="button" data-key="${esc(key)}"
             data-type="${tatari.type}" data-player="${player}"
             aria-pressed="${chosen.has(key)}"
-            title="${esc(tatari.name)}${next === null ? ' — planned to level 7 already' : ''}">
+            title="${esc(tatari.name)}${next === null ? ', planned to level 7 already' : ''}">
       ${artHTML(tatari)}
       ${next === null ? '<span class="step-pick__done">7</span>' : ''}
     </button>`).join('');

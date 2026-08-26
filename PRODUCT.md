@@ -172,17 +172,17 @@ Data constraints that are product truth, not implementation detail:
 
 Real, in-repo, no fabrication needed:
 
-- `data/tatari.json` — 230 Tatari with type, role, tier, evolution line, rarity,
+- `data/tatari.json`: 230 Tatari with type, role, tier, evolution line, rarity,
   skill, flavour text, etymology.
-- `data/meta.json` — types, roles, type-effectiveness chart, skill-type
+- `data/meta.json`: types, roles, type-effectiveness chart, skill-type
   definitions, grid size, level cap.
-- `data/aliases.json` — community nicknames and the real animal per line. The
+- `data/aliases.json`: community nicknames and the real animal per line. The
   one file not scraped; inferred, and some entries are probably wrong.
-- `data/ranges.json` — attack ranges as tile offsets, measured and eye-checked.
+- `data/ranges.json`: attack ranges as tile offsets, measured and eye-checked.
 - `data/images/tatari/` (230 sprites), `glitter/` (207), `icons/` (11),
   `range/` (115 diagrams).
-- `docs/screenshot.jpg`, `docs/media/` — the incumbent interface and share card.
-- `assets/img/jacc6475.jpg` — the author's avatar.
+- `docs/screenshot.jpg`, `docs/media/`: the incumbent interface and share card.
+- `assets/img/jacc6475.jpg`: the author's avatar.
 
 Absences future work must not paper over: there are no testimonials, no usage
 numbers beyond anonymous GoatCounter visit/button counts, no user quotes, no

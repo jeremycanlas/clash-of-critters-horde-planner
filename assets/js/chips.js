@@ -329,7 +329,7 @@ export function renderChips() {
 function card(chip, score, isTaken) {
   const scoreHTML = !score ? '' : `
     <div class="chipcard__score" data-empty="${score.n === 0}">
-      <p class="chipcard__count"><b>${score.n}</b> of your ${score.of} &mdash; ${esc(score.why)}</p>
+      <p class="chipcard__count"><b>${score.n}</b> of your ${score.of} ${esc(score.why)}</p>
       ${whoRow(score)}
     </div>`;
 
@@ -385,7 +385,7 @@ function renderPage() {
    */
   $('#chips-kept').innerHTML = `
     <div class="kept__head">
-      <h2>What you kept${coop ? ` &mdash; P${player}` : ''}</h2>
+      <h2>${coop ? `What P${player} kept` : 'What you kept'}</h2>
       ${coop ? `<div class="kept__who" role="group" aria-label="Whose chips">
         ${store.players().map((p) => `
           <button class="btn btn--tiny${p === player ? ' is-on' : ''}" type="button"

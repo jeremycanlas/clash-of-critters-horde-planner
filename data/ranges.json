@@ -396,7 +396,7 @@
   "byLine": {
     "rubblet": {
       "tiles": [[-1, 0], [0, 0], [1, 0], [-1, -1], [0, -1], [1, -1], [0, -2]],
-      "note": "UNVERIFIED. These tiles match Cobbledon's diagram; neither Rubblet nor Meteorax has a diagram of its own, and both inherit this entry. Range is per-form, so treat it as a placeholder — Zappur differs from Electroar at the same point in its line. Drop it if either differs.",
+      "note": "UNVERIFIED. These tiles match Cobbledon's diagram; neither Rubblet nor Meteorax has a diagram of its own, and both inherit this entry. Range is per-form, so treat it as a placeholder. Zappur differs from Electroar at the same point in its line. Drop it if either differs.",
       "from": "wiki diagram"
     }
   }

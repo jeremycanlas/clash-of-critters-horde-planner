@@ -1,4 +1,4 @@
-# infra/ — Azure deployment as code
+# infra/: Azure deployment as code
 
 The Horde Drafter site is hosted on **GitHub Pages**. This directory is an
 optional, infrastructure-as-code path to also host it on **Azure Static Web
@@ -9,7 +9,7 @@ Apps**, written twice so either IaC tool can drive it:
 | `main.bicep` | Bicep | A `Microsoft.Web/staticSites` resource (Free SKU) |
 | `main.tf`, `variables.tf` | Terraform (azurerm) | A resource group + `azurerm_static_web_app` (Free SKU) |
 
-Neither is required to run or serve the site — it stays plain HTML/CSS/JS with
+Neither is required to run or serve the site. It stays plain HTML/CSS/JS with
 no build step. This is here so an Azure deployment is reproducible from source
 rather than clicked together in the portal.
 

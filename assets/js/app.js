@@ -467,7 +467,7 @@ function wireToolbar() {
      * the only place Undo can live.
      */
     if (unplaced) {
-      toast(`Zobo ground closed — benched ${unplaced}`, 'info', undoTo(before));
+      toast(`Zobo ground closed, benched ${unplaced}`, 'info', undoTo(before));
     }
   });
 
@@ -502,7 +502,7 @@ function wireToolbar() {
     if (got.dropped) said.push(`removed ${got.dropped} that would not fit`);
     if (!said.length) return;
 
-    toast(`Sandbox off — ${said.join(', ')}`,
+    toast(`Sandbox off: ${said.join(', ')}`,
       got.dropped ? 'warn' : 'info', undoTo(before));
   });
 
@@ -515,7 +515,7 @@ function wireToolbar() {
     if (trimmed) notes.push(`benched ${trimmed} over the new field cap`);
     toast(notes.length
       ? `${store.mode().label}: ${notes.join(', ')}`
-      : `${store.mode().label} — ${store.fieldCap()} on the field per player`);
+      : `${store.mode().label}: ${store.fieldCap()} on the field per player`);
   });
 
   /*

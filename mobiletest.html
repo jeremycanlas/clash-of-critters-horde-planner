@@ -46,7 +46,7 @@ const eq = (name, got, want) => ok(name, Object.is(got, want), `got ${JSON.strin
 const under = (name, ms, budget) => {
   const good = ms <= budget;
   if (good) { pass++; line(`<div style="color:#55c98a">  ok   ${name} <span style="color:#a3aab9">${ms.toFixed(0)}ms of ${budget}ms</span></div>`); }
-  else { fail++; line(`<div style="color:#f0654f">  FAIL ${name} — ${ms.toFixed(0)}ms, budget ${budget}ms</div>`); }
+  else { fail++; line(`<div style="color:#f0654f">  FAIL ${name}: ${ms.toFixed(0)}ms, budget ${budget}ms</div>`); }
 };
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -60,7 +60,7 @@ const runGroup = async (name, body) => {
   line(`<div style="margin:12px 0 2px;color:#ffc93c;font-weight:700">${name}</div>`);
   try { await body(); } catch (err) {
     fail++;
-    line(`<div style="color:#f0654f">  FAIL ${name} threw — ${err.message}</div>`);
+    line(`<div style="color:#f0654f">  FAIL ${name} threw: ${err.message}</div>`);
   }
 };
 
@@ -522,7 +522,7 @@ for (const [k, v] of Object.entries(saved)) localStorage.setItem(k, v);
 document.getElementById('head').innerHTML = fail
   ? `<b style="color:#f0654f">${fail} failed</b>, ${pass} passed`
   : `<b style="color:#55c98a">${pass} passed</b>, 0 failed`;
-document.title = `${fail ? `FAIL (${fail})` : 'ok'} — phone checks`;
+document.title = `${fail ? `FAIL (${fail})` : 'ok'}: phone checks`;
 window.__done = { pass, fail };
 </script>
 </body>

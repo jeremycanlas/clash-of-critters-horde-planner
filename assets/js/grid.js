@@ -558,7 +558,7 @@ function renderRangeGap(on) {
     ? 'Nothing is on the field yet.'
     : missing.length
       ? `${missing.length} on your field ${missing.length === 1 ? 'has' : 'have'} none, so ${
-        missing.length === 1 ? 'its' : 'their'} reach is not drawn — ${
+        missing.length === 1 ? 'its' : 'their'} reach is not drawn: ${
         missing.map((p) => esc(state.bySlug.get(p.slug)?.name ?? p.slug)).join(', ')}.`
       : 'Every Tatari on your field has one.';
 
@@ -1097,7 +1097,7 @@ function switchOwner(slug, player) {
   const name = state.bySlug.get(slug)?.name ?? slug;
   const to = player === 1 ? 2 : 1;
   toast(result.swapped
-    ? `${name} swapped — P${to} and P${player} traded, plans included`
+    ? `${name} swapped: P${to} and P${player} traded, plans included`
     : `${name} is P${to}'s now, plan and all`);
 }
 
@@ -1321,7 +1321,7 @@ function effectRows(list, player) {
 
   if (!rows) {
     return `<p class="summary__note">Nothing on the field has a heal, buff or debuff${
-      found.untagged ? ` — ${found.untagged} of them are untagged on the wiki` : ''}.</p>`;
+      found.untagged ? `, and ${found.untagged} of them are untagged on the wiki` : ''}.</p>`;
   }
 
   /*

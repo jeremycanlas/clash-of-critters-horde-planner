@@ -59,7 +59,7 @@ const runGroup = async (name, body) => {
   try { await body(); } catch (err) {
     fail++;
     out.insertAdjacentHTML('beforeend',
-      `<div style="color:#f0654f">  FAIL ${name} threw — ${err.message}</div>`);
+      `<div style="color:#f0654f">  FAIL ${name} threw: ${err.message}</div>`);
   }
 };
 const ok = (name, cond, detail) => {
@@ -420,7 +420,7 @@ for (const [k, v] of Object.entries(saved)) localStorage.setItem(k, v);
 document.getElementById('head').innerHTML = fail
   ? `<b style="color:#f0654f">${fail} failed</b>, ${pass} passed`
   : `<b style="color:#55c98a">${pass} passed</b>, 0 failed`;
-document.title = `${fail ? `FAIL (${fail})` : 'ok'} — end-to-end checks`;
+document.title = `${fail ? `FAIL (${fail})` : 'ok'}: end-to-end checks`;
 window.__done = { pass, fail };
 </script>
 </body>

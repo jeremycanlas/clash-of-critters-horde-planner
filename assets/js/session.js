@@ -922,7 +922,7 @@ function renderPresence() {
   const label = $('#live-count');
   if (label) {
     label.textContent = count === 1
-      ? 'Just you so far — send the link to somebody'
+      ? 'Just you so far. Send the link to somebody'
       : `${count} people editing`;
   }
   renderPeerList();

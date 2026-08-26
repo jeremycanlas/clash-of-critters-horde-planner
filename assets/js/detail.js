@@ -98,8 +98,8 @@ export function openDetail(slug) {
             data-deployed="${!!(m && store.onBench(m.slug, player))}">${esc(n)}</span>`;
         }).join('')}</div></dd>
         <dt>Matchups</dt>
-        <dd>Strong against <b>${esc(chart.strongAgainst ?? '—')}</b>,
-            weak to <b>${esc(chart.weakTo ?? '—')}</b>.</dd>
+        <dd>Strong against <b>${esc(chart.strongAgainst ?? 'nothing')}</b>,
+            weak to <b>${esc(chart.weakTo ?? 'nothing')}</b>.</dd>
         ${t.etymology ? `<dt>Name</dt><dd>${esc(t.etymology)}</dd>` : ''}
         ${aliases.length ? `<dt>Also known as</dt><dd>${esc(aliases.join(', '))}</dd>` : ''}
         ${t.previousRole && t.previousRole !== 'Same' && t.previousRole !== 'None'
