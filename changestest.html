@@ -108,6 +108,42 @@ ok('the three directions account for every marked Tatari',
 ok('every marked Tatari has exactly one direction',
    [...state.changes.values()].every((c) => DIRECTIONS.includes(c.direction)));
 
+/*
+ * The arrows on changes.html, checked against the editorial call on the entry.
+ *
+ * movement() decides up-or-down from the numbers with one exception -- a longer
+ * interval is worse -- and colours the row green or red on that. If the game
+ * ever ships a stat where higher is worse and the word "interval" is not in it,
+ * every fragment of some buffed line will start reading red and nothing on the
+ * page would say so. This is what says so.
+ */
+const { movement } = await import('./assets/js/changes.js');
+const split = (l) => l.changes.flatMap((c) => {
+  const head = state.all.find((t) => t.name === l.line);
+  const skills = Object.values(head?.hordeSkills ?? {})
+    .map((s) => s.name).sort((a, b) => b.length - a.length);
+  const norm = (x) => x.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const name = skills.find((n) => norm(c).startsWith(norm(n)));
+  const rest = (name ? c.slice(name.length) : c).replace(/^\s*:\s*/, '');
+  return rest.split(/,\s+/);
+});
+
+const fragments = lines.flatMap((l) => split(l).map((p) => ({ dir: l.direction, line: l.line, p })));
+const unread = fragments.filter((f) => movement(f.p) === null);
+ok('every stat fragment has two readable numbers', unread.length === 0,
+   unread.map((f) => `${f.line}: ${f.p}`).join('; '));
+
+const wrongWay = fragments.filter((f) => f.dir !== 'adjusted'
+  && (movement(f.p) === 'up') !== (f.dir === 'buff'));
+ok('every arrow agrees with the direction on its entry', wrongWay.length === 0,
+   wrongWay.map((f) => `${f.line}: ${f.p}`).join('; '));
+
+const adjusted = lines.filter((l) => l.direction === 'adjusted')
+  .flatMap((l) => split(l).map(movement));
+ok('an adjusted line really does move both ways',
+   !adjusted.length || (adjusted.includes('up') && adjusted.includes('down')),
+   adjusted.join(', '));
+
 const counts = DIRECTIONS.map((d) => `${d} ${lines.filter((l) => l.direction === d).length}`).join(', ');
 out.innerHTML += `<div style="margin-top:12px">${pass} passed, ${fail} failed`
   + ` &mdash; ${lines.length} lines (${counts}) covering ${state.changes.size} of ${state.all.length} Tatari</div>`;

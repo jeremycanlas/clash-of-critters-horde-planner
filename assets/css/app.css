@@ -3990,23 +3990,32 @@ body.is-clean .clean-hint {
   background: var(--surface);
 }
 /*
- * The direction tints the whole edge, at 1px, rather than thickening one side.
+ * The card takes its element's colour, not its direction's.
  *
- * A 2px coloured border-left is the side-tab tell the project's own detector
- * flags and the craft floor bans outright, and it went in here before either
- * had a chance to catch it. All four sides at 1px says the same thing without
- * the badge-of-honour stripe, and the group heading above has already named the
- * direction in words anyway -- this is confirmation, not the announcement.
+ * Direction was here first and it was the wrong thing to spend the card on:
+ * every card inside a group already has the same one, so the tint repeated what
+ * the heading two lines up had said in words. Element is the fact that actually
+ * varies down the grid, and it is how players hold a roster in their heads --
+ * "my Water team" is a sentence somebody says, "my nerfed team" is not.
+ *
+ * Edge and a wash behind the header, both faint. An evolution line is one
+ * element throughout, so this is a property of the whole card rather than of
+ * any member, and the sprites carry the same hue at greater strength inside it.
  */
-.chline[data-patch="buff"]     { border-color: color-mix(in srgb, var(--ok) 34%, var(--line-soft)); }
-.chline[data-patch="nerf"]     { border-color: color-mix(in srgb, var(--danger) 34%, var(--line-soft)); }
-.chline[data-patch="adjusted"] { border-color: color-mix(in srgb, var(--text-dim) 34%, var(--line-soft)); }
+.chline { border-color: color-mix(in srgb, var(--type-color, var(--line)) 38%, var(--line-soft)); }
+.chline__head {
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--type-color, transparent) 9%, transparent),
+    transparent);
+  margin: calc(var(--s3) * -1) calc(var(--s3) * -1) var(--s2);
+  padding: var(--s3) var(--s3) var(--s2);
+  border-radius: var(--r-md) var(--r-md) 0 0;
+}
 
 .chline__head {
   display: flex; align-items: center; gap: var(--s2);
-  padding-bottom: var(--s2);
-  margin-bottom: var(--s2);
-  border-bottom: 1px solid var(--line-soft);
+  border-bottom: 1px solid color-mix(in srgb, var(--type-color, var(--line)) 26%, var(--line-soft));
 }
 .chline__arts { display: flex; gap: 3px; flex: none; }
 /* Small: the sprite is here to be recognised, not admired. Four at card size
@@ -4016,7 +4025,11 @@ body.is-clean .clean-hint {
   width: 34px; height: 34px;
   display: grid; place-items: center;
   border-radius: var(--r-sm);
-  background: color-mix(in srgb, var(--type-color, var(--line)) 14%, transparent);
+  /* 22%, up from 14%. On the page's own background 14% read as an empty slot
+     rather than as a tinted one, which mattered most on the cards whose sprites
+     had not loaded yet -- four grey squares and no clue what element they were. */
+  background: color-mix(in srgb, var(--type-color, var(--line)) 22%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--type-color, var(--line)) 30%, transparent);
 }
 .chline__art img { width: 100%; height: 100%; object-fit: contain; }
 .chline__tier {
@@ -4048,7 +4061,28 @@ body.is-clean .clean-hint {
   color: var(--text-dim); font-size: 9.5px; font-weight: 800;
   text-align: center; letter-spacing: .02em;
 }
-.chline__what { display: block; color: var(--text-dim); }
+/*
+ * One stat per row, each with its own verdict.
+ *
+ * The arrow is about whether the change helps you, not about which way the
+ * number went -- those differ for an interval, where a bigger number is worse.
+ * See movement() in changes.js for the rule and the check behind it.
+ */
+.chline__stats { margin: 2px 0 0; padding: 0; list-style: none; }
+.chstat {
+  display: flex; align-items: baseline; gap: 5px;
+  color: var(--text-dim); line-height: 1.45;
+}
+.chstat__mark {
+  flex: none;
+  width: 9px;
+  color: var(--text-mute); font-size: 10px; font-weight: 800; text-align: center;
+}
+.chstat[data-move="up"]   .chstat__mark { color: var(--ok); }
+.chstat[data-move="down"] .chstat__mark { color: var(--danger); }
+.chstat[data-move="up"]   .chstat__mark::after { content: "↑"; }
+.chstat[data-move="down"] .chstat__mark::after { content: "↓"; }
+.chstat__text { min-width: 0; }
 
 @media (max-width: 760px) {
   .changes__main { padding: var(--s4) var(--s3) var(--s6); }

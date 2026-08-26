@@ -17,6 +17,7 @@ import { load, state } from './data.js';
 import { applyPrefs } from './prefs.js';
 import { $, artHTML, esc } from './ui.js';
 
+// Safe on import: it only reads localStorage and writes to <html>.
 applyPrefs();
 
 /*
@@ -58,6 +59,36 @@ function levelOf(head, text) {
   return skills.find((s) => norm(text).startsWith(norm(s.name))) ?? null;
 }
 
+/*
+ * Whether one stat moved in your favour, from the numbers alone.
+ *
+ * Higher is better nearly everywhere here -- damage, chance, shield, heal, count
+ * -- so the rule is "up is good" with one documented exception: an interval or a
+ * cooldown getting longer is worse, and that reverses it.
+ *
+ * Checked rather than assumed. Run over all 95 stat fragments in the current
+ * file, this agrees with the editorial direction on the entry every time: every
+ * fragment of a buffed line reads favourable, every fragment of a nerfed line
+ * reads unfavourable, and Voltfawn -- the one adjusted line -- splits, which is
+ * exactly what "adjusted" was recording. If a future patch breaks that
+ * agreement, changestest.html says so rather than the page quietly lying.
+ *
+ * Anything without two readable numbers gets no verdict at all. The notes are
+ * prose and a guess here would be a coloured arrow pointing the wrong way.
+ */
+const LOWER_IS_BETTER = /\b(interval|cooldown)\b/i;
+
+export function movement(part) {
+  const [before, after] = part.split('→');
+  if (after === undefined) return null;
+  const num = (x) => { const m = x.match(/-?\d+(?:\.\d+)?/); return m ? parseFloat(m[0]) : null; };
+  const a = num(before);
+  const b = num(after);
+  if (a === null || b === null || a === b) return null;
+  const up = b > a;
+  return (LOWER_IS_BETTER.test(part) ? !up : up) ? 'up' : 'down';
+}
+
 /**
  * One evolution family, as a card.
  *
@@ -81,18 +112,33 @@ function line(entry) {
   const changes = (entry.changes ?? []).map((text) => {
     const skill = levelOf(head, text);
     const rest = skill ? text.slice(skill.name.length).replace(/^\s*:\s*/, '') : text;
+    /*
+     * One stat per line. The notes pack several into a sentence -- "Damage 160%
+     * -> 200%, extra bomb 40% -> 55%, Blind 30% -> 40%" -- and read as prose
+     * that way, which is the wrong shape for something scanned. Split on the
+     * comma and each number gets its own row and its own verdict.
+     */
+    const stats = rest.split(/,\s+/).map((part) => {
+      const move = movement(part);
+      return `
+        <li class="chstat" ${move ? `data-move="${move}"` : ''}>
+          <span class="chstat__mark" aria-hidden="true"></span>
+          <span class="chstat__text">${esc(part)}</span>
+        </li>`;
+    }).join('');
+
     return `
       <li class="chline__change">
         <span class="chline__skill">
           ${skill ? `<span class="chline__lv" title="Taught at horde level ${skill.level}"
-            >L${skill.level}</span>` : ''}${esc(skill ? skill.name : '')}
+            >L${skill.level}</span>` : ''}${esc(skill ? skill.name : text)}
         </span>
-        <span class="chline__what">${esc(rest)}</span>
+        <ul class="chline__stats">${stats}</ul>
       </li>`;
   }).join('');
 
   return `
-    <article class="chline" data-patch="${entry.direction}">
+    <article class="chline" data-patch="${entry.direction}" data-type="${head?.type ?? ''}">
       <header class="chline__head">
         <div class="chline__arts">${art}</div>
         <h3 class="chline__name">${esc(members.map((t) => t.name).join(' → ') || entry.line)}</h3>
@@ -139,10 +185,20 @@ function render(book) {
   }).join('');
 }
 
-await load();
-const book = await fetch('data/changes.json')
-  .then((r) => r.json())
-  // A copy without the file still renders the page and says so, the same way the
-  // drafter simply marks nothing.
-  .catch(() => ({ lines: [] }));
-render(book);
+/*
+ * Only render when this really is the page.
+ *
+ * movement() is exported so changestest.html can check its verdicts against the
+ * editorial direction on each entry, and importing a module runs everything at
+ * its top level. Without this guard the test page loaded the whole roster and
+ * then threw on the first element that only exists in changes.html.
+ */
+if ($('#changes-body')) {
+  await load();
+  const book = await fetch('data/changes.json')
+    .then((r) => r.json())
+    // A copy without the file still renders the page and says so, the same way
+    // the drafter simply marks nothing.
+    .catch(() => ({ lines: [] }));
+  render(book);
+}
