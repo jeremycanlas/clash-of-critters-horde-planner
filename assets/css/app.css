@@ -4212,36 +4212,34 @@ body.is-clean .clean-hint {
 .chipsblock__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; }
 
 /*
- * One row per chip, with the count drawn as fill rather than as a bar beside it.
+ * One row per chip: the chip, its name, the count, and the Tatari it means.
  *
- * The number is the answer and the fill is the glance: dragging a Tatari from
- * the front row to the back moves two of these at once, and a row that grows is
- * easier to catch out of the corner of your eye than a digit that changes. The
- * fill is a background rather than a pseudo-element with a width, so it cannot
- * end up a pixel out of step with the row it is inside.
+ * This used to draw the count as a fill across the row. The fill was easy to
+ * catch out of the corner of the eye while dragging, which was the argument for
+ * it, but it answered the wrong question -- "four of your six" still leaves you
+ * looking back at the field to see which four, and that is the whole decision.
  */
 .chipbar {
   position: relative;
   display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: baseline;
+  grid-template-columns: auto auto 1fr auto;
+  align-items: center;
   gap: 0 var(--s2);
-  padding: 5px var(--s2);
+  padding: 4px var(--s2);
   border: 1px solid var(--line-soft);
   border-radius: var(--r-sm);
-  background:
-    linear-gradient(to right,
-      color-mix(in srgb, var(--accent) 16%, transparent) 0 var(--fill, 0%),
-      transparent var(--fill, 0%)),
-    var(--surface-2);
   font-size: 12.5px;
 }
-.chipbar__name { font-weight: 600; color: var(--text); min-width: 0; }
+.chipbar__name {
+  font-weight: 600; color: var(--text); white-space: nowrap;
+}
 .chipbar__n { color: var(--text-dim); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .chipbar__n b { color: var(--text); }
 .chipbar__why {
-  grid-column: 1 / -1;
+  grid-column: 3;
+  justify-self: start;
   color: var(--text-mute); font-size: 11px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .chipbar.is-taken {
   border-color: color-mix(in srgb, var(--accent) 55%, var(--line));
@@ -4258,23 +4256,6 @@ body.is-clean .clean-hint {
   color: var(--accent-ink-on);
 }
 .chipbar.is-taken .chipbar__n { padding-right: 30px; }
-
-.chipsblock__split {
-  display: flex; flex-wrap: wrap; gap: var(--s1) var(--s2);
-  margin: var(--s2) 0 0;
-}
-.chipsplit {
-  padding: 2px var(--s2);
-  border-radius: 999px;
-  background: var(--surface-3);
-  font-size: 11px; color: var(--text-dim);
-}
-.chipsplit b { color: var(--text); font-variant-numeric: tabular-nums; }
-.chipsplit[data-type="Water"]     { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--water) 55%, transparent); }
-.chipsplit[data-type="Fire"]      { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--fire) 55%, transparent); }
-.chipsplit[data-type="Grass"]     { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--grass) 55%, transparent); }
-.chipsplit[data-type="Rock"]      { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--rock) 55%, transparent); }
-.chipsplit[data-type="Lightning"] { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--lightning) 55%, transparent); }
 
 /* ------------------------------------------------------------- the page */
 
@@ -4410,11 +4391,16 @@ body.is-clean .clean-hint {
  * thing carrying that. `object-fit: cover` because the crops are not all exactly
  * square -- Mission Reset sits alone on a row the screenshot clipped, so it is a
  * few pixels shorter than the other 48. */
-.chipbar {
-  grid-template-columns: auto 1fr auto;
-}
+/*
+ * One line, not two.
+ *
+ * The sprites started on a row of their own under the name, which read well and
+ * cost 66px a row -- ten rows of that made the field column 1854px tall and
+ * pushed the level-up plan below the roster on a desktop, which is a worse
+ * answer than any layout of this panel. On one line the sprites take the space
+ * the name does not want, and the row is 34px.
+ */
 .chipbar__art {
-  grid-row: 1 / 3;
   width: 26px; height: 26px;
   border-radius: var(--r-sm);
   object-fit: cover;
@@ -4435,3 +4421,85 @@ body.is-clean .clean-hint {
 /* The card is short when a chip has no score and no doubts, and a 46px icon
    beside two lines of text then hangs below them. */
 .chipcard { min-height: 74px; }
+
+/* Who a chip would actually touch.
+ *
+ * This replaced a bar filled to the fraction of the board a chip reaches. The
+ * bar answered "how much" and left you looking back at the field to find out
+ * which -- which is the question, since four Tatari can be the four carrying the
+ * run or the four you are about to bench. Faces answer it without the trip.
+ *
+ * The element ring is the same wash the field tokens use, so a row of Water
+ * sprites reads as Water at a glance and Water Form II needs no reading at all.
+ */
+.chipwho {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 3px;
+  min-width: 0;
+}
+.chipwho__art {
+  display: grid; place-items: center;
+  width: 26px; height: 26px;
+  border-radius: var(--r-sm);
+  background: var(--surface-3);
+  box-shadow: inset 0 0 0 1px var(--line-soft);
+}
+.chipwho__art img { width: 100%; height: 100%; object-fit: contain; }
+.chipwho__art[data-type="Water"]     { background: color-mix(in srgb, var(--water) 22%, var(--surface-3)); }
+.chipwho__art[data-type="Fire"]      { background: color-mix(in srgb, var(--fire) 22%, var(--surface-3)); }
+.chipwho__art[data-type="Grass"]     { background: color-mix(in srgb, var(--grass) 22%, var(--surface-3)); }
+.chipwho__art[data-type="Rock"]      { background: color-mix(in srgb, var(--rock) 22%, var(--surface-3)); }
+.chipwho__art[data-type="Lightning"] { background: color-mix(in srgb, var(--lightning) 22%, var(--surface-3)); }
+.chipwho__more {
+  padding: 0 5px;
+  font-size: 11px; font-weight: 650; color: var(--text-mute);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The panel row, without the fill it used to carry. */
+.chipbar {
+  background: var(--surface-2);
+  padding: var(--s2);
+}
+/* Takes whatever the name leaves, and scrolls rather than wrapping if a big
+   board brings more sprites than the row can hold. */
+.chipbar .chipwho {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+  justify-content: flex-end;
+}
+.chipbar .chipwho::-webkit-scrollbar { display: none; }
+.chipbar .chipwho__art { flex: none; width: 22px; height: 22px; }
+/* Nothing to draw, so the row says what it was looking for instead, and steps
+   back rather than sitting at the same weight as one that found something. */
+.chipbar.is-empty { opacity: .62; }
+
+.chipcard__score {
+  display: flex; flex-direction: column; gap: var(--s2);
+}
+.chipcard__count { margin: 0; }
+.chipcard__score[data-empty="true"] .chipwho { display: none; }
+
+/* The Form chips get the same row as the board chips.
+ *
+ * They were a line of pills reading "Fire 1  Grass 1  Lightning 1", which is the
+ * element split the summary already shows and not an answer about chips at all.
+ * A Form chip touches every Tatari of its element, so the sprites are the
+ * answer -- and there is one Form chip per element, so a row per element is a
+ * row per chip, exactly like the six above it. */
+.chipsblock__head--sub { margin-top: var(--s3); }
+
+/* Stands in for the chip icon on the left of a Form row: the element's own
+   colour, rather than one of the fifteen tile crops, since a single row is
+   speaking for all three tiers of that element at once. */
+.chipbar__elem {
+  width: 26px; height: 26px;
+  border-radius: var(--r-sm);
+  align-self: center;
+  box-shadow: inset 0 0 0 1px var(--line-soft);
+}
+.chipbar__elem[data-type="Water"]     { background: color-mix(in srgb, var(--water) 55%, var(--surface-3)); }
+.chipbar__elem[data-type="Fire"]      { background: color-mix(in srgb, var(--fire) 55%, var(--surface-3)); }
+.chipbar__elem[data-type="Grass"]     { background: color-mix(in srgb, var(--grass) 55%, var(--surface-3)); }
+.chipbar__elem[data-type="Rock"]      { background: color-mix(in srgb, var(--rock) 55%, var(--surface-3)); }
+.chipbar__elem[data-type="Lightning"] { background: color-mix(in srgb, var(--lightning) 55%, var(--surface-3)); }

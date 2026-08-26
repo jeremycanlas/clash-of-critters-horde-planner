@@ -119,6 +119,30 @@ ok('a tie for smallest is admitted, not resolved', !!scoreOne(chip('Weakest Link
 eq('the split is biggest first', elementSplit(mixed).map((e) => e.type).join(','), 'Water,Fire,Grass');
 eq('the split totals the board', elementSplit(mixed).reduce((t, e) => t + e.count, 0), mixed.length);
 
+// --------------------------------------------------------- who, not just how many
+/*
+ * Every score names the Tatari it is talking about, and the page draws those as
+ * sprites instead of a bar. The number and the faces come from the same filter,
+ * so they cannot disagree -- these checks are here to keep it that way, because
+ * the failure if they ever do is a card reading "4 of your 6" above three
+ * sprites, which looks like a rendering bug and is a counting one.
+ */
+const scored = book.chips.map((c) => scoreOne(c, mixed)).filter(Boolean);
+ok('every score names who it means', scored.every((sc) => Array.isArray(sc.who)));
+ok('and names exactly as many as it counted', scored.every((sc) => sc.who.length === sc.n));
+ok('a Form chip names only that element',
+   scoreOne(chip('Fire Form II'), mixed).who.every((p) => p.type === 'Fire'));
+ok('a board chip names only Tatari that pass its own rule',
+   scoreOne(chip('Rear Guard'), board([at(4, 0), at(5, 3), at(0, 0)]))
+     .who.every((p) => Math.floor(p.cell / 6) >= 4));
+eq('and leaves out the ones that do not',
+   scoreOne(chip('Rear Guard'), board([at(4, 0), at(5, 3), at(0, 0)])).who.length, 2);
+ok('a chip that finds nothing names nobody',
+   scoreOne(chip('Rock Form II'), mixed).who.length === 0);
+// The one that reads a derived group rather than a fixed one.
+ok('Weakest Link names the element it picked',
+   scoreOne(chip('Weakest Link'), mixed).who.every((p) => p.type === 'Grass'));
+
 // ----------------------------------------------------------- no answer
 // Twenty-eight chips read nothing about the board. They must return null rather
 // than 0, or the page prints "0 of your 6" beside an income chip.

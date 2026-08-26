@@ -19,7 +19,7 @@
 import { load, state } from './data.js';
 import { applyPrefs } from './prefs.js';
 import * as store from './store.js';
-import { $, esc } from './ui.js';
+import { $, artHTML, esc } from './ui.js';
 
 const { COLS, ROWS } = store;
 
@@ -107,7 +107,7 @@ export function boardFor(player) {
   return store.placedFor(player)
     .map(({ cell, slug }) => {
       const t = state.bySlug.get(slug);
-      return t ? { cell, slug, name: t.name, type: t.type } : null;
+      return t ? { cell, slug, name: t.name, type: t.type, t } : null;
     })
     .filter(Boolean);
 }
@@ -132,25 +132,23 @@ export function elementSplit(board) {
 export function scoreOne(chip, board) {
   const rule = BOARD_RULES[chip.name];
   if (rule) {
-    return {
-      n: board.filter((p) => rule.test(p, board)).length,
-      of: board.length,
-      why: rule.why,
-      assumes: rule.assumes ?? null,
-    };
+    const who = board.filter((p) => rule.test(p, board));
+    return { n: who.length, of: board.length, who, why: rule.why, assumes: rule.assumes ?? null };
   }
 
   if (chip.element) {
-    const n = board.filter((p) => p.type === chip.element).length;
-    return { n, of: board.length, why: `${chip.element} Tatari`, assumes: null };
+    const who = board.filter((p) => p.type === chip.element);
+    return { n: who.length, of: board.length, who, why: `${chip.element} Tatari`, assumes: null };
   }
 
   if (chip.name === 'Weakest Link') {
     const split = elementSplit(board);
     const least = split[split.length - 1];
+    const who = least ? board.filter((p) => p.type === least.type) : [];
     return {
-      n: least?.count ?? 0,
+      n: who.length,
       of: board.length,
+      who,
       why: least ? `${least.type}, your smallest element` : 'your smallest element',
       assumes: split.length > 1 && least && split[split.length - 2].count === least.count
         ? 'Two of your elements are tied for smallest, and the tooltip does not say which one wins.'
@@ -235,6 +233,30 @@ export function loadChips() {
   return loading;
 }
 
+/**
+ * The Tatari a score is talking about, as sprites.
+ *
+ * A bar answered "how much of your board" and this answers "which ones", which
+ * is the question actually being asked. Deciding under an offer, "Rear Guard: 4
+ * of 6" still leaves you looking back at the field to work out whether those
+ * four are the ones you care about; four faces do not.
+ *
+ * Capped, because Sandbox lifts the deployment limit and a 36-Tatari board would
+ * otherwise draw 36 sprites on every one of 21 cards. The count beside them is
+ * the whole number either way, so the cap never hides the answer.
+ */
+const SHOWN = 8;
+
+function whoRow(score) {
+  if (!score.who?.length) return '';
+  const shown = score.who.slice(0, SHOWN);
+  const rest = score.who.length - shown.length;
+  return `<span class="chipwho">${
+    shown.map((p) => `<span class="chipwho__art" data-type="${esc(p.type)}" title="${esc(p.name)}"
+      >${p.t ? artHTML(p.t, { priority: 'low' }) : esc(p.name)}</span>`).join('')
+  }${rest > 0 ? `<span class="chipwho__more">+${rest}</span>` : ''}</span>`;
+}
+
 /* ------------------------------------------------------- the drafter panel */
 
 /**
@@ -275,20 +297,27 @@ export function renderChips() {
     </h3>
     <ul class="chipsblock__list">
       ${reads.map(({ chip, score }) => `
-        <li class="chipbar${mine.includes(chip.name) ? ' is-taken' : ''}"
-            style="--fill:${board.length ? Math.round((score.n / board.length) * 100) : 0}%"
-            title="${esc(chip.text)}">
+        <li class="chipbar${mine.includes(chip.name) ? ' is-taken' : ''}${
+          score.n === 0 ? ' is-empty' : ''}" title="${esc(chip.text)}">
           <img class="chipbar__art" src="${esc(iconFor(chip))}" alt="" loading="lazy" decoding="async">
           <span class="chipbar__name">${esc(chip.name)}</span>
+          ${score.n ? whoRow(score) : `<span class="chipbar__why">${esc(score.why)}</span>`}
           <span class="chipbar__n"><b>${score.n}</b> of ${score.of}</span>
-          <span class="chipbar__why">${esc(score.why)}</span>
         </li>`).join('')}
     </ul>
-    <p class="chipsblock__split">
-      ${split.map((e) => `<span class="chipsplit" data-type="${esc(e.type)}"
-        title="${esc(`${e.type} Form is worth ${e.count} of your ${board.length}`)}"
-        >${esc(e.type)} <b>${e.count}</b></span>`).join('')}
-    </p>
+    <h3 class="chipsblock__head chipsblock__head--sub">
+      Form chips
+      <span class="chipsblock__sub">one per element, 20/30/40% by tier</span>
+    </h3>
+    <ul class="chipsblock__list">
+      ${split.map((e) => `
+        <li class="chipbar" title="${esc(`${e.type} Form gives every one of these a DMG Boost`)}">
+          <span class="chipbar__elem" data-type="${esc(e.type)}" aria-hidden="true"></span>
+          <span class="chipbar__name">${esc(e.type)} Form</span>
+          ${whoRow({ who: board.filter((p) => p.type === e.type) })}
+          <span class="chipbar__n"><b>${e.count}</b> of ${board.length}</span>
+        </li>`).join('')}
+    </ul>
     <p class="chipsblock__more">
       <a href="chips.html">All 49 chips${mine.length ? ` &middot; ${mine.length} of ${PER_PLAYER} kept` : ''} &rarr;</a>
     </p>`;
@@ -299,9 +328,10 @@ export function renderChips() {
 /** One chip as a card. `score` is null for the twenty-eight that read nothing. */
 function card(chip, score, isTaken) {
   const scoreHTML = !score ? '' : `
-    <p class="chipcard__score" data-empty="${score.n === 0}">
-      <b>${score.n}</b> of your ${score.of} &mdash; ${esc(score.why)}
-    </p>`;
+    <div class="chipcard__score" data-empty="${score.n === 0}">
+      <p class="chipcard__count"><b>${score.n}</b> of your ${score.of} &mdash; ${esc(score.why)}</p>
+      ${whoRow(score)}
+    </div>`;
 
   /* The two readings this file guesses at, and the four it suspects reach a
      co-op partner, are printed on the card rather than kept in a comment. A
