@@ -4889,22 +4889,67 @@ body.is-clean #chipbench { display: none !important; }
 .roster[data-chip-view="grid"] { grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); }
 .roster[data-chip-view="grid"] .card--chip {
   display: grid;
-  grid-template-rows: 1fr auto;
+  /*
+   * The columns have to be reset, not just the rows. The list lays the card out
+   * as `auto 1fr auto` -- sprite, body, rank -- and overriding only the rows
+   * left the tile in that first `auto` column, where `width: 100%` resolves
+   * against a column sized to its contents: the icon came out 0x0 and the whole
+   * card was 57px of text with no picture in it.
+   */
+  grid-template-columns: 1fr;
+  grid-template-rows: auto auto;
   gap: 2px;
   padding: var(--s1);
   text-align: center;
 }
-.roster[data-chip-view="grid"] .chiprow__art { width: 100%; height: auto; aspect-ratio: 1; }
+.roster[data-chip-view="grid"] .chiprow__art {
+  width: 100%; height: auto; aspect-ratio: 1;
+  border-radius: var(--r-sm);
+}
 .roster[data-chip-view="grid"] .chiprow__text,
 .roster[data-chip-view="grid"] .chipwho,
 .roster[data-chip-view="grid"] .chiprow__none,
 .roster[data-chip-view="grid"] .chiptype { display: none; }
+/*
+ * Name over tier, not beside it.
+ *
+ * On one row the tier pill took 23px of an 80px card and left the name 52px --
+ * about nine characters, so "Photosynthesis III" read "Photosynt". Stacked, the
+ * name gets the whole width and two lines, which fits every name in the file.
+ * The fixed height on it keeps the tiles level: a grid row is as tall as its
+ * tallest card, so one two-line name would otherwise pad out its whole row.
+ */
 .roster[data-chip-view="grid"] .chiprow__head {
-  justify-content: center; gap: 4px;
-  font-size: 11px;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 10.5px;
+}
+.roster[data-chip-view="grid"] .chiprow__body { min-width: 0; }
+/*
+ * The pick number goes in the corner rather than in the flow.
+ *
+ * In the list it is a third grid column and costs nothing. Here the card is a
+ * single column, so it became a third row -- and only on the chips you kept,
+ * which made those rows 16px taller than their neighbours and the whole grid
+ * step up and down as you picked things.
+ */
+.roster[data-chip-view="grid"] .card--chip { position: relative; }
+.roster[data-chip-view="grid"] .card__rank {
+  position: absolute; top: 3px; left: 3px;
+  box-shadow: 0 0 0 2px var(--surface-2);
 }
 .roster[data-chip-view="grid"] .chiprow__head b {
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;
+  width: 100%;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  max-width: 100%;
+  min-height: 2.4em;
+  line-height: 1.2;
+  text-align: center;
+  white-space: normal;
 }
 
 /*

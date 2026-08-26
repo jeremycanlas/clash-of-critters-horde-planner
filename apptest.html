@@ -619,6 +619,33 @@ await runGroup('the chips tab in the roster', async () => {
      D.defaultView.getComputedStyle(gridCard.querySelector('.chiptier')).display !== 'none');
   ok('and the tiles are narrow again', gridCard.getBoundingClientRect().width < 140,
      `${Math.round(gridCard.getBoundingClientRect().width)}px`);
+
+  /*
+   * A tile is a picture and a name. Both were briefly neither: overriding only
+   * the rows left the icon in the list's first `auto` column, where width: 100%
+   * resolves against a column sized to its contents, so it measured 0x0 and the
+   * card was text with no picture in it. The name meanwhile had 52px of an 80px
+   * card because the tier pill sat beside it, which is nine characters --
+   * "Photosynthesis III" read "Photosynt".
+   */
+  const tile = gridCard.querySelector('.chiprow__art').getBoundingClientRect();
+  ok('the tile actually has a picture on it', tile.width > 40 && tile.height > 40,
+     `${Math.round(tile.width)}x${Math.round(tile.height)}`);
+  const gridName = gridCard.querySelector('.chiprow__head b');
+  ok('every tile is named', chips().every((c) => c.querySelector('.chiprow__head b')?.textContent.trim()));
+  ok('and the name is not cut off', gridName.scrollHeight <= gridName.clientHeight + 1,
+     `${gridName.textContent}: ${gridName.scrollHeight} into ${gridName.clientHeight}`);
+  ok('the name gets most of the tile rather than sharing a line with the tier',
+     gridName.getBoundingClientRect().width > gridCard.getBoundingClientRect().width * 0.7,
+     `${Math.round(gridName.getBoundingClientRect().width)} of ${Math.round(gridCard.getBoundingClientRect().width)}`);
+
+  /* Keeping one must not make its row taller than its neighbours. */
+  const before = new Set(chips().map((c) => Math.round(c.getBoundingClientRect().height)));
+  await click($('.card--chip'), 400);
+  const after = new Set(chips().map((c) => Math.round(c.getBoundingClientRect().height)));
+  eq('keeping a chip does not shove its row down', after.size, before.size);
+  await click($('.card--chip'), 400);
+
   eq('the choice is remembered', localStorage.getItem('coc.chips.view'), 'grid');
 
   await click(view('list'), 420);
