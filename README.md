@@ -520,6 +520,27 @@ type and role icons). The normalizer then trims and re-frames every image so the
 all sit in the same box at the same apparent size; it needs Pillow
 (`python -m pip install Pillow`) and re-running it is a no-op.
 
+### Checking it still works
+
+Two self-checking pages, opened in a browser against the served folder. Neither
+needs a runner, a framework or a dependency; both go red in the tab title when
+something is wrong.
+
+```
+http://localhost:8123/apptest.html      the app, driven like a person drives it
+http://localhost:8123/changestest.html  data/changes.json against the roster
+```
+
+`apptest.html` loads the real `index.html` and `changes.html` in frames, clicks
+the real controls and reads what the pages rendered. It is written that way on
+purpose: the bugs this project actually ships are a CSS escape that draws "BE"
+instead of an arrow, a border radius that turns a rect back into a circle, and a
+chip whose children stack down a column and spill into the row below. A test that
+imports a module and checks its return value passes all three.
+
+It restores whatever was in `localStorage` when it finishes, so running it never
+costs you the formation you had open.
+
 ## Project layout
 
 ```

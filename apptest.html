@@ -1,0 +1,378 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Horde Drafter: end-to-end checks</title>
+<body style="font:13px/1.5 ui-monospace,monospace;background:#12141a;color:#e7eaf1;margin:0">
+<!--
+  Report on the left, the page under test on the right, both actually visible.
+  Two arrangements failed before this one for the same underlying reason: an
+  iframe parked at left:-3000px, and an iframe covered by an opaque report
+  panel, are both throttled by the browser as not-visible, and the drafter's
+  boot never finished inside the timeout. Occluded is the same as off-screen as
+  far as rendering priority goes. Side by side, it is a normal frame.
+-->
+<div style="display:flex;height:100vh">
+  <div style="flex:0 0 46%;overflow:auto;padding:16px;box-sizing:border-box">
+    <h1 style="font:600 15px system-ui;margin:0 0 4px">End-to-end checks</h1>
+    <p id="head" style="margin:0 0 12px;color:#a3aab9">starting…</p>
+    <div id="log"></div>
+  </div>
+  <div id="stage" style="flex:1 1 auto;position:relative;border-left:1px solid #2e3340"></div>
+</div>
+
+<!--
+  The real pages, driven the way a person drives them.
+
+  Everything here clicks a control that exists on the shipped page and then reads
+  what the page rendered. Nothing imports a module and asserts against its return
+  value: this session produced four bugs that a unit test of that kind would have
+  passed clean -- a CSS escape that shipped "BE" instead of a caret glyph, a
+  radius that turned a rect back into a circle, a word-boundary written as a
+  literal backspace byte, and a chip whose three children stacked down a column
+  and spilled into the row below. All four were only visible in a rendered page.
+
+  changestest.html stays as it is and checks the data file against the roster.
+  This checks that the app built on top of it actually works.
+-->
+
+
+<script type="module">
+const out = document.getElementById('log');
+let pass = 0, fail = 0, suite = '';
+
+const group = (name) => {
+  suite = name;
+  out.insertAdjacentHTML('beforeend',
+    `<div style="margin:12px 0 2px;color:#ffc93c;font-weight:700">${name}</div>`);
+};
+
+/*
+ * Each group is sealed off from the others.
+ *
+ * A thrown error used to end the whole run at that point, so one broken thing
+ * hid every check after it -- proving that out cost a full pass, because a
+ * deliberately broken counter took the update-page checks down with it and they
+ * were never reported at all. A suite is most useful when something is broken,
+ * which is exactly when it must keep going.
+ */
+const runGroup = async (name, body) => {
+  group(name);
+  try { await body(); } catch (err) {
+    fail++;
+    out.insertAdjacentHTML('beforeend',
+      `<div style="color:#f0654f">  FAIL ${name} threw — ${err.message}</div>`);
+  }
+};
+const ok = (name, cond, detail) => {
+  if (cond) { pass++; out.insertAdjacentHTML('beforeend', `<div style="color:#55c98a">  ok   ${name}</div>`); }
+  else {
+    fail++;
+    out.insertAdjacentHTML('beforeend',
+      `<div style="color:#f0654f">  FAIL ${name}${detail ? `<div style="padding-left:7ch;color:#a3aab9">${detail}</div>` : ''}</div>`);
+  }
+};
+const eq = (name, got, want) => ok(name, Object.is(got, want), `got ${JSON.stringify(got)}, wanted ${JSON.stringify(want)}`);
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+/* Waits for the page to actually settle rather than for a guessed number of
+   milliseconds, which is what made the earlier hand-run checks flaky. */
+const until = async (test, what, ms = 25000) => {
+  const stop = Date.now() + ms;
+  while (Date.now() < stop) { if (test()) return true; await sleep(50); }
+  throw new Error(`timed out waiting for ${what}`);
+};
+
+/*
+ * The app persists to localStorage, and this page shares its origin. Snapshot
+ * everything and put it back at the end, so running the checks never costs
+ * somebody the formation they had open.
+ */
+const saved = { ...localStorage };
+
+/* Built rather than written into the markup, so the second frame the checks
+   need later can be made the same way and dropped into the same stage. */
+const stage = document.getElementById('stage');
+const frameFor = (src) => {
+  const f = document.createElement('iframe');
+  /*
+   * The load event, captured before src is set, is the only honest signal that
+   * the document inside is the one asked for.
+   *
+   * A fresh iframe's contentDocument is about:blank, and about:blank reports
+   * readyState "complete" the instant you look at it. Waiting on readyState and
+   * then holding onto that document meant every check ran against a blank page
+   * that would never grow a roster, while the real one loaded fine beside it --
+   * which is exactly how it looked: 230 cards on screen, and a timeout.
+   */
+  f.ready = new Promise((resolve) => f.addEventListener('load', resolve, { once: true }));
+  f.src = src;
+  f.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;border:0';
+  stage.append(f);
+  return f;
+};
+const app = frameFor('index.html');
+let D;                                    // the drafter's document
+
+const $ = (sel) => D.querySelector(sel);
+const $$ = (sel) => [...D.querySelectorAll(sel)];
+const cards = () => $$('.panel--roster .card').length;
+const click = async (el, settle = 260) => { el.click(); await sleep(settle); };
+const chipFor = (sel, value) => $(`${sel}[data-value="${value}"]`);
+/* Shared across sealed groups, so they cannot be const inside one of them. Each
+   is filled by the group that discovers it and read by the ones after. */
+let total = 0;
+let caret = () => null;
+let marks = [];
+
+const reset = async () => {
+  await click($$('button').find((b) => /^reset$/i.test(b.textContent.trim())));
+};
+
+// Each group runs sealed off from the others; see runGroup.
+  // ---------------------------------------------------------------- boot
+await runGroup('boot', async () => {
+  await app.ready;
+  D = app.contentDocument;
+  await until(() => D.querySelectorAll('.panel--roster .card').length > 0, 'the roster to render');
+
+  total = cards();
+  ok('the roster renders every Tatari', total > 200, `${total} cards`);
+  eq('the count in the heading agrees', $('#roster-count').textContent.trim(), String(total));
+  ok('the count is a live region for screen readers',
+     $('#roster-count').getAttribute('aria-live') === 'polite');
+
+  // ------------------------------------------------------- plain filters
+});
+await runGroup('type, role and tier filters', async () => {
+  await click(chipFor('.chip--type', 'Water'));
+  const water = cards();
+  ok('an element chip narrows the roster', water > 0 && water < total, `${water} of ${total}`);
+  ok('the heading says "n of total"', $('#roster-count').textContent.includes('of'));
+  eq('the pressed chip says so', chipFor('.chip--type', 'Water').getAttribute('aria-pressed'), 'true');
+
+  await click(chipFor('.chip--tier', '2'));
+  const waterT2 = cards();
+  ok('filters intersect rather than replace', waterT2 > 0 && waterT2 < water, `${waterT2} of ${water}`);
+
+  await reset();
+  eq('reset restores every card', cards(), total);
+  ok('reset unpresses every chip', $$('.chip[aria-pressed="true"]').length === 0);
+
+  // ------------------------------------------------------------- search
+});
+await runGroup('search', async () => {
+  const box = $('input[placeholder*="Search"]');
+  box.value = 'frost';
+  box.dispatchEvent(new D.defaultView.Event('input', { bubbles: true }));
+  await sleep(320);
+  const found = cards();
+  ok('search narrows the roster', found > 0 && found < total, `${found} for "frost"`);
+  /*
+   * Not "every name contains the word". The box searches name, animal, nickname
+   * and skill text, so Stoodbeak is a correct hit on "frost" -- its skill is
+   * called Frostbust. Asserting name-only matching failed the app for doing
+   * exactly what its own placeholder promises.
+   */
+  const names = $$('.panel--roster .card__name').map((n) => n.textContent);
+  ok('a name match is included', names.includes('Frostnip'), names.join(', '));
+  ok('something unrelated is excluded', !names.includes('Zapup'), names.join(', '));
+  await reset();
+  eq('reset clears the search box', box.value, '');
+
+  // ------------------------------------------------------ effect filters
+});
+await runGroup('effect groups, level ceilings and named effects', async () => {
+  caret = (g) => $(`.fxcaret[data-group="${g}"]`);
+  ok('each effect group has a caret', ['heal', 'buff', 'debuff'].every((g) => caret(g)));
+
+  await click(caret('debuff'), 340);
+  eq('the caret reports itself open', caret('debuff').getAttribute('aria-expanded'), 'true');
+  const named = $$('.chip--fxtype');
+  ok('opening a group reveals its named effects', named.length > 5, `${named.length} chips`);
+  ok('focus follows the disclosure',
+     D.activeElement?.classList.contains('chip'), D.activeElement?.className);
+
+  const stun = $('.chip--fxtype[data-type="Stun"]');
+  const stunSays = Number(stun.querySelector('b').textContent);
+  await click(stun, 340);
+  eq('pressing a named effect finds exactly what its count promised', cards(), stunSays);
+
+  await click(stun, 340);
+  eq('pressing it again releases it', cards(), total);
+
+  // the ceiling
+  const budget = (v) => $(`.chip--budget[data-budget="${v}"]`);
+  /* Scoped: the patch chips are a radio group as well, so an unscoped count of
+     [role=radio] is seven and this used to fail for the wrong reason. */
+  ok('the ceiling is a radio group',
+     !!$('.chip--budget')?.closest('[role="radiogroup"]')
+     && $$('.chip--budget[role="radio"]').length === 4);
+  eq('exactly one of them is tabbable', $$('.chip--budget').filter((c) => c.tabIndex >= 0).length, 1);
+
+  await click(budget(0), 340);
+  eq('choosing a ceiling checks it', budget(0).getAttribute('aria-checked'), 'true');
+  const stunAtStart = Number($('.chip--fxtype[data-type="Stun"]').querySelector('b').textContent);
+  ok('a ceiling changes what the counts say', stunAtStart < stunSays, `${stunAtStart} vs ${stunSays}`);
+  await click($('.chip--fxtype[data-type="Stun"]'), 340);
+  eq('and the roster agrees with the new count', cards(), stunAtStart);
+
+  budget(0).dispatchEvent(new D.defaultView.KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+  await sleep(340);
+  eq('arrow keys move the ceiling', budget(3).getAttribute('aria-checked'), 'true');
+  eq('and only one stays checked', $$('.chip--budget[aria-checked="true"]').length, 1);
+
+  await reset();
+  eq('reset clears the ceiling', $$('.chip--budget[aria-checked="true"]').length, 0);
+  eq('reset clears the named effect', cards(), total);
+
+  // ------------------------------------------------------- patch filters
+});
+await runGroup('what the update changed', async () => {
+  const patchChips = $$('.chip--changed');
+  ok('a chip per direction that has entries', patchChips.length > 0 && patchChips.length <= 3);
+  ok('they are radios, not toggles',
+     patchChips.every((c) => c.getAttribute('role') === 'radio'));
+  eq('exactly one is tabbable', patchChips.filter((c) => c.tabIndex >= 0).length, 1);
+
+  /*
+   * Re-queried every time, never held. Choosing a direction redraws the whole
+   * row -- that is how the roving tabindex moves -- so a node captured before
+   * the first click is detached by the second, and clicking a detached node
+   * does nothing at all. Held nodes made two directions silently report the
+   * first one's numbers.
+   */
+  const directions = patchChips.map((c) => c.dataset.changed);
+  const patchChip = (dir) => $(`.chip--changed[data-changed="${dir}"]`);
+
+  for (const dir of directions) {
+    const says = Number(patchChip(dir).querySelector('b').textContent);
+    await click(patchChip(dir), 340);
+    eq(`${dir}: the roster matches the count on the chip`, cards(), says);
+    ok(`${dir}: every card shown carries that mark`,
+       $$('.panel--roster .card').every((c) => c.querySelector('.card__patch')?.dataset.patch === dir));
+    eq(`${dir}: choosing it unchooses the others`,
+       $$('.chip--changed[aria-checked="true"]').length, 1);
+  }
+  await click(patchChip(directions.at(-1)), 340);
+  eq('pressing the chosen one clears it', cards(), total);
+
+  /*
+   * The check that catches a broken facet, which the loop above cannot.
+   *
+   * With nothing else set, a count computed against the other filters and a
+   * count computed against the whole roster are the same number, so removing the
+   * faceting entirely still passes. It only shows up once something else is
+   * narrowing: press an element first, and every chip has to have adjusted.
+   * Verified by deliberately breaking countIf -- the loop above stayed green and
+   * this went red.
+   */
+  await click(chipFor('.chip--type', 'Water'), 300);
+  const withWater = cards();
+  for (const dir of directions) {
+    const says = Number(patchChip(dir).querySelector('b').textContent);
+    ok(`${dir}: its count narrowed with the element filter`, says < Number(
+      // the unfiltered figure, recovered by reading the mark on every card
+      $$('.card__patch').filter((m) => m.dataset.patch === dir).length) || says <= withWater,
+       `chip says ${says}, roster holds ${withWater}`);
+    await click(patchChip(dir), 340);
+    eq(`${dir}: the count still matches once an element is filtered too`, cards(), says);
+    await click(patchChip(dir), 340);
+  }
+
+  // and the same invariant on a named effect
+  if (caret('debuff').getAttribute('aria-expanded') !== 'true') await click(caret('debuff'), 340);
+  const slow = $('.chip--fxtype[data-type="Slow"]');
+  const slowSays = Number(slow.querySelector('b').textContent);
+  await click(slow, 340);
+  eq('a named effect also counts against the other filters', cards(), slowSays);
+  await reset();
+  eq('reset clears all of it', cards(), total);
+
+  const seeAll = $('.chips__seeall');
+  ok('there is a way through to the whole update', !!seeAll && seeAll.getAttribute('href') === 'changes.html');
+
+  // -------------------------------------------------- markers on cards
+});
+await runGroup('markers on the cards', async () => {
+  marks = $$('.card__patch');
+  ok('the roster marks what the update touched', marks.length > 0, `${marks.length} marked`);
+  ok('every mark names a direction we render',
+     marks.every((m) => ['buff', 'nerf', 'adjusted'].includes(m.dataset.patch)));
+  ok('every mark draws a glyph', marks.every((m) => (m.dataset.glyph ?? '').length === 1),
+     marks.map((m) => m.dataset.glyph).filter((g) => (g ?? '').length !== 1).join(' '));
+  ok('a mark carries the numbers in its tooltip',
+     marks.every((m) => (m.title ?? '').includes('→')), marks[0]?.title);
+  /* The bug this catches: a badge that mimics the type and role badges beside
+     it. Those are circles; this must not be one. */
+  ok('the mark is not another circle in a row of circles',
+     !/50%/.test(D.defaultView.getComputedStyle(marks[0]).borderRadius),
+     D.defaultView.getComputedStyle(marks[0]).borderRadius);
+  ok('no badge is drawn over the artwork', $$('.panel--roster .card').slice(0, 60).every((c) => {
+    const img = c.querySelector('.card__art img');
+    if (!img) return true;
+    const art = img.getBoundingClientRect();
+    return [...c.querySelectorAll('.card__fx, .card__patch')].every((b) => {
+      const r = b.getBoundingClientRect();
+      return r.bottom <= art.top + 1 || r.top >= art.bottom - 1;
+    });
+  }));
+
+  // ------------------------------------------------- glyphs actually draw
+});
+await runGroup('glyphs render, not tofu', async () => {
+  const drawn = (el, pseudo) => {
+    const c = D.defaultView.getComputedStyle(el, pseudo).content;
+    return c && c !== 'none' && c !== 'normal' && !/^"\\?[0-9a-fA-F]{2,6}"$/.test(c);
+  };
+  ok('the effect carets draw an arrow, not an escape', drawn(caret('heal'), '::after'),
+     D.defaultView.getComputedStyle(caret('heal'), '::after').content);
+  ok('the patch marks draw their glyph', drawn(marks[0], '::after'),
+     D.defaultView.getComputedStyle(marks[0], '::after').content);
+
+  // ------------------------------------------------------ the whole update
+});
+await runGroup('the what-changed page', async () => {
+  app.style.display = 'none';            // free the stage for the second page
+  const frame = frameFor('changes.html');
+  await frame.ready;
+  const C = frame.contentDocument;
+  await until(() => C.querySelectorAll('.chline').length > 0, 'the update page');
+
+  ok('the date is in the header', (C.querySelector('#changes-patch')?.textContent ?? '').length > 0);
+  ok('it opens with what changed about the mode', !!C.querySelector('#changes-mode .chmode__list li'));
+  ok('there is a card per evolution line', C.querySelectorAll('.chline').length > 10);
+  ok('every card names its element',
+     [...C.querySelectorAll('.chline')].every((c) => c.dataset.type));
+  ok('every skill says which level teaches it',
+     [...C.querySelectorAll('.chline__skill')].every((s) => s.querySelector('.chline__lv')));
+  const stats = [...C.querySelectorAll('.chstat')];
+  ok('each stat is on its own row', stats.length > C.querySelectorAll('.chline__change').length);
+  ok('every stat row reaches a verdict',
+     stats.every((s) => ['up', 'down'].includes(s.dataset.move)),
+     stats.filter((s) => !s.dataset.move).map((s) => s.textContent.trim()).join(' | '));
+  /*
+   * The check that would have caught the backspace-byte regex: a buffed line
+   * whose rows read red, or a nerfed line whose rows read green, means the
+   * favourability rule has broken and the page is confidently lying.
+   */
+  const wrong = [...C.querySelectorAll('.chgroup[data-patch="buff"] .chstat[data-move="down"]')]
+    .concat([...C.querySelectorAll('.chgroup[data-patch="nerf"] .chstat[data-move="up"]')]);
+  ok('no arrow disagrees with the group it sits in', wrong.length === 0,
+     wrong.map((s) => s.textContent.trim()).join(' | '));
+  ok('the adjusted group really does move both ways',
+     !C.querySelector('.chgroup[data-patch="adjusted"]')
+     || (C.querySelector('.chgroup[data-patch="adjusted"] .chstat[data-move="up"]')
+       && C.querySelector('.chgroup[data-patch="adjusted"] .chstat[data-move="down"]')));
+  frame.remove();
+});
+
+/* Whatever happened, the reader gets their formation back. */
+localStorage.clear();
+for (const [k, v] of Object.entries(saved)) localStorage.setItem(k, v);
+
+document.getElementById('head').innerHTML = fail
+  ? `<b style="color:#f0654f">${fail} failed</b>, ${pass} passed`
+  : `<b style="color:#55c98a">${pass} passed</b>, 0 failed`;
+document.title = `${fail ? `FAIL (${fail})` : 'ok'} — end-to-end checks`;
+window.__done = { pass, fail };
+</script>
+</body>
