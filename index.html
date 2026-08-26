@@ -390,7 +390,12 @@
     <!-- ------------------------------------------------ roster -->
     <section id="sec-roster" class="panel panel--roster" aria-labelledby="h-roster">
       <div class="panel__head">
-        <h2 id="h-roster">Roster <span id="roster-count" class="muted"></span></h2>
+        <!-- aria-live because the count is the only answer a filter gives. Pressing
+             Stun takes 230 to 55 on screen and, without this, silently for anyone
+             not looking at it. Polite, not assertive: it should arrive after the
+             chip's own state change, not interrupt it. -->
+        <h2 id="h-roster">Roster <span id="roster-count" class="muted"
+          role="status" aria-live="polite" aria-atomic="true"></span></h2>
         <!-- Two lists, one panel. Zobos are what you draft against, so they
              belong beside the roster rather than in a sheet of their own — and
              a tab keeps the search, the drag and the card layout shared instead
@@ -434,7 +439,7 @@
              a list, so a tag nothing carries never becomes a chip that finds
              nothing. -->
         <div id="filter-effect-types" class="chips chips--text chips--sub"
-          role="group" aria-label="Filter by a specific effect" hidden></div>
+          role="group" aria-label="Specific effects" hidden></div>
 
         <div class="filters__row filters__row--meta">
           <label class="check" title="Hide Tatari locked out by an evolution line you are already bringing">

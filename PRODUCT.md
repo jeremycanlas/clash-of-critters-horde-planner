@@ -62,7 +62,7 @@ tool open.
 ## Product Purpose
 
 Plan a 15-Tatari Horde Invasion formation before committing to a run: choose
-Tatari from the 218-strong roster, place them on the 6×6 field, and set the
+Tatari from the 230-strong roster, place them on the 6×6 field, and set the
 order in which they get levelled. Then share the result as a picture or a link
 so someone else can use it as a template.
 
@@ -144,14 +144,14 @@ Open decisions, not to be assumed:
 
 Data constraints that are product truth, not implementation detail:
 
-- The roster is **218 Tatari**. Three (Kaiseroo, Saberheart, Chomperwraith) have
-  no art upstream and render as their name.
-- **Attack range** is recorded for 72 of 218 as tiles, and 114 of 218 exist as
+- The roster is **230 Tatari**. Every one has art; the six newest Zobos do not,
+  and render without a sprite until the wiki has one.
+- **Attack range** is recorded for 72 of 230 as tiles, and 115 of 230 exist as
   wiki screenshots. This is why the overlay ships off by default.
-- **Horde level-up skills** cover 55 of 62 evolution lines (190 of 218 Tatari).
-- **Base skill tags** cover 203 of 218; the level-up effects are inferred by
+- **Horde level-up skills** cover 62 of 64 evolution lines (222 of 230 Tatari).
+- **Base skill tags** cover 213 of 230; the level-up effects are inferred by
   matching wording, not tagged upstream.
-- 19 of 32 skill-type tags have a published definition; the rest are shown as
+- 20 of 32 skill-type tags have a published definition; the rest are shown as
   undefined rather than guessed.
 
 ## Brand Commitments
@@ -172,15 +172,15 @@ Data constraints that are product truth, not implementation detail:
 
 Real, in-repo, no fabrication needed:
 
-- `data/tatari.json` — 218 Tatari with type, role, tier, evolution line, rarity,
+- `data/tatari.json` — 230 Tatari with type, role, tier, evolution line, rarity,
   skill, flavour text, etymology.
 - `data/meta.json` — types, roles, type-effectiveness chart, skill-type
   definitions, grid size, level cap.
 - `data/aliases.json` — community nicknames and the real animal per line. The
   one file not scraped; inferred, and some entries are probably wrong.
 - `data/ranges.json` — attack ranges as tile offsets, measured and eye-checked.
-- `data/images/tatari/` (215 sprites), `glitter/` (195), `icons/` (11),
-  `range/` (114 diagrams).
+- `data/images/tatari/` (230 sprites), `glitter/` (207), `icons/` (11),
+  `range/` (115 diagrams).
 - `docs/screenshot.jpg`, `docs/media/` — the incumbent interface and share card.
 - `assets/img/jacc6475.jpg` — the author's avatar.
 

@@ -1167,6 +1167,38 @@ img { -webkit-user-drag: none; }
  */
 :root[data-contrast="more"] .ver-pill { color: var(--text-dim); }
 
+/*
+ * The filter chips, for the reader who has asked for contrast.
+ *
+ * An unpressed chip label is --text-mute, which measures 3.37:1 on the chip in
+ * dark and 2.95:1 in light -- short of the 4.5:1 WCAG asks for at 11px, and the
+ * count badge is 9.5px. The note beside --text-mute explains why the token
+ * itself has not been lifted: 42 selectors inherit it and raising them together
+ * visibly brightened the roster. That argument does not reach here. Somebody
+ * with High contrast on has said in as many words that they would rather have
+ * the contrast than the restraint, and until now this switch only swapped the
+ * five element hues and left every filter label exactly as dim as before.
+ *
+ * --text-dim measures 6.5:1 on the same chip. Nothing else changes: the pressed
+ * states were already 12-13:1 and are left alone.
+ */
+/* Scoped through .chips rather than hitting .chip directly. At equal weight the
+   plain .chip colour kept winning, and chasing why is not worth a cascade
+   argument when every chip in this app lives in a .chips row anyway. */
+:root[data-contrast="more"] .chips .chip,
+:root[data-contrast="more"] .chips .fxcaret,
+:root[data-contrast="more"] .chips__label,
+:root[data-contrast="more"] .chips--sub .chip b { color: var(--text-dim); }
+:root[data-contrast="more"] .chips .chip:hover { color: var(--text); }
+/* The dimmed "nothing reaches this under the current ceiling" state relies on
+   opacity, which drags the label back under the floor. Kept legible, and told
+   apart by its border instead. */
+:root[data-contrast="more"] .chips--sub .chip[data-empty="true"] {
+  opacity: 1;
+  color: var(--text-mute);
+  border-style: dashed;
+}
+
 /* Owner marker. Only rendered in co-op, so solo tokens stay uncluttered. */
 .token__owner {
   position: absolute; bottom: 1px; left: 2px;
@@ -1869,7 +1901,11 @@ body[data-switching="true"] .cell[data-zobo] { box-shadow: none; cursor: default
 }
 
 .chip:hover { color: var(--text-dim); background: var(--surface-3); }
-.chip[aria-pressed="true"] { color: var(--text); border-color: currentColor; }
+/* Both, because the budgets are radios and everything else is a toggle. Left as
+   one rule rather than two: "this chip is the one that is on" looks the same
+   either way, and splitting it invites the two halves to drift apart. */
+.chip[aria-pressed="true"],
+.chip[aria-checked="true"] { color: var(--text); border-color: currentColor; }
 .chip--type[aria-pressed="true"] {
   color: var(--type-color);
   background: color-mix(in srgb, var(--type-color) 16%, var(--surface-2));
@@ -1942,10 +1978,14 @@ body[data-switching="true"] .cell[data-zobo] { box-shadow: none; cursor: default
   margin-left: 4px;
   color: var(--text-mute); font-size: 9.5px; font-weight: 700;
 }
-.chips--sub .chip[aria-pressed="true"] b { color: inherit; }
+.chips--sub .chip[aria-pressed="true"] b,
+.chips--sub .chip[aria-checked="true"] b { color: inherit; }
 
 /* "Needs", naming what the budget chips beside it are for. Without it the four
    of them read as four more effects. */
+/* Each half of the opened row is its own labelled group, so the four budgets
+   read as a choose-one set and the effects as an independent one. */
+.chips__group { display: inline-flex; align-items: center; gap: 3px; flex-wrap: wrap; }
 .chips__label {
   align-self: center;
   color: var(--text-mute); font-size: 10px; font-weight: 700;
@@ -1958,7 +1998,7 @@ body[data-switching="true"] .cell[data-zobo] { box-shadow: none; cursor: default
   background: var(--line);
 }
 .chips--sub .chip--budget { font-weight: 700; }
-.chips--sub .chip--budget[aria-pressed="true"] {
+.chips--sub .chip--budget[aria-checked="true"] {
   color: var(--accent-ink-on);
   border-color: color-mix(in srgb, var(--accent) 55%, var(--line));
   background: color-mix(in srgb, var(--accent) 16%, var(--surface-2));
@@ -2929,6 +2969,39 @@ body.is-dragging-active {
   .chips { gap: 3px; }
   .chips--text .chip { width: auto; padding: 0 6px; }
   .chip--effect { min-height: 28px; padding: 2px 6px; gap: 4px; }
+  /*
+   * The caret is deliberately not a .chip -- the generic chip handler reads
+   * dataset.value off anything wearing that class -- and that also kept it out
+   * of every rule in this block. It stayed 26px while the chips it belongs to
+   * grew, leaving the narrowest target in the row on the control that reveals
+   * everything else. Sized with them now, and 28px still clears WCAG 2.5.8.
+   */
+  .fxcaret { width: 28px; min-height: 28px; }
+
+  /*
+   * The opened row scrolls sideways rather than wrapping.
+   *
+   * Eleven debuff chips wrap to three or four lines in a 364px sheet, and the
+   * comment above this block is a long argument about exactly that cost: four
+   * rows of filters came to 316px above a 309px roster, more screen describing
+   * the list than showing it. The row is opt-in, so it never costs anyone who
+   * does not open it -- but the moment it is open it undoes the trade the rest
+   * of this block was written to win.
+   *
+   * One line that scrolls keeps the cost at 34px however many effects a group
+   * has. The budgets stay pinned at the head of it, since they are what you
+   * came to set and they should not scroll away from the effects they govern.
+   */
+  .chips--sub {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+  .chips--sub::-webkit-scrollbar { display: none; }
+  .chips--sub .chips__group { flex-wrap: nowrap; }
+  .chips--sub .chip { flex: none; }
 
   /*
    * 28px rather than 30 is not cosmetic. The five element chips and the six role

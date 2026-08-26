@@ -396,9 +396,17 @@ function buildEffectTypes(onChange) {
     sub.hidden = !open;
     if (!open) { sub.innerHTML = ''; return; }
 
+    /*
+     * radio, not toggle. These four are mutually exclusive, and aria-pressed
+     * says the opposite -- a screen reader reading "Start, toggle button, not
+     * pressed" gives no hint that picking one un-picks the others. role=radio
+     * with aria-checked carries the choose-one relationship, and the group's
+     * own label carries the escape hatch, since clicking the checked one clears
+     * it and that is not a thing radios normally do.
+     */
     const budgets = BUDGETS.map((b) => `
-      <button class="chip chip--budget" type="button" data-budget="${b.value}"
-        aria-pressed="${filters.effectBy[open] === b.value}" title="${esc(b.title)}"
+      <button class="chip chip--budget" type="button" role="radio" data-budget="${b.value}"
+        aria-checked="${filters.effectBy[open] === b.value}" title="${esc(b.title)}"
         >${b.label}</button>`).join('');
 
     const types = tallies[open].map((t) => {
@@ -427,8 +435,15 @@ function buildEffectTypes(onChange) {
         >${esc(t.type)}<b>${count}</b></button>`;
     }).join('');
 
-    sub.innerHTML = `<span class="chips__label">Needs</span>${budgets}`
-      + `<span class="chips__split" aria-hidden="true"></span>${types}`;
+    const group = GROUP_LABELS[open].toLowerCase();
+    sub.setAttribute('aria-label', `Specific ${group}`);
+    sub.innerHTML = `
+      <span class="chips__group" role="radiogroup"
+            aria-label="How far you will level, for ${esc(group)}. Pick the one already chosen to clear it.">
+        <span class="chips__label" aria-hidden="true">Needs</span>${budgets}
+      </span>
+      <span class="chips__split" aria-hidden="true"></span>
+      <span class="chips__group" role="group" aria-label="Which ${esc(group)}">${types}</span>`;
   };
 
   redrawEffectTypes = () => { draw(); markCarets(); };
@@ -442,6 +457,21 @@ function buildEffectTypes(onChange) {
       c.setAttribute('aria-expanded', String(c.dataset.group === open));
     }
     draw();
+    markCarets();
+
+    /*
+     * Focus follows the disclosure, because the DOM cannot.
+     *
+     * The opened row is a sibling after the whole filter row, so tabbing on
+     * from the caret walks T1, T2, T3, T4 before it reaches the thing the caret
+     * just revealed. aria-controls says the two are related and no browser or
+     * screen reader is obliged to act on it. Moving the row into the flex line
+     * would fix the order and wrap the tiers onto a third line to do it, so the
+     * focus moves instead: into the row on open, back to the caret on close,
+     * which is the pattern every other disclosure in the world uses.
+     */
+    if (open) sub.querySelector('.chip')?.focus();
+    else caret.focus();
   });
 
   sub.addEventListener('click', (e) => {
@@ -453,6 +483,9 @@ function buildEffectTypes(onChange) {
       filters.effectBy[open] = filters.effectBy[open] === value ? null : value;
       draw();
       markCarets();
+      // draw() replaced the node under the pointer, so put focus back on the
+      // equivalent chip rather than dropping it to the body mid-interaction.
+      sub.querySelector(`.chip--budget[data-budget="${value}"]`)?.focus();
       onChange();
       return;
     }
