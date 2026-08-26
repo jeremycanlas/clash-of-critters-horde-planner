@@ -298,6 +298,43 @@ await runGroup('drafting, the way a phone does it', async () => {
   await click(barBtn('summary'), 320);
 });
 
+await runGroup('past the contact line', async () => {
+  /*
+   * The rows the boss pull and the Zobo ground open are a second element, and
+   * every board handler used to be bound to the near grid alone. A Tatari out
+   * there could be dragged and nothing else: double-clicking it did not take it
+   * off the field, and an armed chip would not drop into it either.
+   *
+   * Reached here through the Zobo ground rather than through a pull, because the
+   * pull only reaches past the line when a lane is already full to the front
+   * rank and that takes six placements to arrange. Same cells, same element,
+   * same handlers.
+   */
+  await click($('#opt-zobo'), 420);
+  const beyond = $('#enemy .cell[data-cell="60"]');
+  ok('the ground past the line is open', !!beyond && $('#enemy').offsetHeight > 0);
+
+  /* Not merely "not benched": a card from the same evolution line answers a tap
+     by switching tier instead, which benches nobody. */
+  await click(barBtn('roster'), 340);
+  const fresh = $$('.panel--roster .card')
+    .find((c) => !c.classList.contains('is-benched') && !c.dataset.switchFrom);
+  await click(fresh, 320);
+  await click(barBtn('roster'), 340);
+  const waiting = $('.benchchip');
+  ok('there is something on the bench to place', !!waiting);
+  await click(waiting, 250);
+  await click(beyond, 350);
+  ok('an armed chip drops into a cell past the line', beyond.classList.contains('is-filled'));
+
+  beyond.dispatchEvent(new W.MouseEvent('dblclick', { bubbles: true }));
+  await sleep(320);
+  ok('and double-clicking it takes it off the field again', !beyond.classList.contains('is-filled'));
+  ok('it goes back to the bench rather than nowhere', $$('.benchchip').length >= 1);
+
+  await click($('#opt-zobo'), 420);
+});
+
 await runGroup('keeping and sharing it', async () => {
   await click(barBtn('saves'), 340);
   const before = $$('.save').length;

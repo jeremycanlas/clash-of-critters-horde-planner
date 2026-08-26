@@ -78,6 +78,7 @@ field, HAVE above LF.
 
 #### Bug Fixes:
 - You could never drag to reorder the level-up plan on a phone. The browser was reading the gesture as a scroll before the drag even started. Grab the step number and it moves now.
+- With a boss pull on (or the Zobo ground open), double-clicking a Tatari out past the contact line didn't send it back to the bench. Turns out nothing worked out there except dragging — you couldn't click a bench chip into those rows either, and the arrow keys stopped at the line. All of it works now.
 
 ### 1.6.1
 
