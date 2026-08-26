@@ -6,7 +6,10 @@ import { TYPES, ROLES } from './icons.js';
 import { $, artHTML, esc, typeIcon, roleIcon, toast } from './ui.js';
 import { draggable, dropZone } from './dnd.js';
 import { openDetail } from './detail.js';
-import { effectGroupsOf, bringsEffect } from './effects.js';
+import {
+  effectGroupsOf, effectsOf, helpFor, GROUP_LABELS,
+  bringsTypeBy, bringsEffectBy, groupOf,
+} from './effects.js';
 
 const TIERS = [1, 2, 3, 4];
 
@@ -17,12 +20,80 @@ const EFFECTS = [
   { key: 'debuff', glyph: '▼', label: 'Debuffs' },
 ];
 
+/*
+ * What the last game update did, and why it cannot borrow the glyphs above.
+ *
+ * ▲ and ▼ are already spoken for on these cards: they mean this Tatari applies
+ * buffs, this one applies debuffs, and they carry the horde level the effect
+ * arrives at. Reusing them for "was buffed by the patch" would make every card
+ * ambiguous -- a red ▼ would mean two unrelated things at once.
+ *
+ * So this marker differs on every axis available: line arrows rather than solid
+ * triangles, a filled disc rather than an outlined rounded rect, the row under
+ * the sprite rather than the corner of it, and never a number beside it.
+ *
+ * ± for adjusted, not a third arrow. "Some numbers up, some down" is the actual
+ * fact and any single arrow would misreport it -- but ↕ was the first attempt
+ * and it is one stroke from ↑, which blurs at the 15px these are drawn at.
+ * Plus-minus shares no silhouette with either direction, so the odd one out
+ * looks odd immediately, and it is the notation that already means this. The
+ * heal badge is a bare + and lives in the other corner as a rounded rect, so
+ * the two do not read as a family.
+ *
+ * Under the sprite because the note above .card__meta already settled that
+ * question for tier, type and role, having measured that no corner of the art is
+ * reliably empty across the roster. The reason bites harder here than there:
+ * these cards get screenshotted and posted, so a badge sitting on a Tatari's
+ * face travels with it.
+ */
+const PATCH_MARKS = {
+  buff: { glyph: '↑', label: 'Buffed' },
+  nerf: { glyph: '↓', label: 'Nerfed' },
+  adjusted: { glyph: '±', label: 'Adjusted' },
+};
+
 export const filters = {
   query: '',
   types: new Set(),
   roles: new Set(),
   tiers: new Set(),
   effects: new Set(),
+  /*
+   * The specific effects, alongside the groups rather than instead of them.
+   * "Brings a debuff" and "brings Stun" are different questions and a player
+   * asks both, so the two sets are ANDed together the same way two group chips
+   * already are -- picking Debuffs and Stun asks for Stun, picking Stun and
+   * Shield asks for a Tatari carrying both.
+   */
+  effectTypes: new Set(),
+  /*
+   * How far you are willing to level, per group rather than for the roster.
+   *
+   * One ceiling for everything was the wrong shape. What you are levelling to is
+   * a fact about each Tatari you are choosing, not about the search: a free heal
+   * is easy to come by and a Stun almost never is, so "a healer that heals from
+   * the start, and something that stuns by 7" is a real question and one global
+   * number could not ask it. Three independent budgets can, and each one only
+   * governs the effects in its own group.
+   *
+   * Still a single value per group, not a Set: a budget is one number, and "by
+   * 5" already contains everything "by 3" would find.
+   */
+  effectBy: { heal: null, buff: null, debuff: null },
+  /*
+   * Which direction of the last update to show: one of them, or null.
+   *
+   * One value rather than a Set, because the three are what a Tatari can be
+   * rather than things it can carry. Nothing was both buffed and nerfed -- that
+   * is the whole reason "adjusted" exists, as the name for a line whose numbers
+   * moved both ways -- so the three describe one state each and asking for two
+   * at once is not a question anybody has.
+   *
+   * Every other group here is a Set and intersects. This one is not either: it
+   * is a single choice, and it behaves like the level ceiling beside it, down to
+   * clearing when you press the one already on.
+   */
+  changed: null,
   hideBlocked: false,
   sort: 'default',
   /*
@@ -164,6 +235,8 @@ export function buildFilters(onChange, { onPick = bringToBench } = {}) {
   chips($('#filter-tiers'), TIERS, filters.tiers, 'tier', (v) => `Tier ${v}`);
   chips($('#filter-effects'), EFFECTS.map((e) => e.key), filters.effects, 'effect',
     (v) => `${EFFECTS.find((e) => e.key === v).label}, from the base skill or a level-up`);
+  buildEffectTypes(onChange);
+  buildChangedChips(onChange);
 
   /*
    * Debounced. Every keystroke rebuilds 218 cards and rebinds 218 drag handlers,
@@ -250,7 +323,350 @@ export function buildFilters(onChange, { onPick = bringToBench } = {}) {
 }
 
 /**
- * The heal / buff / debuff markers on a card.
+ * What the last game update did, as three chips.
+ *
+ * No caret and no disclosure, unlike the effect groups: a Tatari has exactly one
+ * direction, so there are only ever three of these and they fit standing up.
+ * The glyphs are the card marker's, deliberately, so the chip you press and the
+ * disc you then see on 46 cards are obviously the same statement.
+ *
+ * Absent entirely between patches. data/changes.json with an empty `lines` is a
+ * coherent state -- it is how a fork that does not track updates behaves -- and
+ * three chips that find nothing would be worse than no chips at all.
+ */
+function buildChangedChips(onChange) {
+  const host = $('#filter-changed');
+  if (!host || !state.changes.size) return;
+
+  /*
+   * Counted as Tatari, not as the evolution lines the file is written in, and
+   * counted against whatever else is filtered rather than against the whole
+   * roster. Press T2 and Water and these say how many of *those* the update
+   * touched, the same way "Roster 22 of 230" says how many are left.
+   *
+   * The patch filter itself is left out of its own count -- see passes(). With
+   * it applied, choosing Nerfed would leave Buffed reading 0, which is true and
+   * tells you nothing about what pressing it would do.
+   */
+  const countFor = (dir) =>
+    countIf('changed', (t) => state.changes.get(t.slug)?.direction === dir);
+
+  // Which chips exist at all is decided once, from the unfiltered file: a chip
+  // that vanished when its count hit zero would move the two beside it under
+  // the pointer.
+  const present = { buff: 0, nerf: 0, adjusted: 0 };
+  for (const { direction } of state.changes.values()) present[direction] += 1;
+
+  const label = state.patch?.label ? ` in the ${state.patch.label} update` : ' in the last update';
+  const shown = Object.entries(PATCH_MARKS).filter(([key]) => present[key]);
+
+  const draw = () => {
+    const seeAll = `<a class="chips__seeall" href="changes.html"
+      title="${esc(`Every line the ${state.patch?.label ?? 'last'} update moved, `
+        + 'with the old and new numbers side by side')}"
+      >See all<span aria-hidden="true"> ↗</span></a>`;
+
+  host.innerHTML = `<span class="chips__label" aria-hidden="true">Patch</span>`
+      + shown.map(([key, { glyph, label: word }], i) => `
+        <button class="chip chip--changed" type="button" role="radio" data-changed="${key}"
+          aria-checked="${filters.changed === key}" title="${esc(`${word}${label}`)}"
+          tabindex="${filters.changed === key || (filters.changed === null && i === 0) ? 0 : -1}"
+          ><span class="chip__glyph" data-patch="${key}" data-glyph="${glyph}" aria-hidden="true"></span>${
+          word}<b>${countFor(key)}</b></button>`).join('')
+      + seeAll;
+  };
+
+  host.hidden = false;
+  /*
+   * A radio group, not three toggles. The three are what a Tatari can be rather
+   * than things it can carry, and nothing was both buffed and nerfed -- that is
+   * what "adjusted" is for. Same contract as the level ceiling beside it, down
+   * to the roving tabindex and clearing when you press the one already on.
+   */
+  host.setAttribute('role', 'radiogroup');
+  host.setAttribute('aria-label',
+    `Filter by what changed${label}. Pick the one already chosen to clear it.`);
+  draw();
+
+  const choose = (key) => {
+    filters.changed = filters.changed === key ? null : key;
+    draw();
+    host.querySelector(`.chip--changed[data-changed="${key}"]`)?.focus();
+    onChange();
+  };
+
+  host.addEventListener('click', (e) => {
+    const chip = e.target.closest('.chip--changed');
+    if (chip) choose(chip.dataset.changed);
+  });
+
+  host.addEventListener('keydown', (e) => {
+    const chip = e.target.closest('.chip--changed');
+    if (!chip) return;
+    const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
+    if (!step) return;
+    e.preventDefault();
+    const all = [...host.querySelectorAll('.chip--changed')];
+    choose(all[(all.indexOf(chip) + step + all.length) % all.length].dataset.changed);
+  });
+
+  countUpdaters.push(() => {
+    for (const chip of host.querySelectorAll('.chip--changed')) {
+      const n = countFor(chip.dataset.changed);
+      chip.querySelector('b').textContent = String(n);
+      chip.toggleAttribute('data-empty', n === 0);
+    }
+  });
+}
+
+/**
+ * The caret on each effect group, and the row of specific effects it opens.
+ *
+ * Three chips answer "brings a debuff", which is the question you ask while
+ * filling a bench. They cannot answer "brings Stun", which is the question you
+ * ask after a wave has killed you twice and you have worked out why -- and the
+ * data has carried the answer all along: 23 named effects across heals, buffs
+ * and debuffs, counting what a Tatari starts with and what it gains by
+ * levelling.
+ *
+ * All 23 standing up would double the filter block, on a phone, above a roster
+ * that wants the room. So they arrive one group at a time, behind a caret. Not a
+ * menu: the caret is visible, sits on the chip it belongs to, and what it opens
+ * appears in place rather than floating over anything.
+ *
+ * The chips are built from a tally of the roster rather than from a list of
+ * known tags, which is what keeps this honest as the game changes. A tag nothing
+ * carries never becomes a chip that finds nothing, a new one appears the first
+ * time a Tatari has it, and each chip can say how many it will find before you
+ * spend a tap on it.
+ */
+/*
+ * Set by buildEffectTypes so resetFilters can reach it. The counts on those
+ * chips are computed under the current budget, so clearing the budget without
+ * redrawing leaves the row quietly lying about how many of each there are.
+ */
+let redrawEffectTypes = () => {};
+
+/*
+ * The chips' counts, refreshed in place after every render.
+ *
+ * In place rather than by redrawing: the rows are full of focusable chips, and
+ * rebuilding their markup on each keystroke in the search box would throw the
+ * keyboard out of whatever it was on. Only the number and the dimmed state
+ * change, so only those are written.
+ */
+const countUpdaters = [];
+export function refreshChipCounts() {
+  for (const update of countUpdaters) update();
+}
+
+function buildEffectTypes(onChange) {
+  const host = $('#filter-effects');
+  const sub = $('#filter-effect-types');
+  if (!host || !sub) return;
+
+  const tallies = effectsOf(state.all);
+  let open = null;
+
+  for (const { key } of EFFECTS) {
+    if (!tallies[key]?.length) continue;
+    const chip = host.querySelector(`.chip[data-value="${key}"]`);
+    if (!chip) continue;
+    const caret = document.createElement('button');
+    caret.type = 'button';
+    // Deliberately not a .chip: the generic chip handler above reads
+    // dataset.value off anything wearing that class, and resetFilters unpresses
+    // it. A caret is neither a filter nor something reset should touch.
+    caret.className = 'fxcaret';
+    caret.dataset.group = key;
+    caret.setAttribute('aria-expanded', 'false');
+    caret.setAttribute('aria-controls', 'filter-effect-types');
+    caret.setAttribute('aria-label', `Show the specific ${GROUP_LABELS[key].toLowerCase()}`);
+    caret.title = `The specific ${GROUP_LABELS[key].toLowerCase()} a Tatari brings`;
+    chip.after(caret);
+  }
+
+  /*
+   * How far you are willing to level, as chips at the head of the row.
+   *
+   * They live here rather than in a row of their own because the question is
+   * meaningless on its own screen -- "by 3" is only ever asked about something,
+   * and the something is right next to it. 7 is offered even though it finds
+   * everything a blank budget would: pressing it is how you say "I am taking
+   * this all the way", and its absence would read as an oversight.
+   */
+  const BUDGETS = [
+    { value: 0, label: 'Start', title: 'Only what a Tatari already does, unlevelled' },
+    { value: 3, label: 'By 3', title: 'What it does if you level it to 3' },
+    { value: 5, label: 'By 5', title: 'What it does if you level it to 5' },
+    { value: 7, label: 'By 7', title: 'What it does if you level it all the way' },
+  ];
+
+  /*
+   * Counted under the current budget rather than read off the tally, so the
+   * numbers answer the question actually on screen. Pressing Start and watching
+   * Stun fall from 55 to 12 is the fastest way to learn that most of this
+   * roster's crowd control has to be paid for.
+   */
+  const countFor = (type) =>
+    countIf('effectTypes', (t) => bringsTypeBy(t, type, filters.effectBy[groupOf(type)]));
+
+  /* Which groups are carrying a ceiling, so a closed caret can say so. */
+  const markCarets = () => {
+    for (const c of host.querySelectorAll('.fxcaret')) {
+      const by = filters.effectBy[c.dataset.group];
+      c.toggleAttribute('data-budgeted', by !== null);
+      const label = BUDGETS.find((b) => b.value === by)?.label;
+      c.title = by === null
+        ? `The specific ${GROUP_LABELS[c.dataset.group].toLowerCase()} a Tatari brings`
+        : `${GROUP_LABELS[c.dataset.group]}: ${label.toLowerCase()}`;
+    }
+  };
+
+  const draw = () => {
+    sub.hidden = !open;
+    if (!open) { sub.innerHTML = ''; return; }
+
+    /*
+     * radio, not toggle. These four are mutually exclusive, and aria-pressed
+     * says the opposite -- a screen reader reading "Start, toggle button, not
+     * pressed" gives no hint that picking one un-picks the others. role=radio
+     * with aria-checked carries the choose-one relationship, and the group's
+     * own label carries the escape hatch, since clicking the checked one clears
+     * it and that is not a thing radios normally do.
+     */
+    /*
+     * Roving tabindex, because role=radio is a promise about the keyboard.
+     *
+     * The first version set the role and left four ordinary tab stops behind,
+     * which is worse than the aria-pressed it replaced: a screen reader hears
+     * "radio group" and reaches for the arrow keys, and nothing happens. One
+     * stop into the group, arrows between the options, exactly as a native
+     * radio behaves. Nothing checked yet means the first one holds the stop, so
+     * the group is always reachable.
+     */
+    const stop = filters.effectBy[open];
+    const budgets = BUDGETS.map((b, i) => `
+      <button class="chip chip--budget" type="button" role="radio" data-budget="${b.value}"
+        aria-checked="${stop === b.value}" title="${esc(b.title)}"
+        tabindex="${stop === b.value || (stop === null && i === 0) ? 0 : -1}"
+        >${b.label}</button>`).join('');
+
+    const types = tallies[open].map((t) => {
+      /*
+       * The wiki's own sentence, verbatim, or no tooltip at all.
+       *
+       * It used to be that sentence with a dash and a tally welded on, which
+       * repeated the number already printed on the chip and turned somebody
+       * else's clean definition into a fragment. Now the description is either
+       * the whole tooltip or there is no tooltip.
+       *
+       * Nothing invented for the tags the wiki has not written up yet -- 4 of
+       * the 10 buffs and 6 of the 11 debuffs have a definition, and guessing at
+       * the rest would be worse than silence. Paralyze is the proof: it reads
+       * like a plain stun and is actually Lightning damage over time that
+       * delays movement.
+       *
+       * Heals get none either way. "Heal" explains itself, and a tooltip that
+       * says a heal heals is noise on a chip you are trying to read past.
+       */
+      const help = open === 'heal' ? null : helpFor(t.type);
+      const count = countFor(t.type);
+      return `<button class="chip chip--fxtype" type="button" data-type="${esc(t.type)}"
+        aria-pressed="${filters.effectTypes.has(t.type)}" ${count ? '' : 'data-empty="true"'}
+        ${help ? `title="${esc(help)}"` : ''}
+        >${esc(t.type)}<b>${count}</b></button>`;
+    }).join('');
+
+    const group = GROUP_LABELS[open].toLowerCase();
+    sub.setAttribute('aria-label', `Specific ${group}`);
+    sub.innerHTML = `
+      <span class="chips__group" role="radiogroup"
+            aria-label="How far you will level, for ${esc(group)}. Pick the one already chosen to clear it.">
+        <span class="chips__label" aria-hidden="true">Needs</span>${budgets}
+      </span>
+      <span class="chips__split" aria-hidden="true"></span>
+      <span class="chips__group" role="group" aria-label="Which ${esc(group)}">${types}</span>`;
+  };
+
+  redrawEffectTypes = () => { draw(); markCarets(); };
+  markCarets();
+
+  countUpdaters.push(() => {
+    for (const chip of sub.querySelectorAll('.chip--fxtype')) {
+      const n = countFor(chip.dataset.type);
+      chip.querySelector('b').textContent = String(n);
+      chip.toggleAttribute('data-empty', n === 0);
+    }
+  });
+
+  host.addEventListener('click', (e) => {
+    const caret = e.target.closest('.fxcaret');
+    if (!caret) return;
+    open = open === caret.dataset.group ? null : caret.dataset.group;
+    for (const c of host.querySelectorAll('.fxcaret')) {
+      c.setAttribute('aria-expanded', String(c.dataset.group === open));
+    }
+    draw();
+    markCarets();
+
+    /*
+     * Focus follows the disclosure, because the DOM cannot.
+     *
+     * The opened row is a sibling after the whole filter row, so tabbing on
+     * from the caret walks T1, T2, T3, T4 before it reaches the thing the caret
+     * just revealed. aria-controls says the two are related and no browser or
+     * screen reader is obliged to act on it. Moving the row into the flex line
+     * would fix the order and wrap the tiers onto a third line to do it, so the
+     * focus moves instead: into the row on open, back to the caret on close,
+     * which is the pattern every other disclosure in the world uses.
+     */
+    if (open) sub.querySelector('.chip')?.focus();
+    else caret.focus();
+  });
+
+  /* Arrows move and choose, the way a radio does. Wrapping, because four chips
+     in a row have no meaningful ends to stop at. */
+  sub.addEventListener('keydown', (e) => {
+    const radio = e.target.closest('.chip--budget');
+    if (!radio) return;
+    const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
+    if (!step) return;
+    e.preventDefault();
+    const all = [...sub.querySelectorAll('.chip--budget')];
+    const next = all[(all.indexOf(radio) + step + all.length) % all.length];
+    next.click();                       // choosing is what an arrow does here
+    sub.querySelector(`.chip--budget[data-budget="${next.dataset.budget}"]`)?.focus();
+  });
+
+  sub.addEventListener('click', (e) => {
+    const budget = e.target.closest('.chip--budget');
+    if (budget) {
+      const value = Number(budget.dataset.budget);
+      // Pressing the one already on clears it, so there is a way back to "any
+      // level" without a fifth chip that only ever means "never mind".
+      filters.effectBy[open] = filters.effectBy[open] === value ? null : value;
+      draw();
+      markCarets();
+      // draw() replaced the node under the pointer, so put focus back on the
+      // equivalent chip rather than dropping it to the body mid-interaction.
+      sub.querySelector(`.chip--budget[data-budget="${value}"]`)?.focus();
+      onChange();
+      return;
+    }
+    const chip = e.target.closest('.chip--fxtype');
+    if (!chip) return;
+    const { type } = chip.dataset;
+    if (filters.effectTypes.has(type)) filters.effectTypes.delete(type);
+    else filters.effectTypes.add(type);
+    chip.setAttribute('aria-pressed', String(filters.effectTypes.has(type)));
+    onChange();
+  });
+}
+
+/**
+ * The heal / buff / debuff markers on a card, in a band across the top of the
+ * art box with the sprite sized to sit below them.
  *
  * A solid mark is something the Tatari has from the start. A hollow one with a
  * level number only arrives once you have levelled it that far, and a solid one
@@ -269,7 +685,30 @@ function effectMarks(t) {
     return `<span class="card__fx" data-fx="${key}" data-base="${g.base}" title="${esc(title)}"
       >${glyph}${g.level !== null ? `<b>${g.level}</b>` : ''}</span>`;
   }).filter(Boolean).join('');
-  return marks ? `<span class="card__fxrow">${marks}</span>` : '';
+  /*
+   * The wrapper goes out even with nothing in it: it is the art box's first grid
+   * row, so an absent one would hand its height to the sprite and leave the 34
+   * Tatari with no effects wearing artwork a size larger than everyone else.
+   */
+  return `<span class="card__fxrow">${marks}</span>`;
+}
+
+/**
+ * The patch marker, if the last update touched this Tatari's line.
+ *
+ * The tooltip carries the actual numbers rather than just the direction, since
+ * "nerfed" on its own tells a player nothing they can act on -- whether Dewgrub
+ * lost a tenth or three quarters of its damage is the entire question. Absent
+ * for anything the update did not touch, which is most of the roster.
+ */
+function patchMark(t) {
+  const change = state.changes.get(t.slug);
+  if (!change) return '';
+  const { glyph, label } = PATCH_MARKS[change.direction] ?? {};
+  if (!glyph) return '';
+  const title = [`${label} in the ${state.patch?.label ?? 'latest'} update`, ...change.changes].join('\n');
+  return `<span class="card__patch" data-patch="${change.direction}" data-glyph="${glyph}"
+    title="${esc(title)}" aria-label="${esc(label)} in the latest update"></span>`;
 }
 
 export function resetFilters() {
@@ -278,31 +717,68 @@ export function resetFilters() {
   filters.roles.clear();
   filters.tiers.clear();
   filters.effects.clear();
+  filters.effectTypes.clear();
+  filters.changed = null;
+  for (const g of Object.keys(filters.effectBy)) filters.effectBy[g] = null;
   filters.hideBlocked = false;
   filters.sort = 'default';
   $('#search').value = '';
   $('#sort').value = 'default';
   $('#opt-hide-blocked').checked = false;
   for (const chip of document.querySelectorAll('.chip')) chip.setAttribute('aria-pressed', 'false');
+  redrawEffectTypes();
+}
+
+/**
+ * Whether one Tatari survives the filters, optionally with one of them ignored.
+ *
+ * `skip` is what makes the counts on the chips mean anything. A chip has to say
+ * how many it would find if you pressed it, which is the roster narrowed by
+ * every *other* filter but not by its own group -- count Nerfed with the patch
+ * filter still applied and it reads 46 while Buffed reads 0, which is true and
+ * useless. Leave its own group out and the three read 12, 6 and 0 against the
+ * T2 Water you already picked, which is the number you wanted.
+ */
+function passes(t, player, skip) {
+  if (filters.types.size && !filters.types.has(t.type)) return false;
+  if (filters.roles.size && !filters.roles.has(t.role)) return false;
+  if (filters.tiers.size && !filters.tiers.has(t.tier)) return false;
+  if (skip !== 'changed' && filters.changed !== null
+    && state.changes.get(t.slug)?.direction !== filters.changed) return false;
+
+  // Every chosen effect, not any: picking Heals and Buffs together asks for one
+  // Tatari that does both, which is the question worth asking of a 15-slot
+  // bench. The type and role chips still read as "any". Each group answers under
+  // its own ceiling, not whichever was set last.
+  for (const group of ['heal', 'buff', 'debuff']) {
+    const by = filters.effectBy[group];
+    const named = skip === 'effectTypes' ? []
+      : [...filters.effectTypes].filter((x) => groupOf(x) === group);
+    // A budget with nothing picked under it still asks something worth asking:
+    // "anything from this group by then". Once a type is named, that is the more
+    // specific question and it wins.
+    if ((filters.effects.has(group) || (by !== null && !named.length))
+      && !bringsEffectBy(t, group, by)) return false;
+    for (const type of named) if (!bringsTypeBy(t, type, by)) return false;
+  }
+  if (!matches(t, filters.query)) return false;
+  // Only a per-Tatari reason hides a card. A full bench blocks every Tatari at
+  // once, and collapsing the roster to the 15 already brought reads as the
+  // filter being broken - the same call the card dimming makes below.
+  if (filters.hideBlocked && store.familyConflict(t, player)) return false;
+  return true;
+}
+
+/** How many Tatari a chip would find, counted against everything else you set. */
+function countIf(skip, test) {
+  const player = store.formation.activePlayer;
+  let n = 0;
+  for (const t of state.all) if (passes(t, player, skip) && test(t)) n += 1;
+  return n;
 }
 
 function visible(player) {
-  const list = state.all.filter((t) => {
-    if (filters.types.size && !filters.types.has(t.type)) return false;
-    if (filters.roles.size && !filters.roles.has(t.role)) return false;
-    if (filters.tiers.size && !filters.tiers.has(t.tier)) return false;
-    // Every chosen effect, not any: picking Heals and Buffs together asks for
-    // one Tatari that does both, which is the question worth asking of a
-    // 15-slot bench. The type and role chips still read as "any".
-    if (filters.effects.size
-      && ![...filters.effects].every((group) => bringsEffect(t, group))) return false;
-    if (!matches(t, filters.query)) return false;
-    // Only a per-Tatari reason hides a card. A full bench blocks every Tatari
-    // at once, and collapsing the roster to the 15 already brought reads as the
-    // filter being broken - the same call the card dimming makes below.
-    if (filters.hideBlocked && store.familyConflict(t, player)) return false;
-    return true;
-  });
+  const list = state.all.filter((t) => passes(t, player, null));
   return filters.sort === 'default' ? list : list.sort(SORTS[filters.sort]);
 }
 
@@ -337,7 +813,7 @@ function renderZobos() {
   host.innerHTML = list.map((z) => `
       <div class="card card--zobo" role="listitem" tabindex="0"
            data-slug="${esc(z.slug)}"${z.type ? ` data-type="${z.type}"` : ''}
-           title="${esc(z.name)}${z.type ? ` — ${z.type}` : ''}${z.boss ? ' — Boss' : ''}${
+           title="${esc(z.name)}${z.type ? `, ${z.type}` : ''}${z.boss ? ', Boss' : ''}${
   z.skill?.name ? `
 ${esc(z.skill.name)}` : ''}">
         <div class="card__art">${artHTML(z, { priority: 'low' })}</div>
@@ -367,6 +843,10 @@ ${esc(z.skill.name)}` : ''}">
 }
 
 export function renderRoster() {
+  // Every path that changes what the roster shows comes through here, so this is
+  // the one place the chips' counts have to be brought back into agreement with
+  // it -- including the search box, which never touches a chip.
+  refreshChipCounts();
   if (showing.value === 'zobos') { renderZobos(); return; }
   const player = store.formation.activePlayer;
   const list = visible(player);
@@ -401,13 +881,13 @@ export function renderRoster() {
         clash ? ' is-swap' : ''}"
            role="listitem" tabindex="0" data-slug="${esc(t.slug)}" data-type="${t.type}"${
         clash ? ` data-switch-from="${esc(clash.slug)}"` : ''}
-           title="${esc(t.name)} — ${t.type} ${t.role}, T${t.tier}${
+           title="${esc(t.name)}: ${t.type} ${t.role}, T${t.tier}${
              state_ ? `\n${state_}` : ''}${clash ? `\nTap to switch from ${clash.name}, keeping its plan` : ''}">
-        <!-- Last in the queue: 218 thumbnails will otherwise crowd out the
+        <!-- Last in the queue: 230 thumbnails will otherwise crowd out the
              dozen sprites the field and the benches are showing right now. -->
-        <div class="card__art">${artHTML(t, { priority: 'low' })}${effectMarks(t)}</div>
+        <div class="card__art">${effectMarks(t)}${artHTML(t, { priority: 'low' })}</div>
         <div class="card__meta">
-          <span class="card__tier">T${t.tier}</span>
+          ${patchMark(t)}<span class="card__tier">T${t.tier}</span>
           ${typeIcon(t.type)}${roleIcon(t.role)}
           ${otherPlayer.length
             ? `<span class="card__other" data-player="${otherPlayer[0]}"

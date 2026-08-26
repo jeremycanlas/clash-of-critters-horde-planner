@@ -65,6 +65,21 @@ field, HAVE above LF.
 
 ## Changelog
 
+### 1.7.0
+
+#### Changes:
+- Added a page that highlights the changes made in the latest patch
+- Added a patch filter to see who got buffed, nerfed and adjusted, and a small marker on their card in the roster so you can spot them without filtering
+- When a patch lands there's a line at the top of the page pointing at that page, and it goes away once you've read it
+- Reworked heals/buff/debuff filters so that you can filter tataris per horde skill level and per specific effect, all 23 of them (Stun, Slow, Shield, ATK Boost and the rest)
+- Rearranged the heals/buff/debuff icons in the roster into their own row above the sprite, along with the level they get it, so that nothing the app draws touches a tatari any more
+- The filter labels are brighter and High Contrast Mode also changes filter labels now.
+- Made more tests so that I don't break things more often (woops!).
+
+#### Bug Fixes:
+- You could never drag to reorder the level-up plan on a phone. The browser was reading the gesture as a scroll before the drag even started. Grab the step number and it moves now.
+- With a boss pull on (or the Zobo ground open), double-clicking a Tatari out past the contact line didn't send it back to the bench. Turns out nothing worked out there except dragging — you couldn't click a bench chip into those rows either, and the arrow keys stopped at the line. All of it works now.
+
 ### 1.6.1
 
 #### Changes:
@@ -519,6 +534,45 @@ it doesn't already have (`--no-images` skips that, `--icons-only` fetches just t
 type and role icons). The normalizer then trims and re-frames every image so they
 all sit in the same box at the same apparent size; it needs Pillow
 (`python -m pip install Pillow`) and re-running it is a no-op.
+
+### Checking it still works
+
+Three self-checking pages, opened in a browser against the served folder. None
+needs a runner, a framework or a dependency; all three go red in the tab title
+when something is wrong.
+
+```
+http://localhost:8123/apptest.html      the app on a desktop, driven like a person drives it
+http://localhost:8123/mobiletest.html   the same app in a 390x844 frame, which is a different app
+http://localhost:8123/changestest.html  data/changes.json against the roster
+```
+
+`apptest.html` loads the real `index.html` and `changes.html` in frames, clicks
+the real controls and reads what the pages rendered. It is written that way on
+purpose: the bugs this project actually ships are a CSS escape that draws "BE"
+instead of an arrow, a border radius that turns a rect back into a circle, and a
+chip whose children stack down a column and spill into the row below. A test that
+imports a module and checks its return value passes all three.
+
+`mobiletest.html` is the same idea at 390x844, and it is a separate page because
+under 760px this stops being the same app: the field takes the whole screen, the
+three panels become sheets over it, and a fixed bar along the bottom is the only
+way into any of them. Three quarters of the people who use this never see the
+layout `apptest.html` checks. It walks the phone's own path end to end — tap a
+card, tap the chip, tap a square — and times the redraws that a thumb waits
+through.
+
+One thing it cannot do is pretend to be a touchscreen. `@media (hover: none)`
+never matches in a desktop browser at any width, so the rules in that block —
+the drag grip on the plan, the 28px targets, the effect row that scrolls instead
+of wrapping — are read out of the stylesheet rather than watched applying, and
+the checks say so in their names. That is still worth having: the grip shipped
+broken because `.prio` was missing from exactly that block.
+
+Both restore whatever was in `localStorage` when they finish, so running them
+never costs you the formation you had open. Both also re-fetch every file the app
+is made of before they start, because a browser that serves one cached module
+gives you a full page of green against code you deleted.
 
 ## Project layout
 

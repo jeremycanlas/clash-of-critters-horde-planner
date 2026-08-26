@@ -3,7 +3,7 @@
 import { load, state } from './data.js';
 import * as store from './store.js';
 import {
-  $, $$, glitterOn, toast, downloadJSON, readJSONFile, slugFilename, dragScrollVelocity,
+  $, $$, esc, glitterOn, toast, downloadJSON, readJSONFile, slugFilename, dragScrollVelocity,
   dismissOnBackdrop, APP_VERSION,
 } from './ui.js';
 import {
@@ -128,12 +128,77 @@ async function main() {
   $('#formation-name').value = store.formation.name;
   $('#foot-meta').textContent =
     `${state.meta.counts.tatari} Tatari · ${state.meta.counts.families} evolution lines · wiki data ${state.meta.scrapedAt}`;
+
+  /*
+   * How much range data there is, counted rather than written down.
+   *
+   * The markup used to say "only 72 of the 218 Tatari", which was true when
+   * somebody typed it and had quietly become wrong by the time the roster hit
+   * 230 -- a number in a tooltip is a promise to come back and edit it, and
+   * nobody ever does. The recorded count moves every time someone contributes a
+   * range, so it was never going to hold still.
+   */
+  const recorded = Object.keys(state.ranges?.bySlug ?? {}).length;
+  const ranges = $('#opt-ranges')?.closest('label');
+  if (ranges && recorded) {
+    ranges.title = ranges.title.replace(
+      'The range data is still being filled in,',
+      `Only ${recorded} of the ${state.all.length} Tatari have a recorded range so far,`);
+  }
   // The name is in the markup so it shows without JS; only the version is
   // filled in, from the one constant that also stamps the share card.
   $('#app-version').textContent = `v${APP_VERSION}`;
 
+  showPatchNote();
   wireToolbar();
   wireDragAutoScroll();
+}
+
+
+/**
+ * The one line telling somebody an update landed.
+ *
+ * Dismissal is keyed on the patch itself, not on a boolean. Storing "seen" would
+ * mean the next update arrives silently for everybody who ever closed this one,
+ * which is the failure mode of every notice bar that has ever annoyed anybody:
+ * it either nags forever or it goes quiet forever. Keyed on the label, closing
+ * it settles this update and the next one is news again.
+ *
+ * The whole element stays out of the page when there is nothing to report, so a
+ * copy of this tool that does not track updates never grows a bar it cannot fill.
+ *
+ * "Touched", not "adjusted", however naturally that word comes. Adjusted is one
+ * of the three directions this app marks, and on the update page it means one
+ * evolution line and four Tatari. A bar reading "adjusted 135" three lines above
+ * a heading reading "Adjusted, 4 Tatari" would be the tool contradicting itself
+ * in the same viewport. Not "changed" either, which is the honest word but puts
+ * it twice in one sentence next to "See what changed" -- and that half is the
+ * page's own name, so it is the half that stays.
+ */
+function showPatchNote() {
+  const note = $('#patch-note');
+  if (!note || !state.changes.size) return;
+
+  const patch = state.patch?.patch ?? 'unknown';
+  let seen = null;
+  try { seen = localStorage.getItem('coc.patch-seen'); } catch { /* private mode */ }
+  if (seen === patch) return;
+
+  note.hidden = false;
+  note.innerHTML = `
+    <span class="patchnote__body">
+      The <b>${esc(state.patch?.label ?? 'latest')}</b> update touched
+      ${state.changes.size} of the ${state.all.length} Tatari. See what changed
+    </span>
+    <button class="patchnote__x" type="button" aria-label="Hide this until the next update">&times;</button>`;
+
+  note.addEventListener('click', (e) => {
+    if (!e.target.closest('.patchnote__x')) return;
+    // Not a link click: dismissing is the other thing this row does.
+    e.preventDefault();
+    note.hidden = true;
+    try { localStorage.setItem('coc.patch-seen', patch); } catch { /* private mode */ }
+  });
 }
 
 /**

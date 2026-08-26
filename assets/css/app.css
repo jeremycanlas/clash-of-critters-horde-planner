@@ -13,18 +13,27 @@
   /*
    * The third step of the de-emphasis ramp, and the quietest text on the page.
    *
-   * It was lightened to #8f97a8 for a while, and a --line-strong of #666b78 was
-   * added alongside it for control borders, on contrast grounds: this is 2.94:1
-   * on --surface-3 and the old borders were under 3:1, both short of what WCAG
-   * asks for small text and non-text. Reverted on looks -- 42 selectors inherit
-   * this one, and lifting it and every .btn and .field edge at once visibly
-   * brightened the roster, which is the densest surface in the app.
+   * This was #6f7788 and failed WCAG AA everywhere it was read: 3.37:1 on a
+   * chip, 2.94:1 on --surface-3, against the 4.5:1 small text needs. Not
+   * incidental text either -- it is every field placeholder, every card's tier,
+   * the roster counts, the empty-state lines and the version pill.
    *
-   * The measurements stand and the gap is real, so anything that revisits this
-   * should move the quiet text and the loud borders separately, and check the
-   * roster, not a button in isolation.
+   * It was lifted to almost exactly this value once before, to #8f97a8, and
+   * reverted on looks. That attempt also raised a --line-strong of #666b78 for
+   * every control border in the same change, and the two together visibly
+   * brightened the roster, which is the densest surface in the app. The note
+   * left behind asked that whoever came back move the quiet text and the loud
+   * borders separately and judge it on the roster rather than on a button.
+   *
+   * So: text only this time. The borders are untouched and still under 3:1,
+   * which remains a real 1.4.11 gap and a separate job.
+   *
+   * #8f99aa is the smallest step that clears 4.5:1 on --surface-3, the lightest
+   * surface this can land on: 4.60 there, 5.27 on a chip, 6.40 on the page. It
+   * stays a step below --text-dim rather than collapsing into it -- 4.60 against
+   * 5.67 on the same surface -- so the ramp still has three rungs.
    */
-  --text-mute: #6f7788;
+  --text-mute: #8f99aa;
 
   --accent:      #ffc93c;
   --accent-ink:  #2a2005;
@@ -138,7 +147,7 @@
     --line-soft: #e6e9f0;
     --text:      #1b1e26;
     --text-dim:  #565d6d;
-    --text-mute: #838b9c;      /* 2.95:1 on --surface-3; see the dark note above */
+    --text-mute: #646c7b;      /* 4.56:1 on --surface-3; see the dark note above */
     --accent:      #f0ab00;
     --accent-ink:  #241a00;
     --accent-ink-on: #a05b00;  /* the fill colour is 1.99:1 as text on white */
@@ -167,7 +176,7 @@
   --line-soft: #e6e9f0;
   --text:      #1b1e26;
   --text-dim:  #565d6d;
-  --text-mute: #838b9c;
+  --text-mute: #646c7b;
   --accent:      #f0ab00;
   --accent-ink:  #241a00;
   --accent-ink-on: #a05b00;
@@ -774,9 +783,12 @@ img { -webkit-user-drag: none; }
  * difference between "brings a heal" and "could bring a heal at 5", which is
  * exactly the call you are making while drafting.
  */
+/* The band itself. Row 1 of the art box, always present so every sprite below
+   it is the same size, and never overlapping the artwork. */
 .card__fxrow {
-  position: absolute; top: 2px; left: 2px;
-  display: flex; flex-direction: column; gap: 2px;
+  grid-row: 1;
+  display: flex; align-items: center; justify-content: center; gap: 3px;
+  width: 100%; height: 15px;
   pointer-events: none;
 }
 /*
@@ -798,6 +810,85 @@ img { -webkit-user-drag: none; }
 .card__fx[data-fx="heal"]   { color: var(--ok); }
 .card__fx[data-fx="buff"]   { color: var(--accent); }
 .card__fx[data-fx="debuff"] { color: var(--danger); }
+
+/*
+ * The patch marker, deliberately unlike the effect badges above it.
+ *
+ * Those are rounded rects stacked down the top-left, most of them carrying a
+ * number. This is a single disc in the opposite corner with nothing beside it,
+ * so the two never read as members of one set even at card size -- which they
+ * must not, because ▲ there and ↑ here mean completely different things.
+ *
+ * The arrow carries the meaning and the colour only agrees with it, so the card
+ * still reads with the hues stripped out. Opaque background rather than a tint:
+ * this sits over artwork, and a translucent badge on a pale sprite loses its
+ * arrow entirely.
+ */
+/*
+ * The "this changed in the last update" mark, arrived at by being wrong twice
+ * in opposite directions.
+ *
+ * It began as a filled 15px disc, which put a coloured circle 18px from the 17px
+ * circular type badge in the same row. The card reserves circles for what a
+ * Tatari permanently is -- its element, its role -- and the disc borrowed that
+ * idiom for the most temporary fact on it, the one the next update wipes. Colour
+ * made it worse: a nerfed Fire Tatari wore red beside a red Fire badge, a buffed
+ * Grass one green beside green. Same shape, same size, unrelated meanings.
+ *
+ * Stripping the container fixed that and overshot: a lone glyph beside two
+ * filled circles loses the fight for attention and was simply not noticed.
+ *
+ * So a rect, because nothing else in this row is one; a border, so it has an
+ * edge to be seen by; and an 18% wash rather than a solid fill, because solid is
+ * what made it shout beside a same-coloured type badge. The effect badges are
+ * outlined rects too, which is fine: those live in the band inside the art, this
+ * lives in the meta row, and the two never appear side by side.
+ *
+ * In the meta row rather than on the art at all, because no corner of a sprite
+ * is reliably empty and these cards get screenshotted -- the same argument the
+ * note above .card__meta makes for tier, type and role.
+ */
+.card__patch {
+  flex: none;
+  display: inline-flex; align-items: center; justify-content: center;
+  /* 15px, not wider. At 19 the meta row overflowed 69px of card and wrapped,
+     taking every card from 118px to 122. The circular look came from a 6px
+     radius on a small box, not from the width. */
+  min-width: 15px; height: 14px;
+  padding: 0 1px;
+  border: 1px solid currentColor;
+  /* 3px, matching .card__fx rather than --r-sm. At 6px on a 15px box the corners
+     meet and the tag reads as a circle again, which is the thing this stopped
+     being. Wider than tall for the same reason: a square with rounded corners is
+     a circle at this size, a rect is not. */
+  border-radius: 3px;
+  /*
+   * Mixed toward --bg, not toward transparent.
+   *
+   * An 18% wash of the tag's own colour over the card lightens the panel under a
+   * light glyph, and --danger has almost no room to give: the arrow fell to
+   * 3.79:1 against its own tint, and even 8% only reached 4.37. Mixing the same
+   * hue into the page colour instead darkens the panel, so the tag reads as
+   * recessed and the glyph gains contrast rather than losing it. Measured at
+   * 16%: buffed 6.62:1, nerfed 4.79:1, adjusted 5.99:1.
+   */
+  background: color-mix(in srgb, currentColor 16%, var(--bg));
+  font-size: 11px; font-weight: 800; line-height: 1;
+}
+/*
+ * The arrow is --text, not the direction's hue.
+ *
+ * Colouring the glyph looked right in dark and broke in light, where --ok is
+ * about 3.9:1 as text before anything is done to it: on its own 16% wash the
+ * buffed arrow fell to 2.75:1 and the nerfed one to 3.43:1. Putting the hue in
+ * the border and the panel and leaving the glyph neutral holds 11-13:1 in both
+ * themes, and the colour still arrives -- from the edge and the fill, which are
+ * non-text and answer to 3:1 rather than 4.5:1.
+ */
+.card__patch::after { content: attr(data-glyph); color: var(--text); }
+.card__patch[data-patch="buff"]     { color: var(--ok); }
+.card__patch[data-patch="nerf"]     { color: var(--danger); }
+.card__patch[data-patch="adjusted"] { color: var(--text-dim); }
 
 
 .lf-wants { display: flex; flex-wrap: wrap; gap: var(--s1); }
@@ -1118,6 +1209,38 @@ img { -webkit-user-drag: none; }
  * who has asked for more contrast has asked for exactly this, though.
  */
 :root[data-contrast="more"] .ver-pill { color: var(--text-dim); }
+
+/*
+ * The filter chips, for the reader who has asked for contrast.
+ *
+ * An unpressed chip label is --text-mute, which measures 3.37:1 on the chip in
+ * dark and 2.95:1 in light -- short of the 4.5:1 WCAG asks for at 11px, and the
+ * count badge is 9.5px. The note beside --text-mute explains why the token
+ * itself has not been lifted: 42 selectors inherit it and raising them together
+ * visibly brightened the roster. That argument does not reach here. Somebody
+ * with High contrast on has said in as many words that they would rather have
+ * the contrast than the restraint, and until now this switch only swapped the
+ * five element hues and left every filter label exactly as dim as before.
+ *
+ * --text-dim measures 6.5:1 on the same chip. Nothing else changes: the pressed
+ * states were already 12-13:1 and are left alone.
+ */
+/* Scoped through .chips rather than hitting .chip directly. At equal weight the
+   plain .chip colour kept winning, and chasing why is not worth a cascade
+   argument when every chip in this app lives in a .chips row anyway. */
+:root[data-contrast="more"] .chips .chip,
+:root[data-contrast="more"] .chips .fxcaret,
+:root[data-contrast="more"] .chips__label,
+:root[data-contrast="more"] .chips--sub .chip b { color: var(--text-dim); }
+:root[data-contrast="more"] .chips .chip:hover { color: var(--text); }
+/* The dimmed "nothing reaches this under the current ceiling" state relies on
+   opacity, which drags the label back under the floor. Kept legible, and told
+   apart by its border instead. */
+:root[data-contrast="more"] .chips--sub .chip[data-empty="true"] {
+  opacity: 1;
+  color: var(--text-mute);
+  border-style: dashed;
+}
 
 /* Owner marker. Only rendered in co-op, so solo tokens stay uncluttered. */
 .token__owner {
@@ -1821,13 +1944,185 @@ body[data-switching="true"] .cell[data-zobo] { box-shadow: none; cursor: default
 }
 
 .chip:hover { color: var(--text-dim); background: var(--surface-3); }
-.chip[aria-pressed="true"] { color: var(--text); border-color: currentColor; }
+/* Both, because the budgets are radios and everything else is a toggle. Left as
+   one rule rather than two: "this chip is the one that is on" looks the same
+   either way, and splitting it invites the two halves to drift apart. */
+.chip[aria-pressed="true"],
+.chip[aria-checked="true"] { color: var(--text); border-color: currentColor; }
 .chip--type[aria-pressed="true"] {
   color: var(--type-color);
   background: color-mix(in srgb, var(--type-color) 16%, var(--surface-2));
 }
 .chip--role[aria-pressed="true"] { color: var(--text); background: var(--surface-3); border-color: var(--text-mute); }
 .chips--text .chip { width: auto; padding: 0 var(--s2); font-size: 11.5px; font-weight: 650; }
+
+/*
+ * The caret that opens a group's specific effects, drawn as the right-hand half
+ * of the chip it follows rather than as a control of its own. Two separate
+ * buttons is what the markup has to be -- a button inside a button is not a
+ * thing -- but "filter by debuffs" and "show me which debuffs" are one idea with
+ * two halves, and the join is what says so. Hence the negative margin and the
+ * flattened inner corners.
+ */
+.fxcaret {
+  display: inline-grid; place-items: center;
+  width: 26px; min-height: 26px;
+  margin-left: -1px;
+  border: 1px solid var(--line);
+  /* A drawn divider rather than a transparent edge. The first version left the
+     inner border invisible, and with a 9px glyph the whole control read as a gap
+     between chips instead of as the thing that opens them. */
+  border-left-color: var(--line);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  background: color-mix(in srgb, var(--text) 7%, var(--surface-2));
+  color: var(--text-dim);
+  font: inherit; font-size: 13px; line-height: 1;
+  cursor: pointer;
+  transition: background-color 140ms var(--ease-out), color 140ms var(--ease-out);
+}
+.fxcaret::after { content: "▾"; }
+.fxcaret:hover { color: var(--text-dim); background: var(--surface-3); }
+.fxcaret[aria-expanded="true"] {
+  color: var(--accent-ink-on);
+  background: color-mix(in srgb, var(--accent) 20%, var(--surface-2));
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+}
+/*
+ * A group carrying a level ceiling, while its row is shut.
+ *
+ * The three budgets are independent now, so at any moment up to three of these
+ * are narrowing the roster from behind a closed caret. Without a mark, the only
+ * way to find out which was to open all three, and a filter you cannot see is
+ * how people end up convinced the roster is broken. The dot says a ceiling is
+ * set; the caret's title says which, and opening it shows the chip pressed.
+ */
+.fxcaret[data-budgeted]::before {
+  content: "";
+  position: absolute; top: 3px; right: 3px;
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.fxcaret { position: relative; }
+.fxcaret[aria-expanded="true"]::after { content: "▴"; }
+
+/* The opened row. Indented and wrapping, so it reads as belonging to the chip
+   above it rather than as a fourth filter row of equal weight. */
+.chips--sub {
+  flex-wrap: wrap;
+  margin-top: calc(var(--s1) * -1 + 2px);
+  padding-left: var(--s3);
+  border-left: 1px solid var(--line-soft);
+}
+.chips--sub .chip { width: auto; padding: 0 var(--s2); font-size: 11px; font-weight: 600; }
+/* The count, quieter than the name it follows: it is there to stop a wasted tap,
+   not to be read first. */
+.chips--sub .chip b {
+  margin-left: 4px;
+  color: var(--text-mute); font-size: 9.5px; font-weight: 700;
+}
+.chips--sub .chip[aria-pressed="true"] b,
+.chips--sub .chip[aria-checked="true"] b { color: inherit; }
+
+/* "Needs", naming what the budget chips beside it are for. Without it the four
+   of them read as four more effects. */
+/* Each half of the opened row is its own labelled group, so the four budgets
+   read as a choose-one set and the effects as an independent one. */
+.chips__group { display: inline-flex; align-items: center; gap: 3px; flex-wrap: wrap; }
+.chips__label {
+  align-self: center;
+  color: var(--text-mute); font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .06em;
+}
+/*
+ * The patch chips. A word and a count like the effect chips, with the card
+ * marker's own glyph in front so the chip and the disc on 46 cards read as one
+ * statement rather than two vocabularies that happen to agree.
+ *
+ * The glyph carries the direction's colour; the label stays the row's own
+ * neutral. Colouring the whole chip would have made three of them shout across
+ * a row where every other chip is quiet until pressed, and green and red at
+ * rest is the roster's loudest possible way of saying "nothing is filtered".
+ */
+/* A flex row, for the same reason .chip--effect is one: the base .chip is an
+   inline-grid built for a single centred glyph, so a chip with three children
+   stacks them down the column and spills into the row below. */
+.chip--changed {
+  display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+  width: auto; height: auto; min-height: 26px;
+  padding: 3px var(--s2);
+  font-size: 11.5px; font-weight: 650; line-height: 1.2;
+  white-space: nowrap;
+}
+.chip--changed b {
+  margin-left: 1px;
+  color: var(--text-mute); font-size: 9.5px; font-weight: 700;
+}
+.chip--changed[aria-checked="true"] b { color: inherit; }
+/*
+ * The same mark the cards wear, at chip size.
+ *
+ * It was a filled disc, which is what .card__patch was when this was written and
+ * is not what it is now: the disc mimicked the circular type and role badges and
+ * was replaced by a tinted rect. Leaving this one round meant the chip you press
+ * and the mark you then see on 135 cards were two different shapes claiming to
+ * be the same statement.
+ */
+.chip__glyph {
+  display: inline-grid; place-items: center;
+  min-width: 15px; height: 14px;
+  padding: 0 1px;
+  border: 1px solid currentColor;
+  border-radius: 3px;
+  background: color-mix(in srgb, currentColor 16%, var(--bg));
+  font-size: 11px; font-weight: 800; line-height: 1;
+}
+/* Neutral, not the direction's hue: --ok is about 3.9:1 as text in the light
+   theme and vanishes on its own wash. The colour lives in the edge and the fill,
+   which are non-text and answer to 3:1. Same reasoning as .card__patch. */
+.chip__glyph::after { content: attr(data-glyph); color: var(--text); }
+.chip__glyph[data-patch="buff"]     { color: var(--ok); }
+.chip__glyph[data-patch="nerf"]     { color: var(--danger); }
+.chip__glyph[data-patch="adjusted"] { color: var(--text-dim); }
+.chip--changed[aria-checked="true"] { border-color: currentColor; color: var(--text); }
+
+/* The way out to the full notes. A link, not a chip: it leaves the page, and
+   dressing it as a chip would put it in the same set as three things that
+   filter in place. */
+.chips__seeall {
+  align-self: center;
+  margin-left: var(--s1);
+  color: var(--text-dim); font-size: 11px; font-weight: 650;
+  text-decoration: none; white-space: nowrap;
+}
+.chips__seeall:hover { color: var(--text); text-decoration: underline; }
+
+/* Between the budgets and the effects they qualify: two questions, one row. */
+.chips__split {
+  align-self: stretch;
+  width: 1px; margin: 2px var(--s1);
+  background: var(--line);
+}
+.chips--sub .chip--budget { font-weight: 700; }
+.chips--sub .chip--budget[aria-checked="true"] {
+  color: var(--accent-ink-on);
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--line));
+  background: color-mix(in srgb, var(--accent) 16%, var(--surface-2));
+}
+/*
+ * An effect nothing reaches under the current ceiling. Dimmed rather than
+ * removed: that it went to zero is the answer, and a chip that vanished would
+ * look like it had never been there.
+ *
+ * Not reachable on today's data, and left in deliberately. Every named effect
+ * currently has at least one Tatari that brings it unlevelled, so the lowest
+ * ceiling still finds something for all 23 -- checked across every group and
+ * budget. One patch moving the last base source of Sting or DMG Boost (Solo)
+ * behind a level would produce it. This is a state the data can enter, not dead
+ * code; deleting it would leave a bare "0" looking like any other chip.
+ */
+.chips--sub .chip[data-empty="true"],
+.chip--changed[data-empty="true"] { opacity: .4; }
 
 /* These carry a word, since a bare triangle means nothing — so they need to be
    a flex row rather than the base chip's centred inline-grid, and to size to
@@ -1915,13 +2210,29 @@ body[data-switching="true"] .cell[data-zobo] { box-shadow: none; cursor: default
 .card:active { cursor: grabbing; transform: translateY(0); }
 .card.is-dragging { opacity: .4; }
 
+/*
+ * Two rows: a band for the effect badges, then the sprite in what is left.
+ *
+ * The badges were on top of the artwork, then briefly a row of their own below
+ * it. On top covered the critter, which matters because people screenshot these
+ * cards and post them; below it added 15px to all 230 and left a visible gap on
+ * the 34 with no effects to show. Reserving the space *inside* the art box costs
+ * neither: the box keeps its square footprint and its height, the badges sit on
+ * the type tint rather than on a Tatari, and the sprite is simply drawn smaller
+ * to fit under them. Roughly a fifth smaller, which is the price of the rule
+ * that nothing this app draws is ever on top of the art.
+ */
 .card__art {
   position: relative;
-  display: grid; place-items: center;
+  display: grid; grid-template-rows: 15px 1fr; place-items: center;
   aspect-ratio: 1;
   border-radius: var(--r-sm);
   background: color-mix(in srgb, var(--type-color) 13%, transparent);
 }
+/* min-height:0 so the sprite shrinks into its track rather than pushing the box
+   past the aspect-ratio and re-growing the card. */
+.card__art img,
+.card__art .token__fallback { grid-row: 2; min-height: 0; }
 .card__art img { width: 100%; height: 100%; object-fit: contain; }
 
 /* Tier, type and role sit under the sprite rather than on it. Measured across
@@ -2774,6 +3085,39 @@ body.is-dragging-active {
   .chips { gap: 3px; }
   .chips--text .chip { width: auto; padding: 0 6px; }
   .chip--effect { min-height: 28px; padding: 2px 6px; gap: 4px; }
+  /*
+   * The caret is deliberately not a .chip -- the generic chip handler reads
+   * dataset.value off anything wearing that class -- and that also kept it out
+   * of every rule in this block. It stayed 26px while the chips it belongs to
+   * grew, leaving the narrowest target in the row on the control that reveals
+   * everything else. Sized with them now, and 28px still clears WCAG 2.5.8.
+   */
+  .fxcaret { width: 28px; min-height: 28px; }
+
+  /*
+   * The opened row scrolls sideways rather than wrapping.
+   *
+   * Eleven debuff chips wrap to three or four lines in a 364px sheet, and the
+   * comment above this block is a long argument about exactly that cost: four
+   * rows of filters came to 316px above a 309px roster, more screen describing
+   * the list than showing it. The row is opt-in, so it never costs anyone who
+   * does not open it -- but the moment it is open it undoes the trade the rest
+   * of this block was written to win.
+   *
+   * One line that scrolls keeps the cost at 34px however many effects a group
+   * has. The budgets stay pinned at the head of it, since they are what you
+   * came to set and they should not scroll away from the effects they govern.
+   */
+  .chips--sub {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+  .chips--sub::-webkit-scrollbar { display: none; }
+  .chips--sub .chips__group { flex-wrap: nowrap; }
+  .chips--sub .chip { flex: none; }
 
   /*
    * 28px rather than 30 is not cosmetic. The five element chips and the six role
@@ -2826,6 +3170,50 @@ body.is-dragging-active {
    * on the field's blank space.
    */
   .cell.is-filled, .benchchip { touch-action: none; }
+
+  /*
+   * Reordering the plan by touch, which until now simply did not happen.
+   *
+   * .prio was in dnd.js's DRAG_SURFACES from the start, so the long-press menu
+   * was suppressed over it and everything looked wired up -- but it never got
+   * the touch-action the cells and bench chips have. Without that the browser
+   * has claimed the gesture as a scroll of the plan list well before the 180ms
+   * hold fires, so setPointerCapture arrives to find the pointer already spoken
+   * for and the drag begins over a stream of moves that never come.
+   *
+   * The whole row cannot have touch-action: none, the way a field cell can. A
+   * cell sits in a grid with empty squares left to scroll the page by; the plan
+   * is a scrolling list made entirely of these, so claiming every row would
+   * leave a long plan with no way to scroll at all.
+   *
+   * So the rank number becomes the grip, which is the one part of the row that
+   * already means order -- you take hold of the number to change the number.
+   * Widened and given a dotted grip so it reads as something to grab, and only
+   * here: on a mouse the whole row stays draggable, which is what anyone with a
+   * cursor will try first.
+   */
+  .prio__rank {
+    position: relative;
+    width: 26px; align-self: stretch;
+    display: grid; place-items: center;
+    touch-action: none;
+    cursor: grab;
+  }
+  .prio__rank::after {
+    content: "";
+    position: absolute; left: 50%; bottom: 2px;
+    width: 10px; height: 3px;
+    transform: translateX(-50%);
+    background-image: radial-gradient(circle, var(--text-mute) 40%, transparent 45%);
+    background-size: 3px 3px;
+    opacity: .8;
+  }
+  /* The grip is the target, so it has to be worth aiming at. Stretched over the
+     row's padding rather than made taller, so the row keeps its height. */
+  .prio__rank::before {
+    content: "";
+    position: absolute; inset: -5px -3px -5px -5px;
+  }
 }
 
 /* ======================================================= phone app shell */
@@ -3532,4 +3920,262 @@ body.is-clean .clean-hint {
     background-color: var(--surface-2);
     color: var(--text);
   }
+}
+
+/*
+ * The update notice, between the header and the panels.
+ *
+ * One line, and the only row on this page that is not about the formation. It
+ * exists because the way through to the update was a "See all" link at the end
+ * of the filter row: findable on a desktop, and on a phone sitting inside a
+ * sheet that has to be opened first, which is no way to tell somebody the game
+ * changed under them.
+ *
+ * Sized like a row of chrome rather than a banner. It is news, not an
+ * announcement, and it has a close button because the second time you read it
+ * it is neither.
+ */
+.patchnote {
+  display: flex; align-items: center; gap: var(--s2);
+  margin: 0 var(--s4) var(--s2);
+  padding: 6px var(--s2) 6px var(--s3);
+  border: 1px solid color-mix(in srgb, var(--accent) 32%, var(--line));
+  border-radius: var(--r-sm);
+  background: color-mix(in srgb, var(--accent) 7%, var(--surface));
+  color: var(--text-dim); font-size: 12.5px;
+  text-decoration: none;
+}
+.patchnote:hover { background: color-mix(in srgb, var(--accent) 12%, var(--surface)); }
+.patchnote__body { flex: 1 1 auto; min-width: 0; }
+.patchnote__body b { color: var(--text); font-weight: 650; }
+/* An arrow, because the row is a link and the button beside it is not. */
+.patchnote__body::after { content: " ↗"; color: var(--accent-ink-on); font-weight: 700; }
+.patchnote__x {
+  flex: none;
+  width: 26px; height: 26px;
+  border: 0; border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--text-mute); font: inherit; font-size: 16px; line-height: 1;
+  cursor: pointer;
+}
+.patchnote__x:hover { background: var(--surface-3); color: var(--text); }
+
+@media (max-width: 760px) {
+  /* Full bleed on a phone, where the panels are edge to edge anyway. */
+  .patchnote { margin: 0 var(--s3) var(--s2); }
+}
+
+/* ==================================================== what changed page */
+
+/*
+ * The patch-notes page. Its own address so it can be pasted into Discord on the
+ * morning an update lands, which is when it is read: once, scrolling, often by
+ * somebody who does not have the drafter open.
+ *
+ * Wide rather than a reading column. It began at 68ch, on the theory that this
+ * is prose -- but it is not prose, it is 35 short records, and one column of
+ * them was five screens of scrolling with no way to see how much was left. Two
+ * columns halve that and let a whole group be taken in at once.
+ */
+.changes__main {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: var(--s5) var(--s4) var(--s6);
+}
+.changes__intro {
+  max-width: 72ch;
+  margin: 0 0 var(--s5);
+  color: var(--text-dim); font-size: 14px; line-height: 1.55;
+}
+/* Empty on the normal path, so it must not leave its margin behind. */
+.changes__intro:empty { display: none; }
+
+/*
+ * What the update did to the mode, above what it did to any Tatari.
+ *
+ * Two columns of prose on a page that is otherwise a grid of records, so it has
+ * to read as a different kind of thing: a panel with its own surface rather than
+ * more cards. It is short and read once, which is why it is not collapsible --
+ * hiding eleven lines behind a toggle costs more than it saves.
+ */
+.chmode {
+  margin: 0 0 var(--s6);
+  padding: var(--s4);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-md);
+  background: var(--surface);
+}
+.chmode__head {
+  margin: 0 0 var(--s3);
+  font-size: 15px; font-weight: 700;
+}
+.chmode__groups {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--s3) var(--s5);
+}
+.chmode__title {
+  margin: 0 0 6px;
+  color: var(--text-mute); font-size: 10.5px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .07em;
+}
+.chmode__list { margin: 0; padding-left: 1.1em; }
+.chmode__list li {
+  margin-bottom: 5px;
+  color: var(--text-dim); font-size: 12.5px; line-height: 1.5;
+}
+.chmode__list li::marker { color: var(--text-mute); }
+
+.chgroup { margin-bottom: var(--s6); }
+.chgroup__head {
+  display: flex; align-items: center; gap: var(--s2);
+  margin: 0 0 2px;
+  font-size: 17px; font-weight: 700;
+}
+/* The same tag the roster cards wear, at reading size, so the heading and the
+   135 markers are recognisably one statement. */
+.chgroup__mark {
+  flex: none;
+  display: inline-grid; place-items: center;
+  min-width: 22px; height: 20px;
+  border: 1px solid currentColor;
+  border-radius: 3px;
+  background: color-mix(in srgb, currentColor 16%, var(--bg));
+  font-size: 15px; font-weight: 800; line-height: 1;
+}
+.chgroup__mark::after { content: attr(data-glyph); color: var(--text); }
+.chgroup[data-patch="buff"]     .chgroup__mark { color: var(--ok); }
+.chgroup[data-patch="nerf"]     .chgroup__mark { color: var(--danger); }
+.chgroup[data-patch="adjusted"] .chgroup__mark { color: var(--text-dim); }
+.chgroup__count {
+  margin-left: auto;
+  color: var(--text-mute); font-size: 12px; font-weight: 600;
+}
+.chgroup__blurb {
+  margin: 0 0 var(--s3);
+  color: var(--text-mute); font-size: 12.5px;
+}
+
+/* Two columns where there is room, one where there is not. auto-fill with a
+   floor rather than a fixed count, so a wide window gets a third column free
+   and nothing has to know how wide the window is. */
+.chgroup__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+  gap: var(--s3);
+}
+
+/*
+ * Each family is a card with a real edge.
+ *
+ * These were rows divided by a hairline, and the page read as one undifferen-
+ * tiated column: nothing said where one family stopped and the next began until
+ * you had read far enough to notice the names. A border and a surface do that
+ * work before anything is read.
+ */
+.chline {
+  display: flex; flex-direction: column;
+  padding: var(--s3);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-md);
+  background: var(--surface);
+}
+/*
+ * The card takes its element's colour, not its direction's.
+ *
+ * Direction was here first and it was the wrong thing to spend the card on:
+ * every card inside a group already has the same one, so the tint repeated what
+ * the heading two lines up had said in words. Element is the fact that actually
+ * varies down the grid, and it is how players hold a roster in their heads --
+ * "my Water team" is a sentence somebody says, "my nerfed team" is not.
+ *
+ * Edge and a wash behind the header, both faint. An evolution line is one
+ * element throughout, so this is a property of the whole card rather than of
+ * any member, and the sprites carry the same hue at greater strength inside it.
+ */
+.chline { border-color: color-mix(in srgb, var(--type-color, var(--line)) 38%, var(--line-soft)); }
+.chline__head {
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--type-color, transparent) 9%, transparent),
+    transparent);
+  margin: calc(var(--s3) * -1) calc(var(--s3) * -1) var(--s2);
+  padding: var(--s3) var(--s3) var(--s2);
+  border-radius: var(--r-md) var(--r-md) 0 0;
+}
+
+.chline__head {
+  display: flex; align-items: center; gap: var(--s2);
+  border-bottom: 1px solid color-mix(in srgb, var(--type-color, var(--line)) 26%, var(--line-soft));
+}
+.chline__arts { display: flex; gap: 3px; flex: none; }
+/* Small: the sprite is here to be recognised, not admired. Four at card size
+   would push the numbers off a phone, and the numbers are the page. */
+.chline__art {
+  position: relative;
+  width: 34px; height: 34px;
+  display: grid; place-items: center;
+  border-radius: var(--r-sm);
+  /* 22%, up from 14%. On the page's own background 14% read as an empty slot
+     rather than as a tinted one, which mattered most on the cards whose sprites
+     had not loaded yet -- four grey squares and no clue what element they were. */
+  background: color-mix(in srgb, var(--type-color, var(--line)) 22%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--type-color, var(--line)) 30%, transparent);
+}
+.chline__art img { width: 100%; height: 100%; object-fit: contain; }
+.chline__tier {
+  position: absolute; left: 2px; bottom: 0;
+  color: var(--text-mute); font-size: 8px; font-weight: 700;
+}
+.chline__name {
+  margin: 0; min-width: 0;
+  font-size: 12.5px; font-weight: 650; line-height: 1.3;
+}
+
+.chline__changes { margin: 0; padding: 0; list-style: none; }
+.chline__change { padding: 3px 0; font-size: 12.5px; line-height: 1.45; }
+.chline__change + .chline__change { border-top: 1px dashed var(--line-soft); }
+.chline__skill {
+  display: flex; align-items: center; gap: 5px;
+  color: var(--text); font-weight: 600;
+}
+/*
+ * Which horde level teaches it. The notes never say, and it changes what the
+ * number means: a buff to a level 7 skill is a different proposition from one
+ * to a level 3, because you have to take the Tatari that far to collect it.
+ */
+.chline__lv {
+  flex: none;
+  min-width: 20px; padding: 0 3px;
+  border-radius: 3px;
+  background: var(--surface-3);
+  color: var(--text-dim); font-size: 9.5px; font-weight: 800;
+  text-align: center; letter-spacing: .02em;
+}
+/*
+ * One stat per row, each with its own verdict.
+ *
+ * The arrow is about whether the change helps you, not about which way the
+ * number went -- those differ for an interval, where a bigger number is worse.
+ * See movement() in changes.js for the rule and the check behind it.
+ */
+.chline__stats { margin: 2px 0 0; padding: 0; list-style: none; }
+.chstat {
+  display: flex; align-items: baseline; gap: 5px;
+  color: var(--text-dim); line-height: 1.45;
+}
+.chstat__mark {
+  flex: none;
+  width: 9px;
+  color: var(--text-mute); font-size: 10px; font-weight: 800; text-align: center;
+}
+.chstat[data-move="up"]   .chstat__mark { color: var(--ok); }
+.chstat[data-move="down"] .chstat__mark { color: var(--danger); }
+.chstat[data-move="up"]   .chstat__mark::after { content: "↑"; }
+.chstat[data-move="down"] .chstat__mark::after { content: "↓"; }
+.chstat__text { min-width: 0; }
+
+@media (max-width: 760px) {
+  .changes__main { padding: var(--s4) var(--s3) var(--s6); }
+  .chgroup__grid { grid-template-columns: 1fr; gap: var(--s2); }
 }

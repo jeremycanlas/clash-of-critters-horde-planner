@@ -125,7 +125,7 @@
       wayfinding, and wayfinding only has to be findable.
     -->
       <a class="btn topbar__contribute" href="contribute.html"
-        title="Record a Tatari's attack range or support reach — it takes a couple of minutes and the data is missing for most of the roster"><span
+        title="Record a Tatari's attack range or support reach. It takes a couple of minutes, and the data is missing for most of the roster"><span
           class="topbar__contribute-plus" aria-hidden="true">+</span>Record a range</a>
 
       <!-- Phones only, and invisible: forces the row to break here, between the
@@ -184,6 +184,19 @@
     <a href="#sec-priority">Plan</a>
   </nav>
 
+  <!--
+    News of an update, and the only thing on this page that is not about the
+    formation in front of you.
+
+    The "See all" link beside the Patch chips is findable on a desktop and
+    effectively invisible on a phone, where the filters live inside a sheet that
+    has to be opened first. A patch is worth knowing about before you start
+    drafting, not after you go looking, so it says so here and then goes away for
+    good once read. Rendered by app.js, and absent entirely when
+    data/changes.json has nothing in it.
+  -->
+  <a id="patch-note" class="patchnote" href="changes.html" hidden></a>
+
   <main class="layout">
 
     <!-- ------------------------------------------------ battlefield -->
@@ -204,10 +217,10 @@
           the field on every visit.
         -->
           <label class="check"
-            title="Light the tiles a Tatari can hit, and shade the field by how many cover each tile. Only 72 of the 218 Tatari have a recorded range so far, so the picture is incomplete.">
+            title="Light the tiles a Tatari can hit, and shade the field by how many cover each tile. The range data is still being filled in, so the picture is incomplete.">
             <input id="opt-ranges" type="checkbox"> Ranges <span class="wip">WIP</span></label>
           <label class="check"
-            title="Show where the boss drags your rearmost row. Nothing is moved for real — turn it off and they go back.">
+            title="Show where the boss drags your rearmost row. Nothing is moved for real. Turn it off and they go back.">
             <input id="opt-pull" type="checkbox"> Boss pull</label>
           <!-- Not gated on anything: each round moves one Tatari to just in front
              of its lane's front rank, so any lane two deep on the field takes
@@ -261,7 +274,7 @@
              to say one thing. Turning it off is the lossy direction, so app.js
              says exactly what it cost and puts Undo on the toast. -->
           <label class="check"
-            title="Take the caps off — bring any number of Tatari and place as many as there are cells. Turning it back off puts the caps back, benches whatever no longer fits, and offers Undo.">
+            title="Take the caps off: bring any number of Tatari and place as many as there are cells. Turning it back off puts the caps back, benches whatever no longer fits, and offers Undo.">
             <input id="opt-sandbox" type="checkbox"> <span class="check__text">Sandbox</span></label>
 
           <!-- Desktop's copy. Phones get the one in the app bar instead, where it
@@ -318,7 +331,7 @@
            rows a Zobo walks in across, the same ground contribute.html records
            attack ranges over. -->
         <div id="enemy" class="grid grid--enemy" role="grid"
-          aria-label="Zobo ground, 6 columns by 7 rows — Sandbox only" hidden></div>
+          aria-label="Zobo ground, 6 columns by 7 rows (Sandbox only)" hidden></div>
         <div class="field-frame__enemy">Zobos spawn beyond this line</div>
         <div id="grid" class="grid" role="grid" aria-label="Formation grid, 6 columns by 6 rows"></div>
         <p id="field-lf" class="field-frame__lf" hidden></p>
@@ -390,7 +403,12 @@
     <!-- ------------------------------------------------ roster -->
     <section id="sec-roster" class="panel panel--roster" aria-labelledby="h-roster">
       <div class="panel__head">
-        <h2 id="h-roster">Roster <span id="roster-count" class="muted"></span></h2>
+        <!-- aria-live because the count is the only answer a filter gives. Pressing
+             Stun takes 230 to 55 on screen and, without this, silently for anyone
+             not looking at it. Polite, not assertive: it should arrive after the
+             chip's own state change, not interrupt it. -->
+        <h2 id="h-roster">Roster <span id="roster-count" class="muted"
+          role="status" aria-live="polite" aria-atomic="true"></span></h2>
         <!-- Two lists, one panel. Zobos are what you draft against, so they
              belong beside the roster rather than in a sheet of their own — and
              a tab keeps the search, the drag and the card layout shared instead
@@ -425,7 +443,21 @@
           <div id="filter-effects" class="chips chips--text" role="group"
             aria-label="Filter by what they bring besides damage"></div>
           <div id="filter-tiers" class="chips chips--text" role="group" aria-label="Filter by tier"></div>
+          <!-- What the last game update did. Built and shown only while
+               data/changes.json has entries, so between patches the row goes
+               back to the shape it has always had rather than carrying three
+               chips that find nothing. -->
+          <div id="filter-changed" class="chips chips--text" role="group" hidden></div>
         </div>
+
+        <!-- The specific effects, under the group that owns them. Empty and
+             hidden until one of the three carets above is opened: 23 chips is
+             more than the row can carry standing up, and the three groups answer
+             most questions on their own. Built from the roster rather than from
+             a list, so a tag nothing carries never becomes a chip that finds
+             nothing. -->
+        <div id="filter-effect-types" class="chips chips--text chips--sub"
+          role="group" aria-label="Specific effects" hidden></div>
 
         <div class="filters__row filters__row--meta">
           <label class="check" title="Hide Tatari locked out by an evolution line you are already bringing">

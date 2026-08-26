@@ -277,20 +277,37 @@ export function buildGrid() {
   window.addEventListener('pointerup', clearRangePreview);
   window.addEventListener('pointercancel', clearRangePreview);
 
+  /*
+   * Both halves of the board, not just the near one.
+   *
+   * The rows past the contact line are a second element -- they have to be, the
+   * line is drawn between the two -- and every handler below was bound only to
+   * the near grid. So a Tatari the boss pulled out there could be dragged (that
+   * is bound per cell, further up) and nothing else: double-clicking it did not
+   * take it off the field, an armed bench chip would not drop into it, hovering
+   * it showed no range, and the arrow keys stopped at the line.
+   *
+   * The cells are identical either side and the handlers already read
+   * everything they need off dataset.cell, so the fix is to bind them to both
+   * hosts rather than to teach any one of them where it is standing.
+   */
+  const hosts = [grid, enemy].filter(Boolean);
+  const onBoard = (type, fn) => { for (const host of hosts) host.addEventListener(type, fn); };
+
   // Hovering a token isolates its own range, which is how you read one Tatari
   // out of the coverage shading.
-  grid.addEventListener('pointerover', (e) => {
+  onBoard('pointerover', (e) => {
     const cell = e.target.closest('.cell.is-filled');
     if (!cell || document.body.classList.contains('is-dragging-active')) return;
     const occ = store.formation.cells[Number(cell.dataset.cell)];
     if (occ) previewRange(Number(cell.dataset.cell), occ.slug);
   });
-  grid.addEventListener('pointerout', (e) => {
+  onBoard('pointerout', (e) => {
     if (!e.target.closest('.cell')) return;
     clearRangePreview();
   });
 
-  grid.addEventListener('click', (e) => {
+  onBoard('click', (e) => {
     /*
      * While the switch mode is armed a tap changes sides and does nothing else —
      * before the add-step button and before the armed-chip picker, both of which
@@ -318,12 +335,12 @@ export function buildGrid() {
     commit(Number(cell.dataset.cell));
   });
 
-  grid.addEventListener('dblclick', (e) => {
+  onBoard('dblclick', (e) => {
     const cell = e.target.closest('.cell');
     if (cell) store.unplaceAt(Number(cell.dataset.cell));
   });
 
-  grid.addEventListener('keydown', onKeydown);
+  onBoard('keydown', onKeydown);
 
   // Escape backs out of an armed chip wherever focus happens to be. The sheet
   // handler in shell.js also listens, but a sheet and an armed chip cannot be

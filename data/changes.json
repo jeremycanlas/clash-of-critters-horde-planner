@@ -1,0 +1,548 @@
+{
+  "_readme": [
+    "Which Tatari the last game update moved, and which way.",
+    "",
+    "The wiki publishes what a skill does now; it does not publish what it did",
+    "before, so nothing in this file can be scraped. The numbers come from the",
+    "patch notes the developers post, read by hand into here. The source field",
+    "names which set of notes, so a wrong call can be checked rather than trusted.",
+    "",
+    "A line, not a Tatari. Horde Invasion skills belong to the whole evolution",
+    "family -- Frostnip and Frostluna carry the same three -- so a change lands on",
+    "every member, and members is that family expanded to slugs. Anything absent",
+    "from this file was not touched by the update.",
+    "",
+    "The direction field is the only judgement in here:",
+    "  buff      every number moved in the player favour",
+    "  nerf      every number moved against them",
+    "  adjusted  some of each, so calling it either way would be a lie",
+    "",
+    "Two rules keep that judgement consistent. Faster intervals and shorter",
+    "cooldowns count as favourable and longer ones do not. And where a debuff a",
+    "Tatari inflicts got weaker, that is a nerf to the Tatari even though the",
+    "number went down -- Droppit Sea Fog is the one that catches people.",
+    "",
+    "One patch at a time. These markers are worth having the week an update lands",
+    "and misleading three updates later, so when the next notes arrive this file",
+    "is rewritten rather than appended to. Leaving lines empty is a coherent",
+    "state: the roster simply stops marking anything."
+  ],
+  "patch": "2026-08-26",
+  "label": "26 August 2026",
+  "source": "In-game patch notes, section 8 (Horde Invasion skill balance)",
+  "lines": [
+    {
+      "line": "Blueflick",
+      "direction": "buff",
+      "members": [
+        "blueflick",
+        "ignisnap",
+        "azurion",
+        "newflamander"
+      ],
+      "changes": [
+        "Fire Trigger: Damage 60% → 96%, follow-up 20% → 36%",
+        "Blazing Path: Damage 200% → 300%"
+      ]
+    },
+    {
+      "line": "Drilleroo",
+      "direction": "buff",
+      "members": [
+        "drilleroo",
+        "cragolin",
+        "borelord"
+      ],
+      "changes": [
+        "Shredding Stab: trigger 30% → 45%",
+        "Crowd Crusher: base Shield 5% → 7% of HP"
+      ]
+    },
+    {
+      "line": "Dumbopus",
+      "direction": "buff",
+      "members": [
+        "dumbopus",
+        "dazopus",
+        "fishopus",
+        "lordopus"
+      ],
+      "changes": [
+        "Ink Splatter: Damage 160% → 200%, extra bomb 40% → 55%, Blind 30% → 40%",
+        "Octo-Nuke: Damage 300% → 390%, centre 900% → 1150%"
+      ]
+    },
+    {
+      "line": "Fluffle",
+      "direction": "buff",
+      "members": [
+        "fluffle",
+        "nimbuzzy",
+        "galewether",
+        "cosmoram"
+      ],
+      "changes": [
+        "Flash Bolt: Damage 230% → 255%",
+        "Grim Skies: Damage 80% → 135%"
+      ]
+    },
+    {
+      "line": "Frostnip",
+      "direction": "buff",
+      "members": [
+        "frostnip",
+        "frostpaw",
+        "frostique",
+        "frostluna"
+      ],
+      "changes": [
+        "Ice Burst: Freeze 40% → 45%",
+        "Ice Scatter: Damage 120% → 135%",
+        "Frost Path: Freeze 40% → 45%"
+      ]
+    },
+    {
+      "line": "Fumekit",
+      "direction": "buff",
+      "members": [
+        "fumekit",
+        "sulfunk",
+        "magmusk",
+        "blastniff"
+      ],
+      "changes": [
+        "Ember Pop: Damage 400% → 450%, trigger 20% → 40%",
+        "Firework Frenzy: Damage 40% → 80%"
+      ]
+    },
+    {
+      "line": "Gopher",
+      "direction": "buff",
+      "members": [
+        "gopher",
+        "watchroo",
+        "bastogard",
+        "cratzar"
+      ],
+      "changes": [
+        "Smoke Bomb: Damage 50% → 70%, smoke 50% → 60%",
+        "Escape Route: Damage 180% → 300%"
+      ]
+    },
+    {
+      "line": "Hootlet",
+      "direction": "buff",
+      "members": [
+        "hootlet",
+        "tikowl",
+        "chronerva",
+        "hypnostrix"
+      ],
+      "changes": [
+        "Timed Therapy: Healing 60% → 75%"
+      ]
+    },
+    {
+      "line": "Joeyo",
+      "direction": "buff",
+      "members": [
+        "joeyo",
+        "puncharoo",
+        "kangachamp",
+        "kaiseroo"
+      ],
+      "changes": [
+        "Combo!: extra punch 66% → 80%",
+        "Counterpunch!: counter 30% → 45%, invincibility 2s → 2.5s",
+        "Super Launch!: Damage 380% → 525%"
+      ]
+    },
+    {
+      "line": "Kittazap",
+      "direction": "buff",
+      "members": [
+        "kittazap",
+        "nekowatt",
+        "voltazar"
+      ],
+      "changes": [
+        "Rain of Riches: Damage 85% → 100%"
+      ]
+    },
+    {
+      "line": "Lollama",
+      "direction": "buff",
+      "members": [
+        "lollama",
+        "slobberlama",
+        "ptooielama"
+      ],
+      "changes": [
+        "Sticky Spit: Damage 220% → 240%",
+        "Precision Guidance: Damage 75% → 140%"
+      ]
+    },
+    {
+      "line": "Lullelly",
+      "direction": "buff",
+      "members": [
+        "lullelly",
+        "yawnelly",
+        "souverelle",
+        "somnrayna"
+      ],
+      "changes": [
+        "Splash Shot: Damage 230% → 280%, trigger 40% → 55%",
+        "Bubble Pop: Stun 25% → 35%"
+      ]
+    },
+    {
+      "line": "Maskfry",
+      "direction": "buff",
+      "members": [
+        "maskfry",
+        "ospisces",
+        "armorjaw",
+        "dagondeep"
+      ],
+      "changes": [
+        "Seeping Gaze: Damage 200% → 225%",
+        "Primordial Boon: Shield 30% → 40% of HP",
+        "Abyssal Maw: Damage 250% → 390%"
+      ]
+    },
+    {
+      "line": "Momopo",
+      "direction": "buff",
+      "members": [
+        "momopo",
+        "lulupo",
+        "lilypo",
+        "gemmapo"
+      ],
+      "changes": [
+        "Pink Protection: prevention count 3 → 4",
+        "Lovely Barrier: intercept count 12 → 15"
+      ]
+    },
+    {
+      "line": "Pyropup",
+      "direction": "buff",
+      "members": [
+        "pyropup",
+        "pyrohound",
+        "hellhound",
+        "pyrodaemon"
+      ],
+      "changes": [
+        "Flame Halo: Damage 60% → 85%",
+        "Hellflame: Damage 80% → 120%"
+      ]
+    },
+    {
+      "line": "Rubblet",
+      "direction": "buff",
+      "members": [
+        "rubblet",
+        "cobbledon",
+        "rockzilla",
+        "meteorax"
+      ],
+      "changes": [
+        "Fault Line: Damage 210% → 280%, Stun 20% → 32%"
+      ]
+    },
+    {
+      "line": "Sackling",
+      "direction": "buff",
+      "members": [
+        "sackling",
+        "jarachnid",
+        "terracrawler",
+        "weaverfang"
+      ],
+      "changes": [
+        "Liquid Shield: green bubble 30% → 45%",
+        "Spider Web: Bind 30% → 45%",
+        "Spider Lair: Damage 170% → 240%"
+      ]
+    },
+    {
+      "line": "Sealing",
+      "direction": "buff",
+      "members": [
+        "sealing",
+        "sealoon",
+        "seaswirl",
+        "sealord"
+      ],
+      "changes": [
+        "Pressure Orb: Damage 110% → 120%",
+        "Wave Blast: Damage 160% → 180%"
+      ]
+    },
+    {
+      "line": "Shrimpyro",
+      "direction": "buff",
+      "members": [
+        "shrimpyro",
+        "pyroprawn",
+        "pyroclobster",
+        "pyroviathan"
+      ],
+      "changes": [
+        "Blasting Jabs: Damage 40% → 65%",
+        "Piercing Jabs: Damage 80% → 140%"
+      ]
+    },
+    {
+      "line": "Skinklet",
+      "direction": "buff",
+      "members": [
+        "skinklet",
+        "skinkoon",
+        "ninjaguana",
+        "hychroma"
+      ],
+      "changes": [
+        "Vortex Sap: trigger 40% → 45%",
+        "Technique: Veil: Damage 50% → 90%"
+      ]
+    },
+    {
+      "line": "Tindercub",
+      "direction": "buff",
+      "members": [
+        "tindercub",
+        "kitjitsu",
+        "taiglow",
+        "saberheart"
+      ],
+      "changes": [
+        "Blaze Burst: Damage 160% → 230%",
+        "Flame Fists: Damage 400% → 580%"
+      ]
+    },
+    {
+      "line": "Voltkit",
+      "direction": "buff",
+      "members": [
+        "voltkit",
+        "voltling",
+        "voltverine",
+        "voltreaver"
+      ],
+      "changes": [
+        "Phantom Hit: shadow hit 35% → 55%",
+        "Bolt Slash: Damage 420% → 600%, interval 9s → 8s"
+      ]
+    },
+    {
+      "line": "Voltfawn",
+      "direction": "adjusted",
+      "members": [
+        "voltfawn",
+        "sparkdoe",
+        "zapantler",
+        "magnedart"
+      ],
+      "changes": [
+        "Scatter Bolt: trigger 60% → 45%",
+        "Bolt Trigger: Damage 300% → 255%, Paralysis 40% → 45%"
+      ]
+    },
+    {
+      "line": "Ashlarva",
+      "direction": "nerf",
+      "members": [
+        "ashlarva",
+        "firecoil",
+        "charflutter",
+        "chrysolaria"
+      ],
+      "changes": [
+        "Fluff Flame: Damage 350% → 240%",
+        "Flutter Flame: Damage 25% → 16%",
+        "Wing Embrace: All Stats UP 18% → 9%"
+      ]
+    },
+    {
+      "line": "Buddi",
+      "direction": "nerf",
+      "members": [
+        "buddi",
+        "sunfleur",
+        "solaflora",
+        "heliabloom"
+      ],
+      "changes": [
+        "Warm Aura: Shield 10% → 4% of ATK, stacks 4 → 2",
+        "Tint Shades: Damage 280% → 210%, strange sunlight 50% → 25%",
+        "Full Sun: interval 14-24s → 24-32s"
+      ]
+    },
+    {
+      "line": "Cheerling",
+      "direction": "nerf",
+      "members": [
+        "cheerling",
+        "cheerlet",
+        "cheerspring",
+        "cheerstella"
+      ],
+      "changes": [
+        "Just Dance: interval 16-20s → 18-22s, invincibility 2s → 1.5s",
+        "Zap Chord: Damage 200% → 120%, Slow/Bind/Stun 40/30/20% → 30/20/10%"
+      ]
+    },
+    {
+      "line": "Dewgrub",
+      "direction": "nerf",
+      "members": [
+        "dewgrub",
+        "ripplewing",
+        "waveflutter"
+      ],
+      "changes": [
+        "Aqua Flutter: Damage 100% → 45%, butterfly 20% → 12%",
+        "Resonant Flutter: interval 8-12s → 9-13s, ally effect 4s → 3.5s",
+        "Torrential Flutter: Damage 75% → 18%, Sleep 20% → 12%"
+      ]
+    },
+    {
+      "line": "Droppit",
+      "direction": "nerf",
+      "members": [
+        "droppit",
+        "bubbit",
+        "tideon",
+        "haplysia"
+      ],
+      "changes": [
+        "Sea Fog: Super Fragile 40% → 30%"
+      ]
+    },
+    {
+      "line": "Flameow",
+      "direction": "nerf",
+      "members": [
+        "flameow",
+        "nekoflare",
+        "silversear"
+      ],
+      "changes": [
+        "Sweeping Jewel: Damage 100% → 50%",
+        "More Jewels: pierce 40% → 20%, final 130% → 50%"
+      ]
+    },
+    {
+      "line": "Pandaroo",
+      "direction": "nerf",
+      "members": [
+        "pandaroo",
+        "pandaroot",
+        "pandarrior",
+        "pandagrand"
+      ],
+      "changes": [
+        "Bambattle: bamboo grove DMG Boost & Reduction 25% → 20%"
+      ]
+    },
+    {
+      "line": "Punchimp",
+      "direction": "nerf",
+      "members": [
+        "punchimp",
+        "rockfu",
+        "rockwu",
+        "rockong"
+      ],
+      "changes": [
+        "Hit Me!: clone HP 30% → 24%",
+        "Staff Cyclone: Damage 240% → 180%"
+      ]
+    },
+    {
+      "line": "Souphog",
+      "direction": "nerf",
+      "members": [
+        "souphog",
+        "grillhog",
+        "hothog",
+        "searhog"
+      ],
+      "changes": [
+        "Second Helping: Damage 280% → 180%, launch 40% → 20%",
+        "Free Snacks: Heal 20% → 12%",
+        "Food Fight!: Damage 200% → 105%, Heal 6% → 2.5%"
+      ]
+    },
+    {
+      "line": "Sparkeet",
+      "direction": "nerf",
+      "members": [
+        "sparkeet",
+        "buzzbeak",
+        "toucanzam",
+        "technocan"
+      ],
+      "changes": [
+        "Full Charge: DMG Reduction 20% → 10%, ATK Boost 50% → 25%"
+      ]
+    },
+    {
+      "line": "Zaplet",
+      "direction": "nerf",
+      "members": [
+        "zaplet",
+        "synthhog",
+        "sonarbat",
+        "umbraveil"
+      ],
+      "changes": [
+        "Resonant Echoes: large DMG Boost 30% → 20%",
+        "Bat Swarm: Damage 100% → 50%",
+        "Radar Rage: Damage 100% → 50%"
+      ]
+    },
+    {
+      "line": "Zappur",
+      "direction": "nerf",
+      "members": [
+        "zappur",
+        "electroar",
+        "blitzmane",
+        "stormlion"
+      ],
+      "changes": [
+        "Lightburst: Damage 500% → 350%, Knockback 50% → 40%"
+      ]
+    }
+  ],
+  "mode": {
+    "_note": "The Horde Invasion parts of the update that are not about one Tatari. Trimmed from the full notes, which also cover Cozy Farm, the Bento Maker, the spinwheel and the chapter stages -- none of which this tool models.",
+    "groups": [
+      {
+        "title": "New",
+        "items": [
+          "Horde Invasion now runs in seasons, with balance passes to Tatari and Chips between them. The first season runs about four weeks.",
+          "Chips are back, and staying.",
+          "Difficulties are picked rather than fixed, and unlock in order: clear one to open the next. Single battles are shorter.",
+          "A season leaderboard, ranked on your highest difficulty and your kill count in one invasion. Tallied at the end of each season; rewards include a season-exclusive avatar frame.",
+          "Season history, so recent horde battles can be looked back at and shared."
+        ]
+      },
+      {
+        "title": "Changed",
+        "items": [
+          "Each invasion window is three hours, up from two. The settlement phase is still one hour.",
+          "Fewer kills are needed for a clear, and clearing no longer ends the battle: you can keep chasing Zobos.",
+          "Everyone who took part is rewarded after a clear, not only the finisher.",
+          "Matchmaking prefers players of a similar level.",
+          "The teammate invite list puts recommended teammates ahead of offline friends.",
+          "Fixed: the Horde Invasion entrance sometimes vanishing on the first login of the day."
+        ]
+      }
+    ]
+  }
+}

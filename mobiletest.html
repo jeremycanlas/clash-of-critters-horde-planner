@@ -1,0 +1,528 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Horde Drafter: phone checks</title>
+<body style="font:13px/1.5 ui-monospace,monospace;background:#12141a;color:#e7eaf1;margin:0">
+<!--
+  The phone build, checked at phone size.
+
+  Three quarters of the people who use this are on a phone and 47% of the
+  browsers are Safari, so the layout the desktop suite exercises is the minority
+  one. This runs the same app in a 390x844 frame, which is where the shell
+  changes shape entirely: the field takes the screen, the three panels become
+  sheets, and a fixed bar appears along the bottom.
+
+  What it cannot do is pretend to be a touchscreen. `@media (hover: none)` does
+  not match in a desktop browser at any width, so the rules in that block --
+  touch targets, the plan's drag grip, the sideways effect row -- are checked by
+  reading them out of the stylesheet rather than by watching them apply. That
+  half is honest about being a static check, and the checks say so.
+-->
+<div style="display:flex;height:100vh">
+  <div style="flex:1 1 auto;overflow:auto;padding:16px;box-sizing:border-box">
+    <h1 style="font:600 15px system-ui;margin:0 0 4px">Phone checks</h1>
+    <p id="head" style="margin:0 0 12px;color:#a3aab9">starting…</p>
+    <div id="log"></div>
+  </div>
+  <!-- A real phone viewport. 390x844 is an iPhone 14, which is the shape most of
+     this app's traffic actually arrives in. -->
+  <div id="stage" style="flex:0 0 390px;position:relative;border-left:1px solid #2e3340"></div>
+</div>
+
+<script type="module">
+const out = document.getElementById('log');
+let pass = 0, fail = 0;
+
+const line = (html) => out.insertAdjacentHTML('beforeend', html);
+const ok = (name, cond, detail) => {
+  if (cond) { pass++; line(`<div style="color:#55c98a">  ok   ${name}</div>`); }
+  else {
+    fail++;
+    line(`<div style="color:#f0654f">  FAIL ${name}${detail ? `<div style="padding-left:7ch;color:#a3aab9">${detail}</div>` : ''}</div>`);
+  }
+};
+const eq = (name, got, want) => ok(name, Object.is(got, want), `got ${JSON.stringify(got)}, wanted ${JSON.stringify(want)}`);
+/* Timings are reported whether they pass or not: a budget that quietly passes at
+   199ms is worth seeing before it becomes 201. */
+const under = (name, ms, budget) => {
+  const good = ms <= budget;
+  if (good) { pass++; line(`<div style="color:#55c98a">  ok   ${name} <span style="color:#a3aab9">${ms.toFixed(0)}ms of ${budget}ms</span></div>`); }
+  else { fail++; line(`<div style="color:#f0654f">  FAIL ${name} — ${ms.toFixed(0)}ms, budget ${budget}ms</div>`); }
+};
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const until = async (test, what, ms = 25000) => {
+  const stop = Date.now() + ms;
+  while (Date.now() < stop) { if (test()) return true; await sleep(50); }
+  throw new Error(`timed out waiting for ${what}`);
+};
+
+const runGroup = async (name, body) => {
+  line(`<div style="margin:12px 0 2px;color:#ffc93c;font-weight:700">${name}</div>`);
+  try { await body(); } catch (err) {
+    fail++;
+    line(`<div style="color:#f0654f">  FAIL ${name} threw — ${err.message}</div>`);
+  }
+};
+
+const saved = { ...localStorage };
+/*
+ * The frame shares this origin's storage, so whatever is in it is whatever the
+ * last visit left: a saved formation, a dismissed update notice, a half-drafted
+ * board. Wiped so the drafting checks below start from an empty field, and put
+ * back at the end so running the suite never costs anyone their saves.
+ */
+localStorage.clear();
+const stage = document.getElementById('stage');
+/*
+ * Every file the app is made of, re-fetched past the cache before anything runs.
+ *
+ * This is not housekeeping. Reload this page after editing a module and the
+ * frame can be handed the version that was there before the edit -- a full run
+ * of green against code that no longer exists, which is the worst thing a suite
+ * can do and exactly what happened while this one was being written. A query
+ * string on the frame's own URL does not help: index.html asks for
+ * assets/js/app.js by that name whatever the page's address was, and that is
+ * the request that comes back stale.
+ *
+ * So the graph is walked and every file in it fetched with cache: 'reload',
+ * which revalidates the entry the frame is about to use. Thirty-odd requests
+ * against a local server, and the alternative is a suite that lies.
+ */
+async function freshen(...entries) {
+  const seen = new Set();
+  const queue = [...entries];
+  while (queue.length) {
+    const url = new URL(queue.shift(), location.href).href;
+    if (seen.has(url) || !url.startsWith(location.origin)) continue;
+    seen.add(url);
+    let text;
+    try { text = await (await fetch(url, { cache: 'reload' })).text(); } catch { continue; }
+    if (/\.html$/.test(url)) {
+      for (const m of text.matchAll(/(?:src|href)="([^":]+\.(?:js|css))"/g)) queue.push(new URL(m[1], url).href);
+    } else if (/\.js$/.test(url)) {
+      for (const m of text.matchAll(/from\s+'([^']+\.js)'/g)) queue.push(new URL(m[1], url).href);
+    }
+  }
+  return seen.size;
+}
+const freshened = await freshen('index.html', 'changes.html');
+
+let runs = 0;
+const frameFor = (src) => {
+  const f = document.createElement('iframe');
+  f.ready = new Promise((resolve) => f.addEventListener('load', resolve, { once: true }));
+  f.src = `${src}?run=${performance.now().toFixed(0)}.${runs++}`;
+  f.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;border:0';
+  stage.append(f);
+  return f;
+};
+
+let D, W;
+const $ = (sel) => D.querySelector(sel);
+const $$ = (sel) => [...D.querySelectorAll(sel)];
+const cards = () => $$('.panel--roster .card').length;
+/*
+ * Scoped to the bar on purpose. An open sheet writes data-sheet onto <body>,
+ * and <body> comes first in document order -- so a plain
+ * querySelector('[data-sheet="roster"]') hands back the body element and the
+ * second tap lands on nothing. That is exactly how this suite first "found" a
+ * broken close button that works.
+ */
+const barBtn = (name) => $(`#appbar [data-sheet="${name}"]`);
+const click = async (el, settle = 260) => { el.click(); await sleep(settle); };
+const bootAt = performance.now();
+const app = frameFor('index.html');
+let firstPaint = 0;
+let total = 0;
+
+await runGroup('boot on a phone', async () => {
+  ok('the app was re-fetched past the cache first', freshened > 20, `${freshened} files`);
+  await app.ready;
+  D = app.contentDocument;
+  W = app.contentWindow;
+  await until(() => D.querySelectorAll('.panel--roster .card').length > 0, 'the roster');
+  firstPaint = performance.now() - bootAt;
+
+  eq('the frame really is phone width', W.innerWidth, 390);
+  ok('the phone stylesheet is the one in force', W.matchMedia('(max-width: 760px)').matches);
+  total = cards();
+  ok('every Tatari is there', total > 200, `${total} cards`);
+  /*
+   * A budget rather than a stopwatch. This is one machine on localhost, so the
+   * number means little on its own -- what it catches is the day somebody adds a
+   * blocking fetch to boot and it goes from two seconds to nine.
+   */
+  under('first roster paint', firstPaint, 4000);
+});
+
+await runGroup('the phone shell', async () => {
+  const bar = $('#appbar');
+  ok('the app bar exists', !!bar);
+  ok('the app bar is actually visible here',
+     W.getComputedStyle(bar).display !== 'none', W.getComputedStyle(bar).display);
+  ok('it is pinned to the bottom rather than scrolling away',
+     W.getComputedStyle(bar).position === 'fixed');
+  const labels = [...bar.querySelectorAll('.appbar__label')].map((l) => l.textContent.trim());
+  ok('every panel has a way in', ['Add', 'Summary', 'Plan', 'Saved'].every((l) => labels.includes(l)), labels.join(', '));
+  ok('sharing is on the bar, not buried in the header', labels.includes('Share'));
+
+  /* The reason the shell exists: the field is the page here, and a screenshot of
+     it is how formations actually travel. If it does not fit, that breaks. */
+  const field = $('.panel--field').getBoundingClientRect();
+  ok('the field fits one phone screen', field.height <= 844, `${Math.round(field.height)}px tall`);
+  ok('nothing overflows sideways',
+     D.documentElement.scrollWidth <= 390 + 1, `${D.documentElement.scrollWidth}px wide`);
+});
+
+await runGroup('sheets open and close', async () => {
+  for (const name of ['roster', 'priority', 'saves']) {
+    await click(barBtn(name), 320);
+    eq(`${name}: opening it marks the body`, D.body.dataset.sheet, name);
+    ok(`${name}: the page behind it stops scrolling`,
+       W.getComputedStyle(D.body).overflow === 'hidden');
+    ok(`${name}: what is behind it goes inert`, D.querySelector('.topbar').inert);
+    await click(barBtn(name), 320);
+    ok(`${name}: pressing it again closes`, !D.body.dataset.sheet, D.body.dataset.sheet);
+    ok(`${name}: and the page behind it comes back`, !D.querySelector('.topbar').inert);
+  }
+
+  // Every other way out of a sheet, since a phone offers three.
+  await click(barBtn('roster'), 320);
+  D.querySelector('#scrim').click();
+  await sleep(300);
+  ok('tapping the field behind it closes', !D.body.dataset.sheet, D.body.dataset.sheet);
+
+  await click(barBtn('roster'), 320);
+  W.history.back();
+  await sleep(400);
+  ok('the Android back gesture closes the sheet rather than leaving',
+     !D.body.dataset.sheet, D.body.dataset.sheet);
+});
+
+await runGroup('filtering, from inside the sheet', async () => {
+  await click(barBtn('roster'), 340);
+  eq('the roster sheet is open', D.body.dataset.sheet, 'roster');
+
+  /*
+   * Timed synchronously, and only synchronously.
+   *
+   * Applying a filter rebuilds every card and rebinds every drag handler in one
+   * blocking pass, so the whole cost of a tap sits between .click() returning
+   * and the next line -- which is also exactly the stretch a thumb waits
+   * through. Nothing here waits on a timer, because a browser clamps
+   * setTimeout to one second in a tab that is not in front, and a suite whose
+   * verdict depends on whether you were looking at it is worse than no suite.
+   * That clamp is why the search box below is checked for what it does rather
+   * than for how long its 120ms debounce took.
+   */
+  const tap = (el) => { const t = performance.now(); el.click(); return performance.now() - t; };
+
+  const filterMs = tap($('.chip--type[data-value="Water"]'));
+  const water = cards();
+  ok('it narrowed', water > 0 && water < total, `${water} of ${total}`);
+  under('applying a filter', filterMs, 250);
+
+  // The heaviest redraw there is: back to all 230 cards, every sprite rebuilt.
+  under('clearing it again, all 230 cards', tap($('.chip--type[data-value="Water"]')), 300);
+  eq('clearing put it back', cards(), total);
+
+  const box = $('#search');
+  box.value = 'frost';
+  box.dispatchEvent(new W.Event('input', { bubbles: true }));
+  await until(() => cards() !== total, 'the search to apply', 6000);
+  const found = cards();
+  ok('search narrows the roster', found > 0 && found < total, `${found} cards`);
+  /* Not the arbitrary one it looks like. Stoodbeak's skill is Frostbust, so a
+     search matching names only would find fewer than a search that reads
+     skills, and this is the cheapest way to notice that changed. */
+  ok('and it reads skills, not just names',
+     $$('.panel--roster .card__name').some((el) => !/frost/i.test(el.textContent)));
+
+  await click($('#btn-reset-filters'), 320);
+  box.value = '';
+  eq('reset puts it back', cards(), total);
+});
+
+await runGroup('drafting, the way a phone does it', async () => {
+  /*
+   * The whole reason the shell exists, end to end.
+   *
+   * On a desktop you drag a card onto the field. On a phone the two are never on
+   * screen together, so the path is three taps -- card, chip, cell -- and it is
+   * the only path most of this app's traffic has. If it breaks, the app does.
+   */
+  const count = (sel) => Number($(sel).textContent || 0);
+  eq('nothing is benched to start', count('#appbar-bench'), 0);
+
+  await click(barBtn('roster'), 340);
+  const first = $('.panel--roster .card');
+  const name = first.querySelector('.card__name').textContent.trim();
+  await click(first, 260);
+  eq('tapping a card benches it', count('#appbar-bench'), 1);
+  ok('and the card says so', $(`.card[data-slug="${first.dataset.slug}"]`).classList.contains('is-benched'));
+
+  await click(barBtn('roster'), 340);
+  const chip = $('.benchchip');
+  ok(`${name} is on the bench, under the field`, !!chip);
+
+  await click(chip, 220);
+  ok('tapping the chip arms it', $('.benchchip').classList.contains('is-armed'));
+
+  const empty = $$('.cell:not(.cell--enemy)').find((c) => !c.querySelector('.token'));
+  await click(empty, 300);
+  eq('tapping a square places it', count('#appbar-field'), 1);
+  eq('and the chip leaves the bench strip', $$('.benchchip').length, 0);
+  /*
+   * Still 1, and deliberately. The badge on Add counts what you are bringing,
+   * not what is still waiting -- placing a Tatari does not stop you bringing
+   * it, and a badge that emptied on the first placement would read as "you have
+   * nobody" with a full field.
+   */
+  eq('but you are still bringing it', count('#appbar-bench'), 1);
+  ok('nothing is left armed', !$('.benchchip.is-armed'));
+
+  // The plan, reached from the token rather than from the plan sheet -- which is
+  // the only way to add a step without leaving the field.
+  const add = $('.cell [data-add-step]');
+  ok('a placed Tatari offers a level-up step', !!add);
+  await click(add, 300);
+  eq('adding one shows on the bar', count('#appbar-steps'), 1);
+
+  await click(barBtn('priority'), 340);
+  ok('and the plan sheet lists it', $$('.prio:not(.prio--ghost)').length >= 1);
+  ok('the step names the Tatari', $('.panel--priority').textContent.includes(name));
+  await click(barBtn('priority'), 320);
+
+  await click(barBtn('summary'), 340);
+  ok('the summary sheet has something to say', $('#summary').textContent.trim().length > 0);
+  await click(barBtn('summary'), 320);
+});
+
+await runGroup('past the contact line', async () => {
+  /*
+   * The rows the boss pull and the Zobo ground open are a second element, and
+   * every board handler used to be bound to the near grid alone. A Tatari out
+   * there could be dragged and nothing else: double-clicking it did not take it
+   * off the field, and an armed chip would not drop into it either.
+   *
+   * Reached here through the Zobo ground rather than through a pull, because the
+   * pull only reaches past the line when a lane is already full to the front
+   * rank and that takes six placements to arrange. Same cells, same element,
+   * same handlers.
+   */
+  await click($('#opt-zobo'), 420);
+  const beyond = $('#enemy .cell[data-cell="60"]');
+  ok('the ground past the line is open', !!beyond && $('#enemy').offsetHeight > 0);
+
+  /* Not merely "not benched": a card from the same evolution line answers a tap
+     by switching tier instead, which benches nobody. */
+  await click(barBtn('roster'), 340);
+  const fresh = $$('.panel--roster .card')
+    .find((c) => !c.classList.contains('is-benched') && !c.dataset.switchFrom);
+  await click(fresh, 320);
+  await click(barBtn('roster'), 340);
+  const waiting = $('.benchchip');
+  ok('there is something on the bench to place', !!waiting);
+  await click(waiting, 250);
+  await click(beyond, 350);
+  ok('an armed chip drops into a cell past the line', beyond.classList.contains('is-filled'));
+
+  beyond.dispatchEvent(new W.MouseEvent('dblclick', { bubbles: true }));
+  await sleep(320);
+  ok('and double-clicking it takes it off the field again', !beyond.classList.contains('is-filled'));
+  ok('it goes back to the bench rather than nowhere', $$('.benchchip').length >= 1);
+
+  await click($('#opt-zobo'), 420);
+});
+
+await runGroup('keeping and sharing it', async () => {
+  await click(barBtn('saves'), 340);
+  const before = $$('.save').length;
+  await click($('#btn-keep'), 420);
+  eq('saving adds one', $$('.save').length, before + 1);
+  ok('and the bar counts it', Number($('#appbar-saves').textContent || 0) >= 1);
+  await click(barBtn('saves'), 320);
+
+  await click($('#appbar [data-action="share"]'), 500);
+  const dialog = $('dialog[open]');
+  ok('Share opens something', !!dialog);
+  ok('the sheet got out of the way first', !D.body.dataset.sheet);
+  dialog?.close();
+  await sleep(200);
+});
+
+await runGroup('what this session added, at phone size', async () => {
+  ok('the update notice is on the page before anything is opened',
+     !$('#patch-note').hidden);
+  const note = $('#patch-note').getBoundingClientRect();
+  ok('the notice fits the width', note.width <= 390, `${Math.round(note.width)}px`);
+  ok('it links to the update page', $('#patch-note').getAttribute('href') === 'changes.html');
+
+  ok('the patch chips are reachable in the sheet', $$('.chip--changed').length > 0);
+
+  /*
+   * Counted against a filter that is already on, which is the whole point of
+   * the number.
+   *
+   * With nothing else set, a chip that ignored the rest of the filters would
+   * print the right total anyway -- so checking it on a clean roster proves
+   * nothing. Water first, then the chip has to say how many Water Tatari the
+   * update touched, not how many Tatari it touched.
+   */
+  await click($('.chip--type[data-value="Water"]'), 300);
+  const narrowed = cards();
+  const key = $('.chip--changed').dataset.changed;
+  const says = Number($('.chip--changed b').textContent);
+  ok('a chip promises fewer than the whole roster', says < narrowed, `${says} of ${narrowed}`);
+  await click($(`.chip--changed[data-changed="${key}"]`), 340);
+  eq('and finds exactly what it promised', cards(), says);
+
+  /*
+   * The half of faceting that only shows once a facet is on.
+   *
+   * These three are one choice, so while Buffed is selected the other two have
+   * to keep counting as though it were not -- otherwise they read 0, and a
+   * group where switching looks impossible is a group nobody switches in. It is
+   * also the only way this breaks: with nothing chosen, a chip that ignored the
+   * rest of the filters would print the right number anyway.
+   */
+  const others = $$('.chip--changed').map((c) => c.dataset.changed).filter((d) => d !== key);
+  const wrong = [];
+  for (const dir of others) {
+    const promised = Number($(`.chip--changed[data-changed="${dir}"] b`).textContent);
+    await click($(`.chip--changed[data-changed="${dir}"]`), 340);
+    if (cards() !== promised) wrong.push(`${dir} said ${promised}, found ${cards()}`);
+    await click($(`.chip--changed[data-changed="${dir}"]`), 340);
+    await click($(`.chip--changed[data-changed="${key}"]`), 340);
+  }
+  ok('the directions you did not pick still count as if you had not', wrong.length === 0, wrong.join('; '));
+  /* Zero is a legitimate answer -- only one line was Adjusted this patch, and
+     it is not Water -- so the check above compares promise to result rather
+     than demanding a number above zero. */
+
+  await click($(`.chip--changed[data-changed="${key}"]`), 340);
+  await click($('#btn-reset-filters'), 300);
+
+  await click($('.fxcaret[data-group="debuff"]'), 340);
+  const sub = $('#filter-effect-types');
+  ok('the effect row opens', $$('.chip--fxtype').length > 5);
+  /*
+   * One line that scrolls, not four that wrap. Eleven chips wrapping is the cost
+   * the touch block was written to avoid: filters taller than the roster below
+   * them. Measured, not assumed -- the row is only one line tall if its content
+   * is wider than it is.
+   */
+  /*
+   * The rule that keeps this to one line lives in @media (hover: none), which
+   * never matches in a desktop browser -- so what is checked is the claim the
+   * rule rests on: that with wrapping off, the row is one line tall and the
+   * overflow it then has is horizontal. If a future group grows a chip too tall
+   * to fit, this fails even though the CSS did not change.
+   */
+  const shim = D.createElement('style');
+  shim.textContent = `
+    .chips--sub { flex-wrap: nowrap; overflow-x: auto; }
+    .chips--sub .chips__group { flex-wrap: nowrap; }
+    .chips--sub .chip { flex: none; }`;
+  D.head.append(shim);
+  const row = sub.getBoundingClientRect();
+  ok('with wrapping off the row is one line tall', row.height < 44, `${Math.round(row.height)}px tall`);
+  ok('and it is wider than the sheet, so it scrolls rather than clips',
+     sub.scrollWidth > sub.clientWidth, `${sub.scrollWidth} in ${sub.clientWidth}`);
+  shim.remove();
+  await click($('#btn-reset-filters'), 320);
+});
+
+await runGroup('touch rules are in the stylesheet', async () => {
+  /*
+   * Read, not rendered. (hover: none) never matches in a desktop browser at any
+   * width, so these rules cannot be watched applying here -- but their absence
+   * is still a regression worth catching, and it is exactly the failure the plan
+   * grip shipped with: the CSS block existed and .prio was not in it.
+   */
+  const rules = [];
+  for (const sheet of D.styleSheets) {
+    let rs; try { rs = sheet.cssRules; } catch { continue; }
+    for (const r of rs) {
+      if (r.type === CSSRule.MEDIA_RULE && /hover/.test(r.conditionText)) {
+        for (const inner of r.cssRules) {
+          if (inner.selectorText) rules.push(inner);
+        }
+      }
+    }
+  }
+  ok('there is a touch block at all', rules.length > 0, `${rules.length} rules`);
+
+  /*
+   * Matched on the whole selector, not on a prefix.
+   *
+   * The loose version of this check read startsWith('.chips--sub'), which the
+   * descendant rule `.chips--sub .chips__group` also satisfies -- so deleting
+   * nowrap from the row itself left the check green. A selector either is the
+   * one being asked about or it is a different rule.
+   */
+  const declares = (sel, prop) => rules.some((r) =>
+    r.selectorText.split(',').some((one) => one.trim() === sel)
+    && r.style.getPropertyValue(prop.split(':')[0].trim()) === prop.split(':')[1].trim());
+
+  ok('field pieces claim the gesture', declares('.cell.is-filled', 'touch-action: none'));
+  ok('the plan grip claims the gesture', declares('.prio__rank', 'touch-action: none'));
+  ok('the grip is a target worth aiming at',
+     rules.some((r) => r.selectorText.includes('.prio__rank::after')));
+  ok('the effect caret is sized for a thumb', declares('.fxcaret', 'width: 28px'));
+  ok('the opened effect row scrolls instead of wrapping',
+     declares('.chips--sub', 'flex-wrap: nowrap'));
+  ok('and its chips do not wrap either', declares('.chips--sub .chips__group', 'flex-wrap: nowrap'));
+  ok('the buttons that cost something keep 44px', declares('.btn--tiny', 'min-height: 44px'));
+  ok('so do the ones beside them', declares('.btn', 'min-height: 44px'));
+});
+
+await runGroup('nothing is drawn over a critter', async () => {
+  await click(barBtn('roster'), 340);
+  const bad = $$('.panel--roster .card').slice(0, 80).filter((c) => {
+    const img = c.querySelector('.card__art img');
+    if (!img) return false;
+    const art = img.getBoundingClientRect();
+    return [...c.querySelectorAll('.card__fx, .card__patch')].some((b) => {
+      const r = b.getBoundingClientRect();
+      return r.bottom > art.top + 1 && r.top < art.bottom - 1;
+    });
+  });
+  ok('no badge overlaps the artwork', bad.length === 0,
+     bad.map((c) => c.querySelector('.card__name')?.textContent).join(', '));
+  await click($('#btn-reset-filters'), 260);
+});
+
+await runGroup('the update page on a phone', async () => {
+  app.style.display = 'none';
+  const frame = frameFor('changes.html');
+  const t0 = performance.now();
+  await frame.ready;
+  const C = frame.contentDocument;
+  await until(() => C.querySelectorAll('.chline').length > 0, 'the update page');
+  under('the update page paints', performance.now() - t0, 4000);
+
+  ok('it does not overflow sideways',
+     C.documentElement.scrollWidth <= 390 + 1, `${C.documentElement.scrollWidth}px`);
+  /* One column on a phone: two 330px cards cannot share 390px, and a grid that
+     tried would push every number off the side. */
+  const grid = C.querySelector('.chgroup__grid');
+  const kids = [...grid.children];
+  const firstTop = Math.round(kids[0].getBoundingClientRect().top);
+  eq('the cards stack into one column',
+     kids.filter((k) => Math.round(k.getBoundingClientRect().top) === firstTop).length, 1);
+  ok('every stat still reaches a verdict',
+     [...C.querySelectorAll('.chstat')].every((s) => ['up', 'down'].includes(s.dataset.move)));
+  frame.remove();
+});
+
+localStorage.clear();
+for (const [k, v] of Object.entries(saved)) localStorage.setItem(k, v);
+
+document.getElementById('head').innerHTML = fail
+  ? `<b style="color:#f0654f">${fail} failed</b>, ${pass} passed`
+  : `<b style="color:#55c98a">${pass} passed</b>, 0 failed`;
+document.title = `${fail ? `FAIL (${fail})` : 'ok'} — phone checks`;
+window.__done = { pass, fail };
+</script>
+</body>

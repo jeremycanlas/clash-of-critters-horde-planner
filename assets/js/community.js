@@ -395,7 +395,7 @@ function paintWhoAmI() {
   el.hidden = false;
   el.innerHTML = `Signed in as <b>${esc(me.name)}</b>
     <button class="btn btn--tiny btn--quiet community__signout" type="button" data-signout
-      title="Ends this sign-in, here and on the server. Your saved formations stay in this browser and anything you posted stays posted — you just cannot post, upvote or delete again until you sign back in.">Sign out</button>`;
+      title="Ends this sign-in, here and on the server. Your saved formations stay in this browser and anything you posted stays posted. You just cannot post, upvote or delete again until you sign back in.">Sign out</button>`;
 }
 
 async function onSignOut() {
@@ -885,7 +885,7 @@ function editPost(row) {
         <input id="edit-note" class="field" type="text" maxlength="240"
                autocomplete="off" value="${esc(row.note || '')}">
       </label>
-      <p class="hint">The formation itself cannot be changed — that is what
+      <p class="hint">The formation itself cannot be changed. That is what
         people upvoted. Delete it and post again to change the board.</p>
       <div class="modal__actions">
         <button class="btn btn--primary" type="submit">Save</button>

@@ -25,6 +25,15 @@ export const state = {
    * occupant there without either side needing to know about the other.
    */
   zobos: [],
+  /**
+   * @type {Map<string, {direction: 'buff'|'nerf'|'adjusted', line: string, changes: string[]}>}
+   * What the last game update did to each Tatari, keyed by slug. Empty when
+   * data/changes.json has no entries, which is how a copy that is not tracking
+   * updates behaves.
+   */
+  changes: new Map(),
+  /** @type {{label: string, patch: string}|null} the update those changes describe */
+  patch: null,
   /** @type {Map<string, Zobo>} by slug */
   zoboBySlug: new Map(),
   /** @type {Map<string|number, Tatari[]>} members of each evolution family */
@@ -172,7 +181,7 @@ export function matches(t, query) {
 // ---------------------------------------------------------------- boot
 
 export async function load() {
-  const [meta, roster, zobos, aliases, ranges, effectRanges] = await Promise.all([
+  const [meta, roster, zobos, aliases, ranges, effectRanges, changes] = await Promise.all([
     fetch('data/meta.json').then((r) => r.json()),
     fetch('data/tatari.json').then((r) => r.json()),
     // A copy without the Zobo file still drafts; it simply has no enemies to
@@ -181,6 +190,9 @@ export async function load() {
     fetch('data/aliases.json').then((r) => r.json()).catch(() => ({})),
     fetch('data/ranges.json').then((r) => r.json()).catch(() => ({})),
     fetch('data/effect-ranges.json').then((r) => r.json()).catch(() => ({})),
+    // Hand-authored, so a copy that has not been updated for the current game
+    // update simply marks nothing rather than failing to load the roster.
+    fetch('data/changes.json').then((r) => r.json()).catch(() => ({})),
   ]);
 
   delete aliases._readme;
@@ -188,6 +200,21 @@ export async function load() {
   state.aliases = aliases;
   state.ranges = ranges;
   state.effectRanges = effectRanges;
+  /*
+   * Flattened from lines to members on the way in, because everything that asks
+   * this question asks it about one Tatari -- a card being drawn, a detail sheet
+   * being opened -- and none of them know or care which family it belongs to.
+   * The file is authored by line because that is how the patch notes are written
+   * and how the skills actually work; the lookup is by slug because that is how
+   * it is read. Doing the fan-out once here beats doing it per card.
+   */
+  state.patch = changes?.lines?.length ? { label: changes.label, patch: changes.patch } : null;
+  state.changes = new Map();
+  for (const entry of changes?.lines ?? []) {
+    for (const slug of entry.members ?? []) {
+      state.changes.set(slug, { direction: entry.direction, line: entry.line, changes: entry.changes });
+    }
+  }
   state.all = [...roster, ...loadCustom().map(normalizeCustom)];
   state.zobos = Array.isArray(zobos) ? zobos : [];
   for (const z of state.zobos) {
