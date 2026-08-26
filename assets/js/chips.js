@@ -176,14 +176,25 @@ export function rank(chips, board) {
  * what a run actually handed you.
  * ========================================================================== */
 
+/*
+ * The headings, and nothing under them.
+ *
+ * Each group used to carry a sentence explaining itself. On a page where every
+ * card already prints what its chip does, that sentence was a paragraph between
+ * you and the chips, seven times over.
+ *
+ * `faces` marks the two groups that answer with sprites instead of a sentence:
+ * a Position or Element chip touches particular Tatari, and showing which ones
+ * says it faster and more exactly than any wording of "3 of your 5".
+ */
 const SHAPES = [
-  { key: 'placement', title: 'Read your board', blurb: 'Worth different amounts depending on where things stand.' },
-  { key: 'element', title: 'Read your elements', blurb: 'Worth what your split makes them worth.' },
-  { key: 'level', title: 'Move your levels', blurb: 'These act on the level-up plan rather than the board.' },
-  { key: 'economy', title: 'Energizers', blurb: 'Income. The same for any formation.' },
-  { key: 'capacity', title: 'More bodies', blurb: 'Change how many you can field.' },
-  { key: 'stat', title: 'Flat buffs', blurb: 'Everyone, everywhere.' },
-  { key: 'map', title: 'Change the map', blurb: 'Nothing to do with your Tatari at all.' },
+  { key: 'placement', title: 'Position Chips', faces: true },
+  { key: 'element', title: 'Element Chips', faces: true },
+  { key: 'level', title: 'Level up Chips' },
+  { key: 'economy', title: 'Energizer Chips' },
+  { key: 'capacity', title: 'More Tatari Chips' },
+  { key: 'stat', title: 'Flat Buff Chips' },
+  { key: 'map', title: 'Map Chips' },
 ];
 
 /*
@@ -199,24 +210,93 @@ const tiers = new Set();
 const TAKEN_KEY = 'coc.chips.taken';
 const PER_PLAYER = 3;
 
-/** What you kept this run, as { player: [name, …] }. Never more than three each. */
-function taken() {
-  try { return JSON.parse(localStorage.getItem(TAKEN_KEY) || '{}') || {}; } catch { return {}; }
+/*
+ * Two lists, not one.
+ *
+ * A run gives you three, and which three is a decision you make in order --
+ * first pick, second, third -- so those three are ranked and can be moved. But
+ * the useful thinking happens before the offer: "against this formation these
+ * nine are worth taking, and these three are the ones I want most". The second
+ * list has no limit because that thinking has no limit; it is a shortlist for a
+ * board, not a loadout.
+ *
+ * Stored per player, since co-op is three each and six between you.
+ *
+ *   { "1": { main: [name, name, name], extra: [name, ...] } }
+ */
+function readAll() {
+  let raw;
+  try { raw = JSON.parse(localStorage.getItem(TAKEN_KEY) || '{}') || {}; } catch { return {}; }
+  const out = {};
+  for (const [player, value] of Object.entries(raw)) {
+    // The first version of this stored a bare array. Anybody who used it keeps
+    // what they marked, as their main three, rather than losing it silently.
+    if (Array.isArray(value)) out[player] = { main: value.slice(0, PER_PLAYER), extra: [] };
+    else out[player] = { main: value?.main ?? [], extra: value?.extra ?? [] };
+  }
+  return out;
 }
 
-function setTaken(next) {
+function writeAll(next) {
   try { localStorage.setItem(TAKEN_KEY, JSON.stringify(next)); } catch { /* private window */ }
 }
 
-function takenBy(player) { return taken()[player] ?? []; }
+function keptBy(player) { return readAll()[player] ?? { main: [], extra: [] }; }
 
-function toggleTaken(player, name) {
-  const all = taken();
-  const mine = all[player] ?? [];
-  all[player] = mine.includes(name)
-    ? mine.filter((n) => n !== name)
-    : [...mine, name].slice(-PER_PLAYER);   // the oldest drops out rather than refusing
-  setTaken(all);
+/** Both lists at once, for "is this chip spoken for". */
+function allKept(player) {
+  const { main, extra } = keptBy(player);
+  return [...main, ...extra];
+}
+
+function update(player, fn) {
+  const all = readAll();
+  const mine = all[player] ?? { main: [], extra: [] };
+  all[player] = fn({ main: [...mine.main], extra: [...mine.extra] });
+  writeAll(all);
+}
+
+/**
+ * Keeping a chip, and letting go of it.
+ *
+ * One button on the card rather than two. It fills the three first because that
+ * is what a run asks for, and once they are full it goes on the shortlist --
+ * which is the honest answer to a fourth press, rather than refusing or silently
+ * pushing the first pick out.
+ */
+function toggleKept(player, name) {
+  update(player, ({ main, extra }) => {
+    if (main.includes(name)) return { main: main.filter((n) => n !== name), extra };
+    if (extra.includes(name)) return { main, extra: extra.filter((n) => n !== name) };
+    if (main.length < PER_PLAYER) return { main: [...main, name], extra };
+    return { main, extra: [...extra, name] };
+  });
+}
+
+/** Moves one of the three up or down. `step` is -1 or 1. */
+function reorder(player, name, step) {
+  update(player, ({ main, extra }) => {
+    const i = main.indexOf(name);
+    const j = i + step;
+    if (i < 0 || j < 0 || j >= main.length) return { main, extra };
+    const next = [...main];
+    [next[i], next[j]] = [next[j], next[i]];
+    return { main: next, extra };
+  });
+}
+
+/** Shortlist to the three, and back. */
+function promote(player, name) {
+  update(player, ({ main, extra }) => (main.length >= PER_PLAYER
+    ? { main, extra }
+    : { main: [...main, name], extra: extra.filter((n) => n !== name) }));
+}
+
+function demote(player, name) {
+  update(player, ({ main, extra }) => ({
+    main: main.filter((n) => n !== name),
+    extra: [...extra, name],
+  }));
 }
 
 /**
@@ -298,7 +378,7 @@ export function renderChips() {
 
   const reads = rank(BOOK.chips.filter((c) => c.shape === 'placement'), board);
   const split = elementSplit(board);
-  const mine = takenBy(player);
+  const mine = allKept(player);
 
   host.innerHTML = `
     <h3 class="chipsblock__head">
@@ -329,36 +409,35 @@ export function renderChips() {
         </li>`).join('')}
     </ul>
     <p class="chipsblock__more">
-      <a href="chips.html">All 49 chips${mine.length ? ` &middot; ${mine.length} of ${PER_PLAYER} kept` : ''} &rarr;</a>
+      <a href="chips.html">All 49 chips${
+        mine.length ? ` &middot; ${keptBy(player).main.length} of ${PER_PLAYER} kept` : ''} &rarr;</a>
     </p>`;
 }
 
 /* ------------------------------------------------------------- the page */
 
 /** One chip as a card. `score` is null for the twenty-eight that read nothing. */
-function card(chip, score, isTaken) {
-  const scoreHTML = !score ? '' : `
-    <div class="chipcard__score" data-empty="${score.n === 0}">
-      <p class="chipcard__count"><b>${score.n}</b> of your ${score.of} ${esc(score.why)}</p>
-      ${whoRow(score)}
-    </div>`;
-
-  /* The two readings this file guesses at, and the four it suspects reach a
-     co-op partner, are printed on the card rather than kept in a comment. A
-     guess the reader can see is a guess they can correct after one run. */
-  const doubt = [
-    score?.assumes ? { kind: 'reading', text: score.assumes } : null,
-    chip.scope === 'unknown'
-      ? { kind: 'scope', text: `Might affect both players. ${chip.scopeNote}` }
-      : null,
-  ].filter(Boolean);
+/**
+ * One chip as a card.
+ *
+ * Position and Element chips answer in faces: the sprites of the Tatari the
+ * chip would touch, and no sentence at all. Everything else answers with a
+ * count, because "11 energizers every 5 seconds" is not about anybody in
+ * particular and there is nobody to draw.
+ */
+function card(chip, score, isTaken, faces) {
+  const scoreHTML = !score ? '' : (faces
+    ? (score.n ? `<div class="chipcard__score" data-faces="true">${whoRow(score)}</div>` : '')
+    : `<div class="chipcard__score" data-empty="${score.n === 0}">
+        <p class="chipcard__count"><b>${score.n}</b> of your ${score.of} ${esc(score.why)}</p>
+      </div>`);
 
   return `
     <article class="chipcard${isTaken ? ' is-taken' : ''}" data-chip="${esc(chip.name)}">
       <button class="chipcard__keep" type="button" data-keep="${esc(chip.name)}"
         aria-pressed="${isTaken}"
         aria-label="${esc(isTaken ? `Stop counting ${chip.name} as kept` : `I kept ${chip.name}`)}"
-        title="${esc(isTaken ? 'Kept this run' : 'Mark this as one of the three you kept')}"
+        title="${esc(isTaken ? 'Keeping this' : 'Keep this: one of your three, or the shortlist once they are full')}"
         >${isTaken ? '&check;' : '+'}</button>
       <img class="chipcard__art" src="${esc(iconFor(chip))}" alt="" loading="lazy" decoding="async">
       <h3 class="chipcard__name">
@@ -368,7 +447,6 @@ function card(chip, score, isTaken) {
       </h3>
       <p class="chipcard__text">${esc(chip.text)}</p>
       ${scoreHTML}
-      ${doubt.map((d) => `<p class="chipcard__doubt" data-kind="${d.kind}">${esc(d.text)}</p>`).join('')}
     </article>`;
 }
 
@@ -407,7 +485,8 @@ function renderPage() {
   const chips = tiers.size ? all.filter((c) => tiers.has(c.tier)) : all;
   const player = store.formation.activePlayer;
   const board = boardFor(player);
-  const mine = takenBy(player);
+  const { main, extra } = keptBy(player);
+  const kept = [...main, ...extra];
   const coop = store.isCoop();
 
   $('#chips-patch').textContent = board.length
@@ -424,36 +503,69 @@ function renderPage() {
    * mid-run. In co-op it is three each and six between you, which is why the
    * tabs exist -- the tool already knows whose board is whose.
    */
+  /*
+   * The row's contents, not the row. Both callers are already inside an <li> --
+   * the three slots and the shortlist are both lists -- and returning another
+   * one nested li inside li, which is invalid, so the browser closed the outer
+   * one early and hoisted every row out of the slot it belonged to. The slots
+   * still said is-filled and had nothing in them.
+   */
+  const row = (name, controls) => {
+    const chip = all.find((c) => c.name === name);
+    return `
+      <img class="keptrow__art" src="${esc(chip ? iconFor(chip) : '')}" alt=""
+           loading="lazy" decoding="async">
+      <span class="keptrow__name">${esc(name)}</span>
+      <span class="keptrow__ctl">${controls}</span>`;
+  };
+
+  const btn = (act, name, glyph, label, off = false) => `
+    <button class="keptrow__btn" type="button" data-act="${act}" data-name="${esc(name)}"
+      ${off ? 'disabled' : ''} aria-label="${esc(label)}" title="${esc(label)}">${glyph}</button>`;
+
   $('#chips-kept').innerHTML = `
     <div class="kept__head">
-      <h2>${coop ? `What P${player} kept` : 'What you kept'}</h2>
+      <h2>${coop ? `P${player}` : 'The three you keep'}</h2>
       ${coop ? `<div class="kept__who" role="group" aria-label="Whose chips">
         ${store.players().map((p) => `
           <button class="btn btn--tiny${p === player ? ' is-on' : ''}" type="button"
             data-player="${p}" aria-pressed="${p === player}">P${p}</button>`).join('')}
       </div>` : ''}
     </div>
+
     <ol class="kept__slots">
       ${Array.from({ length: PER_PLAYER }, (_, i) => {
-        const name = mine[i];
-        const chip = all.find((c) => c.name === name);
-        return `<li class="kept__slot${name ? ' is-filled' : ''}">${
-          name ? `<b>${esc(name)}</b><span>${esc(chip?.text ?? '')}</span>`
-               : '<span class="kept__wait">Nothing yet</span>'}</li>`;
+        const name = main[i];
+        if (!name) return '<li class="kept__slot"><span class="kept__wait">Nothing yet</span></li>';
+        return `<li class="kept__slot is-filled keptrow" data-name="${esc(name)}">${row(name, [
+          btn('up', name, '&uarr;', `Move ${name} up`, i === 0),
+          btn('down', name, '&darr;', `Move ${name} down`, i === main.length - 1),
+          btn('demote', name, '&darr;&darr;', `Move ${name} to the shortlist`),
+          btn('drop', name, '&times;', `Stop keeping ${name}`),
+        ].join(''))}</li>`;
       }).join('')}
     </ol>
+
+    <div class="kept__extra">
+      <h3>Also worth taking
+        <span class="kept__hint">${extra.length
+          ? `${extra.length} shortlisted for this formation`
+          : 'as many as you like'}</span>
+      </h3>
+      ${extra.length ? `<ul class="kept__list">
+        ${extra.map((name) => `<li class="keptrow" data-name="${esc(name)}">${row(name, [
+          btn('promote', name, '&uarr;', `Move ${name} into the three`, main.length >= PER_PLAYER),
+          btn('drop', name, '&times;', `Take ${name} off the shortlist`),
+        ].join(''))}</li>`).join('')}
+      </ul>` : `<p class="kept__none">Keep a fourth chip and it lands here. Nothing on this
+        list is a commitment; it is what you would take if the run offered it.</p>`}
+    </div>
+
     ${coop ? `<p class="kept__total muted">${
-      store.players().reduce((n, p) => n + takenBy(p).length, 0)} of
-      ${PER_PLAYER * store.players().length} between you.</p>` : ''}`;
+      store.players().reduce((n, p) => n + keptBy(p).main.length, 0)} of
+      ${PER_PLAYER * store.players().length} kept between you.</p>` : ''}`;
 
-  if (!chips.length) {
-    $('#chips-body').innerHTML = `
-      <p class="chipspage__none">No chips at that tier. The tiers you have not
-        pressed are still there, and pressing a tier again releases it.</p>`;
-    return;
-  }
-
-  $('#chips-body').innerHTML = SHAPES.map(({ key, title, blurb }) => {
+  $('#chips-body').innerHTML = SHAPES.map(({ key, title, faces }) => {
     const group = chips.filter((c) => c.shape === key);
     if (!group.length) return '';
     /* Placement and element groups lead with whatever is worth most to this
@@ -467,9 +579,8 @@ function renderPage() {
         <h2 class="chgroup__head">${title}
           <span class="chgroup__count">${group.length}</span>
         </h2>
-        <p class="chgroup__blurb">${blurb}</p>
         <div class="chgroup__grid">
-          ${scored.map(({ chip, score }) => card(chip, score, mine.includes(chip.name))).join('')}
+          ${scored.map(({ chip, score }) => card(chip, score, kept.includes(chip.name), faces)).join('')}
         </div>
       </section>`;
   }).join('');
@@ -494,8 +605,25 @@ if ($('#chips-body')) {
   document.addEventListener('click', (e) => {
     const keep = e.target.closest('[data-keep]');
     if (keep) {
-      toggleTaken(store.formation.activePlayer, keep.dataset.keep);
+      toggleKept(store.formation.activePlayer, keep.dataset.keep);
       renderPage();
+      return;
+    }
+
+    const act = e.target.closest('.keptrow__btn');
+    if (act) {
+      const player = store.formation.activePlayer;
+      const { act: what, name } = act.dataset;
+      if (what === 'up') reorder(player, name, -1);
+      else if (what === 'down') reorder(player, name, 1);
+      else if (what === 'promote') promote(player, name);
+      else if (what === 'demote') demote(player, name);
+      else if (what === 'drop') toggleKept(player, name);
+      renderPage();
+      /* Focus follows the row, or every reorder throws you back to the top of
+         the page and the second press has to be aimed all over again. */
+      $(`.keptrow[data-name="${CSS.escape(name)}"] [data-act="${what}"]`)?.focus()
+        ?? $(`.keptrow[data-name="${CSS.escape(name)}"] .keptrow__btn`)?.focus();
       return;
     }
     const tier = e.target.closest('.chip--rarity');

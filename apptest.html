@@ -533,6 +533,71 @@ await runGroup('the chips page', async () => {
   C.querySelector(`[data-keep="${name}"]`).click();
   await sleep(240);
   eq('pressing it again gives the slot back', C.querySelectorAll('.kept__slot.is-filled').length, 0);
+
+  /*
+   * Three ranked, then a shortlist with no limit.
+   *
+   * The three are what a run hands you, in the order you would take them, so
+   * they move. The shortlist is the thinking done before any offer, which has
+   * no reason to stop at three -- a fourth press goes there rather than being
+   * refused or quietly pushing your first pick out.
+   */
+  const three = () => [...C.querySelectorAll('.kept__slot.is-filled .keptrow__name')]
+    .map((el) => el.textContent.trim());
+  const shortlist = () => [...C.querySelectorAll('.kept__list .keptrow__name')]
+    .map((el) => el.textContent.trim());
+  const slot = (i) => C.querySelectorAll('.kept__slot.is-filled')[i];
+
+  /* By name, re-queried each time. renderPage() replaces every node, so a list
+     of elements collected up front is four detached buttons after the first
+     click, and the other three do nothing at all. */
+  const wanted = [...C.querySelectorAll('[data-keep]')].slice(0, 4).map((b) => b.dataset.keep);
+  for (const n of wanted) {
+    C.querySelector(`[data-keep="${CSS.escape(n)}"]`).click();
+    await sleep(220);
+  }
+  eq('the first three fill the three', three().length, 3);
+  eq('and the fourth goes to the shortlist', shortlist().length, 1);
+
+  const order = three().join(',');
+  slot(2).querySelector('[data-act="up"]').click();
+  await sleep(240);
+  const moved = three();
+  eq('moving the third up swaps it with the second',
+     moved.join(','), order.split(',').map((n, i, a) => (i === 1 ? a[2] : i === 2 ? a[1] : n)).join(','));
+
+  ok('the first cannot move up', slot(0).querySelector('[data-act="up"]').disabled);
+  ok('and the last cannot move down', slot(2).querySelector('[data-act="down"]').disabled);
+
+  const demoted = three()[0];
+  slot(0).querySelector('[data-act="demote"]').click();
+  await sleep(240);
+  eq('demoting drops it out of the three', three().length, 2);
+  ok('and onto the shortlist', shortlist().includes(demoted), shortlist().join(', '));
+
+  C.querySelector(`.keptrow[data-name="${CSS.escape(demoted)}"] [data-act="promote"]`).click();
+  await sleep(240);
+  ok('promoting puts it back', three().includes(demoted), three().join(', '));
+  ok('and takes it off the shortlist', !shortlist().includes(demoted));
+
+  ok('promote is refused while the three are full',
+     C.querySelector('.kept__list [data-act="promote"]')?.disabled !== false,
+     'a fourth would have been promoted into three slots');
+
+  /* Renamed groups, and nothing under the headings. */
+  const heads = [...C.querySelectorAll('.chgroup__head')].map((h) => h.firstChild.textContent.trim());
+  ok('the groups are named as chips', heads.every((h) => /Chips$/.test(h)), heads.join(' | '));
+  eq('nothing explains a heading underneath it', C.querySelectorAll('.chgroup__blurb').length, 0);
+  eq('no co-op notes are printed on the cards', C.querySelectorAll('.chipcard__doubt').length, 0);
+
+  /* Position and Element answer in faces; the rest answer in words. */
+  const facesGroup = C.querySelector('.chgroup[data-shape="placement"]');
+  eq('a Position card says nothing in numbers',
+     facesGroup.querySelectorAll('.chipcard__count').length, 0);
+  eq('nor does an Element card',
+     C.querySelectorAll('.chgroup[data-shape="element"] .chipcard__count').length, 0);
+  ok('but the chips that read nothing still print their text',
+     C.querySelector('.chgroup[data-shape="economy"] .chipcard__text').textContent.trim().length > 10);
   frame.remove();
 });
 

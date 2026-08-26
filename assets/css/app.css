@@ -4397,15 +4397,6 @@ body.is-clean .clean-hint {
 /* Zero is a real answer and worth printing, but it should not read as a result. */
 .chipcard__score[data-empty="true"] { background: var(--surface-2); color: var(--text-mute); }
 .chipcard__score[data-empty="true"] b { color: var(--text-mute); }
-.chipcard__doubt {
-  margin: var(--s2) 0 0;
-  font-size: 11.5px; line-height: 1.45; color: var(--text-mute);
-}
-.chipcard__doubt::before {
-  content: "Guess: ";
-  font-weight: 700; color: var(--text-dim);
-}
-.chipcard__doubt[data-kind="scope"]::before { content: "Co-op: "; }
 
 @media (max-width: 760px) {
   .chipspage__main { padding: var(--s4) var(--s3) var(--s6); }
@@ -4577,4 +4568,89 @@ body.is-clean .clean-hint {
 .chipspage__none {
   max-width: 60ch;
   color: var(--text-mute); font-size: 13px; line-height: 1.55;
+}
+
+/* The three you keep, and the shortlist under them.
+ *
+ * Three ranked slots plus a list with no limit. The three are what a run gives
+ * you, in the order you would take them, so they move. The shortlist is the
+ * thinking you did before the offer, which has no reason to be capped at three.
+ */
+/* The slot IS the row now, so its own flex column layout would stack the sprite,
+   the name and the controls on top of each other. */
+.kept__slot.keptrow { display: grid; }
+.kept__slot:not(.is-filled) { display: flex; align-items: center; }
+
+.keptrow {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--s2);
+  width: 100%;
+  min-width: 0;
+}
+.keptrow__art {
+  width: 30px; height: 30px;
+  border-radius: var(--r-sm);
+  object-fit: cover;
+}
+.keptrow__name {
+  font-size: 13px; font-weight: 600; color: var(--text);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.keptrow__ctl { display: flex; gap: 2px; }
+
+/*
+ * 26px, which clears WCAG 2.5.8's 24px floor without turning four controls into
+ * 176px of buttons beside a 30px sprite. Mistapping one is cheap: every action
+ * here is reversible with the button next to it.
+ */
+.keptrow__btn {
+  width: 26px; height: 26px;
+  display: grid; place-items: center;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  color: var(--text-dim);
+  font-size: 11px; line-height: 1;
+  cursor: pointer;
+}
+.keptrow__btn:hover:not(:disabled) { color: var(--text); border-color: var(--accent); }
+/* Disabled rather than absent: the top row's "up" going missing would shift the
+   other three controls under the pointer between presses. */
+.keptrow__btn:disabled { opacity: .3; cursor: default; }
+
+.kept__extra { margin-top: var(--s4); }
+.kept__extra h3 {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--s2);
+  margin: 0 0 var(--s2);
+  font-size: 13px; font-weight: 650;
+}
+.kept__hint {
+  font-size: 11.5px; font-weight: 500; color: var(--text-mute);
+}
+.kept__list {
+  list-style: none; margin: 0; padding: 0;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--s1) var(--s2);
+}
+.kept__list .keptrow {
+  padding: var(--s1) var(--s2);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-md);
+  background: var(--surface);
+}
+.kept__none {
+  max-width: 62ch;
+  margin: 0; color: var(--text-mute); font-size: 12.5px; line-height: 1.5;
+}
+
+/* Faces instead of a sentence, on the two groups that have particular Tatari to
+   point at. No count line, so the row is the whole answer. */
+.chipcard__score[data-faces="true"] {
+  background: none; padding: 0;
+}
+
+@media (max-width: 760px) {
+  .kept__list { grid-template-columns: 1fr; }
 }
