@@ -894,7 +894,8 @@ export function renderRoster() {
                      title="P${otherPlayer[0]} is bringing this too">P${otherPlayer[0]}</span>` : ''}
         </div>
         <div class="card__name">${esc(t.name)}</div>
-        ${clash ? `<span class="card__lock">Switch from ${esc(clash.name)}</span>` : ''}
+        ${clash ? `<span class="card__lock" aria-hidden="true">&#8646;</span>
+        <span class="sr-only">Switch from ${esc(clash.name)}, keeping its plan</span>` : ''}
         <!-- Focusable. It was tabindex="-1", which took the detail sheet — and
              with it "Place on the field" — off the keyboard entirely. The
              reveal already handles :focus-visible, so it appears when tabbed

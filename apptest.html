@@ -413,6 +413,75 @@ await runGroup('the what-changed page', async () => {
   frame.remove();
 });
 
+await runGroup('a card you already have one of', async () => {
+  /*
+   * Bring one Tatari and the rest of its line becomes swap targets. The marker
+   * that says so used to be a full-width bar pinned to the bottom of the card,
+   * which is where the name is: it covered the name, and its own text ("Switch
+   * from Frostique") was far too long for a 79px card, so it truncated to
+   * "SWITCH FROM...". Three cards of the same line all read those nine
+   * characters and nothing else.
+   *
+   * So this checks the two facts that were lost, not the styling that lost
+   * them: the card still says which Tatari it is, and nothing is drawn over it.
+   */
+  /* The bench first, not just the filters. Earlier groups leave Tatari on it,
+     and clicking a card that is already benched takes it off again -- which is
+     how this check first reported "nothing clashed" against a working app. */
+  /*
+   * The stage back, before anything is measured.
+   *
+   * The changes-page group hides the app frame to make room for the second
+   * page, and every rect inside a display:none frame is 0x0 at 0,0. This group
+   * is geometry, so on a hidden frame "the marker does not sit on top of the
+   * name" becomes 0 >= -0.5, which is true, and the whole group passes against
+   * a card it never saw. It did: the original bug was put back and all seven
+   * checks stayed green.
+   */
+  app.style.display = '';
+  await sleep(160);
+
+  await reset();
+  const clearFirst = $('[data-clear-bench]');
+  if (clearFirst) { clearFirst.click(); await sleep(300); }
+
+  const first = $$('.panel--roster .card').find((c) => !c.classList.contains('is-benched'));
+  const brought = first.querySelector('.card__name').textContent.trim();
+  first.click();
+  await sleep(420);
+
+  const swap = $('.card.is-swap');
+  ok('bringing one marks the rest of its line', !!swap, `nothing clashed with ${brought}`);
+  if (!swap) return;
+
+  const nameEl = swap.querySelector('.card__name');
+  const name = nameEl.textContent.trim();
+  ok('a swap card still says which Tatari it is', name.length > 0 && !/switch/i.test(name), name);
+  ok('and it is not the one you already brought', name !== brought, `${name} vs ${brought}`);
+
+  const badge = swap.querySelector('.card__lock');
+  ok('there is a marker saying it would swap', !!badge);
+  const n = nameEl.getBoundingClientRect();
+  const b = badge.getBoundingClientRect();
+  /* Both really on screen. Without this every comparison below is 0 against 0. */
+  ok('the card is actually rendered, so the measurements mean something',
+     n.width > 0 && n.height > 0 && b.width > 0 && b.height > 0,
+     `name ${Math.round(n.width)}x${Math.round(n.height)}, marker ${Math.round(b.width)}x${Math.round(b.height)}`);
+  ok('and the marker does not sit on top of the name',
+     b.left >= n.right - 0.5, `name ends ${Math.round(n.right)}, marker starts ${Math.round(b.left)}`);
+  ok('the marker is small enough to be a marker', b.width <= 20 && b.height <= 20,
+     `${Math.round(b.width)}x${Math.round(b.height)}`);
+
+  /* The sentence the bar was trying to fit still exists, somewhere that has room
+     for it. A screen reader gets it; 79px never could. */
+  const said = `${swap.querySelector('.sr-only')?.textContent ?? ''} ${swap.getAttribute('title') ?? ''}`;
+  ok('and it still says which one you would swap from', said.includes(brought), said.trim());
+
+  await reset();
+  const clearBench = $('[data-clear-bench]');
+  if (clearBench) { clearBench.click(); await sleep(260); }
+});
+
 await runGroup('the chips page', async () => {
   /*
    * The engine behind this page is checked in chipstest.html against boards

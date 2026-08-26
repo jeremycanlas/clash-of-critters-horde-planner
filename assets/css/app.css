@@ -2296,16 +2296,44 @@ body[data-switching="true"] .cell[data-zobo] { box-shadow: none; cursor: default
 .card.is-swap { opacity: .62; }
 .card.is-swap:hover { opacity: 1; }
 .card.is-swap .card__lock {
-  background: color-mix(in srgb, var(--accent) 22%, var(--surface));
+  background: color-mix(in srgb, var(--accent) 34%, var(--surface));
   color: var(--text);
 }
+/*
+ * The swap marker, which used to be a caption and could not be one.
+ *
+ * It was `inset: auto 0 0` -- a full-width bar pinned to the bottom edge, which
+ * is exactly where .card__name sits. So on every card in a line you already
+ * bring, the bar covered the name, and then its own text ("Switch from
+ * Frostique") was far too long for a 90px card and truncated to "SWITCH
+ * FROM...". Both facts were lost at once: which Tatari the card is, and which
+ * one you would be switching from. Three cards in a row of the same line all
+ * read the same nine characters.
+ *
+ * No text fits there, so it stops being text. The glyph sits beside the name
+ * rather than over it, and the sentence it was trying to say is on the card's
+ * own title and in an .sr-only span -- both of which could already carry it,
+ * and neither of which has 90px to fit in.
+ */
 .card__lock {
-  position: absolute; inset: auto 0 0; padding: 1px 3px;
-  background: color-mix(in srgb, var(--bg) 84%, transparent);
-  font-size: 8.5px; font-weight: 650; letter-spacing: .04em;
-  text-transform: uppercase; color: var(--text-mute);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  position: absolute; right: 3px; bottom: 2px;
+  display: grid; place-items: center;
+  width: 15px; height: 15px;
+  border-radius: var(--r-sm);
+  background: color-mix(in srgb, var(--accent) 26%, var(--surface));
+  color: var(--accent-ink-on);
+  font-size: 11px; line-height: 1;
 }
+/*
+ * Margin, not padding.
+ *
+ * `overflow: hidden` clips at the padding box, so padding-right reserves space
+ * the text is still free to paint across on its way to being clipped -- a long
+ * name would run under the badge and stop there. A margin shrinks the box
+ * itself, so the ellipsis lands before the badge and cannot reach it. The name
+ * re-centres in what is left, which is what the card's text-align already wants.
+ */
+.card.is-swap .card__name { margin-right: 17px; }
 
 /* ============================================================ modals */
 
