@@ -358,17 +358,6 @@
 
       <div id="bench" class="bench"></div>
       <div id="summary" class="summary"></div>
-
-      <!--
-      What an offered chip would be worth to the board above.
-
-      Under the summary and inside the field panel on purpose: on a phone that
-      puts it in the Summary sheet, which is where you already go to ask what
-      the formation adds up to. It does not get an app bar button of its own --
-      the bar is five wide already and a sixth takes letters off the others.
-    -->
-    <div id="chips" class="chipsblock"></div>
-
       <!-- Clean view's own way out. In the flow after the frame rather than a
          floating toast, so it can never sit on top of the grid it is telling
          you to photograph. -->
@@ -429,6 +418,12 @@
             aria-selected="true">Tatari</button>
           <button class="segmented__btn" type="button" role="tab" data-list="zobos"
             aria-selected="false">Zobos</button>
+          <!-- Chips are a third thing you pick, so they live where the other two
+             do rather than in a panel of their own. The roster already has the
+             search box, the card grid and the tabs; a panel had to grow its own
+             and cost 559px under the Summary to do it. -->
+          <button class="segmented__btn" type="button" role="tab" data-list="chips"
+            aria-selected="false">Chips</button>
         </div>
       </div>
 
@@ -469,7 +464,12 @@
         <div id="filter-effect-types" class="chips chips--text chips--sub"
           role="group" aria-label="Specific effects" hidden></div>
 
-        <div class="filters__row filters__row--meta">
+        <!-- Tier, for the chips tab. body[data-roster-list] hides it everywhere else,
+           the same way the Zobo-only and Tatari-only controls are handled. -->
+      <div id="filter-chip-tiers" class="chips chips--text chips-only" role="group"
+        aria-label="Filter chips by tier"></div>
+
+      <div class="filters__row filters__row--meta">
           <label class="check" title="Hide Tatari locked out by an evolution line you are already bringing">
             <input id="opt-hide-blocked" type="checkbox"> Hide unavailable</label>
 

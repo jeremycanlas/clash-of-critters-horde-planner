@@ -482,6 +482,66 @@ await runGroup('a card you already have one of', async () => {
   if (clearBench) { clearBench.click(); await sleep(260); }
 });
 
+await runGroup('the chips tab in the roster', async () => {
+  /*
+   * Chips are a third list in the roster because a chip is a third thing you
+   * pick. This is the tab, not the page: what it has to get right is that it
+   * shows all 49, that the Tatari filters get out of the way (none of element,
+   * role, evolution tier or bench means anything to a chip), and that a card
+   * says what the chip is worth to the board currently on the field.
+   */
+  localStorage.removeItem('coc.chips.taken');
+  await reset();
+  const tab = (name) => $(`#roster-tabs [data-list="${name}"]`);
+  ok('there is a Chips tab', !!tab('chips'));
+
+  await click(tab('chips'), 420);
+  eq('choosing it marks the body', D.body.dataset.rosterList, 'chips');
+  const chips = () => $$('.card--chip');
+  eq('every chip is in the list', chips().length, 49);
+  eq('and the count agrees', $('#roster-count').textContent.trim(), '49');
+
+  const hidden = (sel) => D.defaultView.getComputedStyle($(sel)).display === 'none';
+  ok('the element filter steps aside', hidden('#filter-types'));
+  ok('so do roles and evolution tiers', hidden('#filter-roles') && hidden('#filter-tiers'));
+  ok('and the chip tier filter appears', !hidden('#filter-chip-tiers'));
+
+  const tierBtn = $('#filter-chip-tiers [data-tier="3"]');
+  const promised = Number(tierBtn.textContent.replace(/\D/g, ''));
+  await click(tierBtn, 380);
+  eq('filtering by tier finds what it promised', chips().length, promised);
+  await click($('#filter-chip-tiers [data-tier="3"]'), 380);
+  eq('and releases', chips().length, 49);
+
+  const box = $('#search');
+  box.value = 'lawn';
+  box.dispatchEvent(new D.defaultView.Event('input', { bubbles: true }));
+  await sleep(320);
+  ok('the search box searches chips too', chips().length > 0 && chips().length < 49,
+     `${chips().length} for "lawn"`);
+  await reset();
+  box.value = '';
+
+  /* Tapping keeps it, the same way tapping a Tatari benches one. */
+  const first = chips()[0];
+  const name = first.dataset.chip;
+  await click(first, 380);
+  ok('tapping a chip keeps it',
+     $(`.card--chip[data-chip="${CSS.escape(name)}"]`).classList.contains('is-benched'));
+  ok('and it says which of the three it is',
+     !!$(`.card--chip[data-chip="${CSS.escape(name)}"] .card__rank`));
+  await click($(`.card--chip[data-chip="${CSS.escape(name)}"]`), 380);
+  ok('tapping again lets it go',
+     !$(`.card--chip[data-chip="${CSS.escape(name)}"]`).classList.contains('is-benched'));
+
+  /* The panel this replaced is gone, not hidden. */
+  ok('the old panel under the Summary is gone', !$('#chips'));
+
+  await click(tab('tatari'), 380);
+  eq('and the Tatari tab still works', D.body.dataset.rosterList, 'tatari');
+  ok('with its filters back', !hidden('#filter-types'));
+});
+
 await runGroup('the chips page', async () => {
   /*
    * The engine behind this page is checked in chipstest.html against boards

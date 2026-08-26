@@ -1,6 +1,9 @@
 /** The searchable, filterable roster you draft from. */
 
 import { state, matches } from './data.js';
+import {
+  boardFor, chipList, iconFor, keptBy, scoreOne, toggleKept,
+} from './chips.js';
 import * as store from './store.js';
 import { TYPES, ROLES } from './icons.js';
 import { $, artHTML, esc, typeIcon, roleIcon, toast } from './ui.js';
@@ -173,6 +176,28 @@ export function buildFilters(onChange, { onPick = bringToBench } = {}) {
    * meaning for an enemy, so the body carries a flag and the CSS hides them
    * rather than each control learning about tabs.
    */
+  /*
+   * Tier, for the chips tab only.
+   *
+   * It cannot reuse #filter-tiers: that one means T1 to T4 of a Tatari, and a
+   * chip's tier is a different axis with three values. Two filters that both
+   * say "tier" and mean different things would be worse than a second row that
+   * only appears when it applies.
+   */
+  const chipTierHost = $('#filter-chip-tiers');
+  if (chipTierHost) {
+    /* Only the listener here. The buttons themselves are drawn by renderChips,
+       because their counts come from data/chips.json and that arrives after the
+       filters are built -- drawn once at boot, all three read "0" forever. */
+    chipTierHost.addEventListener('click', (e) => {
+      const btn = e.target.closest('.chip--rarity');
+      if (!btn) return;
+      const t = Number(btn.dataset.tier);
+      if (chipTiers.has(t)) chipTiers.delete(t); else chipTiers.add(t);
+      onChange();
+    });
+  }
+
   const tabs = $('#roster-tabs');
   if (tabs) {
     tabs.addEventListener('click', (e) => {
@@ -267,6 +292,15 @@ export function buildFilters(onChange, { onPick = bringToBench } = {}) {
   // Clicking does whatever the host page wants. Dragging is for putting it
   // somewhere specific on the field.
   $('#roster').addEventListener('click', (e) => {
+    /* A chip card is a different kind of card in the same grid, so it is
+       answered before anything that assumes a slug. */
+    const chipCard = e.target.closest('.card--chip');
+    if (chipCard) {
+      toggleKept(store.formation.activePlayer, chipCard.dataset.chip);
+      onChange();
+      return;
+    }
+
     if (e.target.closest('.card__info')) {
       openDetail(e.target.closest('.card').dataset.slug);
       return;
@@ -842,12 +876,81 @@ ${esc(z.skill.name)}` : ''}">
     : `${list.length} of ${state.zobos.length}`;
 }
 
+/*
+ * The chips, as a third list in the roster.
+ *
+ * They belong here for the same reason Zobos do: the roster is the list of
+ * things you pick from, and a chip is a thing you pick. It also inherits the
+ * search box and the card grid, which a panel of its own had to grow copies of.
+ *
+ * The card says the two things a card can say at 79px: which chip, and what it
+ * would be worth to the board you have built. Which particular Tatari is in the
+ * tooltip and on chips.html, both of which have the room for it.
+ */
+const chipTiers = new Set();
+
+function drawChipTiers() {
+  const host = $('#filter-chip-tiers');
+  if (!host) return;
+  host.innerHTML = `<span class="chips__label" aria-hidden="true">Tier</span>`
+    + [1, 2, 3].map((t) => `
+      <button class="chip chip--rarity" type="button" data-tier="${t}"
+        aria-pressed="${chipTiers.has(t)}"
+        title="${esc(`Show only tier ${'I'.repeat(t)} chips`)}"
+        ><span class="chip__tier" data-tier="${t}" aria-hidden="true">${'I'.repeat(t)}</span
+        >${chipList().filter((c) => c.tier === t).length}</button>`).join('');
+}
+
+function renderChips() {
+  drawChipTiers();
+  const host = $('#roster');
+  const q = filters.query.toLowerCase();
+  const player = store.formation.activePlayer;
+  const board = boardFor(player);
+  const kept = keptBy(player);
+  const mine = [...kept.main, ...kept.extra];
+
+  const list = chipList().filter((c) => {
+    if (chipTiers.size && !chipTiers.has(c.tier)) return false;
+    return !q || `${c.name} ${c.text}`.toLowerCase().includes(q);
+  });
+
+  host.innerHTML = list.map((c) => {
+    const score = board.length ? scoreOne(c, board) : null;
+    const rank = kept.main.indexOf(c.name);
+    const held = mine.includes(c.name);
+    const who = score?.who?.length
+      ? `
+${score.n} of your ${score.of}: ${score.who.map((p) => p.name).join(', ')}`
+      : '';
+    return `
+      <div class="card card--chip${held ? ' is-benched' : ''}" role="listitem" tabindex="0"
+           data-chip="${esc(c.name)}" data-tier="${c.tier}"
+           title="${esc(`${c.name}
+${c.text}${who}`)}">
+        <div class="card__art"><img src="${esc(iconFor(c))}" alt="" loading="lazy" decoding="async"></div>
+        <div class="card__meta">
+          <span class="card__tier" data-tier="${c.tier}">${'I'.repeat(c.tier)}</span>
+          ${score ? `<span class="card__score" data-empty="${score.n === 0}"
+            >${score.n}/${score.of}</span>` : ''}
+          ${rank >= 0 ? `<span class="card__rank">${rank + 1}</span>` : ''}
+        </div>
+        <div class="card__name">${esc(c.name)}</div>
+      </div>`;
+  }).join('');
+
+  $('#roster-count').textContent = list.length === chipList().length
+    ? `${list.length}`
+    : `${list.length} of ${chipList().length}`;
+}
+
 export function renderRoster() {
   // Every path that changes what the roster shows comes through here, so this is
   // the one place the chips' counts have to be brought back into agreement with
   // it -- including the search box, which never touches a chip.
   refreshChipCounts();
   if (showing.value === 'zobos') { renderZobos(); return; }
+  if (showing.value === 'chips') { renderChips(); return; }
   const player = store.formation.activePlayer;
   const list = visible(player);
   const host = $('#roster');

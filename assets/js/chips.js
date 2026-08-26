@@ -242,7 +242,7 @@ function writeAll(next) {
   try { localStorage.setItem(TAKEN_KEY, JSON.stringify(next)); } catch { /* private window */ }
 }
 
-function keptBy(player) { return readAll()[player] ?? { main: [], extra: [] }; }
+export function keptBy(player) { return readAll()[player] ?? { main: [], extra: [] }; }
 
 /** Both lists at once, for "is this chip spoken for". */
 function allKept(player) {
@@ -265,7 +265,7 @@ function update(player, fn) {
  * which is the honest answer to a fourth press, rather than refusing or silently
  * pushing the first pick out.
  */
-function toggleKept(player, name) {
+export function toggleKept(player, name) {
   update(player, ({ main, extra }) => {
     if (main.includes(name)) return { main: main.filter((n) => n !== name), extra };
     if (extra.includes(name)) return { main, extra: extra.filter((n) => n !== name) };
@@ -348,6 +348,9 @@ export const iconFor = (chip) =>
 
 let BOOK = null;
 
+/** Every chip, once loadChips() has run. Empty before that, never null. */
+export const chipList = () => BOOK?.chips ?? [];
+
 /** Loads chips.json once. Safe to call twice; the second call is the same promise. */
 let loading = null;
 export function loadChips() {
@@ -381,73 +384,6 @@ function whoRow(score) {
     shown.map((p) => `<span class="chipwho__art" data-type="${esc(p.type)}" title="${esc(p.name)}"
       >${p.t ? artHTML(p.t, { priority: 'low' }) : esc(p.name)}</span>`).join('')
   }${rest > 0 ? `<span class="chipwho__more">+${rest}</span>` : ''}</span>`;
-}
-
-/* ------------------------------------------------------- the drafter panel */
-
-/**
- * The live block, under the Summary.
- *
- * Deliberately only the chips that move as you drag. The other twenty-eight are
- * the same whatever you build, so putting them here would bury the six that are
- * not under twenty-eight that are -- and they are one tap away on the page.
- *
- * No sheet of its own on a phone: the app bar is already five buttons wide and a
- * sixth would take letters off the others. This sits inside the field panel, so
- * on a phone it arrives inside the Summary sheet, which is where you already go
- * to ask what the board adds up to.
- */
-export function renderChips() {
-  const host = $('#chips');
-  if (!host || !BOOK?.chips?.length) return;
-
-  const player = store.formation.activePlayer;
-  const board = boardFor(player);
-
-  if (!board.length) {
-    host.innerHTML = `
-      <h3 class="chipsblock__head">Chips</h3>
-      <p class="chipsblock__empty">Put something on the field and this says what each chip
-        would be worth to it. <a href="chips.html">All 49 chips</a></p>`;
-    return;
-  }
-
-  const reads = rank(BOOK.chips.filter((c) => c.shape === 'placement'), board);
-  const split = elementSplit(board);
-  const mine = allKept(player);
-
-  host.innerHTML = `
-    <h3 class="chipsblock__head">
-      Chips
-      <span class="chipsblock__sub">what an offer would be worth to these ${board.length}</span>
-    </h3>
-    <ul class="chipsblock__list">
-      ${reads.map(({ chip, score }) => `
-        <li class="chipbar${mine.includes(chip.name) ? ' is-taken' : ''}${
-          score.n === 0 ? ' is-empty' : ''}" title="${esc(chip.text)}">
-          <img class="chipbar__art" src="${esc(iconFor(chip))}" alt="" loading="lazy" decoding="async">
-          <span class="chipbar__name">${esc(chip.name)}</span>
-          ${score.n ? whoRow(score) : `<span class="chipbar__why">${esc(score.why)}</span>`}
-          <span class="chipbar__n"><b>${score.n}</b> of ${score.of}</span>
-        </li>`).join('')}
-    </ul>
-    <h3 class="chipsblock__head chipsblock__head--sub">
-      Form chips
-      <span class="chipsblock__sub">one per element, 20/30/40% by tier</span>
-    </h3>
-    <ul class="chipsblock__list">
-      ${split.map((e) => `
-        <li class="chipbar" title="${esc(`${e.type} Form gives every one of these a DMG Boost`)}">
-          <span class="chipbar__elem" data-type="${esc(e.type)}" aria-hidden="true"></span>
-          <span class="chipbar__name">${esc(e.type)} Form</span>
-          ${whoRow({ who: board.filter((p) => p.type === e.type) })}
-          <span class="chipbar__n"><b>${e.count}</b> of ${board.length}</span>
-        </li>`).join('')}
-    </ul>
-    <p class="chipsblock__more">
-      <a href="chips.html">All 49 chips${
-        mine.length ? ` &middot; ${keptBy(player).main.length} of ${PER_PLAYER} kept` : ''} &rarr;</a>
-    </p>`;
 }
 
 /* ------------------------------------------------------------- the page */

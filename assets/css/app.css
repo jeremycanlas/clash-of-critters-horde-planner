@@ -4682,3 +4682,56 @@ body.is-clean .clean-hint {
   /* A thumb-sized handle without making the row taller. */
   .keptrow__art { width: 34px; height: 34px; }
 }
+
+/* ---------------------------------------------------- the chips tab
+ *
+ * A third list in the roster, next to Tatari and Zobos, because a chip is a
+ * third thing you pick and the roster is where picking happens. It also
+ * inherits the search box, the card grid and the tab strip, all of which the
+ * panel it replaced had grown its own copies of at a cost of 559px under the
+ * Summary.
+ */
+body:not([data-roster-list="chips"]) .chips-only { display: none; }
+
+/* Nothing in the Tatari filter block means anything to a chip: no element, no
+   role, no evolution tier, no bench. Same approach as the Zobo tab -- the body
+   carries the flag and the CSS hides them, rather than each control learning
+   about tabs. */
+body[data-roster-list="chips"] #filter-types,
+body[data-roster-list="chips"] #filter-roles,
+body[data-roster-list="chips"] #filter-effects,
+body[data-roster-list="chips"] #filter-tiers,
+body[data-roster-list="chips"] #filter-changed,
+body[data-roster-list="chips"] #filter-boss,
+body[data-roster-list="chips"] #filter-effect-types,
+body[data-roster-list="chips"] .filters__row--meta .check,
+body[data-roster-list="chips"] .filters__row--meta .sortby { display: none; }
+
+/* The tile art is the whole card face: it is already a framed icon on a
+   coloured ground, so the card's own padding around it would be a frame on a
+   frame. */
+.card--chip { cursor: pointer; }
+.card--chip .card__art img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  border-radius: var(--r-sm);
+}
+.card--chip .card__meta { justify-content: center; gap: var(--s1); }
+.card__score {
+  padding: 0 4px;
+  border-radius: var(--r-sm);
+  background: color-mix(in srgb, var(--accent) 22%, var(--surface-3));
+  font-size: 10px; font-weight: 700; color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+/* Nothing on this board qualifies. Still shown, because "0 of your 6" is an
+   answer and hiding it would read as the chip having no rule at all. */
+.card__score[data-empty="true"] { background: var(--surface-3); color: var(--text-mute); }
+/* Which of your three it is, if it is one of them. */
+.card__rank {
+  min-width: 14px; height: 14px;
+  display: grid; place-items: center;
+  border-radius: 999px;
+  background: var(--accent); color: var(--accent-ink);
+  font-size: 9px; font-weight: 700;
+}
