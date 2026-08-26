@@ -166,6 +166,14 @@ async function main() {
  *
  * The whole element stays out of the page when there is nothing to report, so a
  * copy of this tool that does not track updates never grows a bar it cannot fill.
+ *
+ * "Touched", not "adjusted", however naturally that word comes. Adjusted is one
+ * of the three directions this app marks, and on the update page it means one
+ * evolution line and four Tatari. A bar reading "adjusted 135" three lines above
+ * a heading reading "Adjusted, 4 Tatari" would be the tool contradicting itself
+ * in the same viewport. Not "changed" either, which is the honest word but puts
+ * it twice in one sentence next to "See what changed" -- and that half is the
+ * page's own name, so it is the half that stays.
  */
 function showPatchNote() {
   const note = $('#patch-note');
@@ -179,8 +187,8 @@ function showPatchNote() {
   note.hidden = false;
   note.innerHTML = `
     <span class="patchnote__body">
-      The <b>${esc(state.patch?.label ?? 'latest')}</b> update moved
-      ${state.changes.size} Tatari. See what changed
+      The <b>${esc(state.patch?.label ?? 'latest')}</b> update touched
+      ${state.changes.size} of the ${state.all.length} Tatari. See what changed
     </span>
     <button class="patchnote__x" type="button" aria-label="Hide this until the next update">&times;</button>`;
 
