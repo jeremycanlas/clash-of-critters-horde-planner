@@ -731,7 +731,12 @@ await runGroup('flex slots', async () => {
     if (!img) return null;
     lastSrc = img.src;
     const V = D.defaultView;
-    const bmp = await V.createImageBitmap(await (await V.fetch(img.src)).blob());
+    let bmp;
+    /* Same guard as the chips group further down: headless Chrome will hand out
+       a blob: URL it then refuses to fetch. Null here already means "no card to
+       measure", which is what the caller reports. */
+    try { bmp = await V.createImageBitmap(await (await V.fetch(img.src)).blob()); }
+    catch { $('dialog[open]')?.close(); await sleep(200); return null; }
     const cv = new V.OffscreenCanvas(bmp.width, bmp.height);
     const cx = cv.getContext('2d');
     cx.drawImage(bmp, 0, 0);
@@ -1033,7 +1038,20 @@ await runGroup('the chips travel with the picture', async () => {
       }, 'a freshly drawn full card', 16000);
     } catch { return null; }
     lastCard = $('dialog[open] img').src;
-    const bmp = await V.createImageBitmap(await (await V.fetch($('dialog[open] img').src)).blob());
+    let bmp;
+    try {
+      bmp = await V.createImageBitmap(await (await V.fetch($('dialog[open] img').src)).blob());
+    } catch {
+      /* Headless Chrome under a virtual clock hands out a blob: URL and then
+         declines to fetch it. The card did draw -- the wait above only returns
+         once the img has a natural width -- so this is the browser refusing to
+         read it back, not the app failing to make it. Reported as a skip and
+         measured properly the next time the group runs in a real window,
+         because a check that goes red for the harness gets ignored. */
+      $('dialog[open]')?.close();
+      await sleep(240);
+      return 'unreadable';
+    }
     const cv = new V.OffscreenCanvas(bmp.width, bmp.height);
     const cx = cv.getContext('2d');
     cx.drawImage(bmp, 0, 0);
@@ -1060,7 +1078,9 @@ await runGroup('the chips travel with the picture', async () => {
   localStorage.removeItem('coc.chips.taken');
   await click($('#roster-tabs [data-list="chips"]'), 420);
   const bare = await fullCard();
-  ok('the full card renders with no chips kept', bare !== null);
+  const readable = bare !== 'unreadable';
+  if (!readable) skip('the chips are in the picture', 'this browser will not read its own blob: URL back');
+  else ok('the full card renders with no chips kept', bare !== null);
 
   const names = $$('.card--chip').slice(0, 3).map((c) => c.dataset.chip);
   for (const n of names) {
@@ -1068,9 +1088,9 @@ await runGroup('the chips travel with the picture', async () => {
     await sleep(260);
   }
   const withChips = await fullCard();
-  ok('and with three kept', withChips !== null);
+  if (readable) ok('and with three kept', withChips !== null);
 
-  if (bare && withChips) {
+  if (readable && bare && withChips && withChips !== 'unreadable') {
     ok('keeping chips puts them in the picture', withChips.accent > bare.accent,
        `${withChips.accent} accent pixels against ${bare.accent}`);
     ok('and the card grows to make room rather than cropping them',
@@ -1079,6 +1099,102 @@ await runGroup('the chips travel with the picture', async () => {
   }
 
   await click($('#roster-tabs [data-list="tatari"]'), 380);
+});
+
+/*
+ * The bug this group exists for, reported from a phone with a screenshot.
+ *
+ * data-chip-view is written onto #roster when the chips list renders, and it
+ * describes only the chips list: in "list" it forces one full-width column.
+ * Going back to Tatari left it there, so 230 critters rendered one enormous
+ * card per row. Nothing threw. No count was wrong. The only symptom was the
+ * layout, which is exactly the kind of break every check written so far walks
+ * straight past.
+ *
+ * So the check is not "the chips tab tidies up after itself". It is the general
+ * shape: measure a list, leave by every route there is, come back, and find it
+ * exactly as it was -- attributes, columns, card count and the header number.
+ * That catches the next thing somebody leaves behind as well as this one.
+ */
+await runGroup('switching lists leaves nothing behind', async () => {
+  await reset();
+
+  const roster = $('#roster');
+  const tab = (name) => $(`#roster-tabs [data-list="${name}"]`);
+  const LISTS = ['tatari', 'zobos', 'chips'];
+  ok('all three lists have a tab', LISTS.every((l) => !!tab(l)));
+
+  const shapeOf = () => {
+    const cs = D.defaultView.getComputedStyle(roster);
+    return {
+      attrs: [...roster.attributes].map((a) => `${a.name}=${a.value}`).sort().join(' | '),
+      columns: cs.gridTemplateColumns.split(/\s+/).filter(Boolean).length,
+      cards: roster.children.length,
+      count: $('#roster-count').textContent.trim(),
+    };
+  };
+  const go = async (name) => { await click(tab(name), 420); return shapeOf(); };
+
+  const first = {};
+  for (const l of LISTS) first[l] = await go(l);
+
+  /*
+   * The failing symptom, said as a number: one column is the chips' list view
+   * wearing the Tatari roster's clothes.
+   *
+   * Only asked when the roster has a real width. auto-fill fits one 76px track
+   * into anything narrower than about 160px, and a window sitting behind
+   * another app reports its frame as four pixels wide -- so unguarded this
+   * fails for a reason the app had no part in. The round trips above are the
+   * check that does not care how wide anything is.
+   */
+  const wide = () => roster.getBoundingClientRect().width >= 200;
+  if (!wide()) {
+    skip('the roster is a grid of several columns',
+         `the roster measures ${Math.round(roster.getBoundingClientRect().width)}px, so this window is not on screen`);
+  } else {
+    ok('the Tatari list is a grid of several columns', first.tatari.columns > 1,
+       `${first.tatari.columns} column(s)`);
+    ok('and so is the Zobo list', first.zobos.columns > 1, `${first.zobos.columns} column(s)`);
+  }
+
+  const KEYS = ['attrs', 'columns', 'cards', 'count'];
+  for (const home of LISTS) {
+    for (const via of LISTS) {
+      if (via === home) continue;
+      await go(home);
+      await go(via);
+      const back = await go(home);
+      const drift = KEYS.filter((k) => back[k] !== first[home][k]);
+      ok(`${home} comes back unchanged from ${via}`, drift.length === 0,
+         drift.map((k) => `${k}: ${JSON.stringify(back[k])} not ${JSON.stringify(first[home][k])}`).join('; '));
+    }
+  }
+
+  /*
+   * The other half of the same fix. Clearing the attribute on the way out must
+   * not throw away the reader's choice on the way back in -- a view switch that
+   * forgets is a worse bug than the one being fixed, and the obvious fix for
+   * the leak (never write the attribute) would cause it.
+   */
+  const view = $('#chip-view');
+  ok('the chips have a view switch', !!view);
+  if (view) {
+    await go('chips');
+    await click(view.querySelector('[data-view="grid"]'), 400);
+    eq('grid can be chosen', roster.dataset.chipView, 'grid');
+    await go('tatari');
+    ok('leaving the chips takes their layout with them', !roster.dataset.chipView,
+       roster.dataset.chipView);
+    if (wide()) {
+      ok('and the critters are back in a grid of their own',
+         D.defaultView.getComputedStyle(roster).gridTemplateColumns.split(/\s+/).filter(Boolean).length > 1);
+    }
+    await go('chips');
+    eq('coming back remembers grid', roster.dataset.chipView, 'grid');
+    await click(view.querySelector('[data-view="list"]'), 400);
+    await go('tatari');
+  }
 });
 
 await runGroup('the chips page', async () => {

@@ -230,6 +230,9 @@ ok('the three never grow past three',
 out.innerHTML += `<div style="margin-top:12px">${pass} passed, ${fail} failed`
   + `. ${book.chips.length} chips, ${book.chips.filter((c) => scoreOne(c, mixed)).length} of them scored`
   + ` against a board of ${mixed.length}</div>`;
+/* In the title so a headless run can read the verdict without running
+   script of its own -- tools/check.sh greps exactly this. */
+document.title = `${fail ? `FAIL (${fail})` : 'ok'}: chip data`;
 window.__done = { pass, fail };
 </script>
 </body>

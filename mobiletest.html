@@ -68,6 +68,17 @@ const until = async (test, what, ms = 25000) => {
  */
 const only = new URLSearchParams(location.search).get('only')?.toLowerCase() ?? '';
 
+/*
+ * A third outcome, for the checks that need the window to actually be on
+ * screen. A measurement taken while the tab is occluded is not a failure the
+ * app caused, and reporting it as one teaches you to ignore the suite.
+ */
+let skipped = 0;
+const skip = (name, why) => {
+  line(`<div style="color:#8f99aa">  skip ${name}<div style="padding-left:7ch">${why}</div></div>`);
+  skipped += 1;
+};
+
 const runGroup = async (name, body) => {
   /* Boot is never skipped. It is where the frame is waited for and where D, W
      and the roster total come from, so filtering it out leaves every other
@@ -552,6 +563,102 @@ await runGroup('what this session added, at phone size', async () => {
   await click($('#btn-reset-filters'), 320);
 });
 
+/*
+ * The bug this group exists for, reported from a phone with a screenshot.
+ *
+ * data-chip-view is written onto #roster when the chips list renders, and it
+ * describes only the chips list: in "list" it forces one full-width column.
+ * Going back to Tatari left it there, so 230 critters rendered one enormous
+ * card per row. Nothing threw. No count was wrong. The only symptom was the
+ * layout, which is exactly the kind of break every check written so far walks
+ * straight past.
+ *
+ * So the check is not "the chips tab tidies up after itself". It is the general
+ * shape: measure a list, leave by every route there is, come back, and find it
+ * exactly as it was -- attributes, columns, card count and the header number.
+ * That catches the next thing somebody leaves behind as well as this one.
+ */
+await runGroup('switching lists leaves nothing behind', async () => {
+  await click(barBtn('roster'), 340);   // the roster is a sheet on a phone
+  await click($('#btn-reset-filters'), 320);
+  const roster = $('#roster');
+  const tab = (name) => $(`#roster-tabs [data-list="${name}"]`);
+  const LISTS = ['tatari', 'zobos', 'chips'];
+  ok('all three lists have a tab', LISTS.every((l) => !!tab(l)));
+
+  const shapeOf = () => {
+    const cs = D.defaultView.getComputedStyle(roster);
+    return {
+      attrs: [...roster.attributes].map((a) => `${a.name}=${a.value}`).sort().join(' | '),
+      columns: cs.gridTemplateColumns.split(/\s+/).filter(Boolean).length,
+      cards: roster.children.length,
+      count: $('#roster-count').textContent.trim(),
+    };
+  };
+  const go = async (name) => { await click(tab(name), 420); return shapeOf(); };
+
+  const first = {};
+  for (const l of LISTS) first[l] = await go(l);
+
+  /*
+   * The failing symptom, said as a number: one column is the chips' list view
+   * wearing the Tatari roster's clothes.
+   *
+   * Only asked when the roster has a real width. auto-fill fits one 76px track
+   * into anything narrower than about 160px, and a window sitting behind
+   * another app reports its frame as four pixels wide -- so unguarded this
+   * fails for a reason the app had no part in. The round trips above are the
+   * check that does not care how wide anything is.
+   */
+  const wide = () => roster.getBoundingClientRect().width >= 200;
+  if (!wide()) {
+    skip('the roster is a grid of several columns',
+         `the roster measures ${Math.round(roster.getBoundingClientRect().width)}px, so this window is not on screen`);
+  } else {
+    ok('the Tatari list is a grid of several columns', first.tatari.columns > 1,
+       `${first.tatari.columns} column(s)`);
+    ok('and so is the Zobo list', first.zobos.columns > 1, `${first.zobos.columns} column(s)`);
+  }
+
+  const KEYS = ['attrs', 'columns', 'cards', 'count'];
+  for (const home of LISTS) {
+    for (const via of LISTS) {
+      if (via === home) continue;
+      await go(home);
+      await go(via);
+      const back = await go(home);
+      const drift = KEYS.filter((k) => back[k] !== first[home][k]);
+      ok(`${home} comes back unchanged from ${via}`, drift.length === 0,
+         drift.map((k) => `${k}: ${JSON.stringify(back[k])} not ${JSON.stringify(first[home][k])}`).join('; '));
+    }
+  }
+
+  /*
+   * The other half of the same fix. Clearing the attribute on the way out must
+   * not throw away the reader's choice on the way back in -- a view switch that
+   * forgets is a worse bug than the one being fixed, and the obvious fix for
+   * the leak (never write the attribute) would cause it.
+   */
+  const view = $('#chip-view');
+  ok('the chips have a view switch', !!view);
+  if (view) {
+    await go('chips');
+    await click(view.querySelector('[data-view="grid"]'), 400);
+    eq('grid can be chosen', roster.dataset.chipView, 'grid');
+    await go('tatari');
+    ok('leaving the chips takes their layout with them', !roster.dataset.chipView,
+       roster.dataset.chipView);
+    if (wide()) {
+      ok('and the critters are back in a grid of their own',
+         D.defaultView.getComputedStyle(roster).gridTemplateColumns.split(/\s+/).filter(Boolean).length > 1);
+    }
+    await go('chips');
+    eq('coming back remembers grid', roster.dataset.chipView, 'grid');
+    await click(view.querySelector('[data-view="list"]'), 400);
+    await go('tatari');
+  }
+});
+
 await runGroup('touch rules are in the stylesheet', async () => {
   /*
    * Read, not rendered. (hover: none) never matches in a desktop browser at any
@@ -638,10 +745,11 @@ await runGroup('the update page on a phone', async () => {
 localStorage.clear();
 for (const [k, v] of Object.entries(saved)) localStorage.setItem(k, v);
 
+const skipNote = skipped ? `, ${skipped} skipped` : '';
 document.getElementById('head').innerHTML = fail
-  ? `<b style="color:#f0654f">${fail} failed</b>, ${pass} passed`
-  : `<b style="color:#55c98a">${pass} passed</b>, 0 failed`;
+  ? `<b style="color:#f0654f">${fail} failed</b>, ${pass} passed${skipNote}`
+  : `<b style="color:#55c98a">${pass} passed</b>, 0 failed${skipNote}`;
 document.title = `${fail ? `FAIL (${fail})` : 'ok'}: phone checks`;
-window.__done = { pass, fail };
+window.__done = { pass, fail, skipped };
 </script>
 </body>

@@ -1206,6 +1206,13 @@ export function renderRoster() {
     fold.innerHTML = `Filters${n ? ` <b>${n}</b>` : ''}`;
     fold.classList.toggle('is-on', n > 0);
   }
+  /* data-chip-view belongs to the chips list and only to it: it decides the
+     roster's grid columns, and left behind on the way back to Tatari it laid
+     230 cards out one per row at full width. Cleared here rather than in each
+     of the other two render paths, because there is no fourth list yet and
+     there will be, and it would be forgotten. renderChips sets it again. */
+  $('#roster').removeAttribute('data-chip-view');
+
   if (showing.value === 'zobos') { renderZobos(); return; }
   if (showing.value === 'chips') { renderChips(); return; }
   const player = store.formation.activePlayer;

@@ -147,6 +147,9 @@ ok('an adjusted line really does move both ways',
 const counts = DIRECTIONS.map((d) => `${d} ${lines.filter((l) => l.direction === d).length}`).join(', ');
 out.innerHTML += `<div style="margin-top:12px">${pass} passed, ${fail} failed`
   + `. ${lines.length} lines (${counts}) covering ${state.changes.size} of ${state.all.length} Tatari</div>`;
+/* In the title so a headless run can read the verdict without running
+   script of its own -- tools/check.sh greps exactly this. */
+document.title = `${fail ? `FAIL (${fail})` : 'ok'}: patch changes`;
 window.__done = { pass, fail };
 </script>
 </body>
