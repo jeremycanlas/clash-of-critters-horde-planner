@@ -161,13 +161,17 @@ function render(book) {
     return;
   }
 
-  const tatari = lines.reduce((n, l) => n + (l.members?.length ?? 0), 0);
-  $('#changes-intro').innerHTML =
-    `The ${esc(patch)} update rebalanced the Horde Invasion skills of `
-    + `<b>${plural(lines.length, 'evolution line')}</b>, which is `
-    + `<b>${tatariCount(tatari)}</b> of the ${state.all.length} in the roster. `
-    + `Horde skills belong to the whole line, so every member of a family moves together. `
-    + `<a href="index.html">The drafter</a> marks these on the roster and can filter to them.`;
+  /*
+   * No standing paragraph. It used to open with a sentence restating the date
+   * already in the header and the counts already on every group heading, and
+   * "The 26 August 2026 update rebalanced..." is the kind of line a reader skips
+   * on the way to the thing they came for. The date is in the header; the
+   * numbers are three lines down; the way back to the drafter is a button.
+   *
+   * The element stays for the case where there is nothing to show, which is the
+   * only time this page needs to say anything in prose.
+   */
+  $('#changes-intro').textContent = '';
 
   /*
    * What the update did to the mode, before what it did to any Tatari.

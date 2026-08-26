@@ -3933,7 +3933,8 @@ body.is-clean .clean-hint {
   margin: 0 0 var(--s5);
   color: var(--text-dim); font-size: 14px; line-height: 1.55;
 }
-.changes__intro b { color: var(--text); font-weight: 650; }
+/* Empty on the normal path, so it must not leave its margin behind. */
+.changes__intro:empty { display: none; }
 
 /*
  * What the update did to the mode, above what it did to any Tatari.
