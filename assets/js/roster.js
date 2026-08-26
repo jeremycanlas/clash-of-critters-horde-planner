@@ -17,6 +17,26 @@ const EFFECTS = [
   { key: 'debuff', glyph: '▼', label: 'Debuffs' },
 ];
 
+/*
+ * What the last game update did, and why it cannot borrow the glyphs above.
+ *
+ * ▲ and ▼ are already spoken for on these cards: they mean this Tatari applies
+ * buffs, this one applies debuffs, and they carry the horde level the effect
+ * arrives at. Reusing them for "was buffed by the patch" would make every card
+ * ambiguous -- a red ▼ would mean two unrelated things at once.
+ *
+ * So this marker differs on every axis available: line arrows rather than solid
+ * triangles, a disc rather than a rounded rect, the top-right corner rather than
+ * the top-left, and never a number beside it. ↕ for adjusted rather than a
+ * second colour of arrow, because "some numbers up, some down" is the actual
+ * fact and any single arrow would misreport it.
+ */
+const PATCH_MARKS = {
+  buff: { glyph: '↑', label: 'Buffed' },
+  nerf: { glyph: '↓', label: 'Nerfed' },
+  adjusted: { glyph: '↕', label: 'Adjusted' },
+};
+
 export const filters = {
   query: '',
   types: new Set(),
@@ -272,6 +292,24 @@ function effectMarks(t) {
   return marks ? `<span class="card__fxrow">${marks}</span>` : '';
 }
 
+/**
+ * The patch marker, if the last update touched this Tatari's line.
+ *
+ * The tooltip carries the actual numbers rather than just the direction, since
+ * "nerfed" on its own tells a player nothing they can act on -- whether Dewgrub
+ * lost a tenth or three quarters of its damage is the entire question. Absent
+ * for anything the update did not touch, which is most of the roster.
+ */
+function patchMark(t) {
+  const change = state.changes.get(t.slug);
+  if (!change) return '';
+  const { glyph, label } = PATCH_MARKS[change.direction] ?? {};
+  if (!glyph) return '';
+  const title = [`${label} in the ${state.patch?.label ?? 'latest'} update`, ...change.changes].join('\n');
+  return `<span class="card__patch" data-patch="${change.direction}" title="${esc(title)}"
+    aria-label="${esc(label)} in the latest update">${glyph}</span>`;
+}
+
 export function resetFilters() {
   filters.query = '';
   filters.types.clear();
@@ -405,7 +443,7 @@ export function renderRoster() {
              state_ ? `\n${state_}` : ''}${clash ? `\nTap to switch from ${clash.name}, keeping its plan` : ''}">
         <!-- Last in the queue: 218 thumbnails will otherwise crowd out the
              dozen sprites the field and the benches are showing right now. -->
-        <div class="card__art">${artHTML(t, { priority: 'low' })}${effectMarks(t)}</div>
+        <div class="card__art">${artHTML(t, { priority: 'low' })}${effectMarks(t)}${patchMark(t)}</div>
         <div class="card__meta">
           <span class="card__tier">T${t.tier}</span>
           ${typeIcon(t.type)}${roleIcon(t.role)}

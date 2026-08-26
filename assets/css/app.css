@@ -799,6 +799,33 @@ img { -webkit-user-drag: none; }
 .card__fx[data-fx="buff"]   { color: var(--accent); }
 .card__fx[data-fx="debuff"] { color: var(--danger); }
 
+/*
+ * The patch marker, deliberately unlike the effect badges above it.
+ *
+ * Those are rounded rects stacked down the top-left, most of them carrying a
+ * number. This is a single disc in the opposite corner with nothing beside it,
+ * so the two never read as members of one set even at card size -- which they
+ * must not, because ▲ there and ↑ here mean completely different things.
+ *
+ * The arrow carries the meaning and the colour only agrees with it, so the card
+ * still reads with the hues stripped out. Opaque background rather than a tint:
+ * this sits over artwork, and a translucent badge on a pale sprite loses its
+ * arrow entirely.
+ */
+.card__patch {
+  position: absolute; top: 2px; right: 2px;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 15px; height: 15px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  background: color-mix(in srgb, currentColor 26%, var(--bg));
+  font-size: 10px; font-weight: 800; line-height: 1;
+  pointer-events: none;
+}
+.card__patch[data-patch="buff"]     { color: var(--ok); }
+.card__patch[data-patch="nerf"]     { color: var(--danger); }
+.card__patch[data-patch="adjusted"] { color: var(--text-dim); }
+
 
 .lf-wants { display: flex; flex-wrap: wrap; gap: var(--s1); }
 .lf-wants:empty { display: none; }

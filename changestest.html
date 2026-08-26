@@ -1,0 +1,95 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>patch changes test</title>
+<body style="font:14px monospace;background:#111;color:#ddd;padding:16px">
+<div id="log">loading…</div>
+<script type="module">
+/*
+ * data/changes.json against the roster it describes.
+ *
+ * The file is hand-authored from patch notes, so the failures worth catching are
+ * authoring ones: a name typed wrong, a line that gained an evolution since the
+ * notes were read, a Tatari filed under two directions at once. The last one is
+ * the reason for the whole-line check -- Lordopus and Dharmadder arrived as new
+ * T4s in the same week as these notes, and a stale members list would silently
+ * leave the newest member of a nerfed line unmarked.
+ */
+import { load, state } from './assets/js/data.js';
+
+const DIRECTIONS = ['buff', 'nerf', 'adjusted'];
+
+const out = document.getElementById('log');
+let pass = 0, fail = 0;
+const ok = (name, cond, detail) => {
+  if (cond) { pass++; out.innerHTML += `<div style="color:#7c7">ok   ${name}</div>`; }
+  else { fail++; out.innerHTML += `<div style="color:#f77">FAIL ${name}${detail ? ' — ' + detail : ''}</div>`; }
+};
+
+await load();
+const book = await fetch('data/changes.json').then((r) => r.json());
+const lines = book.lines ?? [];
+out.innerHTML = '';
+
+ok('roster loaded', state.all.length > 0, `${state.all.length} Tatari`);
+ok('changes.json has a patch label', !!book.patch && !!book.label);
+ok('every entry names a direction we render', lines.every((l) => DIRECTIONS.includes(l.direction)),
+   lines.filter((l) => !DIRECTIONS.includes(l.direction)).map((l) => l.line).join(', '));
+ok('every entry carries at least one change', lines.every((l) => (l.changes ?? []).length > 0),
+   lines.filter((l) => !(l.changes ?? []).length).map((l) => l.line).join(', '));
+
+// Names, not just shapes: a slug that is not in the roster marks nothing at all,
+// and does it silently.
+const unknown = lines.flatMap((l) => (l.members ?? []).filter((s) => !state.bySlug.has(s)));
+ok('every member slug is a real Tatari', unknown.length === 0, unknown.join(', '));
+
+const headNotInRoster = lines.filter((l) => !state.all.some((t) => t.name === l.line));
+ok('every line name is a real Tatari', headNotInRoster.length === 0,
+   headNotInRoster.map((l) => l.line).join(', '));
+
+/*
+ * The check that earns its keep. Horde skills belong to the family, so a change
+ * applies to the family as it stands today -- not as it stood when the notes were
+ * read. If the wiki has since added a T4, this fails and names it.
+ */
+const stale = [];
+for (const l of lines) {
+  const head = state.all.find((t) => t.name === l.line);
+  if (!head) continue;
+  const expected = (head.evolutionLine ?? [head.name])
+    .map((n) => state.all.find((t) => t.name === n)?.slug).filter(Boolean);
+  const missing = expected.filter((s) => !(l.members ?? []).includes(s));
+  const extra = (l.members ?? []).filter((s) => !expected.includes(s));
+  if (missing.length || extra.length) {
+    stale.push(`${l.line}: ${missing.length ? 'missing ' + missing.join('/') : ''}` +
+               `${extra.length ? ' unexpected ' + extra.join('/') : ''}`);
+  }
+}
+ok('every line covers its whole evolution family', stale.length === 0, stale.join('; '));
+
+// One Tatari cannot be both buffed and nerfed. Overlapping families would mean
+// whichever entry was read last silently wins.
+const seen = new Map();
+const dupes = [];
+for (const l of lines) {
+  for (const s of l.members ?? []) {
+    if (seen.has(s)) dupes.push(`${s} in both ${seen.get(s)} and ${l.line}`);
+    else seen.set(s, l.line);
+  }
+}
+ok('no Tatari appears in two entries', dupes.length === 0, dupes.join('; '));
+
+// The fan-out the loader does, checked against the file it did it from.
+ok('loader flattened every member', state.changes.size === seen.size,
+   `${state.changes.size} in state, ${seen.size} in file`);
+ok('loader kept the direction', lines.every((l) =>
+     (l.members ?? []).every((s) => state.changes.get(s)?.direction === l.direction)));
+ok('untouched Tatari carry no entry',
+   state.all.some((t) => !state.changes.has(t.slug)),
+   'every Tatari is marked, which would make the marker meaningless');
+
+const counts = DIRECTIONS.map((d) => `${d} ${lines.filter((l) => l.direction === d).length}`).join(', ');
+out.innerHTML += `<div style="margin-top:12px">${pass} passed, ${fail} failed`
+  + ` &mdash; ${lines.length} lines (${counts}) covering ${state.changes.size} of ${state.all.length} Tatari</div>`;
+window.__done = { pass, fail };
+</script>
+</body>
