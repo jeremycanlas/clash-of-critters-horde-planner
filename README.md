@@ -65,6 +65,23 @@ field, HAVE above LF.
 
 ## Changelog
 
+### 1.7.0
+
+#### Changes:
+- **A "what changed" page.** Every line the last update touched, with the old and new numbers side by side, and the horde level that teaches each skill so you can see whether a change is one you'd even reach. It opens with what changed about the game mode itself — seasons, difficulty selection, the three-hour window. It has its own address, so on patch day you can paste the link straight into Discord instead of telling people where to click.
+- **The roster marks what moved.** A small green up, red down or grey plus-minus next to the tier on every Tatari the update touched — 135 of the 230 this time. Hover it for the actual numbers.
+- **A Patch filter** to show only what was buffed, nerfed or adjusted. One at a time, because a Tatari can only be one of the three; "adjusted" is the name for a line whose numbers moved both ways.
+- **Filter by a named effect.** The little arrow beside Heals, Buffs and Debuffs opens all 23 of them — Stun, Slow, Shield, ATK Boost and the rest — each with a count of how many Tatari bring it.
+- **Tell the filter how far you're willing to level.** Start / By 3 / By 5 / By 7, one per group. Stun looks like 55 Tatari until you ask what you get for free, and then it's 12. That gap was always there, it just had nowhere to show up.
+- **Every count now narrows with the filters**, the way "Roster 22 of 230" already did. Pick T2 and Water and the chips tell you what is left of *those*, not of the whole roster.
+- **Nothing the app draws sits on a critter any more.** The heal/buff/debuff badges moved off the artwork, so a screenshot of the roster is just the roster.
+- Filter labels are brighter. They were under the contrast standard at 11px, and turning on High contrast never reached them — it does now.
+
+#### Bug Fixes:
+- You could never drag to reorder the level-up plan on a phone. The browser was taking the gesture as a scroll before the drag started. Grab the step number and it moves now.
+- The Ranges tooltip claimed "only 72 of the 218 Tatari". The 72 was right; the 218 was two updates stale. It counts both ends itself now so it can't drift again.
+- Effect tooltips had the wiki's definition with a tally welded onto the end. They just show the definition, and say nothing at all where the wiki hasn't written one.
+
 ### 1.6.1
 
 #### Changes:
