@@ -510,7 +510,11 @@ await runGroup('the chips tab in the roster', async () => {
   const promised = Number(tierBtn.textContent.replace(/\D/g, ''));
   await click(tierBtn, 380);
   eq('filtering by tier finds what it promised', chips().length, promised);
-  await click($('#filter-chip-tiers [data-tier="3"]'), 380);
+  /* One at a time here too, so the two rows do not behave differently. */
+  const tierII = Number($('#filter-chip-tiers [data-tier="2"]').textContent.replace(/\D/g, ''));
+  await click($('#filter-chip-tiers [data-tier="2"]'), 380);
+  eq('a second tier replaces rather than adds', chips().length, tierII);
+  await click($('#filter-chip-tiers [data-tier="2"]'), 380);
   eq('and releases', chips().length, 49);
 
   const box = $('#search');
@@ -560,11 +564,27 @@ await runGroup('the chips tab in the roster', async () => {
   const mapBtn = $('.chip--group[data-shape="map"]');
   const says = Number(mapBtn.querySelector('b').textContent);
   await click(mapBtn, 380);
-  eq('filtering by kind finds what it promised', chips().length, says);
-  ok('and they really are that kind',
+  eq('filtering by type finds what it promised', chips().length, says);
+  ok('and they really are that type',
      chips().every((c) => c.querySelector('.chiprow__cat').textContent.trim() === 'Map'));
-  await click($('.chip--group[data-shape="map"]'), 380);
+
+  const elemN = Number($('.chip--group[data-shape="element"] b').textContent);
+  await click($('.chip--group[data-shape="element"]'), 380);
+  eq('a second type replaces the first', chips().length, elemN);
+  eq('and only one is pressed',
+     $$('.chip--group[aria-pressed="true"]').length, 1);
+  await click($('.chip--group[data-shape="element"]'), 380);
   eq('releasing it puts them all back', chips().length, 49);
+
+  /*
+   * The gallery's order, which is not tier, not alphabetical, and nothing this
+   * app could work out -- so it is copied into data/chips.json from the same
+   * screenshots the icons were cut from. Sorting it any other way makes the tab
+   * disagree with the game a player is looking at while they read it.
+   */
+  eq('the list is in the order the game shows them',
+     chips().slice(0, 4).map((c) => c.dataset.chip).join(', '),
+     'Photosynthesis III, Bounty Hunter III, Slot Machine 4, Water Form III');
 
   /* The panel this replaced is gone, not hidden. */
   ok('the old panel under the Summary is gone', !$('#chips'));
@@ -606,16 +626,17 @@ await runGroup('the chips page', async () => {
   eq('and says so', C.querySelector('.chipfilters__n').textContent.trim(), `${promised} of ${all}`);
   ok('the pressed one reports itself', tier(3).getAttribute('aria-pressed') === 'true');
 
-  /* Multi-select, because "II or III" is a real question and the low tier of the
-     same chip is a different offer. */
+  /* One at a time. "II or III" answers 35 of 49, which is not a filter, and the
+     same control on the roster tab behaves the same way. */
   const alsoII = Number(tier(2).textContent.replace(/\D/g, ''));
   tier(2).click();
-  await sleep(220);
-  eq('a second tier adds rather than replaces', cards(), promised + alsoII);
+  await sleep(240);
+  eq('a second tier replaces the first rather than adding', cards(), alsoII);
+  eq('and only one is pressed',
+     C.querySelectorAll('.chip--rarity[aria-pressed="true"]').length, 1);
 
-  tier(3).click(); await sleep(200);
-  tier(2).click(); await sleep(220);
-  eq('pressing them again puts everything back', cards(), all);
+  tier(2).click(); await sleep(240);
+  eq('pressing the one already on releases it', cards(), all);
 
   // The three you kept are yours whatever the filter is doing.
   const keep = C.querySelector('[data-keep]');

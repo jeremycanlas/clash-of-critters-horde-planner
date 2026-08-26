@@ -199,14 +199,16 @@ const SHAPES = [
 ];
 
 /*
- * Which tiers to show. Empty means all of them, the same contract every filter
- * in the roster uses: nothing pressed is not an empty result, it is no question
- * asked.
+ * Which tier to show, or null for all of them.
+ *
+ * One at a time, matching the tab in the roster. "II or III" reads like a real
+ * question and answers 35 of 49, which is not a filter; and the same control on
+ * two surfaces behaving two ways is worse than either behaviour on its own.
  *
  * Tier is what the game calls rarity. The gallery says it twice, as a numeral on
  * the name and as the colour of the tile, and this page says it twice too.
  */
-const tiers = new Set();
+let tier = null;
 
 const TAKEN_KEY = 'coc.chips.taken';
 const PER_PLAYER = 3;
@@ -437,15 +439,15 @@ function renderFilters(all) {
   host.hidden = present.length < 2;
   if (host.hidden) return;
 
-  const shown = tiers.size ? all.filter((c) => tiers.has(c.tier)).length : all.length;
+  const shown = tier === null ? all.length : all.filter((c) => c.tier === tier).length;
   host.innerHTML = `
     <span class="chipfilters__label">Tier</span>
-    ${present.map(({ tier, label }) => `
-      <button class="chip chip--rarity" type="button" data-tier="${tier}"
-        aria-pressed="${tiers.has(tier)}"
+    ${present.map(({ tier: t, label }) => `
+      <button class="chip chip--rarity" type="button" data-tier="${t}"
+        aria-pressed="${tier === t}"
         title="${esc(`Show only tier ${label} chips. Press again to stop filtering by it.`)}"
-        ><span class="chip__tier" data-tier="${tier}" aria-hidden="true">${label}</span
-        >${all.filter((c) => c.tier === tier).length}</button>`).join('')}
+        ><span class="chip__tier" data-tier="${t}" aria-hidden="true">${label}</span
+        >${all.filter((c) => c.tier === t).length}</button>`).join('')}
     <span class="chipfilters__n">${shown === all.length
       ? `all ${all.length}`
       : `${shown} of ${all.length}`}</span>`;
@@ -517,7 +519,7 @@ const $$ = (sel) => [...document.querySelectorAll(sel)];
 function renderPage() {
   const all = BOOK?.chips ?? [];
   renderFilters(all);
-  const chips = tiers.size ? all.filter((c) => tiers.has(c.tier)) : all;
+  const chips = tier === null ? all : all.filter((c) => c.tier === tier);
   const player = store.formation.activePlayer;
   const board = boardFor(player);
   const { main, extra } = keptBy(player);
@@ -672,10 +674,10 @@ if ($('#chips-body')) {
         ?? $(`.keptrow[data-name="${CSS.escape(name)}"] .keptrow__btn`)?.focus();
       return;
     }
-    const tier = e.target.closest('.chip--rarity');
-    if (tier) {
-      const n = Number(tier.dataset.tier);
-      if (tiers.has(n)) tiers.delete(n); else tiers.add(n);
+    const tierBtn = e.target.closest('.chip--rarity');
+    if (tierBtn) {
+      const n = Number(tierBtn.dataset.tier);
+      tier = tier === n ? null : n;
       renderPage();
       $(`.chip--rarity[data-tier="${n}"]`)?.focus();
       return;

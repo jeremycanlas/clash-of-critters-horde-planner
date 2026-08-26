@@ -193,7 +193,7 @@ export function buildFilters(onChange, { onPick = bringToBench } = {}) {
       const btn = e.target.closest('.chip--rarity');
       if (!btn) return;
       const t = Number(btn.dataset.tier);
-      if (chipTiers.has(t)) chipTiers.delete(t); else chipTiers.add(t);
+      chipTier = chipTier === t ? null : t;
       onChange();
     });
   }
@@ -204,7 +204,7 @@ export function buildFilters(onChange, { onPick = bringToBench } = {}) {
       const btn = e.target.closest('.chip--group');
       if (!btn) return;
       const k = btn.dataset.shape;
-      if (chipShapes.has(k)) chipShapes.delete(k); else chipShapes.add(k);
+      chipShape = chipShape === k ? null : k;
       onChange();
     });
   }
@@ -898,8 +898,17 @@ ${esc(z.skill.name)}` : ''}">
  * would be worth to the board you have built. Which particular Tatari is in the
  * tooltip and on chips.html, both of which have the room for it.
  */
-const chipTiers = new Set();
-const chipShapes = new Set();
+/*
+ * One at a time, both rows.
+ *
+ * Multi-select was the wrong default here. "Tier II or III" reads like a real
+ * question but the answer is 35 of 49, which is not a filter; and two rows
+ * sitting next to each other behaving differently is worse than either
+ * behaviour on its own. Pressing the one already on releases it, the same as
+ * the Patch chips on the Tatari tab.
+ */
+let chipTier = null;
+let chipShape = null;
 
 /* The same names the page uses for its headings, minus the word "Chips" --
    printed on a chip, on a page of chips, it is the only word on the label that
@@ -920,7 +929,7 @@ function drawChipTiers() {
     host.innerHTML = `<span class="chips__label" aria-hidden="true">Tier</span>`
       + [1, 2, 3].map((t) => `
         <button class="chip chip--rarity" type="button" data-tier="${t}"
-          aria-pressed="${chipTiers.has(t)}"
+          aria-pressed="${chipTier === t}"
           title="${esc(`Show only tier ${'I'.repeat(t)} chips`)}"
           ><span class="chip__tier" data-tier="${t}" aria-hidden="true">${'I'.repeat(t)}</span
           >${chipList().filter((c) => c.tier === t).length}</button>`).join('');
@@ -930,12 +939,12 @@ function drawChipTiers() {
      card in this app is decoration only. */
   const cats = $('#filter-chip-groups');
   if (!cats) return;
-  cats.innerHTML = `<span class="chips__label" aria-hidden="true">Kind</span>`
+  cats.innerHTML = `<span class="chips__label" aria-hidden="true">Type</span>`
     + Object.entries(CHIP_GROUPS)
       .filter(([key]) => chipList().some((c) => c.shape === key))
       .map(([key, label]) => `
         <button class="chip chip--group" type="button" data-shape="${key}"
-          aria-pressed="${chipShapes.has(key)}"
+          aria-pressed="${chipShape === key}"
           title="${esc(`Show only ${label} chips`)}"
           >${esc(label)} <b>${chipList().filter((c) => c.shape === key).length}</b></button>`)
       .join('');
@@ -950,9 +959,11 @@ function renderChips() {
   const kept = keptBy(player);
   const mine = [...kept.main, ...kept.extra];
 
-  const list = chipList().filter((c) => {
-    if (chipTiers.size && !chipTiers.has(c.tier)) return false;
-    if (chipShapes.size && !chipShapes.has(c.shape)) return false;
+  /* The gallery's own order, which is not tier and not alphabetical and not
+     anything this file could derive -- so it is copied into the data instead. */
+  const list = chipList().slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0)).filter((c) => {
+    if (chipTier !== null && c.tier !== chipTier) return false;
+    if (chipShape !== null && c.shape !== chipShape) return false;
     return !q || `${c.name} ${c.text}`.toLowerCase().includes(q);
   });
 
