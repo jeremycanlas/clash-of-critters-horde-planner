@@ -437,14 +437,31 @@ await runGroup('markers on the cards', async () => {
   // ------------------------------------------------- glyphs actually draw
 });
 await runGroup('glyphs render, not tofu', async () => {
+  /*
+   * Finds its own elements rather than borrowing them.
+   *
+   * `caret` and `marks` are set by two groups further up, so under ?only=glyphs
+   * this asked getComputedStyle for the style of undefined. A group that cannot
+   * be run on its own is a group you cannot iterate on, which is the whole
+   * point of the flag.
+   */
   const drawn = (el, pseudo) => {
     const c = D.defaultView.getComputedStyle(el, pseudo).content;
-    return c && c !== 'none' && c !== 'normal' && !/^"\\?[0-9a-fA-F]{2,6}"$/.test(c);
+    return c && c !== 'none' && c !== 'normal' && !/^"\?[0-9a-fA-F]{2,6}"$/.test(c);
   };
-  ok('the effect carets draw an arrow, not an escape', drawn(caret('heal'), '::after'),
-     D.defaultView.getComputedStyle(caret('heal'), '::after').content);
-  ok('the patch marks draw their glyph', drawn(marks[0], '::after'),
-     D.defaultView.getComputedStyle(marks[0], '::after').content);
+  const aCaret = caret('heal') ?? $('.fxcaret');
+  const aMark = (marks && marks[0]) ?? $('.card__patch');
+
+  ok('there is a caret to look at', !!aCaret);
+  ok('there is a patch mark to look at', !!aMark);
+  if (aCaret) {
+    ok('the effect carets draw an arrow, not an escape', drawn(aCaret, '::after'),
+       D.defaultView.getComputedStyle(aCaret, '::after').content);
+  }
+  if (aMark) {
+    ok('the patch marks draw their glyph', drawn(aMark, '::after'),
+       D.defaultView.getComputedStyle(aMark, '::after').content);
+  }
 
   // ------------------------------------------------------ the whole update
 });

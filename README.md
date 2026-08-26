@@ -557,15 +557,23 @@ all sit in the same box at the same apparent size; it needs Pillow
 
 ### Checking it still works
 
-Three self-checking pages, opened in a browser against the served folder. None
-needs a runner, a framework or a dependency; all three go red in the tab title
+Four self-checking pages, opened in a browser against the served folder. None
+needs a runner, a framework or a dependency; all four go red in the tab title
 when something is wrong.
 
 ```
 http://localhost:8123/apptest.html      the app on a desktop, driven like a person drives it
 http://localhost:8123/mobiletest.html   the same app in a 390x844 frame, which is a different app
+http://localhost:8123/chipstest.html    the chip data, and what a chip is worth to a board
 http://localhost:8123/changestest.html  data/changes.json against the roster
 ```
+
+Add `?only=flex` to either of the first two to run just the groups whose name
+contains that word. Iterating on one group otherwise means sitting through the
+other twenty, and there is a second reason: a browser clamps every timer in a
+hidden tab to a second and then freezes the page after about five minutes, so a
+full run in a window sitting behind another app stops partway. Keep the window
+visible for a full run, or take it in slices.
 
 `apptest.html` loads the real `index.html` and `changes.html` in frames, clicks
 the real controls and reads what the pages rendered. It is written that way on
@@ -588,6 +596,17 @@ never matches in a desktop browser at any width, so the rules in that block
 instead of wrapping) are read out of the stylesheet rather than watched
 applying, and the checks say so in their names. That is still worth having: the grip shipped
 broken because `.prio` was missing from exactly that block.
+
+`chipstest.html` checks the data against the roster and the six placement rules
+against boards it builds itself. Those rules are this project's own arithmetic
+rather than a tooltip reprinted, and arithmetic about a 6x6 grid is exactly the
+kind of thing that is off by one row and still looks plausible -- row 0 is the
+*front* row, and getting that backwards armours the two rows nothing was hitting.
+
+Two checks in `apptest.html` measure the share card by rendering the real PNG
+and counting pixels. The card is a canvas with no DOM to assert against, and a
+check that only proved the drawing function was *called* would pass just as
+happily while drawing nothing.
 
 Both restore whatever was in `localStorage` when they finish, so running them
 never costs you the formation you had open. Both also re-fetch every file the app
