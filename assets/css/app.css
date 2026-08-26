@@ -829,8 +829,7 @@ img { -webkit-user-drag: none; }
      of a sprite is reliably empty, and these cards get screenshotted. */
   flex: none;
   display: inline-flex; align-items: center; justify-content: center;
-  width: 15px; height: 15px;
-  border-radius: 50%;
+  width: auto; height: auto;
   /*
    * Filled, with the arrow knocked out of it -- and that is the part doing the
    * work, not the hue. The first version of this was a tinted outline in --ok
@@ -844,14 +843,25 @@ img { -webkit-user-drag: none; }
    * hit. Bigger than the effect badges too: there is only ever one of these, and
    * it is the thing someone is hunting for the week an update lands.
    */
-  background: currentColor;
-  font-size: 10px; font-weight: 800; line-height: 1;
+  font-size: 12px; font-weight: 800; line-height: 1;
 }
-/* The glyph, knocked out of the fill. Not white: on the pale end of the light
-   theme a white arrow on --ok disappears, while the card's own surface is by
-   definition the thing the badge is sitting against. */
-.card__patch::after { content: attr(data-glyph); color: var(--surface-2); }
-.card:hover .card__patch::after { color: var(--surface-3); }
+/*
+ * No container at all, and that is the whole point.
+ *
+ * This was a filled 15px disc, which put a coloured circle 18px from the 17px
+ * circular type badge in the same row. The card reserves circular badges for
+ * what a Tatari permanently is -- its element, its role -- and a disc borrowed
+ * that idiom for the most temporary fact on the card, the one wiped by the next
+ * update. Worse on colour: a nerfed Fire Tatari wore a red circle beside a red
+ * Fire badge, a buffed Grass one green beside green. Same shape, same size, same
+ * row, unrelated meanings.
+ *
+ * A bare glyph competes with nothing. It is the only uncontained mark on the
+ * card, which is a reasonable way for "this changed recently" to read next to
+ * things that are permanently true. The arrow still carries the direction, so it
+ * survives with the colour stripped out.
+ */
+.card__patch::after { content: attr(data-glyph); }
 .card__patch[data-patch="buff"]     { color: var(--ok); }
 .card__patch[data-patch="nerf"]     { color: var(--danger); }
 .card__patch[data-patch="adjusted"] { color: var(--text-dim); }
