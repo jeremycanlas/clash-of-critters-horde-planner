@@ -30,9 +30,15 @@ const EFFECTS = [
  *
  * So this marker differs on every axis available: line arrows rather than solid
  * triangles, a filled disc rather than an outlined rounded rect, the row under
- * the sprite rather than the corner of it, and never a number beside it. ↕ for
- * adjusted rather than a second colour of arrow, because "some numbers up, some
- * down" is the actual fact and any single arrow would misreport it.
+ * the sprite rather than the corner of it, and never a number beside it.
+ *
+ * ± for adjusted, not a third arrow. "Some numbers up, some down" is the actual
+ * fact and any single arrow would misreport it -- but ↕ was the first attempt
+ * and it is one stroke from ↑, which blurs at the 15px these are drawn at.
+ * Plus-minus shares no silhouette with either direction, so the odd one out
+ * looks odd immediately, and it is the notation that already means this. The
+ * heal badge is a bare + and lives in the other corner as a rounded rect, so
+ * the two do not read as a family.
  *
  * Under the sprite because the note above .card__meta already settled that
  * question for tier, type and role, having measured that no corner of the art is
@@ -43,7 +49,7 @@ const EFFECTS = [
 const PATCH_MARKS = {
   buff: { glyph: '↑', label: 'Buffed' },
   nerf: { glyph: '↓', label: 'Nerfed' },
-  adjusted: { glyph: '↕', label: 'Adjusted' },
+  adjusted: { glyph: '±', label: 'Adjusted' },
 };
 
 export const filters = {
