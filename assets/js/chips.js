@@ -186,6 +186,16 @@ const SHAPES = [
   { key: 'map', title: 'Change the map', blurb: 'Nothing to do with your Tatari at all.' },
 ];
 
+/*
+ * Which tiers to show. Empty means all of them, the same contract every filter
+ * in the roster uses: nothing pressed is not an empty result, it is no question
+ * asked.
+ *
+ * Tier is what the game calls rarity. The gallery says it twice, as a numeral on
+ * the name and as the colour of the tile, and this page says it twice too.
+ */
+const tiers = new Set();
+
 const TAKEN_KEY = 'coc.chips.taken';
 const PER_PLAYER = 3;
 
@@ -362,8 +372,39 @@ function card(chip, score, isTaken) {
     </article>`;
 }
 
+const TIERS = [
+  { tier: 1, label: 'I' },
+  { tier: 2, label: 'II' },
+  { tier: 3, label: 'III' },
+];
+
+function renderFilters(all) {
+  const host = $('#chips-filters');
+  if (!host) return;
+
+  const present = TIERS.filter(({ tier }) => all.some((c) => c.tier === tier));
+  // One tier is not a choice, so there is nothing to offer.
+  host.hidden = present.length < 2;
+  if (host.hidden) return;
+
+  const shown = tiers.size ? all.filter((c) => tiers.has(c.tier)).length : all.length;
+  host.innerHTML = `
+    <span class="chipfilters__label">Tier</span>
+    ${present.map(({ tier, label }) => `
+      <button class="chip chip--rarity" type="button" data-tier="${tier}"
+        aria-pressed="${tiers.has(tier)}"
+        title="${esc(`Show only tier ${label} chips. Press again to stop filtering by it.`)}"
+        ><span class="chip__tier" data-tier="${tier}" aria-hidden="true">${label}</span
+        >${all.filter((c) => c.tier === tier).length}</button>`).join('')}
+    <span class="chipfilters__n">${shown === all.length
+      ? `all ${all.length}`
+      : `${shown} of ${all.length}`}</span>`;
+}
+
 function renderPage() {
-  const chips = BOOK?.chips ?? [];
+  const all = BOOK?.chips ?? [];
+  renderFilters(all);
+  const chips = tiers.size ? all.filter((c) => tiers.has(c.tier)) : all;
   const player = store.formation.activePlayer;
   const board = boardFor(player);
   const mine = takenBy(player);
@@ -395,7 +436,7 @@ function renderPage() {
     <ol class="kept__slots">
       ${Array.from({ length: PER_PLAYER }, (_, i) => {
         const name = mine[i];
-        const chip = chips.find((c) => c.name === name);
+        const chip = all.find((c) => c.name === name);
         return `<li class="kept__slot${name ? ' is-filled' : ''}">${
           name ? `<b>${esc(name)}</b><span>${esc(chip?.text ?? '')}</span>`
                : '<span class="kept__wait">Nothing yet</span>'}</li>`;
@@ -404,6 +445,13 @@ function renderPage() {
     ${coop ? `<p class="kept__total muted">${
       store.players().reduce((n, p) => n + takenBy(p).length, 0)} of
       ${PER_PLAYER * store.players().length} between you.</p>` : ''}`;
+
+  if (!chips.length) {
+    $('#chips-body').innerHTML = `
+      <p class="chipspage__none">No chips at that tier. The tiers you have not
+        pressed are still there, and pressing a tier again releases it.</p>`;
+    return;
+  }
 
   $('#chips-body').innerHTML = SHAPES.map(({ key, title, blurb }) => {
     const group = chips.filter((c) => c.shape === key);
@@ -448,6 +496,14 @@ if ($('#chips-body')) {
     if (keep) {
       toggleTaken(store.formation.activePlayer, keep.dataset.keep);
       renderPage();
+      return;
+    }
+    const tier = e.target.closest('.chip--rarity');
+    if (tier) {
+      const n = Number(tier.dataset.tier);
+      if (tiers.has(n)) tiers.delete(n); else tiers.add(n);
+      renderPage();
+      $(`.chip--rarity[data-tier="${n}"]`)?.focus();
       return;
     }
     const who = e.target.closest('.kept__who [data-player]');

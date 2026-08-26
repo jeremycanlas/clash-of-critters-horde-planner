@@ -413,6 +413,60 @@ await runGroup('the what-changed page', async () => {
   frame.remove();
 });
 
+await runGroup('the chips page', async () => {
+  /*
+   * The engine behind this page is checked in chipstest.html against boards
+   * built on purpose. What is checked here is the page: the two controls on it
+   * are a tier filter and a keep button, and neither has any arithmetic to get
+   * wrong, only wiring.
+   */
+  const frame = frameFor('chips.html');
+  await frame.ready;
+  const C = frame.contentDocument;
+  await until(() => C.querySelectorAll('.chipcard').length > 0, 'the chips page');
+  const cards = () => C.querySelectorAll('.chipcard').length;
+  const tier = (n) => C.querySelector(`.chip--rarity[data-tier="${n}"]`);
+
+  const all = cards();
+  eq('every chip is on the page', all, 49);
+  ok('and each one has an icon', C.querySelectorAll('.chipcard__art').length === all);
+
+  ok('there is a tier filter', !!tier(1) && !!tier(2) && !!tier(3));
+  const promised = Number(tier(3).textContent.replace(/\D/g, ''));
+  tier(3).click();
+  await sleep(220);
+  eq('pressing a tier finds exactly what it promised', cards(), promised);
+  eq('and says so', C.querySelector('.chipfilters__n').textContent.trim(), `${promised} of ${all}`);
+  ok('the pressed one reports itself', tier(3).getAttribute('aria-pressed') === 'true');
+
+  /* Multi-select, because "II or III" is a real question and the low tier of the
+     same chip is a different offer. */
+  const alsoII = Number(tier(2).textContent.replace(/\D/g, ''));
+  tier(2).click();
+  await sleep(220);
+  eq('a second tier adds rather than replaces', cards(), promised + alsoII);
+
+  tier(3).click(); await sleep(200);
+  tier(2).click(); await sleep(220);
+  eq('pressing them again puts everything back', cards(), all);
+
+  // The three you kept are yours whatever the filter is doing.
+  const keep = C.querySelector('[data-keep]');
+  const name = keep.dataset.keep;
+  keep.click();
+  await sleep(240);
+  ok('keeping a chip fills a slot',
+     [...C.querySelectorAll('.kept__slot.is-filled')].some((el) => el.textContent.includes(name)),
+     name);
+  eq('and only one slot', C.querySelectorAll('.kept__slot.is-filled').length, 1);
+  ok('three slots, always', C.querySelectorAll('.kept__slot').length === 3);
+
+  C.querySelector(`[data-keep="${name}"]`).click();
+  await sleep(240);
+  eq('pressing it again gives the slot back', C.querySelectorAll('.kept__slot.is-filled').length, 0);
+  frame.remove();
+});
+
 /* Whatever happened, the reader gets their formation back. */
 localStorage.clear();
 for (const [k, v] of Object.entries(saved)) localStorage.setItem(k, v);
