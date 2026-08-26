@@ -26,10 +26,16 @@ const EFFECTS = [
  * ambiguous -- a red ▼ would mean two unrelated things at once.
  *
  * So this marker differs on every axis available: line arrows rather than solid
- * triangles, a disc rather than a rounded rect, the top-right corner rather than
- * the top-left, and never a number beside it. ↕ for adjusted rather than a
- * second colour of arrow, because "some numbers up, some down" is the actual
- * fact and any single arrow would misreport it.
+ * triangles, a filled disc rather than an outlined rounded rect, the row under
+ * the sprite rather than the corner of it, and never a number beside it. ↕ for
+ * adjusted rather than a second colour of arrow, because "some numbers up, some
+ * down" is the actual fact and any single arrow would misreport it.
+ *
+ * Under the sprite because the note above .card__meta already settled that
+ * question for tier, type and role, having measured that no corner of the art is
+ * reliably empty across the roster. The reason bites harder here than there:
+ * these cards get screenshotted and posted, so a badge sitting on a Tatari's
+ * face travels with it.
  */
 const PATCH_MARKS = {
   buff: { glyph: '↑', label: 'Buffed' },
@@ -306,8 +312,8 @@ function patchMark(t) {
   const { glyph, label } = PATCH_MARKS[change.direction] ?? {};
   if (!glyph) return '';
   const title = [`${label} in the ${state.patch?.label ?? 'latest'} update`, ...change.changes].join('\n');
-  return `<span class="card__patch" data-patch="${change.direction}" title="${esc(title)}"
-    aria-label="${esc(label)} in the latest update">${glyph}</span>`;
+  return `<span class="card__patch" data-patch="${change.direction}" data-glyph="${glyph}"
+    title="${esc(title)}" aria-label="${esc(label)} in the latest update"></span>`;
 }
 
 export function resetFilters() {
@@ -443,9 +449,9 @@ export function renderRoster() {
              state_ ? `\n${state_}` : ''}${clash ? `\nTap to switch from ${clash.name}, keeping its plan` : ''}">
         <!-- Last in the queue: 218 thumbnails will otherwise crowd out the
              dozen sprites the field and the benches are showing right now. -->
-        <div class="card__art">${artHTML(t, { priority: 'low' })}${effectMarks(t)}${patchMark(t)}</div>
+        <div class="card__art">${artHTML(t, { priority: 'low' })}${effectMarks(t)}</div>
         <div class="card__meta">
-          <span class="card__tier">T${t.tier}</span>
+          ${patchMark(t)}<span class="card__tier">T${t.tier}</span>
           ${typeIcon(t.type)}${roleIcon(t.role)}
           ${otherPlayer.length
             ? `<span class="card__other" data-player="${otherPlayer[0]}"

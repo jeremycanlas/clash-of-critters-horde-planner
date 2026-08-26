@@ -813,15 +813,33 @@ img { -webkit-user-drag: none; }
  * arrow entirely.
  */
 .card__patch {
-  position: absolute; top: 2px; right: 2px;
+  /* In the meta row, not on the art. See the note above .card__meta: no corner
+     of a sprite is reliably empty, and these cards get screenshotted. */
+  flex: none;
   display: inline-flex; align-items: center; justify-content: center;
   width: 15px; height: 15px;
-  border: 1px solid currentColor;
   border-radius: 50%;
-  background: color-mix(in srgb, currentColor 26%, var(--bg));
+  /*
+   * Filled, with the arrow knocked out of it -- and that is the part doing the
+   * work, not the hue. The first version of this was a tinted outline in --ok
+   * and --danger, which are the same two tokens the badges opposite already use
+   * for "heals" and "applies debuffs": four small outlined badges on one card in
+   * three shared colours, and no way to tell which vocabulary you were reading.
+   *
+   * Solid against outlined separates them at a glance even where the colour
+   * repeats, so the greens and reds can stay -- they are the right colours for
+   * this, and losing them would cost the ability to scan a screen for what got
+   * hit. Bigger than the effect badges too: there is only ever one of these, and
+   * it is the thing someone is hunting for the week an update lands.
+   */
+  background: currentColor;
   font-size: 10px; font-weight: 800; line-height: 1;
-  pointer-events: none;
 }
+/* The glyph, knocked out of the fill. Not white: on the pale end of the light
+   theme a white arrow on --ok disappears, while the card's own surface is by
+   definition the thing the badge is sitting against. */
+.card__patch::after { content: attr(data-glyph); color: var(--surface-2); }
+.card:hover .card__patch::after { color: var(--surface-3); }
 .card__patch[data-patch="buff"]     { color: var(--ok); }
 .card__patch[data-patch="nerf"]     { color: var(--danger); }
 .card__patch[data-patch="adjusted"] { color: var(--text-dim); }
