@@ -235,6 +235,32 @@ export const bringsEffect = (t, group) => {
 export const bringsType = (t, type) => effectSources(t).some((s) => s.type === type);
 
 /**
+ * How far you would have to level a Tatari before an effect turns up.
+ *
+ * `maxLevel` is a budget, not a target: null asks for any level at all, 0 for
+ * what the Tatari already does, and 3/5/7 for what it will do if you take it
+ * that far. A base effect satisfies every budget, which is the point -- the
+ * question a player is really asking is "if I only level this to 3, do I get the
+ * Stun", and something that stuns from the start answers yes.
+ *
+ * Sorted the other way round it would be a trap. "Exactly at 5" reads fine as
+ * English and is almost never what anyone wants: it would hide the Tatari that
+ * stuns for free behind the one that makes you pay for it.
+ */
+const reaches = (source, maxLevel) =>
+  maxLevel === null || source.level === null || source.level <= maxLevel;
+
+export const bringsTypeBy = (t, type, maxLevel = null) =>
+  effectSources(t).some((s) => s.type === type && reaches(s, maxLevel));
+
+export const bringsEffectBy = (t, group, maxLevel = null) =>
+  effectSources(t).some((s) => groupOf(s.type) === group && reaches(s, maxLevel));
+
+/** Any tagged effect at all by then -- what a level chip means on its own. */
+export const bringsAnythingBy = (t, maxLevel) =>
+  effectSources(t).some((s) => groupOf(s.type) !== 'other' && reaches(s, maxLevel));
+
+/**
  * What each skill type does, in the wiki's own words.
  *
  * Every tag has a `Category:Skill Type: X` page, and that page carries a

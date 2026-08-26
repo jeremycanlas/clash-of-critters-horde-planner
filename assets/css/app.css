@@ -1887,20 +1887,27 @@ body[data-switching="true"] .cell[data-zobo] { box-shadow: none; cursor: default
  */
 .fxcaret {
   display: inline-grid; place-items: center;
-  width: 18px; min-height: 26px;
+  width: 26px; min-height: 26px;
   margin-left: -1px;
   border: 1px solid var(--line);
-  border-left-color: transparent;
+  /* A drawn divider rather than a transparent edge. The first version left the
+     inner border invisible, and with a 9px glyph the whole control read as a gap
+     between chips instead of as the thing that opens them. */
+  border-left-color: var(--line);
   border-radius: 0 var(--r-sm) var(--r-sm) 0;
-  background: var(--surface-2);
-  color: var(--text-mute);
-  font: inherit; font-size: 9px; line-height: 1;
+  background: color-mix(in srgb, var(--text) 7%, var(--surface-2));
+  color: var(--text-dim);
+  font: inherit; font-size: 13px; line-height: 1;
   cursor: pointer;
   transition: background-color 140ms var(--ease-out), color 140ms var(--ease-out);
 }
 .fxcaret::after { content: "▾"; }
 .fxcaret:hover { color: var(--text-dim); background: var(--surface-3); }
-.fxcaret[aria-expanded="true"] { color: var(--text); background: var(--surface-3); }
+.fxcaret[aria-expanded="true"] {
+  color: var(--accent-ink-on);
+  background: color-mix(in srgb, var(--accent) 20%, var(--surface-2));
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+}
 .fxcaret[aria-expanded="true"]::after { content: "▴"; }
 
 /* The opened row. Indented and wrapping, so it reads as belonging to the chip
@@ -1919,6 +1926,30 @@ body[data-switching="true"] .cell[data-zobo] { box-shadow: none; cursor: default
   color: var(--text-mute); font-size: 9.5px; font-weight: 700;
 }
 .chips--sub .chip[aria-pressed="true"] b { color: inherit; }
+
+/* "Needs", naming what the budget chips beside it are for. Without it the four
+   of them read as four more effects. */
+.chips__label {
+  align-self: center;
+  color: var(--text-mute); font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .06em;
+}
+/* Between the budgets and the effects they qualify: two questions, one row. */
+.chips__split {
+  align-self: stretch;
+  width: 1px; margin: 2px var(--s1);
+  background: var(--line);
+}
+.chips--sub .chip--budget { font-weight: 700; }
+.chips--sub .chip--budget[aria-pressed="true"] {
+  color: var(--accent-ink-on);
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--line));
+  background: color-mix(in srgb, var(--accent) 16%, var(--surface-2));
+}
+/* An effect nothing reaches under the current budget. Dimmed rather than
+   removed: that it went to zero is the answer, and a chip that vanished would
+   look like it had never been there. */
+.chips--sub .chip[data-empty="true"] { opacity: .4; }
 
 /* These carry a word, since a bare triangle means nothing — so they need to be
    a flex row rather than the base chip's centred inline-grid, and to size to

@@ -6,7 +6,10 @@ import { TYPES, ROLES } from './icons.js';
 import { $, artHTML, esc, typeIcon, roleIcon, toast } from './ui.js';
 import { draggable, dropZone } from './dnd.js';
 import { openDetail } from './detail.js';
-import { effectGroupsOf, bringsEffect, bringsType, effectsOf, helpFor, GROUP_LABELS } from './effects.js';
+import {
+  effectGroupsOf, bringsEffect, effectsOf, helpFor, GROUP_LABELS,
+  bringsTypeBy, bringsEffectBy, bringsAnythingBy, effectSources, groupOf,
+} from './effects.js';
 
 const TIERS = [1, 2, 3, 4];
 
@@ -57,6 +60,13 @@ export const filters = {
    * Shield asks for a Tatari carrying both.
    */
   effectTypes: new Set(),
+  /*
+   * How far you are willing to level, as a ceiling on where an effect may come
+   * from: null for "wherever", 0 for what a Tatari already does, 3/5/7 for what
+   * it will do if taken that far. One value rather than a Set, because a budget
+   * is a single number -- "by 5" already includes everything "by 3" would find.
+   */
+  effectBy: null,
   hideBlocked: false,
   sort: 'default',
   /*
@@ -305,6 +315,13 @@ export function buildFilters(onChange, { onPick = bringToBench } = {}) {
  * time a Tatari has it, and each chip can say how many it will find before you
  * spend a tap on it.
  */
+/*
+ * Set by buildEffectTypes so resetFilters can reach it. The counts on those
+ * chips are computed under the current budget, so clearing the budget without
+ * redrawing leaves the row quietly lying about how many of each there are.
+ */
+let redrawEffectTypes = () => {};
+
 function buildEffectTypes(onChange) {
   const host = $('#filter-effects');
   const sub = $('#filter-effect-types');
@@ -331,21 +348,58 @@ function buildEffectTypes(onChange) {
     chip.after(caret);
   }
 
+  /*
+   * How far you are willing to level, as chips at the head of the row.
+   *
+   * They live here rather than in a row of their own because the question is
+   * meaningless on its own screen -- "by 3" is only ever asked about something,
+   * and the something is right next to it. 7 is offered even though it finds
+   * everything a blank budget would: pressing it is how you say "I am taking
+   * this all the way", and its absence would read as an oversight.
+   */
+  const BUDGETS = [
+    { value: 0, label: 'Start', title: 'Only what a Tatari already does, unlevelled' },
+    { value: 3, label: 'By 3', title: 'What it does if you level it to 3' },
+    { value: 5, label: 'By 5', title: 'What it does if you level it to 5' },
+    { value: 7, label: 'By 7', title: 'What it does if you level it all the way' },
+  ];
+
+  /*
+   * Counted under the current budget rather than read off the tally, so the
+   * numbers answer the question actually on screen. Pressing Start and watching
+   * Stun fall from 55 to 12 is the fastest way to learn that most of this
+   * roster's crowd control has to be paid for.
+   */
+  const countFor = (type) =>
+    state.all.reduce((n, t) => n + (bringsTypeBy(t, type, filters.effectBy) ? 1 : 0), 0);
+
   const draw = () => {
     sub.hidden = !open;
     if (!open) { sub.innerHTML = ''; return; }
-    sub.innerHTML = tallies[open].map((t) => {
-      // The wiki's own definition where it has one; the count where it does not,
+
+    const budgets = BUDGETS.map((b) => `
+      <button class="chip chip--budget" type="button" data-budget="${b.value}"
+        aria-pressed="${filters.effectBy === b.value}" title="${esc(b.title)}"
+        >${b.label}</button>`).join('');
+
+    const types = tallies[open].map((t) => {
+      // The wiki's own definition where it has one; the reach where it does not,
       // which is still more use than repeating the chip's own label back.
       const help = helpFor(t.type);
       const reach = t.fromBase && t.fromLevel ? 'some from the start, some by levelling'
         : t.fromLevel ? `only by levelling, from ${t.minLevel}` : 'from the start';
+      const count = countFor(t.type);
       return `<button class="chip chip--fxtype" type="button" data-type="${esc(t.type)}"
-        aria-pressed="${filters.effectTypes.has(t.type)}"
+        aria-pressed="${filters.effectTypes.has(t.type)}" ${count ? '' : 'data-empty="true"'}
         title="${esc(`${help ?? t.type} — ${t.count} Tatari, ${reach}`)}"
-        >${esc(t.type)}<b>${t.count}</b></button>`;
+        >${esc(t.type)}<b>${count}</b></button>`;
     }).join('');
+
+    sub.innerHTML = `<span class="chips__label">Needs</span>${budgets}`
+      + `<span class="chips__split" aria-hidden="true"></span>${types}`;
   };
+
+  redrawEffectTypes = draw;
 
   host.addEventListener('click', (e) => {
     const caret = e.target.closest('.fxcaret');
@@ -358,6 +412,16 @@ function buildEffectTypes(onChange) {
   });
 
   sub.addEventListener('click', (e) => {
+    const budget = e.target.closest('.chip--budget');
+    if (budget) {
+      const value = Number(budget.dataset.budget);
+      // Pressing the one already on clears it, so there is a way back to "any
+      // level" without a fifth chip that only ever means "never mind".
+      filters.effectBy = filters.effectBy === value ? null : value;
+      draw();
+      onChange();
+      return;
+    }
     const chip = e.target.closest('.chip--fxtype');
     if (!chip) return;
     const { type } = chip.dataset;
@@ -422,12 +486,14 @@ export function resetFilters() {
   filters.tiers.clear();
   filters.effects.clear();
   filters.effectTypes.clear();
+  filters.effectBy = null;
   filters.hideBlocked = false;
   filters.sort = 'default';
   $('#search').value = '';
   $('#sort').value = 'default';
   $('#opt-hide-blocked').checked = false;
   for (const chip of document.querySelectorAll('.chip')) chip.setAttribute('aria-pressed', 'false');
+  redrawEffectTypes();
 }
 
 function visible(player) {
@@ -439,9 +505,14 @@ function visible(player) {
     // one Tatari that does both, which is the question worth asking of a
     // 15-slot bench. The type and role chips still read as "any".
     if (filters.effects.size
-      && ![...filters.effects].every((group) => bringsEffect(t, group))) return false;
+      && ![...filters.effects].every((g) => bringsEffectBy(t, g, filters.effectBy))) return false;
     if (filters.effectTypes.size
-      && ![...filters.effectTypes].every((type) => bringsType(t, type))) return false;
+      && ![...filters.effectTypes].every((x) => bringsTypeBy(t, x, filters.effectBy))) return false;
+    // A level on its own still means something: "show me anything that brings
+    // an effect by then", which is the shape of the question before you have
+    // decided which effect you want.
+    if (filters.effectBy !== null && !filters.effects.size && !filters.effectTypes.size
+      && !bringsAnythingBy(t, filters.effectBy)) return false;
     if (!matches(t, filters.query)) return false;
     // Only a per-Tatari reason hides a card. A full bench blocks every Tatari
     // at once, and collapsing the roster to the 15 already brought reads as the
