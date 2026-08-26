@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <!-- viewport-fit=cover, or env(safe-area-inset-*) resolves to 0 on iOS and every
+     safe-area rule in app.css silently does nothing. -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Horde Drafter: What changed</title>
+  <meta name="description"
+    content="Every Tatari the last Clash of Critters update touched, with the old and new numbers side by side.">
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='19' font-size='20'>🐾</text></svg>">
+  <link rel="stylesheet" href="assets/css/app.css">
+</head>
+
+<body class="changes">
+
+  <header class="topbar">
+    <div class="topbar__title">
+      <h1>What changed</h1>
+      <span id="changes-patch" class="topbar__sub"></span>
+    </div>
+    <div class="topbar__actions">
+      <a class="btn btn--quiet" href="index.html">Back to the drafter</a>
+    </div>
+  </header>
+
+  <main class="changes__main">
+    <!--
+      Written before the data loads and left alone afterwards. Somebody arriving
+      from a Discord link has no idea what this page is or where the numbers came
+      from, and the answer is short enough to say up front rather than bury in a
+      footnote: these are the developers' own patch notes, read by hand.
+    -->
+    <p id="changes-intro" class="changes__intro">Loading the update…</p>
+
+    <div id="changes-body"></div>
+  </main>
+
+  <footer class="foot">
+    <span>Data and sprites from the
+      <a href="https://clashofcritters.wiki.gg/wiki/Tatari" target="_blank" rel="noopener">Clash of Critters Wiki</a>.
+      Fan-made, unofficial.</span>
+    <span class="muted">The before-and-after numbers come from the developers' patch notes,
+      read into this page by hand. The wiki publishes what a skill does now and never what
+      it did before, so none of this can be scraped and any of it can be wrong. Check it
+      against the notes if a number matters to you.</span>
+  </footer>
+
+  <script type="module" src="assets/js/changes.js"></script>
+</body>
+
+</html>

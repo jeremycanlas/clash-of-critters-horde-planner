@@ -361,13 +361,19 @@ function buildChangedChips(onChange) {
   const shown = Object.entries(PATCH_MARKS).filter(([key]) => present[key]);
 
   const draw = () => {
-    host.innerHTML = `<span class="chips__label" aria-hidden="true">Patch</span>`
+    const seeAll = `<a class="chips__seeall" href="changes.html"
+      title="${esc(`Every line the ${state.patch?.label ?? 'last'} update moved, `
+        + 'with the old and new numbers side by side')}"
+      >See all<span aria-hidden="true"> ↗</span></a>`;
+
+  host.innerHTML = `<span class="chips__label" aria-hidden="true">Patch</span>`
       + shown.map(([key, { glyph, label: word }], i) => `
         <button class="chip chip--changed" type="button" role="radio" data-changed="${key}"
           aria-checked="${filters.changed === key}" title="${esc(`${word}${label}`)}"
           tabindex="${filters.changed === key || (filters.changed === null && i === 0) ? 0 : -1}"
           ><span class="chip__glyph" data-patch="${key}" data-glyph="${glyph}" aria-hidden="true"></span>${
-          word}<b>${countFor(key)}</b></button>`).join('');
+          word}<b>${countFor(key)}</b></button>`).join('')
+      + seeAll;
   };
 
   host.hidden = false;

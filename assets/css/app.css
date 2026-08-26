@@ -2075,6 +2075,17 @@ body[data-switching="true"] .cell[data-zobo] { box-shadow: none; cursor: default
 .chip__glyph[data-patch="adjusted"] { color: var(--text-dim); }
 .chip--changed[aria-checked="true"] { border-color: currentColor; color: var(--text); }
 
+/* The way out to the full notes. A link, not a chip: it leaves the page, and
+   dressing it as a chip would put it in the same set as three things that
+   filter in place. */
+.chips__seeall {
+  align-self: center;
+  margin-left: var(--s1);
+  color: var(--text-dim); font-size: 11px; font-weight: 650;
+  text-decoration: none; white-space: nowrap;
+}
+.chips__seeall:hover { color: var(--text); text-decoration: underline; }
+
 /* Between the budgets and the effects they qualify: two questions, one row. */
 .chips__split {
   align-self: stretch;
@@ -3898,4 +3909,108 @@ body.is-clean .clean-hint {
     background-color: var(--surface-2);
     color: var(--text);
   }
+}
+
+/* ==================================================== what changed page */
+
+/*
+ * The patch-notes page. Its own address so it can be pasted into Discord on the
+ * morning an update lands, which is when it is read: once, scrolling, often by
+ * somebody who does not have the drafter open.
+ *
+ * A reading measure rather than the app's full width. The drafter is a dense
+ * three-panel tool and this is the opposite job -- prose and numbers, read top
+ * to bottom -- so it takes the one column the rest of the app never needs.
+ */
+.changes__main {
+  max-width: 78ch;
+  margin: 0 auto;
+  padding: var(--s5) var(--s4) var(--s6);
+}
+.changes__intro {
+  margin: 0 0 var(--s5);
+  color: var(--text-dim); font-size: 14px; line-height: 1.55;
+}
+.changes__intro b { color: var(--text); font-weight: 650; }
+
+.chgroup { margin-bottom: var(--s6); }
+.chgroup__head {
+  display: flex; align-items: center; gap: var(--s2);
+  margin: 0 0 2px;
+  font-size: 17px; font-weight: 700;
+}
+/* The same tag the roster cards wear, at reading size, so the heading and the
+   135 markers are recognisably one statement. */
+.chgroup__mark {
+  flex: none;
+  display: inline-grid; place-items: center;
+  min-width: 22px; height: 20px;
+  border: 1px solid currentColor;
+  border-radius: 3px;
+  background: color-mix(in srgb, currentColor 16%, var(--bg));
+  font-size: 15px; font-weight: 800; line-height: 1;
+}
+.chgroup__mark::after { content: attr(data-glyph); color: var(--text); }
+.chgroup[data-patch="buff"]     .chgroup__mark { color: var(--ok); }
+.chgroup[data-patch="nerf"]     .chgroup__mark { color: var(--danger); }
+.chgroup[data-patch="adjusted"] .chgroup__mark { color: var(--text-dim); }
+.chgroup__count {
+  margin-left: auto;
+  color: var(--text-mute); font-size: 12px; font-weight: 600;
+}
+.chgroup__blurb {
+  margin: 0 0 var(--s3);
+  color: var(--text-mute); font-size: 12.5px;
+}
+
+.chline {
+  display: flex; flex-wrap: wrap; gap: var(--s2) var(--s3);
+  padding: var(--s3) 0;
+  border-top: 1px solid var(--line-soft);
+}
+.chline__arts { display: flex; gap: 4px; flex: none; }
+/* Small: the sprite is here to be recognised, not admired. Four of them at card
+   size would push the numbers off a phone screen, and the numbers are the page. */
+.chline__art {
+  position: relative;
+  width: 40px; height: 40px;
+  display: grid; place-items: center;
+  border-radius: var(--r-sm);
+  background: color-mix(in srgb, var(--type-color, var(--line)) 14%, transparent);
+}
+.chline__art img { width: 100%; height: 100%; object-fit: contain; }
+.chline__tier {
+  position: absolute; left: 2px; bottom: 0;
+  color: var(--text-mute); font-size: 8.5px; font-weight: 700;
+}
+.chline__body { flex: 1 1 16rem; min-width: 0; }
+.chline__name {
+  margin: 0 0 4px;
+  font-size: 13px; font-weight: 650; line-height: 1.35;
+}
+.chline__changes { margin: 0; padding: 0; list-style: none; }
+.chline__change {
+  display: flex; flex-wrap: wrap; gap: 2px var(--s2);
+  padding: 1px 0;
+  font-size: 12.5px; line-height: 1.5;
+}
+/*
+ * A fixed column so the skill names line up down the group and the eye can run
+ * the left edge looking for one it fields, then step right into the numbers.
+ *
+ * The numbers take whatever is left and wrap inside it -- flex-basis 0 with
+ * min-width 0, not a basis in rem. Given a rem basis they dropped to their own
+ * line whenever the text was long, so Drilleroo read as two aligned columns and
+ * Blueflick right under it read as stacked pairs, which is worse than either
+ * arrangement chosen on purpose.
+ */
+.chline__skill { flex: none; width: 10rem; color: var(--text); font-weight: 600; }
+.chline__what { flex: 1 1 0; min-width: 0; color: var(--text-dim); }
+
+@media (max-width: 760px) {
+  .changes__main { padding: var(--s4) var(--s3) var(--s6); }
+  /* The two-column split needs width it does not have on a phone: the skill name
+     and its numbers stack instead, which is also how they read aloud. */
+  .chline__skill { width: auto; flex: 1 1 100%; }
+  .chline__what { flex: 1 1 100%; }
 }
