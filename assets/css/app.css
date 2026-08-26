@@ -4402,3 +4402,36 @@ body.is-clean .clean-hint {
   .chipspage__main { padding: var(--s4) var(--s3) var(--s6); }
   .kept__slots { grid-template-columns: 1fr; }
 }
+
+/* Chip icons, cut out of the in-game gallery by tools/cut_chips.py.
+ *
+ * The tile background comes with them and is kept: the gallery uses it to say
+ * which tier a chip is, and throwing it away would leave the numeral as the only
+ * thing carrying that. `object-fit: cover` because the crops are not all exactly
+ * square -- Mission Reset sits alone on a row the screenshot clipped, so it is a
+ * few pixels shorter than the other 48. */
+.chipbar {
+  grid-template-columns: auto 1fr auto;
+}
+.chipbar__art {
+  grid-row: 1 / 3;
+  width: 26px; height: 26px;
+  border-radius: var(--r-sm);
+  object-fit: cover;
+  align-self: center;
+}
+.chipbar__why { grid-column: 2 / -1; }
+
+.chipcard {
+  padding-left: 74px;
+}
+.chipcard__art {
+  position: absolute; left: var(--s3); top: var(--s3);
+  width: 46px; height: 46px;
+  border-radius: var(--r-sm);
+  object-fit: cover;
+  box-shadow: 0 0 0 1px var(--line);
+}
+/* The card is short when a chip has no score and no doubts, and a 46px icon
+   beside two lines of text then hangs below them. */
+.chipcard { min-height: 74px; }

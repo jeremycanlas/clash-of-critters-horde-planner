@@ -134,6 +134,27 @@ ok('every placement and element chip does score',
 ok('an empty board scores zero rather than throwing',
    book.chips.filter((c) => scoreOne(c, [])).every((c) => scoreOne(c, []).n === 0));
 
+/*
+ * Every icon actually loads.
+ *
+ * The filename is built from the chip's name in two places -- here in JS and in
+ * tools/cut_chips.py -- and the two agreeing is the whole contract. Rename a
+ * chip in chips.json and the page silently shows 48 icons and one gap, which is
+ * the sort of thing nobody notices until they scroll that far. Checked by
+ * loading them, not by listing a directory, because a page cannot list one.
+ */
+const { iconFor } = await import('./assets/js/chips.js');
+const missing = [];
+await Promise.all(book.chips.map((c) => new Promise((done) => {
+  const img = new Image();
+  img.onload = () => done();
+  img.onerror = () => { missing.push(c.name); done(); };
+  img.src = iconFor(c);
+})));
+ok('every chip has an icon that loads', missing.length === 0, missing.join(', '));
+ok('and no two chips share one',
+   new Set(book.chips.map(iconFor)).size === book.chips.length);
+
 out.innerHTML += `<div style="margin-top:12px">${pass} passed, ${fail} failed`
   + ` &mdash; ${book.chips.length} chips, ${book.chips.filter((c) => scoreOne(c, mixed)).length} of them scored`
   + ` against a board of ${mixed.length}</div>`;

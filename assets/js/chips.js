@@ -211,6 +211,17 @@ function toggleTaken(player, name) {
   setTaken(all);
 }
 
+/**
+ * A chip's icon, cut out of the in-game gallery by tools/cut_chips.py.
+ *
+ * The same slug rule as the tool, and it has to stay the same: the tool checks
+ * its output against every name in chips.json, so a rename breaks the build
+ * loudly there rather than quietly here. Nothing on the wiki, nothing to fetch
+ * -- these exist only because somebody screenshotted the gallery.
+ */
+export const iconFor = (chip) =>
+  `data/images/chips/${chip.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}.png`;
+
 let BOOK = null;
 
 /** Loads chips.json once. Safe to call twice; the second call is the same promise. */
@@ -267,6 +278,7 @@ export function renderChips() {
         <li class="chipbar${mine.includes(chip.name) ? ' is-taken' : ''}"
             style="--fill:${board.length ? Math.round((score.n / board.length) * 100) : 0}%"
             title="${esc(chip.text)}">
+          <img class="chipbar__art" src="${esc(iconFor(chip))}" alt="" loading="lazy" decoding="async">
           <span class="chipbar__name">${esc(chip.name)}</span>
           <span class="chipbar__n"><b>${score.n}</b> of ${score.of}</span>
           <span class="chipbar__why">${esc(score.why)}</span>
@@ -308,6 +320,7 @@ function card(chip, score, isTaken) {
         aria-label="${esc(isTaken ? `Stop counting ${chip.name} as kept` : `I kept ${chip.name}`)}"
         title="${esc(isTaken ? 'Kept this run' : 'Mark this as one of the three you kept')}"
         >${isTaken ? '&check;' : '+'}</button>
+      <img class="chipcard__art" src="${esc(iconFor(chip))}" alt="" loading="lazy" decoding="async">
       <h3 class="chipcard__name">
         ${esc(chip.name)}
         <span class="chipcard__tier" data-tier="${chip.tier}"
