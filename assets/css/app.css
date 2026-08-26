@@ -2059,17 +2059,28 @@ body[data-switching="true"] .cell[data-zobo] { box-shadow: none; cursor: default
   color: var(--text-mute); font-size: 9.5px; font-weight: 700;
 }
 .chip--changed[aria-checked="true"] b { color: inherit; }
+/*
+ * The same mark the cards wear, at chip size.
+ *
+ * It was a filled disc, which is what .card__patch was when this was written and
+ * is not what it is now: the disc mimicked the circular type and role badges and
+ * was replaced by a tinted rect. Leaving this one round meant the chip you press
+ * and the mark you then see on 135 cards were two different shapes claiming to
+ * be the same statement.
+ */
 .chip__glyph {
   display: inline-grid; place-items: center;
-  width: 13px; height: 13px;
-  border-radius: 50%;
-  background: currentColor;
-  font-size: 9px; font-weight: 800; line-height: 1;
+  min-width: 15px; height: 14px;
+  padding: 0 1px;
+  border: 1px solid currentColor;
+  border-radius: 3px;
+  background: color-mix(in srgb, currentColor 16%, var(--bg));
+  font-size: 11px; font-weight: 800; line-height: 1;
 }
-/* The arrow knocked out of the fill, the same trick .card__patch uses, and for
-   the same reason: a white arrow disappears on --ok in the light theme, and the
-   surface behind the chip is by definition what it is sitting on. */
-.chip__glyph::after { content: attr(data-glyph); color: var(--surface-2); }
+/* Neutral, not the direction's hue: --ok is about 3.9:1 as text in the light
+   theme and vanishes on its own wash. The colour lives in the edge and the fill,
+   which are non-text and answer to 3:1. Same reasoning as .card__patch. */
+.chip__glyph::after { content: attr(data-glyph); color: var(--text); }
 .chip__glyph[data-patch="buff"]     { color: var(--ok); }
 .chip__glyph[data-patch="nerf"]     { color: var(--danger); }
 .chip__glyph[data-patch="adjusted"] { color: var(--text-dim); }
@@ -3909,6 +3920,49 @@ body.is-clean .clean-hint {
     background-color: var(--surface-2);
     color: var(--text);
   }
+}
+
+/*
+ * The update notice, between the header and the panels.
+ *
+ * One line, and the only row on this page that is not about the formation. It
+ * exists because the way through to the update was a "See all" link at the end
+ * of the filter row: findable on a desktop, and on a phone sitting inside a
+ * sheet that has to be opened first, which is no way to tell somebody the game
+ * changed under them.
+ *
+ * Sized like a row of chrome rather than a banner. It is news, not an
+ * announcement, and it has a close button because the second time you read it
+ * it is neither.
+ */
+.patchnote {
+  display: flex; align-items: center; gap: var(--s2);
+  margin: 0 var(--s4) var(--s2);
+  padding: 6px var(--s2) 6px var(--s3);
+  border: 1px solid color-mix(in srgb, var(--accent) 32%, var(--line));
+  border-radius: var(--r-sm);
+  background: color-mix(in srgb, var(--accent) 7%, var(--surface));
+  color: var(--text-dim); font-size: 12.5px;
+  text-decoration: none;
+}
+.patchnote:hover { background: color-mix(in srgb, var(--accent) 12%, var(--surface)); }
+.patchnote__body { flex: 1 1 auto; min-width: 0; }
+.patchnote__body b { color: var(--text); font-weight: 650; }
+/* An arrow, because the row is a link and the button beside it is not. */
+.patchnote__body::after { content: " ↗"; color: var(--accent-ink-on); font-weight: 700; }
+.patchnote__x {
+  flex: none;
+  width: 26px; height: 26px;
+  border: 0; border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--text-mute); font: inherit; font-size: 16px; line-height: 1;
+  cursor: pointer;
+}
+.patchnote__x:hover { background: var(--surface-3); color: var(--text); }
+
+@media (max-width: 760px) {
+  /* Full bleed on a phone, where the panels are edge to edge anyway. */
+  .patchnote { margin: 0 var(--s3) var(--s2); }
 }
 
 /* ==================================================== what changed page */
