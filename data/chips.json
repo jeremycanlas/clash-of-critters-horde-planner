@@ -125,10 +125,10 @@
     {
       "name": "Center Spotlight",
       "tier": 3,
-      "shape": "placement",
+      "shape": "map",
       "text": "Zobo bosses will only appear in the middle 2 columns.",
       "scope": "unknown",
-      "scopeNote": "Changes where bosses appear. Spawning is a property of the wave, not of one player's units.",
+      "scopeNote": "Changes where Zobo bosses spawn, which is a property of the wave rather than of anybody's units, so it plausibly reaches both players.",
       "order": 10
     },
     {

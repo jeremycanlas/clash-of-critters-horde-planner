@@ -68,10 +68,17 @@ const middle = board([at(2, 0), at(3, 0)]);
 eq('nothing in the middle rows is front', n('Barricade', middle), 0);
 eq('nothing in the middle rows is back', n('Rear Guard', middle), 0);
 
-// -------------------------------------------------------- middle columns
-eq('Center Spotlight counts columns 3 and 4',
-   n('Center Spotlight', board([at(0, 2), at(3, 3)])), 2);
-eq('and not the outer four', n('Center Spotlight', board([at(0, 0), at(0, 1), at(0, 4), at(0, 5)])), 0);
+// -------------------------------------------------------- the enemy's business
+/*
+ * Center Spotlight moves where Zobo bosses spawn. It says nothing about your
+ * Tatari, so it scores nothing about them either -- it used to count how many
+ * of yours stood in the middle two columns, which was a reading invented here
+ * rather than read off the chip. It is a map chip.
+ */
+ok('Center Spotlight is filed with the map chips', chip('Center Spotlight').shape === 'map',
+   chip('Center Spotlight').shape);
+ok('and scores nothing about your Tatari',
+   scoreOne(chip('Center Spotlight'), board([at(0, 2), at(3, 3)])) === null);
 
 // --------------------------------------------------------------- The Exile
 // One alone is alone. Two side by side are not, and neither is either of them --
@@ -147,7 +154,7 @@ ok('Weakest Link names the element it picked',
 // Twenty-eight chips read nothing about the board. They must return null rather
 // than 0, or the page prints "0 of your 6" beside an income chip.
 const readsNothing = book.chips.filter((c) => scoreOne(c, mixed) === null);
-eq('the chips that read nothing return no score', readsNothing.length, 49 - 6 - 15 - 1);
+eq('the chips that read nothing return no score', readsNothing.length, 49 - 5 - 15 - 1);
 ok('and none of them is a placement chip',
    !readsNothing.some((c) => c.shape === 'placement'),
    readsNothing.filter((c) => c.shape === 'placement').map((c) => c.name).join(', '));

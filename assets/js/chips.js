@@ -7,7 +7,7 @@
  * question about placement, and placement is the one thing this tool already
  * knows.
  *
- * Twenty-one of the forty-nine can be answered that way: six read the board and
+ * Twenty of the forty-nine can be answered that way: five read the board and
  * fifteen read your element split. The other twenty-eight are economy, levelling
  * and map effects that do not care where anything stands. They are listed with
  * their text and no number, because a number there would be invented.
@@ -78,12 +78,6 @@ const BOARD_RULES = {
   'Rear Guard': {
     why: 'in your back 2 rows',
     test: (p) => rowOf(p.cell) >= ROWS - DEPTH,
-  },
-  'Center Spotlight': {
-    why: 'in the middle 2 columns',
-    /* Counted as "your Tatari standing where the bosses will be", which is what
-       the chip is worth to you -- it does not buff anyone, it moves the enemy. */
-    test: (p) => colOf(p.cell) === 2 || colOf(p.cell) === 3,
   },
   'The Exile': {
     why: 'with nobody beside, above or below them',
