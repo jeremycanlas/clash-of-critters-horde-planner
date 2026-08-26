@@ -679,7 +679,7 @@ function leaveFull() {
   const restore = preJoin;
   endSession({ quiet: true });            // clears preJoin
   if (restore) store.applySnapshot(restore);
-  toast('That live session is full — it is limited to two people. Your formation is safe.', 'error');
+  toast('That live session is full. It is limited to two people, and your formation is safe.', 'error');
   track('live-room-full');
 }
 

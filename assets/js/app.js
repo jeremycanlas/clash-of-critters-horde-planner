@@ -128,6 +128,23 @@ async function main() {
   $('#formation-name').value = store.formation.name;
   $('#foot-meta').textContent =
     `${state.meta.counts.tatari} Tatari · ${state.meta.counts.families} evolution lines · wiki data ${state.meta.scrapedAt}`;
+
+  /*
+   * How much range data there is, counted rather than written down.
+   *
+   * The markup used to say "only 72 of the 218 Tatari", which was true when
+   * somebody typed it and had quietly become wrong by the time the roster hit
+   * 230 -- a number in a tooltip is a promise to come back and edit it, and
+   * nobody ever does. The recorded count moves every time someone contributes a
+   * range, so it was never going to hold still.
+   */
+  const recorded = Object.keys(state.ranges?.bySlug ?? {}).length;
+  const ranges = $('#opt-ranges')?.closest('label');
+  if (ranges && recorded) {
+    ranges.title = ranges.title.replace(
+      'The range data is still being filled in,',
+      `Only ${recorded} of the ${state.all.length} Tatari have a recorded range so far,`);
+  }
   // The name is in the markup so it shows without JS; only the version is
   // filled in, from the one constant that also stamps the share card.
   $('#app-version').textContent = `v${APP_VERSION}`;

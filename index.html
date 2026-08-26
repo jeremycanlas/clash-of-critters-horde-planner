@@ -125,7 +125,7 @@
       wayfinding, and wayfinding only has to be findable.
     -->
       <a class="btn topbar__contribute" href="contribute.html"
-        title="Record a Tatari's attack range or support reach — it takes a couple of minutes and the data is missing for most of the roster"><span
+        title="Record a Tatari's attack range or support reach. It takes a couple of minutes, and the data is missing for most of the roster"><span
           class="topbar__contribute-plus" aria-hidden="true">+</span>Record a range</a>
 
       <!-- Phones only, and invisible: forces the row to break here, between the
@@ -204,10 +204,10 @@
           the field on every visit.
         -->
           <label class="check"
-            title="Light the tiles a Tatari can hit, and shade the field by how many cover each tile. Only 72 of the 218 Tatari have a recorded range so far, so the picture is incomplete.">
+            title="Light the tiles a Tatari can hit, and shade the field by how many cover each tile. The range data is still being filled in, so the picture is incomplete.">
             <input id="opt-ranges" type="checkbox"> Ranges <span class="wip">WIP</span></label>
           <label class="check"
-            title="Show where the boss drags your rearmost row. Nothing is moved for real — turn it off and they go back.">
+            title="Show where the boss drags your rearmost row. Nothing is moved for real. Turn it off and they go back.">
             <input id="opt-pull" type="checkbox"> Boss pull</label>
           <!-- Not gated on anything: each round moves one Tatari to just in front
              of its lane's front rank, so any lane two deep on the field takes
@@ -261,7 +261,7 @@
              to say one thing. Turning it off is the lossy direction, so app.js
              says exactly what it cost and puts Undo on the toast. -->
           <label class="check"
-            title="Take the caps off — bring any number of Tatari and place as many as there are cells. Turning it back off puts the caps back, benches whatever no longer fits, and offers Undo.">
+            title="Take the caps off: bring any number of Tatari and place as many as there are cells. Turning it back off puts the caps back, benches whatever no longer fits, and offers Undo.">
             <input id="opt-sandbox" type="checkbox"> <span class="check__text">Sandbox</span></label>
 
           <!-- Desktop's copy. Phones get the one in the app bar instead, where it
@@ -318,7 +318,7 @@
            rows a Zobo walks in across, the same ground contribute.html records
            attack ranges over. -->
         <div id="enemy" class="grid grid--enemy" role="grid"
-          aria-label="Zobo ground, 6 columns by 7 rows — Sandbox only" hidden></div>
+          aria-label="Zobo ground, 6 columns by 7 rows (Sandbox only)" hidden></div>
         <div class="field-frame__enemy">Zobos spawn beyond this line</div>
         <div id="grid" class="grid" role="grid" aria-label="Formation grid, 6 columns by 6 rows"></div>
         <p id="field-lf" class="field-frame__lf" hidden></p>
