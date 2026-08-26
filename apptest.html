@@ -176,6 +176,38 @@ const reset = async () => {
   await click($$('button').find((b) => /^reset$/i.test(b.textContent.trim())));
 };
 
+/**
+ * Gets one Tatari onto the field, whichever way this run is being asked to.
+ *
+ * The stage is sized by the browser window, so on a narrow one it is under
+ * 760px and the app inside it is in the phone layout -- where a bench chip arms
+ * and waits for you to tap a square rather than auto-placing. Three separate
+ * groups worked that out the hard way, each of them reading a polite "tap the
+ * cell you want" as "it never reached the field".
+ *
+ * `into` picks the square when there is one that matters; otherwise the first
+ * free field square will do. Zobo-ground squares are excluded on purpose: they
+ * are closed unless Sandbox opened them, and the app correctly refuses them
+ * with a toast that reads exactly like a failure.
+ */
+const placeOne = async (into = null) => {
+  if (!$('.benchchip')) {
+    const pick = $$('.panel--roster .card')
+      .find((c) => !c.classList.contains('is-benched') && !c.dataset.switchFrom);
+    if (!pick) return false;
+    pick.click();
+    try { await until(() => !!$('.benchchip'), 'the bench', 4000); } catch { return false; }
+  }
+  $('.benchchip').click();
+  await sleep(300);
+  if (!$('.cell.is-filled') || into) {
+    const target = into ?? $$('.cell:not(.cell--enemy)').find((c) => !c.querySelector('.token'));
+    target?.click();
+    await sleep(360);
+  }
+  return !!$('.cell.is-filled');
+};
+
 // Each group runs sealed off from the others; see runGroup.
   // ---------------------------------------------------------------- boot
 await runGroup('boot', async () => {
@@ -532,33 +564,7 @@ await runGroup('the level-up plan explains itself', async () => {
   ok('and points at the field rather than at this panel', /put them on the field/.test(saying()));
 
   /* Bring one. The answer changes, because the reason for the emptiness has. */
-  const pick = $$('.panel--roster .card')
-    .find((c) => !c.classList.contains('is-benched') && !c.dataset.switchFrom);
-  /* Waited for at each hop. Benching redraws the dock, so a bench chip queried
-     too early is null and the optional-chained click quietly does nothing --
-     which reads later as "it benched but never placed" and looks like a bug in
-     the app. */
-  /*
-   * Both paths, because this suite does not always get the one it expects.
-   *
-   * The stage is sized by the browser window, so on a narrow window it is under
-   * 760px and the app inside it is in the phone layout -- where a bench chip
-   * arms rather than auto-places, and you then tap the square you want. The
-   * check spent a run failing with "it never reached the field" while the app
-   * was politely waiting to be told where.
-   */
-  pick.click();
-  await until(() => !!$('.benchchip'), 'the Tatari to reach the bench', 4000);
-  $('.benchchip').click();
-  await sleep(320);
-  if (!$('.cell.is-filled')) {
-    /* A field square, not a Zobo-ground one. `.cell` covers both halves of the
-       board and the ground beyond the line is closed unless Sandbox opened it,
-       so the first match was a square the app correctly refused. */
-    const target = $$('.cell:not(.cell--enemy)').find((c) => !c.querySelector('.token'));
-    target?.click();
-    await sleep(360);
-  }
+  await placeOne();
   ok('a Tatari on the field is placed', !!$('.cell.is-filled'),
      `bench had ${$$('.benchchip').length}, last toast: ${$('.toast')?.textContent?.trim() ?? '(none)'}`);
   ok('and now it says what a step is', /A step is one or more Tatari/.test(saying()), saying().slice(0, 90));
@@ -645,12 +651,9 @@ await runGroup('flex slots', async () => {
   ok('marked the square the next Tatari will land on', cell(free).classList.contains('is-flex'));
   flexBox.click(); await sleep(300);
 
-  const pick = $$('.panel--roster .card')
-    .find((c) => !c.classList.contains('is-benched') && !c.dataset.switchFrom);
-  pick.click(); await sleep(260);
-  $('.benchchip')?.click();
-  await sleep(420);
-  ok('placing there fills the square', cell(free).classList.contains('is-filled'));
+  await placeOne(cell(free));
+  ok('placing there fills the square', cell(free).classList.contains('is-filled'),
+     `last toast: ${$('.toast')?.textContent?.trim() ?? '(none)'}`);
   ok('and the mark is gone rather than hiding under it',
      !cell(free).classList.contains('is-flex'));
   const after = JSON.parse(localStorage.getItem('coc.formation.v4') ?? '{}');
@@ -735,13 +738,7 @@ await runGroup('the chips tab in the roster', async () => {
 
   /* Something on the field, or every chip that reads the board has nothing to
      name and the sprite check below is vacuously true. */
-  if (!$('.cell.is-filled')) {
-    const pick = $$('.panel--roster .card')
-      .find((c) => !c.classList.contains('is-benched') && !c.dataset.switchFrom);
-    if (pick) { pick.click(); await sleep(260); }
-    const chipOnBench = $('.benchchip');
-    if (chipOnBench) { chipOnBench.click(); await sleep(320); }
-  }
+  if (!$('.cell.is-filled')) await placeOne();
   ok('there is a formation to score chips against', !!$('.cell.is-filled'));
 
   const tab = (name) => $(`#roster-tabs [data-list="${name}"]`);
