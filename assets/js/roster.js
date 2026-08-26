@@ -75,17 +75,19 @@ export const filters = {
    */
   effectBy: { heal: null, buff: null, debuff: null },
   /*
-   * Which directions of the last update to show, and the one filter here that
-   * unions rather than intersects.
+   * Which direction of the last update to show: one of them, or null.
    *
-   * Every other chip group asks for a Tatari that satisfies all of them: Stun
-   * and Shield means one that brings both. These cannot work that way, because
-   * a Tatari has exactly one direction -- picking Buffed and Nerfed together
-   * under the usual rule would ask for something buffed and nerfed at once and
-   * always find nothing. Read as "either", which is also the question anyone
-   * pressing two of them is actually asking.
+   * One value rather than a Set, because the three are what a Tatari can be
+   * rather than things it can carry. Nothing was both buffed and nerfed -- that
+   * is the whole reason "adjusted" exists, as the name for a line whose numbers
+   * moved both ways -- so the three describe one state each and asking for two
+   * at once is not a question anybody has.
+   *
+   * Every other group here is a Set and intersects. This one is not either: it
+   * is a single choice, and it behaves like the level ceiling beside it, down to
+   * clearing when you press the one already on.
    */
-  changed: new Set(),
+  changed: null,
   hideBlocked: false,
   sort: 'default',
   /*
@@ -336,23 +338,50 @@ function buildChangedChips(onChange) {
   for (const { direction } of state.changes.values()) tally[direction] += 1;
 
   const label = state.patch?.label ? ` in the ${state.patch.label} update` : ' in the last update';
+  const shown = Object.entries(PATCH_MARKS).filter(([key]) => tally[key]);
+
+  const draw = () => {
+    host.innerHTML = `<span class="chips__label" aria-hidden="true">Patch</span>`
+      + shown.map(([key, { glyph, label: word }], i) => `
+        <button class="chip chip--changed" type="button" role="radio" data-changed="${key}"
+          aria-checked="${filters.changed === key}" title="${esc(`${word}${label}`)}"
+          tabindex="${filters.changed === key || (filters.changed === null && i === 0) ? 0 : -1}"
+          ><span class="chip__glyph" data-patch="${key}" data-glyph="${glyph}" aria-hidden="true"></span>${
+          word}<b>${tally[key]}</b></button>`).join('');
+  };
+
   host.hidden = false;
-  host.setAttribute('aria-label', `Filter by what changed${label}`);
-  host.innerHTML = `<span class="chips__label" aria-hidden="true">Patch</span>`
-    + Object.entries(PATCH_MARKS).map(([key, { glyph, label: word }]) => (tally[key] ? `
-      <button class="chip chip--changed" type="button" data-changed="${key}"
-        aria-pressed="false" title="${esc(`${word}${label}`)}"
-        ><span class="chip__glyph" data-patch="${key}" data-glyph="${glyph}" aria-hidden="true"></span>${
-        word}<b>${tally[key]}</b></button>` : '')).join('');
+  /*
+   * A radio group, not three toggles. The three are what a Tatari can be rather
+   * than things it can carry, and nothing was both buffed and nerfed -- that is
+   * what "adjusted" is for. Same contract as the level ceiling beside it, down
+   * to the roving tabindex and clearing when you press the one already on.
+   */
+  host.setAttribute('role', 'radiogroup');
+  host.setAttribute('aria-label',
+    `Filter by what changed${label}. Pick the one already chosen to clear it.`);
+  draw();
+
+  const choose = (key) => {
+    filters.changed = filters.changed === key ? null : key;
+    draw();
+    host.querySelector(`.chip--changed[data-changed="${key}"]`)?.focus();
+    onChange();
+  };
 
   host.addEventListener('click', (e) => {
     const chip = e.target.closest('.chip--changed');
+    if (chip) choose(chip.dataset.changed);
+  });
+
+  host.addEventListener('keydown', (e) => {
+    const chip = e.target.closest('.chip--changed');
     if (!chip) return;
-    const { changed } = chip.dataset;
-    if (filters.changed.has(changed)) filters.changed.delete(changed);
-    else filters.changed.add(changed);
-    chip.setAttribute('aria-pressed', String(filters.changed.has(changed)));
-    onChange();
+    const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
+    if (!step) return;
+    e.preventDefault();
+    const all = [...host.querySelectorAll('.chip--changed')];
+    choose(all[(all.indexOf(chip) + step + all.length) % all.length].dataset.changed);
   });
 }
 
@@ -634,7 +663,7 @@ export function resetFilters() {
   filters.tiers.clear();
   filters.effects.clear();
   filters.effectTypes.clear();
-  filters.changed.clear();
+  filters.changed = null;
   for (const g of Object.keys(filters.effectBy)) filters.effectBy[g] = null;
   filters.hideBlocked = false;
   filters.sort = 'default';
@@ -658,7 +687,7 @@ function visible(player) {
      * checked against the budget of the group they belong to, not against
      * whichever budget happened to be set last.
      */
-    if (filters.changed.size && !filters.changed.has(state.changes.get(t.slug)?.direction)) {
+    if (filters.changed !== null && state.changes.get(t.slug)?.direction !== filters.changed) {
       return false;
     }
     for (const group of ['heal', 'buff', 'debuff']) {

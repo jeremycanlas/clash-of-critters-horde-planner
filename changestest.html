@@ -103,10 +103,9 @@ ok('chip counts match the file, per direction',
    DIRECTIONS.map((d) => `${d}: ${perDirection[d]} vs ${fromFile[d]}`).join(', '));
 ok('the three directions account for every marked Tatari',
    DIRECTIONS.reduce((n, d) => n + perDirection[d], 0) === state.changes.size);
-// Pressing two Patch chips has to mean "either". A Tatari carries one direction,
-// so intersecting them the way the effect chips intersect would always find
-// nothing -- this is what makes that union the only coherent reading.
-ok('no Tatari carries two directions',
+// The premise the Patch chips are single-choice on: a Tatari is one of the three.
+// Nothing is both buffed and nerfed, which is what "adjusted" is the name for.
+ok('every marked Tatari has exactly one direction',
    [...state.changes.values()].every((c) => DIRECTIONS.includes(c.direction)));
 
 const counts = DIRECTIONS.map((d) => `${d} ${lines.filter((l) => l.direction === d).length}`).join(', ');

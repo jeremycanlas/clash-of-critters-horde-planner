@@ -2024,7 +2024,7 @@ body[data-switching="true"] .cell[data-zobo] { box-shadow: none; cursor: default
   margin-left: 1px;
   color: var(--text-mute); font-size: 9.5px; font-weight: 700;
 }
-.chip--changed[aria-pressed="true"] b { color: inherit; }
+.chip--changed[aria-checked="true"] b { color: inherit; }
 .chip__glyph {
   display: inline-grid; place-items: center;
   width: 13px; height: 13px;
@@ -2039,7 +2039,7 @@ body[data-switching="true"] .cell[data-zobo] { box-shadow: none; cursor: default
 .chip__glyph[data-patch="buff"]     { color: var(--ok); }
 .chip__glyph[data-patch="nerf"]     { color: var(--danger); }
 .chip__glyph[data-patch="adjusted"] { color: var(--text-dim); }
-.chip--changed[aria-pressed="true"] { border-color: currentColor; color: var(--text); }
+.chip--changed[aria-checked="true"] { border-color: currentColor; color: var(--text); }
 
 /* Between the budgets and the effects they qualify: two questions, one row. */
 .chips__split {
