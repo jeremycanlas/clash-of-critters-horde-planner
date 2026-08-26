@@ -199,6 +199,53 @@ await runGroup('sheets open and close', async () => {
      !D.body.dataset.sheet, D.body.dataset.sheet);
 });
 
+await runGroup('the filters fold away', async () => {
+  /*
+   * The sheet exists to show 230 Tatari and was spending 225px of its 700 on
+   * the controls for narrowing them: three card rows of roster, and the rest of
+   * the screen describing it. The search stays out, because it is the fastest
+   * filter and the first thing people reach for; the rest folds.
+   */
+  /* Opened here and closed again at the end. The groups after this one open it
+     themselves and assert that it opened, so leaving it open turns their first
+     press into a close and every check after it measures a hidden sheet. */
+  const wasOpen = D.body.dataset.sheet === 'roster';
+  if (!wasOpen) await click(barBtn('roster'), 340);
+  const fold = $('#filters-toggle');
+  ok('there is a way to fold them', !!fold);
+  ok('and it is only on a phone', W.getComputedStyle(fold).display !== 'none');
+
+  const rosterPx = () => {
+    const sheet = $('.panel--roster').getBoundingClientRect();
+    const card = $('.panel--roster .card').getBoundingClientRect();
+    return Math.round(sheet.bottom - card.top);
+  };
+
+  const folded = rosterPx();
+  ok('closed by default', fold.getAttribute('aria-expanded') === 'false');
+  ok('which leaves the roster most of the sheet', folded > 480, `${folded}px of roster`);
+  ok('the search is still out where you can reach it',
+     W.getComputedStyle($('#search')).display !== 'none');
+
+  await click(fold, 340);
+  ok('opening them costs that room back', rosterPx() < folded, `${rosterPx()} vs ${folded}`);
+  ok('and the element chips are reachable', W.getComputedStyle($('#filter-types')).display !== 'none');
+
+  /*
+   * The count is the whole point of the closed state. A filter that is on and
+   * out of sight is worse than no filter at all -- the roster looks broken and
+   * nothing on screen says why.
+   */
+  await click($('.chip--type[data-value="Water"]'), 320);
+  await click($('#filters-toggle'), 340);
+  ok('folded again, it admits what is still on', /\d/.test(fold.textContent),
+     `button reads "${fold.textContent.trim()}"`);
+  eq('and the roster is narrowed to match', cards() < total, true);
+
+  await click($('#btn-reset-filters'), 320);
+  if (!wasOpen) await click(barBtn('roster'), 320);
+});
+
 await runGroup('filtering, from inside the sheet', async () => {
   await click(barBtn('roster'), 340);
   eq('the roster sheet is open', D.body.dataset.sheet, 'roster');
@@ -403,6 +450,10 @@ await runGroup('what this session added, at phone size', async () => {
   await click($(`.chip--changed[data-changed="${key}"]`), 340);
   await click($('#btn-reset-filters'), 300);
 
+  /* The filters fold on a phone, and a folded row measures 0x0. Geometry needs
+     them open; the checks above only press things, and a press lands on a
+     hidden element just fine. */
+  if (D.body.dataset.filters !== 'open') await click($('#filters-toggle'), 320);
   await click($('.fxcaret[data-group="debuff"]'), 340);
   const sub = $('#filter-effect-types');
   ok('the effect row opens', $$('.chip--fxtype').length > 5);

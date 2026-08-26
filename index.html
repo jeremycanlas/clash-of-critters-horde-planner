@@ -446,6 +446,16 @@
         <input id="search" class="field" type="search" autocomplete="off"
           placeholder="Search name, animal, nickname or skill…" aria-label="Search Tatari">
 
+        <!--
+        Phone only, via .touch-only. The filters below come to 225px of a 700px
+        sheet, which left three card rows of the thing the sheet is for. They
+        fold behind this instead, with a count so a filter can never be on
+        without saying so. The search stays out, because it is the fastest
+        filter there is and the one people reach for first.
+      -->
+        <button id="filters-toggle" class="btn btn--tiny touch-only" type="button"
+          aria-expanded="false" aria-controls="filters-body">Filters</button>
+
         <div class="filters__row">
           <div id="filter-types" class="chips" role="group" aria-label="Filter by type"></div>
           <div id="filter-roles" class="chips" role="group" aria-label="Filter by role"></div>

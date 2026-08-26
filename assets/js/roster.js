@@ -319,6 +319,24 @@ export function buildFilters(onChange, { onPick = bringToBench } = {}) {
     filters.hideBlocked = e.target.checked;
     onChange();
   });
+  /*
+   * The filters fold away on a phone.
+   *
+   * They are 225px of a 700px sheet and the sheet exists to show the roster:
+   * three card rows of 230 Tatari, with more screen spent describing the list
+   * than showing it. Closed by default, and the button carries a count so a
+   * filter is never quietly on behind it.
+   */
+  const foldToggle = $('#filters-toggle');
+  if (foldToggle) {
+    foldToggle.addEventListener('click', () => {
+      const open = document.body.dataset.filters !== 'open';
+      if (open) document.body.dataset.filters = 'open';
+      else delete document.body.dataset.filters;
+      foldToggle.setAttribute('aria-expanded', String(open));
+    });
+  }
+
   $('#btn-reset-filters').addEventListener('click', () => {
     resetFilters();
     onChange();
@@ -780,6 +798,26 @@ function patchMark(t) {
     title="${esc(title)}" aria-label="${esc(label)} in the latest update"></span>`;
 }
 
+/**
+ * How many questions you have asked, for the folded button to admit to.
+ *
+ * Counted rather than tracked as a flag: a count that says "3" is the
+ * difference between "I forgot a filter is on" and "I know exactly how much is
+ * hiding behind this button".
+ */
+export function activeFilterCount() {
+  let n = filters.types.size + filters.roles.size + filters.tiers.size
+    + filters.effects.size + filters.effectTypes.size;
+  if (filters.changed) n += 1;
+  if (filters.boss) n += 1;
+  if (filters.hideBlocked) n += 1;
+  if (filters.sort !== 'default') n += 1;
+  for (const g of Object.keys(filters.effectBy)) if (filters.effectBy[g] !== null) n += 1;
+  if (chipTier !== null) n += 1;
+  if (chipShape !== null) n += 1;
+  return n;
+}
+
 export function resetFilters() {
   filters.query = '';
   filters.types.clear();
@@ -1161,6 +1199,13 @@ export function renderRoster() {
      renderRoster and not the whole app, so a dock drawn only from renderAll
      never hears about it. */
   renderChipBench();
+
+  const fold = $('#filters-toggle');
+  if (fold) {
+    const n = activeFilterCount();
+    fold.innerHTML = `Filters${n ? ` <b>${n}</b>` : ''}`;
+    fold.classList.toggle('is-on', n > 0);
+  }
   if (showing.value === 'zobos') { renderZobos(); return; }
   if (showing.value === 'chips') { renderChips(); return; }
   const player = store.formation.activePlayer;

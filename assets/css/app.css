@@ -5086,3 +5086,43 @@ body[data-roster-list="chips"] #filter-chip-groups { order: 4; flex: 1 1 100%; }
   body[data-roster-list="chips"] .panel--roster .panel__head h2 { flex: 1 1 100%; }
   body[data-roster-list="chips"] .panel--roster .panel__head #roster-tabs { margin-left: 0; }
 }
+
+/* ------------------------------------ the filters, folded away on a phone
+ *
+ * They were 225px of a 700px sheet, so 230 Tatari got three card rows and the
+ * rest of the screen went on describing the list rather than showing it. The
+ * search stays out because it is the fastest filter and the one people reach
+ * for first; everything else folds behind a button that says how much is
+ * behind it.
+ *
+ * Above 760px nothing here applies: .touch-only hides the button, and the rows
+ * are a column as they always were.
+ */
+@media (max-width: 760px) {
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--s2);
+  }
+  .filters > #search { flex: 1 1 auto; width: auto; min-width: 0; }
+  .filters > #filters-toggle { flex: none; }
+  /* Everything else takes a line of its own when it is shown at all. */
+  .filters > *:not(#search):not(#filters-toggle) { flex: 1 1 100%; }
+
+  body:not([data-filters="open"]) .filters > *:not(#search):not(#filters-toggle) {
+    display: none;
+  }
+
+  /* The count is the whole point of the closed state: a filter that is on and
+     out of sight is worse than no filter at all. */
+  #filters-toggle b {
+    display: inline-grid; place-items: center;
+    min-width: 16px; height: 16px; margin-left: 3px; padding: 0 3px;
+    border-radius: 999px;
+    background: var(--accent); color: var(--accent-ink);
+    font-size: 10px; font-weight: 800;
+  }
+  #filters-toggle.is-on { border-color: var(--accent); color: var(--text); }
+  #filters-toggle[aria-expanded="true"] { background: var(--surface-3); color: var(--text); }
+}
