@@ -54,7 +54,24 @@ const group = (name) => {
  * were never reported at all. A suite is most useful when something is broken,
  * which is exactly when it must keep going.
  */
+/*
+ * Run one group, or a few, instead of all of them.
+ *
+ * `?only=chips` runs every group whose name contains "chips". Two reasons it
+ * earns its place. Iterating on one group meant sitting through the other
+ * twenty every time; and a browser freezes a page that has been hidden for
+ * about five minutes, while clamping every timer in it to a second before that
+ * -- so a full run in a background window reaches roughly a hundred checks and
+ * stops. Halves finish.
+ */
+const only = new URLSearchParams(location.search).get('only')?.toLowerCase() ?? '';
+
 const runGroup = async (name, body) => {
+  /* Boot is never skipped. It is where the frame is waited for and where D, W
+     and the roster total come from, so filtering it out leaves every other
+     group reading properties of undefined -- which is what "?only=flex" did on
+     its first outing. */
+  if (only && !name.toLowerCase().includes('boot') && !name.toLowerCase().includes(only)) return;
   group(name);
   try { await body(); } catch (err) {
     fail++;
@@ -675,18 +692,27 @@ await runGroup('flex slots', async () => {
    * that only proved drawCell was *called* would have passed just as happily
    * while drawing nothing.
    */
+  /*
+   * The previous card is still in the dialog when it reopens.
+   *
+   * Waiting for "an image that has loaded" is satisfied instantly by the one
+   * already sitting there, so two renders in a row returned the same picture
+   * and the comparison read 4223 against 4223 -- the feature looking broken
+   * because the check never saw the second render. Each draw gets a fresh blob
+   * URL, so the src changing is the signal that this is a new one.
+   */
+  let lastSrc = '';
   const accentPixels = async () => {
     $('#btn-share').click();
-    /* Waited for, not slept through. The card is drawn to a canvas and handed
-       over as a blob, and how long that takes depends on the machine and on
-       whether the tab is being rendered at all -- a fixed sleep is either too
-       short somewhere or wasted everywhere. */
     try {
-      await until(() => $('dialog[open] img')?.complete
-        && $('dialog[open] img')?.naturalWidth > 0, 'the share card', 12000);
+      await until(() => {
+        const el = $('dialog[open] img');
+        return el && el.src !== lastSrc && el.complete && el.naturalWidth > 0;
+      }, 'a freshly drawn share card', 14000);
     } catch { return null; }
     const img = $('dialog[open] img');
     if (!img) return null;
+    lastSrc = img.src;
     const V = D.defaultView;
     const bmp = await V.createImageBitmap(await (await V.fetch(img.src)).blob());
     const cv = new V.OffscreenCanvas(bmp.width, bmp.height);
@@ -960,15 +986,21 @@ await runGroup('the chips travel with the picture', async () => {
   await reset();
 
   const V = D.defaultView;
+  /* Same trap as the flex group's: the dialog reopens showing the last card it
+     drew, so "an image that has loaded" is true before this render begins. */
+  let lastCard = '';
   const fullCard = async () => {
     $('#btn-share').click();
-    await sleep(700);
+    await sleep(500);
     $$('dialog[open] button, dialog[open] label')
       .find((e) => /everything/i.test(e.textContent))?.click();
     try {
-      await until(() => $('dialog[open] img')?.complete
-        && $('dialog[open] img')?.naturalWidth > 0, 'the full card', 14000);
+      await until(() => {
+        const el = $('dialog[open] img');
+        return el && el.src !== lastCard && el.complete && el.naturalWidth > 0;
+      }, 'a freshly drawn full card', 16000);
     } catch { return null; }
+    lastCard = $('dialog[open] img').src;
     const bmp = await V.createImageBitmap(await (await V.fetch($('dialog[open] img').src)).blob());
     const cv = new V.OffscreenCanvas(bmp.width, bmp.height);
     const cx = cv.getContext('2d');

@@ -56,7 +56,24 @@ const until = async (test, what, ms = 25000) => {
   throw new Error(`timed out waiting for ${what}`);
 };
 
+/*
+ * Run one group, or a few, instead of all of them.
+ *
+ * `?only=chips` runs every group whose name contains "chips". Two reasons it
+ * earns its place. Iterating on one group meant sitting through the other
+ * twenty every time; and a browser freezes a page that has been hidden for
+ * about five minutes, while clamping every timer in it to a second before that
+ * -- so a full run in a background window reaches roughly a hundred checks and
+ * stops. Halves finish.
+ */
+const only = new URLSearchParams(location.search).get('only')?.toLowerCase() ?? '';
+
 const runGroup = async (name, body) => {
+  /* Boot is never skipped. It is where the frame is waited for and where D, W
+     and the roster total come from, so filtering it out leaves every other
+     group reading properties of undefined -- which is what "?only=flex" did on
+     its first outing. */
+  if (only && !name.toLowerCase().includes('boot') && !name.toLowerCase().includes(only)) return;
   line(`<div style="margin:12px 0 2px;color:#ffc93c;font-weight:700">${name}</div>`);
   try { await body(); } catch (err) {
     fail++;
