@@ -539,12 +539,13 @@ all sit in the same box at the same apparent size; it needs Pillow
 
 ### Checking it still works
 
-Two self-checking pages, opened in a browser against the served folder. Neither
-needs a runner, a framework or a dependency; both go red in the tab title when
-something is wrong.
+Three self-checking pages, opened in a browser against the served folder. None
+needs a runner, a framework or a dependency; all three go red in the tab title
+when something is wrong.
 
 ```
-http://localhost:8123/apptest.html      the app, driven like a person drives it
+http://localhost:8123/apptest.html      the app on a desktop, driven like a person drives it
+http://localhost:8123/mobiletest.html   the same app in a 390x844 frame, which is a different app
 http://localhost:8123/changestest.html  data/changes.json against the roster
 ```
 
@@ -555,8 +556,25 @@ instead of an arrow, a border radius that turns a rect back into a circle, and a
 chip whose children stack down a column and spill into the row below. A test that
 imports a module and checks its return value passes all three.
 
-It restores whatever was in `localStorage` when it finishes, so running it never
-costs you the formation you had open.
+`mobiletest.html` is the same idea at 390x844, and it is a separate page because
+under 760px this stops being the same app: the field takes the whole screen, the
+three panels become sheets over it, and a fixed bar along the bottom is the only
+way into any of them. Three quarters of the people who use this never see the
+layout `apptest.html` checks. It walks the phone's own path end to end — tap a
+card, tap the chip, tap a square — and times the redraws that a thumb waits
+through.
+
+One thing it cannot do is pretend to be a touchscreen. `@media (hover: none)`
+never matches in a desktop browser at any width, so the rules in that block —
+the drag grip on the plan, the 28px targets, the effect row that scrolls instead
+of wrapping — are read out of the stylesheet rather than watched applying, and
+the checks say so in their names. That is still worth having: the grip shipped
+broken because `.prio` was missing from exactly that block.
+
+Both restore whatever was in `localStorage` when they finish, so running them
+never costs you the formation you had open. Both also re-fetch every file the app
+is made of before they start, because a browser that serves one cached module
+gives you a full page of green against code you deleted.
 
 ## Project layout
 

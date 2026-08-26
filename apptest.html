@@ -88,9 +88,42 @@ const until = async (test, what, ms = 25000) => {
  */
 const saved = { ...localStorage };
 
+/*
+ * Every file the app is made of, re-fetched past the cache before anything runs.
+ *
+ * Reload this page after editing a module and the frame can be handed the
+ * version that was there before the edit -- a full run of green against code
+ * that no longer exists, which is the worst thing a suite can do. A query
+ * string on the frame's own URL does not help: index.html asks for
+ * assets/js/app.js by that name whatever the page's address was, and that is
+ * the request that comes back stale.
+ *
+ * So the graph is walked and every file in it fetched with cache: 'reload',
+ * which revalidates the entry the frame is about to use.
+ */
+async function freshen(...entries) {
+  const seen = new Set();
+  const queue = [...entries];
+  while (queue.length) {
+    const url = new URL(queue.shift(), location.href).href;
+    if (seen.has(url) || !url.startsWith(location.origin)) continue;
+    seen.add(url);
+    let text;
+    try { text = await (await fetch(url, { cache: 'reload' })).text(); } catch { continue; }
+    if (/\.html$/.test(url)) {
+      for (const m of text.matchAll(/(?:src|href)="([^":]+\.(?:js|css))"/g)) queue.push(new URL(m[1], url).href);
+    } else if (/\.js$/.test(url)) {
+      for (const m of text.matchAll(/from\s+'([^']+\.js)'/g)) queue.push(new URL(m[1], url).href);
+    }
+  }
+  return seen.size;
+}
+const freshened = await freshen('index.html', 'changes.html');
+
 /* Built rather than written into the markup, so the second frame the checks
    need later can be made the same way and dropped into the same stage. */
 const stage = document.getElementById('stage');
+let runs = 0;
 const frameFor = (src) => {
   const f = document.createElement('iframe');
   /*
@@ -104,7 +137,7 @@ const frameFor = (src) => {
    * which is exactly how it looked: 230 cards on screen, and a timeout.
    */
   f.ready = new Promise((resolve) => f.addEventListener('load', resolve, { once: true }));
-  f.src = src;
+  f.src = `${src}?run=${performance.now().toFixed(0)}.${runs++}`;
   f.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;border:0';
   stage.append(f);
   return f;
@@ -130,6 +163,7 @@ const reset = async () => {
 // Each group runs sealed off from the others; see runGroup.
   // ---------------------------------------------------------------- boot
 await runGroup('boot', async () => {
+  ok('the app was re-fetched past the cache first', freshened > 20, `${freshened} files`);
   await app.ready;
   D = app.contentDocument;
   await until(() => D.querySelectorAll('.panel--roster .card').length > 0, 'the roster to render');
