@@ -518,5 +518,31 @@
         "Lightburst: Damage 500% → 350%, Knockback 50% → 40%"
       ]
     }
-  ]
+  ],
+  "mode": {
+    "_note": "The Horde Invasion parts of the update that are not about one Tatari. Trimmed from the full notes, which also cover Cozy Farm, the Bento Maker, the spinwheel and the chapter stages -- none of which this tool models.",
+    "groups": [
+      {
+        "title": "New",
+        "items": [
+          "Horde Invasion now runs in seasons, with balance passes to Tatari and Chips between them. The first season runs about four weeks.",
+          "Chips are back, and staying.",
+          "Difficulties are picked rather than fixed, and unlock in order: clear one to open the next. Single battles are shorter.",
+          "A season leaderboard, ranked on your highest difficulty and your kill count in one invasion. Tallied at the end of each season; rewards include a season-exclusive avatar frame.",
+          "Season history, so recent horde battles can be looked back at and shared."
+        ]
+      },
+      {
+        "title": "Changed",
+        "items": [
+          "Each invasion window is three hours, up from two. The settlement phase is still one hour.",
+          "Fewer kills are needed for a clear, and clearing no longer ends the battle: you can keep chasing Zobos.",
+          "Everyone who took part is rewarded after a clear, not only the finisher.",
+          "Matchmaking prefers players of a similar level.",
+          "The teammate invite list puts recommended teammates ahead of offline friends.",
+          "Fixed: the Horde Invasion entrance sometimes vanishing on the first login of the day."
+        ]
+      }
+    ]
+  }
 }

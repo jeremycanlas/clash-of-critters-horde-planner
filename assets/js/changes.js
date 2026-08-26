@@ -154,6 +154,7 @@ function render(book) {
   $('#changes-patch').textContent = patch;
 
   if (!lines.length) {
+    $('#changes-mode').innerHTML = '';
     $('#changes-intro').textContent =
       'No update is being tracked right now. When the next patch notes land, what they '
       + 'moved will be listed here.';
@@ -167,6 +168,31 @@ function render(book) {
     + `<b>${tatariCount(tatari)}</b> of the ${state.all.length} in the roster. `
     + `Horde skills belong to the whole line, so every member of a family moves together. `
     + `<a href="index.html">The drafter</a> marks these on the roster and can filter to them.`;
+
+  /*
+   * What the update did to the mode, before what it did to any Tatari.
+   *
+   * The cards below answer "is mine still good", which is the second question.
+   * The first is "what am I walking into" -- seasons, difficulties, a three-hour
+   * window instead of two -- and somebody arriving from a Discord link on patch
+   * morning wants that before they want 35 families of numbers.
+   *
+   * Trimmed from the full notes by hand, like everything else here. An update
+   * covers the farm, the bento maker and the spinwheel too; none of that is
+   * anything this tool models, so none of it is repeated here.
+   */
+  const mode = book.mode?.groups ?? [];
+  $('#changes-mode').innerHTML = !mode.length ? '' : `
+    <h2 class="chmode__head">The mode itself</h2>
+    <div class="chmode__groups">
+      ${mode.map((g) => `
+        <section class="chmode__group">
+          <h3 class="chmode__title">${esc(g.title)}</h3>
+          <ul class="chmode__list">
+            ${(g.items ?? []).map((item) => `<li>${esc(item)}</li>`).join('')}
+          </ul>
+        </section>`).join('')}
+    </div>`;
 
   $('#changes-body').innerHTML = ORDER.map(({ key, glyph, title, blurb }) => {
     const group = lines.filter((l) => l.direction === key);

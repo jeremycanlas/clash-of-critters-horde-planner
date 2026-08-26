@@ -3935,6 +3935,42 @@ body.is-clean .clean-hint {
 }
 .changes__intro b { color: var(--text); font-weight: 650; }
 
+/*
+ * What the update did to the mode, above what it did to any Tatari.
+ *
+ * Two columns of prose on a page that is otherwise a grid of records, so it has
+ * to read as a different kind of thing: a panel with its own surface rather than
+ * more cards. It is short and read once, which is why it is not collapsible --
+ * hiding eleven lines behind a toggle costs more than it saves.
+ */
+.chmode {
+  margin: 0 0 var(--s6);
+  padding: var(--s4);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-md);
+  background: var(--surface);
+}
+.chmode__head {
+  margin: 0 0 var(--s3);
+  font-size: 15px; font-weight: 700;
+}
+.chmode__groups {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--s3) var(--s5);
+}
+.chmode__title {
+  margin: 0 0 6px;
+  color: var(--text-mute); font-size: 10.5px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .07em;
+}
+.chmode__list { margin: 0; padding-left: 1.1em; }
+.chmode__list li {
+  margin-bottom: 5px;
+  color: var(--text-dim); font-size: 12.5px; line-height: 1.5;
+}
+.chmode__list li::marker { color: var(--text-mute); }
+
 .chgroup { margin-bottom: var(--s6); }
 .chgroup__head {
   display: flex; align-items: center; gap: var(--s2);
