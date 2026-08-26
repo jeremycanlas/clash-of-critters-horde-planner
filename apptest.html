@@ -946,6 +946,80 @@ await runGroup('the chips tab in the roster', async () => {
   ok('with its filters back', !hidden('#filter-types'));
 });
 
+await runGroup('the chips travel with the picture', async () => {
+  /*
+   * Formations travel as a picture, so what you would take travels with it or
+   * it does not travel at all. Only on the full card: the grid-only card is the
+   * tight crop people post, and a chip list is not part of the board -- it goes
+   * with the bench, which is also only on the full one.
+   *
+   * Checked by rendering the real PNG and measuring it, because a section the
+   * canvas was not sized for is not pushed into whitespace, it is cut off. That
+   * is the one failure a share card cannot have, and card.js says so about the
+   * board already.
+   */
+  app.style.display = '';
+  await sleep(200);
+  await reset();
+
+  const V = D.defaultView;
+  const fullCard = async () => {
+    $('#btn-share').click();
+    await sleep(700);
+    $$('dialog[open] button, dialog[open] label')
+      .find((e) => /everything/i.test(e.textContent))?.click();
+    try {
+      await until(() => $('dialog[open] img')?.complete
+        && $('dialog[open] img')?.naturalWidth > 0, 'the full card', 14000);
+    } catch { return null; }
+    const bmp = await V.createImageBitmap(await (await V.fetch($('dialog[open] img').src)).blob());
+    const cv = new V.OffscreenCanvas(bmp.width, bmp.height);
+    const cx = cv.getContext('2d');
+    cx.drawImage(bmp, 0, 0);
+    const low = cx.getImageData(0, Math.floor(bmp.height * 0.6), bmp.width,
+      Math.floor(bmp.height * 0.4)).data;
+    let accent = 0;
+    for (let i = 0; i < low.length; i += 4) {
+      if (Math.abs(low[i] - 255) < 26 && Math.abs(low[i + 1] - 201) < 26
+        && Math.abs(low[i + 2] - 60) < 40) accent += 1;
+    }
+    /* The last rows must be flat background. If the card is a section short,
+       this is where the evidence is. */
+    const tail = cx.getImageData(0, bmp.height - 8, bmp.width, 8).data;
+    let offBg = 0;
+    for (let i = 0; i < tail.length; i += 4) {
+      if (Math.abs(tail[i] - tail[0]) > 10 || Math.abs(tail[i + 1] - tail[1]) > 10
+        || Math.abs(tail[i + 2] - tail[2]) > 10) offBg += 1;
+    }
+    $('dialog[open]')?.close();
+    await sleep(240);
+    return { h: bmp.height, accent, offBg };
+  };
+
+  localStorage.removeItem('coc.chips.taken');
+  await click($('#roster-tabs [data-list="chips"]'), 420);
+  const bare = await fullCard();
+  ok('the full card renders with no chips kept', bare !== null);
+
+  const names = $$('.card--chip').slice(0, 3).map((c) => c.dataset.chip);
+  for (const n of names) {
+    $(`.card--chip[data-chip="${CSS.escape(n)}"]`)?.click();
+    await sleep(260);
+  }
+  const withChips = await fullCard();
+  ok('and with three kept', withChips !== null);
+
+  if (bare && withChips) {
+    ok('keeping chips puts them in the picture', withChips.accent > bare.accent,
+       `${withChips.accent} accent pixels against ${bare.accent}`);
+    ok('and the card grows to make room rather than cropping them',
+       withChips.h > bare.h, `${withChips.h}px against ${bare.h}px`);
+    eq('nothing is cut off the bottom', withChips.offBg, 0);
+  }
+
+  await click($('#roster-tabs [data-list="tatari"]'), 380);
+});
+
 await runGroup('the chips page', async () => {
   /*
    * The engine behind this page is checked in chipstest.html against boards

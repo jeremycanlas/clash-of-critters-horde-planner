@@ -13,6 +13,7 @@
 import * as store from './store.js';
 import { $, toast, copyText, downloadBlob, slugFilename, dismissOnBackdrop } from './ui.js';
 import { drawCard, canvasBlob } from './card.js';
+import { chipList, keptBy } from './chips.js';
 import { roomInHash, withRoom } from './hash.js';
 import { track } from './analytics.js';
 
@@ -195,8 +196,23 @@ function setBusy(busy) {
 
 async function redraw() {
   setBusy(true);
+  /*
+   * The chips travel with the picture, because the picture is how formations
+   * travel. Resolved to names and tiers here rather than in card.js: what you
+   * kept lives in the chips module and card.js has no business learning about a
+   * fourth data source for one optional strip.
+   */
+  const kept = keptBy(store.formation.activePlayer);
+  const byName = new Map(chipList().map((c) => [c.name, c]));
+  const named = (list) => list
+    .map((name) => ({ name, tier: byName.get(name)?.tier ?? 1 }));
+
   cardBlob = await canvasBlob(
-    await drawCard({ username: nameField.value, full: scope === 'full' }));
+    await drawCard({
+      username: nameField.value,
+      full: scope === 'full',
+      chips: { main: named(kept.main), extra: named(kept.extra) },
+    }));
   releasePreview();
   previewUrl = URL.createObjectURL(cardBlob);
   preview.src = previewUrl;

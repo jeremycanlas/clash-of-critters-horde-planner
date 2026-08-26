@@ -756,6 +756,69 @@ function drawBench(ctx, colours, sprites, view, x, y, width) {
  *
  * Returns the y it finished at, so the same call measures and draws.
  */
+/**
+ * The chips you would take, on the card that carries everything else.
+ *
+ * Names rather than icons, deliberately. The gallery tile is a 126px crop and
+ * on a card at phone scale it is a smudge -- and a name is the thing a reader
+ * can act on, because they can find it in the game. The tier goes with it,
+ * since Rear Guard II and Rear Guard III are different offers.
+ *
+ * Only on the full card. The grid-only card is the tight crop people post, and
+ * a chip list is not part of the board; it belongs with the bench, which is
+ * also only on the full one.
+ *
+ * Wording matters here. You are not handed these -- a run offers chips at
+ * random and you keep three -- so the card says what the poster would take
+ * rather than what they have, and a shortlist reads as exactly that.
+ */
+function drawChips(ctx, colours, x, y, width, kept) {
+  const { main = [], extra = [] } = kept;
+  let top = sectionLabel(ctx, colours, 'Chips to take', x, y + 12);
+
+  ctx.font = font(13.5);
+  ctx.fillStyle = colours.mute;
+  ctx.fillText('Offered at random during a run. These are the ones worth taking for this board.',
+    x, top + 4);
+  top += 22;
+
+  const tierMark = (tier) => 'I'.repeat(Math.max(1, Math.min(3, tier || 1)));
+  let cx = x;
+  const rowTop = top + 6;
+
+  main.forEach((entry, i) => {
+    const label = `${i + 1}  ${entry.name}`;
+    ctx.font = font(14, 650);
+    const w = ctx.measureText(label).width + 34;
+    const done = tint(ctx, colours.accent, 0.16);
+    roundRect(ctx, cx, rowTop, w, 26, 6);
+    ctx.fill();
+    done();
+    ctx.strokeStyle = colours.accent;
+    ctx.lineWidth = 1;
+    roundRect(ctx, cx + 0.5, rowTop + 0.5, w - 1, 25, 6);
+    ctx.stroke();
+
+    ctx.fillStyle = colours.text;
+    ctx.font = font(14, 650);
+    ctx.fillText(label, cx + 9, rowTop + 18);
+    ctx.font = font(10, 800);
+    ctx.fillStyle = colours.mute;
+    ctx.fillText(tierMark(entry.tier), cx + w - 22, rowTop + 18);
+    cx += w + 8;
+  });
+
+  top = rowTop + 32;
+
+  if (extra.length) {
+    ctx.font = font(13);
+    ctx.fillStyle = colours.dim;
+    ctx.fillText(`Also worth it: ${extra.map((e) => e.name).join(', ')}`, x, top + 10);
+    top += 22;
+  }
+  return top;
+}
+
 function drawEffects(ctx, colours, x, y, width, list) {
   const found = effectsOf(list);
   const groups = ['heal', 'buff', 'debuff'].filter((g) => found[g].length);
@@ -844,6 +907,14 @@ function drawEffects(ctx, colours, x, y, width, list) {
  */
 export async function drawCard({
   username = '', avatar = '', note = '', full = false, stacked = false,
+  /*
+   * Passed in rather than read here. What you kept lives in the chips module's
+   * own storage, and card.js already knows about the store, the roster and the
+   * effects -- giving it a fourth dependency for one optional strip is how a
+   * drawing file becomes an application. The caller has it; the caller hands it
+   * over.
+   */
+  chips = null,
   view = store, scale = SCALE,
 } = {}) {
   const colours = palette();
@@ -944,6 +1015,16 @@ export async function drawCard({
     ? drawEffects(probe, colours, 0, 0, contentW, fielded) + 12
     : 0;
 
+  /*
+   * Measured on the probe by running the real drawing, exactly like the effects
+   * above. A section the canvas was not sized for does not overflow into
+   * whitespace -- it is simply cut off, and this file already carries a comment
+   * about that being the one failure a share card cannot have.
+   */
+  const chipsH = (full && chips?.main?.length)
+    ? drawChips(probe, colours, 0, 0, contentW, chips) + 12
+    : 0;
+
   // Side by side takes the taller of the two; stacked takes both, plus the rule
   // between them.
   let bodyH = fieldH;
@@ -953,7 +1034,7 @@ export async function drawCard({
   // wrong rather than as margin.
   const height = PAD + headerH + bodyH
     + (full ? 20 + benchHeight() : 0)
-    + effectsH + 12 + PAD;
+    + chipsH + effectsH + 12 + PAD;
 
   const canvas = document.createElement('canvas');
   canvas.width = Math.round(w * scale);
@@ -1093,6 +1174,11 @@ export async function drawCard({
   if (full) {
     fill(ctx, colours.line, PAD, y, contentW, 1);
     y = drawBench(ctx, colours, sprites, view, PAD, y + 8, contentW);
+  }
+
+  if (full && chips?.main?.length) {
+    fill(ctx, colours.line, PAD, y, contentW, 1);
+    y = drawChips(ctx, colours, PAD, y + 8, contentW, chips);
   }
 
   if (fielded.length) {
