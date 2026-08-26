@@ -427,6 +427,15 @@
           <div id="filter-tiers" class="chips chips--text" role="group" aria-label="Filter by tier"></div>
         </div>
 
+        <!-- The specific effects, under the group that owns them. Empty and
+             hidden until one of the three carets above is opened: 23 chips is
+             more than the row can carry standing up, and the three groups answer
+             most questions on their own. Built from the roster rather than from
+             a list, so a tag nothing carries never becomes a chip that finds
+             nothing. -->
+        <div id="filter-effect-types" class="chips chips--text chips--sub"
+          role="group" aria-label="Filter by a specific effect" hidden></div>
+
         <div class="filters__row filters__row--meta">
           <label class="check" title="Hide Tatari locked out by an evolution line you are already bringing">
             <input id="opt-hide-blocked" type="checkbox"> Hide unavailable</label>

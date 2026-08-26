@@ -1877,6 +1877,49 @@ body[data-switching="true"] .cell[data-zobo] { box-shadow: none; cursor: default
 .chip--role[aria-pressed="true"] { color: var(--text); background: var(--surface-3); border-color: var(--text-mute); }
 .chips--text .chip { width: auto; padding: 0 var(--s2); font-size: 11.5px; font-weight: 650; }
 
+/*
+ * The caret that opens a group's specific effects, drawn as the right-hand half
+ * of the chip it follows rather than as a control of its own. Two separate
+ * buttons is what the markup has to be -- a button inside a button is not a
+ * thing -- but "filter by debuffs" and "show me which debuffs" are one idea with
+ * two halves, and the join is what says so. Hence the negative margin and the
+ * flattened inner corners.
+ */
+.fxcaret {
+  display: inline-grid; place-items: center;
+  width: 18px; min-height: 26px;
+  margin-left: -1px;
+  border: 1px solid var(--line);
+  border-left-color: transparent;
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  background: var(--surface-2);
+  color: var(--text-mute);
+  font: inherit; font-size: 9px; line-height: 1;
+  cursor: pointer;
+  transition: background-color 140ms var(--ease-out), color 140ms var(--ease-out);
+}
+.fxcaret::after { content: "▾"; }
+.fxcaret:hover { color: var(--text-dim); background: var(--surface-3); }
+.fxcaret[aria-expanded="true"] { color: var(--text); background: var(--surface-3); }
+.fxcaret[aria-expanded="true"]::after { content: "▴"; }
+
+/* The opened row. Indented and wrapping, so it reads as belonging to the chip
+   above it rather than as a fourth filter row of equal weight. */
+.chips--sub {
+  flex-wrap: wrap;
+  margin-top: calc(var(--s1) * -1 + 2px);
+  padding-left: var(--s3);
+  border-left: 1px solid var(--line-soft);
+}
+.chips--sub .chip { width: auto; padding: 0 var(--s2); font-size: 11px; font-weight: 600; }
+/* The count, quieter than the name it follows: it is there to stop a wasted tap,
+   not to be read first. */
+.chips--sub .chip b {
+  margin-left: 4px;
+  color: var(--text-mute); font-size: 9.5px; font-weight: 700;
+}
+.chips--sub .chip[aria-pressed="true"] b { color: inherit; }
+
 /* These carry a word, since a bare triangle means nothing — so they need to be
    a flex row rather than the base chip's centred inline-grid, and to size to
    their text rather than to the 30px icon box. Defined after .chip on purpose:

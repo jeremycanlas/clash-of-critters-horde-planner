@@ -224,6 +224,17 @@ export const bringsEffect = (t, group) => {
 };
 
 /**
+ * Whether this Tatari brings one named effect, from the start or by levelling.
+ *
+ * The narrow twin of bringsEffect. That one asks "any debuff at all", which is
+ * the right question when you are filling a bench; this one asks "Stun", which
+ * is the right question when a wave keeps killing you and you have worked out
+ * why. Both read the same memoised sources, so asking 23 of these per card
+ * costs no more than asking three.
+ */
+export const bringsType = (t, type) => effectSources(t).some((s) => s.type === type);
+
+/**
  * What each skill type does, in the wiki's own words.
  *
  * Every tag has a `Category:Skill Type: X` page, and that page carries a

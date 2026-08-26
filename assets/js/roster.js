@@ -6,7 +6,7 @@ import { TYPES, ROLES } from './icons.js';
 import { $, artHTML, esc, typeIcon, roleIcon, toast } from './ui.js';
 import { draggable, dropZone } from './dnd.js';
 import { openDetail } from './detail.js';
-import { effectGroupsOf, bringsEffect } from './effects.js';
+import { effectGroupsOf, bringsEffect, bringsType, effectsOf, helpFor, GROUP_LABELS } from './effects.js';
 
 const TIERS = [1, 2, 3, 4];
 
@@ -49,6 +49,14 @@ export const filters = {
   roles: new Set(),
   tiers: new Set(),
   effects: new Set(),
+  /*
+   * The specific effects, alongside the groups rather than instead of them.
+   * "Brings a debuff" and "brings Stun" are different questions and a player
+   * asks both, so the two sets are ANDed together the same way two group chips
+   * already are -- picking Debuffs and Stun asks for Stun, picking Stun and
+   * Shield asks for a Tatari carrying both.
+   */
+  effectTypes: new Set(),
   hideBlocked: false,
   sort: 'default',
   /*
@@ -190,6 +198,7 @@ export function buildFilters(onChange, { onPick = bringToBench } = {}) {
   chips($('#filter-tiers'), TIERS, filters.tiers, 'tier', (v) => `Tier ${v}`);
   chips($('#filter-effects'), EFFECTS.map((e) => e.key), filters.effects, 'effect',
     (v) => `${EFFECTS.find((e) => e.key === v).label}, from the base skill or a level-up`);
+  buildEffectTypes(onChange);
 
   /*
    * Debounced. Every keystroke rebuilds 218 cards and rebinds 218 drag handlers,
@@ -276,6 +285,90 @@ export function buildFilters(onChange, { onPick = bringToBench } = {}) {
 }
 
 /**
+ * The caret on each effect group, and the row of specific effects it opens.
+ *
+ * Three chips answer "brings a debuff", which is the question you ask while
+ * filling a bench. They cannot answer "brings Stun", which is the question you
+ * ask after a wave has killed you twice and you have worked out why -- and the
+ * data has carried the answer all along: 23 named effects across heals, buffs
+ * and debuffs, counting what a Tatari starts with and what it gains by
+ * levelling.
+ *
+ * All 23 standing up would double the filter block, on a phone, above a roster
+ * that wants the room. So they arrive one group at a time, behind a caret. Not a
+ * menu: the caret is visible, sits on the chip it belongs to, and what it opens
+ * appears in place rather than floating over anything.
+ *
+ * The chips are built from a tally of the roster rather than from a list of
+ * known tags, which is what keeps this honest as the game changes. A tag nothing
+ * carries never becomes a chip that finds nothing, a new one appears the first
+ * time a Tatari has it, and each chip can say how many it will find before you
+ * spend a tap on it.
+ */
+function buildEffectTypes(onChange) {
+  const host = $('#filter-effects');
+  const sub = $('#filter-effect-types');
+  if (!host || !sub) return;
+
+  const tallies = effectsOf(state.all);
+  let open = null;
+
+  for (const { key } of EFFECTS) {
+    if (!tallies[key]?.length) continue;
+    const chip = host.querySelector(`.chip[data-value="${key}"]`);
+    if (!chip) continue;
+    const caret = document.createElement('button');
+    caret.type = 'button';
+    // Deliberately not a .chip: the generic chip handler above reads
+    // dataset.value off anything wearing that class, and resetFilters unpresses
+    // it. A caret is neither a filter nor something reset should touch.
+    caret.className = 'fxcaret';
+    caret.dataset.group = key;
+    caret.setAttribute('aria-expanded', 'false');
+    caret.setAttribute('aria-controls', 'filter-effect-types');
+    caret.setAttribute('aria-label', `Show the specific ${GROUP_LABELS[key].toLowerCase()}`);
+    caret.title = `The specific ${GROUP_LABELS[key].toLowerCase()} a Tatari brings`;
+    chip.after(caret);
+  }
+
+  const draw = () => {
+    sub.hidden = !open;
+    if (!open) { sub.innerHTML = ''; return; }
+    sub.innerHTML = tallies[open].map((t) => {
+      // The wiki's own definition where it has one; the count where it does not,
+      // which is still more use than repeating the chip's own label back.
+      const help = helpFor(t.type);
+      const reach = t.fromBase && t.fromLevel ? 'some from the start, some by levelling'
+        : t.fromLevel ? `only by levelling, from ${t.minLevel}` : 'from the start';
+      return `<button class="chip chip--fxtype" type="button" data-type="${esc(t.type)}"
+        aria-pressed="${filters.effectTypes.has(t.type)}"
+        title="${esc(`${help ?? t.type} — ${t.count} Tatari, ${reach}`)}"
+        >${esc(t.type)}<b>${t.count}</b></button>`;
+    }).join('');
+  };
+
+  host.addEventListener('click', (e) => {
+    const caret = e.target.closest('.fxcaret');
+    if (!caret) return;
+    open = open === caret.dataset.group ? null : caret.dataset.group;
+    for (const c of host.querySelectorAll('.fxcaret')) {
+      c.setAttribute('aria-expanded', String(c.dataset.group === open));
+    }
+    draw();
+  });
+
+  sub.addEventListener('click', (e) => {
+    const chip = e.target.closest('.chip--fxtype');
+    if (!chip) return;
+    const { type } = chip.dataset;
+    if (filters.effectTypes.has(type)) filters.effectTypes.delete(type);
+    else filters.effectTypes.add(type);
+    chip.setAttribute('aria-pressed', String(filters.effectTypes.has(type)));
+    onChange();
+  });
+}
+
+/**
  * The heal / buff / debuff markers on a card, in a band across the top of the
  * art box with the sprite sized to sit below them.
  *
@@ -328,6 +421,7 @@ export function resetFilters() {
   filters.roles.clear();
   filters.tiers.clear();
   filters.effects.clear();
+  filters.effectTypes.clear();
   filters.hideBlocked = false;
   filters.sort = 'default';
   $('#search').value = '';
@@ -346,6 +440,8 @@ function visible(player) {
     // 15-slot bench. The type and role chips still read as "any".
     if (filters.effects.size
       && ![...filters.effects].every((group) => bringsEffect(t, group))) return false;
+    if (filters.effectTypes.size
+      && ![...filters.effectTypes].every((type) => bringsType(t, type))) return false;
     if (!matches(t, filters.query)) return false;
     // Only a per-Tatari reason hides a card. A full bench blocks every Tatari
     // at once, and collapsing the roster to the 15 already brought reads as the
