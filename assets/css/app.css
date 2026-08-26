@@ -4735,3 +4735,65 @@ body[data-roster-list="chips"] .filters__row--meta .sortby { display: none; }
   background: var(--accent); color: var(--accent-ink);
   font-size: 9px; font-weight: 700;
 }
+
+/* Chips read as rows, not as tiles.
+ *
+ * A Tatari card works at 82px because a sprite is recognisable at 82px. A chip
+ * is a rule -- "Generate 6 single-use lawn mowers at the bottom of the map" --
+ * and no amount of grid tuning makes that legible in a tile. So on this tab the
+ * roster stops being a grid and becomes a list, and each row has room for the
+ * whole sentence, which is the thing you are actually choosing between.
+ */
+body[data-roster-list="chips"] .roster {
+  grid-template-columns: 1fr;
+  gap: var(--s1);
+}
+.card--chip {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: start;
+  gap: var(--s3);
+  padding: var(--s2) var(--s3);
+  text-align: left;
+  cursor: pointer;
+}
+.chiprow__art {
+  width: 42px; height: 42px;
+  border-radius: var(--r-sm);
+  object-fit: cover;
+}
+.chiprow__body { min-width: 0; }
+.chiprow__head {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--s1) var(--s2);
+  margin: 0 0 2px;
+  font-size: 13px;
+}
+.chiprow__head b { font-weight: 650; color: var(--text); }
+/* The category, on the chip and filterable beside it. */
+.chiprow__cat {
+  padding: 0 5px;
+  border-radius: var(--r-sm);
+  background: var(--surface-3);
+  font-size: 10px; font-weight: 650; letter-spacing: .03em;
+  color: var(--text-mute);
+}
+.chiprow__text {
+  margin: 0;
+  font-size: 12px; line-height: 1.45; color: var(--text-dim);
+}
+.chiprow__score {
+  margin: var(--s1) 0 0;
+  font-size: 11.5px; line-height: 1.4; color: var(--text-dim);
+}
+.chiprow__score b { color: var(--text); font-variant-numeric: tabular-nums; }
+.chiprow__score[data-empty="true"] { color: var(--text-mute); }
+.chiprow__score[data-empty="true"] b { color: var(--text-mute); }
+
+.chip--group { width: auto; padding: 0 var(--s2); gap: 4px; }
+.chip--group b { font-variant-numeric: tabular-nums; }
+
+@media (max-width: 760px) {
+  /* The sprite gives up the least: the sentence is why the row exists. */
+  .chiprow__art { width: 34px; height: 34px; }
+  .card--chip { gap: var(--s2); padding: var(--s2); }
+}

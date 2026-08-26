@@ -534,6 +534,38 @@ await runGroup('the chips tab in the roster', async () => {
   ok('tapping again lets it go',
      !$(`.card--chip[data-chip="${CSS.escape(name)}"]`).classList.contains('is-benched'));
 
+  /*
+   * A chip is a rule, not a sprite, so the rule has to be on the row.
+   *
+   * These were 82px tiles with the text in a tooltip, which is unreadable on a
+   * phone -- there is no hover -- and slow everywhere else. A Tatari card works
+   * at 82px because a sprite is recognisable at 82px; "Generate 6 single-use
+   * lawn mowers at the bottom of the map" is not.
+   */
+  const lawn = $('.card--chip[data-chip="Lawn Care"]');
+  ok('a chip says what it does without being hovered',
+     lawn.querySelector('.chiprow__text')?.textContent.includes('lawn mowers'),
+     lawn.querySelector('.chiprow__text')?.textContent ?? '(no text)');
+  eq('and says which kind it is', lawn.querySelector('.chiprow__cat').textContent.trim(), 'Map');
+  ok('every chip carries both', chips().every((c) =>
+    c.querySelector('.chiprow__text')?.textContent.trim() && c.querySelector('.chiprow__cat')));
+
+  /* One column, or the sentence has nowhere to go. */
+  eq('the list is one chip per row',
+     new Set(chips().slice(0, 5).map((c) => Math.round(c.getBoundingClientRect().left))).size, 1);
+
+  /* Every category on a card is also one you can ask for. */
+  const kinds = $$('.chip--group');
+  eq('there is a filter per kind', kinds.length, 7);
+  const mapBtn = $('.chip--group[data-shape="map"]');
+  const says = Number(mapBtn.querySelector('b').textContent);
+  await click(mapBtn, 380);
+  eq('filtering by kind finds what it promised', chips().length, says);
+  ok('and they really are that kind',
+     chips().every((c) => c.querySelector('.chiprow__cat').textContent.trim() === 'Map'));
+  await click($('.chip--group[data-shape="map"]'), 380);
+  eq('releasing it puts them all back', chips().length, 49);
+
   /* The panel this replaced is gone, not hidden. */
   ok('the old panel under the Summary is gone', !$('#chips'));
 

@@ -198,6 +198,17 @@ export function buildFilters(onChange, { onPick = bringToBench } = {}) {
     });
   }
 
+  const chipGroupHost = $('#filter-chip-groups');
+  if (chipGroupHost) {
+    chipGroupHost.addEventListener('click', (e) => {
+      const btn = e.target.closest('.chip--group');
+      if (!btn) return;
+      const k = btn.dataset.shape;
+      if (chipShapes.has(k)) chipShapes.delete(k); else chipShapes.add(k);
+      onChange();
+    });
+  }
+
   const tabs = $('#roster-tabs');
   if (tabs) {
     tabs.addEventListener('click', (e) => {
@@ -888,17 +899,46 @@ ${esc(z.skill.name)}` : ''}">
  * tooltip and on chips.html, both of which have the room for it.
  */
 const chipTiers = new Set();
+const chipShapes = new Set();
+
+/* The same names the page uses for its headings, minus the word "Chips" --
+   printed on a chip, on a page of chips, it is the only word on the label that
+   says nothing. */
+const CHIP_GROUPS = {
+  placement: 'Position',
+  element: 'Element',
+  level: 'Level up',
+  economy: 'Energizer',
+  capacity: 'More Tatari',
+  stat: 'Flat Buff',
+  map: 'Map',
+};
 
 function drawChipTiers() {
   const host = $('#filter-chip-tiers');
-  if (!host) return;
-  host.innerHTML = `<span class="chips__label" aria-hidden="true">Tier</span>`
-    + [1, 2, 3].map((t) => `
-      <button class="chip chip--rarity" type="button" data-tier="${t}"
-        aria-pressed="${chipTiers.has(t)}"
-        title="${esc(`Show only tier ${'I'.repeat(t)} chips`)}"
-        ><span class="chip__tier" data-tier="${t}" aria-hidden="true">${'I'.repeat(t)}</span
-        >${chipList().filter((c) => c.tier === t).length}</button>`).join('');
+  if (host) {
+    host.innerHTML = `<span class="chips__label" aria-hidden="true">Tier</span>`
+      + [1, 2, 3].map((t) => `
+        <button class="chip chip--rarity" type="button" data-tier="${t}"
+          aria-pressed="${chipTiers.has(t)}"
+          title="${esc(`Show only tier ${'I'.repeat(t)} chips`)}"
+          ><span class="chip__tier" data-tier="${t}" aria-hidden="true">${'I'.repeat(t)}</span
+          >${chipList().filter((c) => c.tier === t).length}</button>`).join('');
+  }
+
+  /* Every category on a chip is also a category you can ask for. Nothing on a
+     card in this app is decoration only. */
+  const cats = $('#filter-chip-groups');
+  if (!cats) return;
+  cats.innerHTML = `<span class="chips__label" aria-hidden="true">Kind</span>`
+    + Object.entries(CHIP_GROUPS)
+      .filter(([key]) => chipList().some((c) => c.shape === key))
+      .map(([key, label]) => `
+        <button class="chip chip--group" type="button" data-shape="${key}"
+          aria-pressed="${chipShapes.has(key)}"
+          title="${esc(`Show only ${label} chips`)}"
+          >${esc(label)} <b>${chipList().filter((c) => c.shape === key).length}</b></button>`)
+      .join('');
 }
 
 function renderChips() {
@@ -912,6 +952,7 @@ function renderChips() {
 
   const list = chipList().filter((c) => {
     if (chipTiers.size && !chipTiers.has(c.tier)) return false;
+    if (chipShapes.size && !chipShapes.has(c.shape)) return false;
     return !q || `${c.name} ${c.text}`.toLowerCase().includes(q);
   });
 
@@ -919,23 +960,23 @@ function renderChips() {
     const score = board.length ? scoreOne(c, board) : null;
     const rank = kept.main.indexOf(c.name);
     const held = mine.includes(c.name);
-    const who = score?.who?.length
-      ? `
-${score.n} of your ${score.of}: ${score.who.map((p) => p.name).join(', ')}`
-      : '';
     return `
       <div class="card card--chip${held ? ' is-benched' : ''}" role="listitem" tabindex="0"
            data-chip="${esc(c.name)}" data-tier="${c.tier}"
-           title="${esc(`${c.name}
-${c.text}${who}`)}">
-        <div class="card__art"><img src="${esc(iconFor(c))}" alt="" loading="lazy" decoding="async"></div>
-        <div class="card__meta">
-          <span class="card__tier" data-tier="${c.tier}">${'I'.repeat(c.tier)}</span>
-          ${score ? `<span class="card__score" data-empty="${score.n === 0}"
-            >${score.n}/${score.of}</span>` : ''}
-          ${rank >= 0 ? `<span class="card__rank">${rank + 1}</span>` : ''}
+           title="${esc(held ? `Keeping ${c.name}. Press to let it go.` : `Keep ${c.name}`)}">
+        <img class="chiprow__art" src="${esc(iconFor(c))}" alt="" loading="lazy" decoding="async">
+        <div class="chiprow__body">
+          <p class="chiprow__head">
+            <b>${esc(c.name)}</b>
+            <span class="chiprow__cat">${esc(CHIP_GROUPS[c.shape] ?? c.shape)}</span>
+            <span class="card__tier" data-tier="${c.tier}">${'I'.repeat(c.tier)}</span>
+          </p>
+          <p class="chiprow__text">${esc(c.text)}</p>
+          ${score ? `<p class="chiprow__score" data-empty="${score.n === 0}">
+            <b>${score.n}</b> of your ${score.of} ${esc(score.why)}${
+            score.who?.length ? `: ${esc(score.who.map((p) => p.name).join(', '))}` : ''}</p>` : ''}
         </div>
-        <div class="card__name">${esc(c.name)}</div>
+        ${rank >= 0 ? `<span class="card__rank" title="${esc(`Your pick ${rank + 1}`)}">${rank + 1}</span>` : ''}
       </div>`;
   }).join('');
 
