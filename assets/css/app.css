@@ -4179,3 +4179,226 @@ body.is-clean .clean-hint {
   .changes__main { padding: var(--s4) var(--s3) var(--s6); }
   .chgroup__grid { grid-template-columns: 1fr; gap: var(--s2); }
 }
+
+/* =======================================================  chips
+ *
+ * Two surfaces off one engine: a live block under the Summary in the drafter,
+ * and a page of its own. They share .chgroup and its children with the changes
+ * page above, deliberately -- both are "here is a body of reference, scored",
+ * and a second visual language for the same shape would only be a second thing
+ * to keep in step.
+ * ======================================================================== */
+
+/* --------------------------------------------------- the drafter block */
+
+.chipsblock {
+  margin-top: var(--s4); padding-top: var(--s3);
+  border-top: 1px solid var(--line-soft);
+}
+.chipsblock__head {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--s2);
+  margin: 0 0 var(--s2);
+  font-size: 12px; font-weight: 650; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--text-mute);
+}
+.chipsblock__sub {
+  font-size: 11px; font-weight: 500; letter-spacing: 0; text-transform: none;
+  color: var(--text-mute);
+}
+.chipsblock__empty, .chipsblock__more {
+  margin: 0; color: var(--text-mute); font-size: 12.5px; line-height: 1.5;
+}
+.chipsblock__more { margin-top: var(--s2); }
+.chipsblock__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; }
+
+/*
+ * One row per chip, with the count drawn as fill rather than as a bar beside it.
+ *
+ * The number is the answer and the fill is the glance: dragging a Tatari from
+ * the front row to the back moves two of these at once, and a row that grows is
+ * easier to catch out of the corner of your eye than a digit that changes. The
+ * fill is a background rather than a pseudo-element with a width, so it cannot
+ * end up a pixel out of step with the row it is inside.
+ */
+.chipbar {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: baseline;
+  gap: 0 var(--s2);
+  padding: 5px var(--s2);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-sm);
+  background:
+    linear-gradient(to right,
+      color-mix(in srgb, var(--accent) 16%, transparent) 0 var(--fill, 0%),
+      transparent var(--fill, 0%)),
+    var(--surface-2);
+  font-size: 12.5px;
+}
+.chipbar__name { font-weight: 600; color: var(--text); min-width: 0; }
+.chipbar__n { color: var(--text-dim); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.chipbar__n b { color: var(--text); }
+.chipbar__why {
+  grid-column: 1 / -1;
+  color: var(--text-mute); font-size: 11px;
+}
+.chipbar.is-taken {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--line));
+}
+/*
+ * A word in the corner rather than a coloured left edge. A 2px border on one
+ * side is the side-tab this project bans everywhere else, and it reads as a nav
+ * item rather than as a state.
+ */
+.chipbar.is-taken::after {
+  content: "kept";
+  position: absolute; top: 4px; right: var(--s2);
+  font-size: 9px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--accent-ink-on);
+}
+.chipbar.is-taken .chipbar__n { padding-right: 30px; }
+
+.chipsblock__split {
+  display: flex; flex-wrap: wrap; gap: var(--s1) var(--s2);
+  margin: var(--s2) 0 0;
+}
+.chipsplit {
+  padding: 2px var(--s2);
+  border-radius: 999px;
+  background: var(--surface-3);
+  font-size: 11px; color: var(--text-dim);
+}
+.chipsplit b { color: var(--text); font-variant-numeric: tabular-nums; }
+.chipsplit[data-type="Water"]     { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--water) 55%, transparent); }
+.chipsplit[data-type="Fire"]      { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--fire) 55%, transparent); }
+.chipsplit[data-type="Grass"]     { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--grass) 55%, transparent); }
+.chipsplit[data-type="Rock"]      { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--rock) 55%, transparent); }
+.chipsplit[data-type="Lightning"] { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--lightning) 55%, transparent); }
+
+/* ------------------------------------------------------------- the page */
+
+/*
+ * `chipspage`, not `chips`. `.chips` is already the filter-chip row in the
+ * roster -- `display: flex` -- so `<body class="chips">` turned the whole
+ * document into a flex container and squashed an 1180px page down to 362px
+ * inside a 1280px window, looking for all the world like a broken max-width.
+ */
+.chipspage__main {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: var(--s5) var(--s4) var(--s6);
+}
+.chipspage__intro {
+  max-width: 72ch;
+  margin: 0 0 var(--s5);
+  color: var(--text-dim); font-size: 14px; line-height: 1.55;
+}
+/* Empty on the normal path, so it must not leave its margin behind. */
+.chipspage__intro:empty { display: none; }
+
+/* The three you kept, above everything else. Mid-run this is the only part you
+   open the page for, so it does not sit below forty-nine cards. */
+.kept { margin-bottom: var(--s6); }
+.kept__head {
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2) var(--s3);
+  margin-bottom: var(--s3);
+}
+.kept__head h2 { margin: 0; font-size: 15px; font-weight: 650; }
+.kept__who { display: flex; gap: var(--s1); }
+.kept__who .is-on {
+  background: var(--accent); color: var(--accent-ink); border-color: transparent;
+}
+.kept__slots {
+  list-style: none; margin: 0; padding: 0;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--s2);
+  counter-reset: slot;
+}
+.kept__slot {
+  counter-increment: slot;
+  display: flex; flex-direction: column; gap: 2px;
+  min-height: 62px;
+  padding: var(--s2) var(--s3);
+  border: 1px dashed var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  font-size: 12.5px;
+}
+.kept__slot::before {
+  content: counter(slot);
+  font-size: 10px; font-weight: 700; color: var(--text-mute);
+}
+.kept__slot.is-filled { border-style: solid; border-color: var(--accent); }
+.kept__slot b { color: var(--text); font-size: 13.5px; }
+.kept__slot span { color: var(--text-mute); line-height: 1.45; }
+.kept__wait { color: var(--text-mute); font-style: italic; }
+.kept__total { margin: var(--s2) 0 0; font-size: 12px; }
+
+.chipcard {
+  position: relative;
+  padding: var(--s3);
+  padding-right: var(--s6);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface);
+}
+.chipcard.is-taken { border-color: var(--accent); }
+.chipcard__keep {
+  position: absolute; top: var(--s2); right: var(--s2);
+  width: 26px; height: 26px;
+  display: grid; place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--text-mute);
+  font-size: 14px; line-height: 1;
+  cursor: pointer;
+}
+.chipcard__keep:hover { color: var(--text); border-color: var(--accent); }
+.chipcard__keep[aria-pressed="true"] {
+  background: var(--accent); border-color: transparent; color: var(--accent-ink);
+}
+.chipcard__name {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--s2);
+  margin: 0 0 var(--s1);
+  font-size: 14px; font-weight: 650;
+}
+/* The gallery colours its tiers, so this does too, but with the numeral as
+   well: colour on its own is not a channel every reader has. */
+.chipcard__tier {
+  padding: 0 5px;
+  border-radius: var(--r-sm);
+  font-size: 9.5px; font-weight: 700; letter-spacing: .1em;
+  background: var(--surface-3); color: var(--text-mute);
+}
+.chipcard__tier[data-tier="2"] { color: var(--fire); }
+.chipcard__tier[data-tier="3"] { color: var(--water); }
+.chipcard__text {
+  margin: 0; color: var(--text-dim); font-size: 12.5px; line-height: 1.5;
+}
+.chipcard__score {
+  margin: var(--s2) 0 0;
+  padding: var(--s1) var(--s2);
+  border-radius: var(--r-sm);
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface-2));
+  font-size: 12.5px; color: var(--text-dim);
+}
+.chipcard__score b { color: var(--text); font-variant-numeric: tabular-nums; }
+/* Zero is a real answer and worth printing, but it should not read as a result. */
+.chipcard__score[data-empty="true"] { background: var(--surface-2); color: var(--text-mute); }
+.chipcard__score[data-empty="true"] b { color: var(--text-mute); }
+.chipcard__doubt {
+  margin: var(--s2) 0 0;
+  font-size: 11.5px; line-height: 1.45; color: var(--text-mute);
+}
+.chipcard__doubt::before {
+  content: "Guess: ";
+  font-weight: 700; color: var(--text-dim);
+}
+.chipcard__doubt[data-kind="scope"]::before { content: "Co-op: "; }
+
+@media (max-width: 760px) {
+  .chipspage__main { padding: var(--s4) var(--s3) var(--s6); }
+  .kept__slots { grid-template-columns: 1fr; }
+}

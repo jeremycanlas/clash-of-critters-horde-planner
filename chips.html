@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <!-- viewport-fit=cover, or env(safe-area-inset-*) resolves to 0 on iOS and every
+     safe-area rule in app.css silently does nothing. -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Horde Drafter: Chips</title>
+  <meta name="description"
+    content="Every Horde Invasion chip, and what each one would be worth to the formation you built.">
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='19' font-size='20'>🐾</text></svg>">
+  <link rel="stylesheet" href="assets/css/app.css">
+</head>
+
+<body class="chipspage">
+
+  <header class="topbar">
+    <div class="topbar__title">
+      <h1>Chips</h1>
+      <span id="chips-patch" class="topbar__sub"></span>
+    </div>
+    <div class="topbar__actions">
+      <a class="btn btn--quiet" href="index.html">Back to the drafter</a>
+    </div>
+  </header>
+
+  <main class="chipspage__main">
+    <!-- Only speaks when there is no formation to score against. With a board
+       loaded every card carries its own number and a paragraph here would be
+       repeating them. -->
+    <p id="chips-intro" class="chipspage__intro"></p>
+
+    <!-- The three you kept this run, and in co-op the three your partner kept.
+       Top of the page because it is what you come back to mid-run. -->
+    <section id="chips-kept" class="kept"></section>
+
+    <div id="chips-body"></div>
+  </main>
+
+  <footer class="foot">
+    <span>Fan-made, unofficial. Tatari data and sprites from the
+      <a href="https://clashofcritters.wiki.gg/wiki/Tatari" target="_blank" rel="noopener">Clash of Critters Wiki</a>.</span>
+    <span class="muted">The chips themselves are not on the wiki at all. Every name and
+      every line of text here was read off the in-game Chip Gallery by hand, so any of
+      it can be wrong &mdash; check it in game if it matters. Chips are offered at
+      random during a run and you keep three, so nothing here is a loadout you can
+      choose; it is a way to know what an offer is worth before you take it.</span>
+  </footer>
+
+  <script type="module" src="assets/js/chips.js"></script>
+</body>
+
+</html>

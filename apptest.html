@@ -222,8 +222,22 @@ await runGroup('effect groups, level ceilings and named effects', async () => {
   eq('the caret reports itself open', caret('debuff').getAttribute('aria-expanded'), 'true');
   const named = $$('.chip--fxtype');
   ok('opening a group reveals its named effects', named.length > 5, `${named.length} chips`);
-  ok('focus follows the disclosure',
-     D.activeElement?.classList.contains('chip'), D.activeElement?.className);
+  /*
+   * Waited for, not sampled.
+   *
+   * This read activeElement once after a fixed sleep, which is a race dressed up
+   * as an assertion: the focus call is synchronous inside the click handler, but
+   * whether this line runs before or after everything else the browser has queued
+   * is not something a 340ms sleep decides. It failed twice in a row, passed four
+   * times after, and cost an afternoon of blaming an unrelated change. Waiting
+   * still fails if focus never lands -- it just stops failing when it lands late.
+   */
+  let landed = false;
+  for (let i = 0; i < 20 && !landed; i++) {
+    landed = !!D.activeElement?.classList.contains('chip');
+    if (!landed) await sleep(50);
+  }
+  ok('focus follows the disclosure', landed, D.activeElement?.className || '(nothing focused)');
 
   const stun = $('.chip--fxtype[data-type="Stun"]');
   const stunSays = Number(stun.querySelector('b').textContent);

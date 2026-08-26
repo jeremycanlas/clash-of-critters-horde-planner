@@ -15,6 +15,7 @@ import { buildPriority, renderPriority } from './priority.js';
 import { buildShare, openShare } from './share.js';
 import { warmSprites } from './card.js';
 import { buildShell, renderShell } from './shell.js';
+import { loadChips, renderChips } from './chips.js';
 import { buildSaves, savedById, keepQuietly } from './saves.js';
 import { buildSubmit, openSubmit, resumeSubmit } from './submit.js';
 import { buildSession } from './session.js';
@@ -41,6 +42,7 @@ function renderAll() {
   renderPriority();
   renderRoster();
   renderSummary();
+  renderChips();
   renderShell();
 
   for (const btn of $$('#mode-switch .segmented__btn')) {
@@ -93,6 +95,15 @@ async function main() {
   const pending = buildSubmit();
   buildAnalytics();
   buildFilters(() => renderRoster());
+
+  /*
+   * Chips arrive late and redraw once, rather than holding up the board.
+   *
+   * The panel needs data/chips.json, which is another round trip, and the field
+   * is what somebody opened this for. So renderAll() draws it empty, this fills
+   * it in when the file lands, and every later render has the data already.
+   */
+  loadChips().then(renderChips);
 
   store.subscribe(renderAll);
   countFirstUse();
