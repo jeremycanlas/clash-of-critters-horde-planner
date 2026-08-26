@@ -824,44 +824,68 @@ img { -webkit-user-drag: none; }
  * this sits over artwork, and a translucent badge on a pale sprite loses its
  * arrow entirely.
  */
+/*
+ * The "this changed in the last update" mark, arrived at by being wrong twice
+ * in opposite directions.
+ *
+ * It began as a filled 15px disc, which put a coloured circle 18px from the 17px
+ * circular type badge in the same row. The card reserves circles for what a
+ * Tatari permanently is -- its element, its role -- and the disc borrowed that
+ * idiom for the most temporary fact on it, the one the next update wipes. Colour
+ * made it worse: a nerfed Fire Tatari wore red beside a red Fire badge, a buffed
+ * Grass one green beside green. Same shape, same size, unrelated meanings.
+ *
+ * Stripping the container fixed that and overshot: a lone glyph beside two
+ * filled circles loses the fight for attention and was simply not noticed.
+ *
+ * So a rect, because nothing else in this row is one; a border, so it has an
+ * edge to be seen by; and an 18% wash rather than a solid fill, because solid is
+ * what made it shout beside a same-coloured type badge. The effect badges are
+ * outlined rects too, which is fine: those live in the band inside the art, this
+ * lives in the meta row, and the two never appear side by side.
+ *
+ * In the meta row rather than on the art at all, because no corner of a sprite
+ * is reliably empty and these cards get screenshotted -- the same argument the
+ * note above .card__meta makes for tier, type and role.
+ */
 .card__patch {
-  /* In the meta row, not on the art. See the note above .card__meta: no corner
-     of a sprite is reliably empty, and these cards get screenshotted. */
   flex: none;
   display: inline-flex; align-items: center; justify-content: center;
-  width: auto; height: auto;
+  /* 15px, not wider. At 19 the meta row overflowed 69px of card and wrapped,
+     taking every card from 118px to 122. The circular look came from a 6px
+     radius on a small box, not from the width. */
+  min-width: 15px; height: 14px;
+  padding: 0 1px;
+  border: 1px solid currentColor;
+  /* 3px, matching .card__fx rather than --r-sm. At 6px on a 15px box the corners
+     meet and the tag reads as a circle again, which is the thing this stopped
+     being. Wider than tall for the same reason: a square with rounded corners is
+     a circle at this size, a rect is not. */
+  border-radius: 3px;
   /*
-   * Filled, with the arrow knocked out of it -- and that is the part doing the
-   * work, not the hue. The first version of this was a tinted outline in --ok
-   * and --danger, which are the same two tokens the badges opposite already use
-   * for "heals" and "applies debuffs": four small outlined badges on one card in
-   * three shared colours, and no way to tell which vocabulary you were reading.
+   * Mixed toward --bg, not toward transparent.
    *
-   * Solid against outlined separates them at a glance even where the colour
-   * repeats, so the greens and reds can stay -- they are the right colours for
-   * this, and losing them would cost the ability to scan a screen for what got
-   * hit. Bigger than the effect badges too: there is only ever one of these, and
-   * it is the thing someone is hunting for the week an update lands.
+   * An 18% wash of the tag's own colour over the card lightens the panel under a
+   * light glyph, and --danger has almost no room to give: the arrow fell to
+   * 3.79:1 against its own tint, and even 8% only reached 4.37. Mixing the same
+   * hue into the page colour instead darkens the panel, so the tag reads as
+   * recessed and the glyph gains contrast rather than losing it. Measured at
+   * 16%: buffed 6.62:1, nerfed 4.79:1, adjusted 5.99:1.
    */
-  font-size: 12px; font-weight: 800; line-height: 1;
+  background: color-mix(in srgb, currentColor 16%, var(--bg));
+  font-size: 11px; font-weight: 800; line-height: 1;
 }
 /*
- * No container at all, and that is the whole point.
+ * The arrow is --text, not the direction's hue.
  *
- * This was a filled 15px disc, which put a coloured circle 18px from the 17px
- * circular type badge in the same row. The card reserves circular badges for
- * what a Tatari permanently is -- its element, its role -- and a disc borrowed
- * that idiom for the most temporary fact on the card, the one wiped by the next
- * update. Worse on colour: a nerfed Fire Tatari wore a red circle beside a red
- * Fire badge, a buffed Grass one green beside green. Same shape, same size, same
- * row, unrelated meanings.
- *
- * A bare glyph competes with nothing. It is the only uncontained mark on the
- * card, which is a reasonable way for "this changed recently" to read next to
- * things that are permanently true. The arrow still carries the direction, so it
- * survives with the colour stripped out.
+ * Colouring the glyph looked right in dark and broke in light, where --ok is
+ * about 3.9:1 as text before anything is done to it: on its own 16% wash the
+ * buffed arrow fell to 2.75:1 and the nerfed one to 3.43:1. Putting the hue in
+ * the border and the panel and leaving the glyph neutral holds 11-13:1 in both
+ * themes, and the colour still arrives -- from the edge and the fill, which are
+ * non-text and answer to 3:1 rather than 4.5:1.
  */
-.card__patch::after { content: attr(data-glyph); }
+.card__patch::after { content: attr(data-glyph); color: var(--text); }
 .card__patch[data-patch="buff"]     { color: var(--ok); }
 .card__patch[data-patch="nerf"]     { color: var(--danger); }
 .card__patch[data-patch="adjusted"] { color: var(--text-dim); }
