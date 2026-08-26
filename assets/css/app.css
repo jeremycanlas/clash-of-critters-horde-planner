@@ -3417,7 +3417,7 @@ body.is-dragging-active {
    * which put the fifteen you are bringing out of sight on the one screen whose
    * whole job is placing them.
    */
-  #bench {
+  #dock {
     position: fixed; left: 0; right: 0;
     /* Tucked 2px behind the bar rather than balanced exactly on its edge: two
        fixed elements meeting at a fractional device pixel leave a hairline the
@@ -4807,4 +4807,73 @@ body[data-roster-list="chips"] .roster {
   /* The sprite gives up the most: the sentence is why the row exists. */
   .chiprow__art { width: 30px; height: 30px; }
   .card--chip { gap: var(--s2); padding: 5px var(--s2); }
+}
+
+/* ------------------------------------------------ the chip dock
+ *
+ * The bench answers "what am I bringing" for Tatari. This answers it for chips,
+ * and it sits with the bench rather than in the roster so that one screenshot of
+ * the field carries the board, the bench and the chips at once. On a phone both
+ * ride the same fixed shelf above the app bar, for the same reason.
+ */
+.dock { display: grid; gap: var(--s2); }
+
+.chipbench { margin-top: var(--s1); }
+.chipbench[hidden] { display: none; }
+.chipbench__head {
+  display: flex; align-items: baseline; gap: var(--s2);
+  margin-bottom: var(--s1);
+}
+.chipbench__label {
+  font-size: 10.5px; font-weight: 650; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--text-mute);
+}
+.chipbench__count { color: var(--text-dim); font-size: 11.5px; }
+.chipbench__count b { color: var(--text); font-weight: 700; }
+.chipbench__strip { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s1); }
+
+.chipbench__chip {
+  position: relative;
+  width: 34px; height: 34px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+.chipbench__chip img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.chipbench__missing {
+  display: grid; place-items: center; width: 100%; height: 100%;
+  background: var(--surface-3); color: var(--text-mute); font-size: 13px;
+}
+/* Which of the three it is. Only the three are numbered; the shortlist is not
+   an order, it is a set. */
+.chipbench__n {
+  position: absolute; left: 1px; top: 1px;
+  min-width: 12px; height: 12px;
+  display: grid; place-items: center;
+  border-radius: 999px;
+  background: var(--accent); color: var(--accent-ink);
+  font-size: 8px; font-weight: 700;
+}
+/* A gap, not a heading: the shortlist is the same kind of thing, further down
+   your list, and a second label for it would cost more room than it explains. */
+.chipbench__gap {
+  width: 1px; height: 22px;
+  background: var(--line);
+  margin: 0 var(--s1);
+}
+.chipbench .chipbench__chip:not([data-rank]) { opacity: .82; }
+
+/* Clean view is the field and nothing else, so the chips go with the bench. */
+body.is-clean #chipbench { display: none !important; }
+
+@media (max-width: 760px) {
+  .chipbench { margin-top: 0; }
+  .chipbench__strip {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+  }
+  .chipbench__strip::-webkit-scrollbar { display: none; }
+  .chipbench__chip { flex: none; width: 30px; height: 30px; }
 }

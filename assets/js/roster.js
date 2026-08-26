@@ -9,6 +9,7 @@ import { TYPES, ROLES } from './icons.js';
 import { $, artHTML, esc, typeIcon, roleIcon, toast } from './ui.js';
 import { draggable, dropZone } from './dnd.js';
 import { openDetail } from './detail.js';
+import { measureDock } from './shell.js';
 import {
   effectGroupsOf, effectsOf, helpFor, GROUP_LABELS,
   bringsTypeBy, bringsEffectBy, groupOf,
@@ -913,6 +914,8 @@ let chipShape = null;
 /* The same names the page uses for its headings, minus the word "Chips" --
    printed on a chip, on a page of chips, it is the only word on the label that
    says nothing. */
+const PER = 3;
+
 const CHIP_GROUPS = {
   placement: 'Position',
   element: 'Element',
@@ -961,7 +964,21 @@ function renderChips() {
 
   /* The gallery's own order, which is not tier and not alphabetical and not
      anything this file could derive -- so it is copied into the data instead. */
-  const list = chipList().slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0)).filter((c) => {
+  /*
+   * What you keep rises to the top, then the gallery's own order.
+   *
+   * Forty-nine rows is a long scroll and the three you have chosen are the ones
+   * you come back to; leaving them wherever the gallery put them means hunting
+   * for your own picks. Within each half the game's order holds, so the list
+   * still reads the way the gallery does.
+   */
+  const rank = (c) => {
+    const i = kept.main.indexOf(c.name);
+    if (i >= 0) return i;                       // your three, in your order
+    if (kept.extra.includes(c.name)) return PER + kept.extra.indexOf(c.name);
+    return 1e6 + (c.order ?? 0);
+  };
+  const list = chipList().slice().sort((a, b) => rank(a) - rank(b)).filter((c) => {
     if (chipTier !== null && c.tier !== chipTier) return false;
     if (chipShape !== null && c.shape !== chipShape) return false;
     return !q || `${c.name} ${c.text}`.toLowerCase().includes(q);
@@ -996,11 +1013,72 @@ function renderChips() {
     : `${list.length} of ${chipList().length}`;
 }
 
+/**
+ * The chips you are bringing, docked under the bench.
+ *
+ * The bench answers "what am I bringing" for Tatari; this answers it for chips,
+ * and it sits with the bench rather than in the roster so that one screenshot of
+ * the field carries the board, the bench and the chips together. On a phone both
+ * strips ride the same fixed shelf above the app bar for the same reason.
+ *
+ * Empty until something is kept: an always-visible row of three blank squares
+ * would cost the field height on every formation, most of which never pick a
+ * chip at all.
+ */
+export function renderChipBench() {
+  const host = $('#chipbench');
+  if (!host) return;
+
+  const player = store.formation.activePlayer;
+  const { main, extra } = keptBy(player);
+  const byName = new Map(chipList().map((c) => [c.name, c]));
+
+  if (!main.length && !extra.length) {
+    host.innerHTML = '';
+    host.hidden = true;
+    measureDock();
+    return;
+  }
+  host.hidden = false;
+
+  const chip = (name, i) => {
+    const c = byName.get(name);
+    return `
+      <span class="chipbench__chip" data-chip="${esc(name)}"
+        title="${esc(c ? `${name}: ${c.text}` : name)}">
+        ${c ? `<img src="${esc(iconFor(c))}" alt="" loading="lazy" decoding="async">`
+          : `<span class="chipbench__missing">?</span>`}
+        ${i === null ? '' : `<span class="chipbench__n">${i + 1}</span>`}
+      </span>`;
+  };
+
+  host.innerHTML = `
+    <div class="chipbench__head">
+      <span class="chipbench__label">Chips</span>
+      <span class="chipbench__count"><b>${main.length}</b>/${PER}${
+        extra.length ? ` &middot; ${extra.length} shortlisted` : ''}</span>
+    </div>
+    <div class="chipbench__strip">
+      ${main.map((n, i) => chip(n, i)).join('')}
+      ${extra.length ? `<span class="chipbench__gap" aria-hidden="true"></span>` : ''}
+      ${extra.map((n) => chip(n, null)).join('')}
+    </div>`;
+
+  /* The dock just changed height, and on a phone the page's bottom padding is
+     derived from it. Said directly rather than waited for: the observer that
+     would notice is deferred while the tab is not being rendered. */
+  measureDock();
+}
+
 export function renderRoster() {
   // Every path that changes what the roster shows comes through here, so this is
   // the one place the chips' counts have to be brought back into agreement with
   // it -- including the search box, which never touches a chip.
   refreshChipCounts();
+  /* And the dock, for the same reason: keeping a chip calls onChange, which is
+     renderRoster and not the whole app, so a dock drawn only from renderAll
+     never hears about it. */
+  renderChipBench();
   if (showing.value === 'zobos') { renderZobos(); return; }
   if (showing.value === 'chips') { renderChips(); return; }
   const player = store.formation.activePlayer;
