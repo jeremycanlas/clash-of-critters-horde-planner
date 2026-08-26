@@ -791,6 +791,15 @@ export function resetFilters() {
   for (const g of Object.keys(filters.effectBy)) filters.effectBy[g] = null;
   filters.hideBlocked = false;
   filters.sort = 'default';
+  /*
+   * The chips tab's two filters, which Reset used to leave exactly where they
+   * were -- and worse than untouched: the loop below unpresses every .chip on
+   * the page, so the buttons went pale while the filter stayed on, and the next
+   * redraw put them back. Pressing Reset appeared to do nothing because, on this
+   * tab, it did nothing.
+   */
+  chipTier = null;
+  chipShape = null;
   $('#search').value = '';
   $('#sort').value = 'default';
   $('#opt-hide-blocked').checked = false;

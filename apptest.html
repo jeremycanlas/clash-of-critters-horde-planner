@@ -676,6 +676,28 @@ await runGroup('the chips tab in the roster', async () => {
   delete D.documentElement.dataset.contrast;
   await sleep(150);
 
+  /*
+   * Reset has to reach this tab's filters too.
+   *
+   * It did not, and the failure was quiet in the worst way: resetFilters
+   * unpresses every .chip on the page, so the buttons went pale while the
+   * filter stayed on, and the next redraw put them back. Pressing Reset looked
+   * like it did nothing because on this tab it did nothing.
+   */
+  await click($('#filter-chip-tiers [data-tier="2"]'), 340);
+  await click($('.chip--group[data-shape="element"]'), 340);
+  ok('two filters narrow it', chips().length < 49, `${chips().length}`);
+  await click($('#btn-reset-filters'), 420);
+  eq('Reset brings every chip back', chips().length, 49);
+  eq('and unpresses both rows',
+     $$('#filter-chip-tiers [aria-pressed="true"], .chip--group[aria-pressed="true"]').length, 0);
+
+  /* Seven types do not fit a phone, so the row scrolls rather than hiding two
+     of them off the edge with no way to reach them. */
+  const typeRow = $('#filter-chip-groups');
+  ok('the type row can reach all seven',
+     D.defaultView.getComputedStyle(typeRow).overflowX === 'auto');
+
   /* The panel this replaced is gone, not hidden. */
   ok('the old panel under the Summary is gone', !$('#chips'));
 

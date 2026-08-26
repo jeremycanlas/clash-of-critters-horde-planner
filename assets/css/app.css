@@ -5028,3 +5028,61 @@ body.is-clean #chipbench { display: none !important; }
   #chip-view .segmented__btn span { display: none; }
   #chip-view .segmented__btn { padding: 6px 8px; }
 }
+
+/* ------------------------------------- the chips tab's filter block
+ *
+ * Three problems, one shape. The panel head was carrying the panel name, three
+ * tabs and a two-button view switch on one line: 366px of controls in 358px of
+ * phone. Reset sat alone on a line of its own, because every other control in
+ * the meta row is hidden on this tab and it was the only thing left. And the
+ * seven type buttons ran off the right edge with no way to reach the last two.
+ */
+
+/*
+ * The rows that belong to Tatari go entirely, not just their contents. Hiding
+ * the chips inside them left two empty rows still spending the grid's gap.
+ */
+body[data-roster-list="chips"] .filters__row:not(.filters__row--meta) { display: none; }
+
+/*
+ * Flex rather than the usual single column, so tier and Reset can share a line.
+ * The order is set explicitly because the meta row sits after the type row in
+ * the markup, and wrapping follows source order: without it Reset lands under
+ * the types instead of beside the tiers.
+ */
+body[data-roster-list="chips"] .filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s2);
+}
+body[data-roster-list="chips"] .filters > .field[type="search"] { order: 1; flex: 1 1 100%; }
+body[data-roster-list="chips"] #filter-chip-tiers { order: 2; flex: 1 1 auto; }
+body[data-roster-list="chips"] .filters__row--meta { order: 3; flex: 0 0 auto; margin-left: auto; }
+body[data-roster-list="chips"] #filter-chip-groups { order: 4; flex: 1 1 100%; }
+
+/*
+ * Seven types do not fit a phone and never will, so the row scrolls sideways
+ * rather than hiding its last two off the edge. Same trade the opened effect
+ * row makes: one line that moves beats four that stand still above a roster
+ * that wanted the room.
+ */
+#filter-chip-groups {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+#filter-chip-groups::-webkit-scrollbar { display: none; }
+#filter-chip-groups .chip--group { flex: none; }
+#filter-chip-groups .chips__label { flex: none; }
+
+@media (max-width: 760px) {
+  /*
+   * The head gives the tabs their own line. The panel name, three tabs and the
+   * view switch came to more than the width, so everything got squeezed towards
+   * illegible rather than one thing giving way.
+   */
+  body[data-roster-list="chips"] .panel--roster .panel__head h2 { flex: 1 1 100%; }
+  body[data-roster-list="chips"] .panel--roster .panel__head #roster-tabs { margin-left: 0; }
+}
