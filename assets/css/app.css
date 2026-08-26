@@ -2000,6 +2000,47 @@ body[data-switching="true"] .cell[data-zobo] { box-shadow: none; cursor: default
   color: var(--text-mute); font-size: 10px; font-weight: 700;
   text-transform: uppercase; letter-spacing: .06em;
 }
+/*
+ * The patch chips. A word and a count like the effect chips, with the card
+ * marker's own glyph in front so the chip and the disc on 46 cards read as one
+ * statement rather than two vocabularies that happen to agree.
+ *
+ * The glyph carries the direction's colour; the label stays the row's own
+ * neutral. Colouring the whole chip would have made three of them shout across
+ * a row where every other chip is quiet until pressed, and green and red at
+ * rest is the roster's loudest possible way of saying "nothing is filtered".
+ */
+/* A flex row, for the same reason .chip--effect is one: the base .chip is an
+   inline-grid built for a single centred glyph, so a chip with three children
+   stacks them down the column and spills into the row below. */
+.chip--changed {
+  display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+  width: auto; height: auto; min-height: 26px;
+  padding: 3px var(--s2);
+  font-size: 11.5px; font-weight: 650; line-height: 1.2;
+  white-space: nowrap;
+}
+.chip--changed b {
+  margin-left: 1px;
+  color: var(--text-mute); font-size: 9.5px; font-weight: 700;
+}
+.chip--changed[aria-pressed="true"] b { color: inherit; }
+.chip__glyph {
+  display: inline-grid; place-items: center;
+  width: 13px; height: 13px;
+  border-radius: 50%;
+  background: currentColor;
+  font-size: 9px; font-weight: 800; line-height: 1;
+}
+/* The arrow knocked out of the fill, the same trick .card__patch uses, and for
+   the same reason: a white arrow disappears on --ok in the light theme, and the
+   surface behind the chip is by definition what it is sitting on. */
+.chip__glyph::after { content: attr(data-glyph); color: var(--surface-2); }
+.chip__glyph[data-patch="buff"]     { color: var(--ok); }
+.chip__glyph[data-patch="nerf"]     { color: var(--danger); }
+.chip__glyph[data-patch="adjusted"] { color: var(--text-dim); }
+.chip--changed[aria-pressed="true"] { border-color: currentColor; color: var(--text); }
+
 /* Between the budgets and the effects they qualify: two questions, one row. */
 .chips__split {
   align-self: stretch;

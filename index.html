@@ -430,6 +430,11 @@
           <div id="filter-effects" class="chips chips--text" role="group"
             aria-label="Filter by what they bring besides damage"></div>
           <div id="filter-tiers" class="chips chips--text" role="group" aria-label="Filter by tier"></div>
+          <!-- What the last game update did. Built and shown only while
+               data/changes.json has entries, so between patches the row goes
+               back to the shape it has always had rather than carrying three
+               chips that find nothing. -->
+          <div id="filter-changed" class="chips chips--text" role="group" hidden></div>
         </div>
 
         <!-- The specific effects, under the group that owns them. Empty and

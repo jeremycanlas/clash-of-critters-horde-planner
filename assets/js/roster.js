@@ -74,6 +74,18 @@ export const filters = {
    * 5" already contains everything "by 3" would find.
    */
   effectBy: { heal: null, buff: null, debuff: null },
+  /*
+   * Which directions of the last update to show, and the one filter here that
+   * unions rather than intersects.
+   *
+   * Every other chip group asks for a Tatari that satisfies all of them: Stun
+   * and Shield means one that brings both. These cannot work that way, because
+   * a Tatari has exactly one direction -- picking Buffed and Nerfed together
+   * under the usual rule would ask for something buffed and nerfed at once and
+   * always find nothing. Read as "either", which is also the question anyone
+   * pressing two of them is actually asking.
+   */
+  changed: new Set(),
   hideBlocked: false,
   sort: 'default',
   /*
@@ -216,6 +228,7 @@ export function buildFilters(onChange, { onPick = bringToBench } = {}) {
   chips($('#filter-effects'), EFFECTS.map((e) => e.key), filters.effects, 'effect',
     (v) => `${EFFECTS.find((e) => e.key === v).label}, from the base skill or a level-up`);
   buildEffectTypes(onChange);
+  buildChangedChips(onChange);
 
   /*
    * Debounced. Every keystroke rebuilds 218 cards and rebinds 218 drag handlers,
@@ -298,6 +311,48 @@ export function buildFilters(onChange, { onPick = bringToBench } = {}) {
     if (!card) return;
     e.preventDefault();
     card.click();
+  });
+}
+
+/**
+ * What the last game update did, as three chips.
+ *
+ * No caret and no disclosure, unlike the effect groups: a Tatari has exactly one
+ * direction, so there are only ever three of these and they fit standing up.
+ * The glyphs are the card marker's, deliberately, so the chip you press and the
+ * disc you then see on 46 cards are obviously the same statement.
+ *
+ * Absent entirely between patches. data/changes.json with an empty `lines` is a
+ * coherent state -- it is how a fork that does not track updates behaves -- and
+ * three chips that find nothing would be worse than no chips at all.
+ */
+function buildChangedChips(onChange) {
+  const host = $('#filter-changed');
+  if (!host || !state.changes.size) return;
+
+  // Counted from the flattened map rather than the file, so the numbers are of
+  // Tatari, which is what the roster is about to show, not of evolution lines.
+  const tally = { buff: 0, nerf: 0, adjusted: 0 };
+  for (const { direction } of state.changes.values()) tally[direction] += 1;
+
+  const label = state.patch?.label ? ` in the ${state.patch.label} update` : ' in the last update';
+  host.hidden = false;
+  host.setAttribute('aria-label', `Filter by what changed${label}`);
+  host.innerHTML = `<span class="chips__label" aria-hidden="true">Patch</span>`
+    + Object.entries(PATCH_MARKS).map(([key, { glyph, label: word }]) => (tally[key] ? `
+      <button class="chip chip--changed" type="button" data-changed="${key}"
+        aria-pressed="false" title="${esc(`${word}${label}`)}"
+        ><span class="chip__glyph" data-patch="${key}" data-glyph="${glyph}" aria-hidden="true"></span>${
+        word}<b>${tally[key]}</b></button>` : '')).join('');
+
+  host.addEventListener('click', (e) => {
+    const chip = e.target.closest('.chip--changed');
+    if (!chip) return;
+    const { changed } = chip.dataset;
+    if (filters.changed.has(changed)) filters.changed.delete(changed);
+    else filters.changed.add(changed);
+    chip.setAttribute('aria-pressed', String(filters.changed.has(changed)));
+    onChange();
   });
 }
 
@@ -579,6 +634,7 @@ export function resetFilters() {
   filters.tiers.clear();
   filters.effects.clear();
   filters.effectTypes.clear();
+  filters.changed.clear();
   for (const g of Object.keys(filters.effectBy)) filters.effectBy[g] = null;
   filters.hideBlocked = false;
   filters.sort = 'default';
@@ -602,6 +658,9 @@ function visible(player) {
      * checked against the budget of the group they belong to, not against
      * whichever budget happened to be set last.
      */
+    if (filters.changed.size && !filters.changed.has(state.changes.get(t.slug)?.direction)) {
+      return false;
+    }
     for (const group of ['heal', 'buff', 'debuff']) {
       const by = filters.effectBy[group];
       const named = [...filters.effectTypes].filter((x) => groupOf(x) === group);

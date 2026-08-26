@@ -87,6 +87,28 @@ ok('untouched Tatari carry no entry',
    state.all.some((t) => !state.changes.has(t.slug)),
    'every Tatari is marked, which would make the marker meaningless');
 
+/*
+ * The numbers the Patch chips print, checked against the file they came from.
+ *
+ * The chips count Tatari and the file counts lines, and the difference is the
+ * whole reason to check: 12 nerfed lines are 46 nerfed Tatari, and a chip
+ * claiming 12 would send anyone hunting for 34 cards that were never missing.
+ */
+const perDirection = Object.fromEntries(DIRECTIONS.map((d) => [d, 0]));
+for (const { direction } of state.changes.values()) perDirection[direction] += 1;
+const fromFile = Object.fromEntries(DIRECTIONS.map((d) => [d,
+  lines.filter((l) => l.direction === d).reduce((n, l) => n + l.members.length, 0)]));
+ok('chip counts match the file, per direction',
+   DIRECTIONS.every((d) => perDirection[d] === fromFile[d]),
+   DIRECTIONS.map((d) => `${d}: ${perDirection[d]} vs ${fromFile[d]}`).join(', '));
+ok('the three directions account for every marked Tatari',
+   DIRECTIONS.reduce((n, d) => n + perDirection[d], 0) === state.changes.size);
+// Pressing two Patch chips has to mean "either". A Tatari carries one direction,
+// so intersecting them the way the effect chips intersect would always find
+// nothing -- this is what makes that union the only coherent reading.
+ok('no Tatari carries two directions',
+   [...state.changes.values()].every((c) => DIRECTIONS.includes(c.direction)));
+
 const counts = DIRECTIONS.map((d) => `${d} ${lines.filter((l) => l.direction === d).length}`).join(', ');
 out.innerHTML += `<div style="margin-top:12px">${pass} passed, ${fail} failed`
   + ` &mdash; ${lines.length} lines (${counts}) covering ${state.changes.size} of ${state.all.length} Tatari</div>`;
