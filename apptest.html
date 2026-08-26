@@ -489,6 +489,12 @@ await runGroup('the chips page', async () => {
    * are a tier filter and a keep button, and neither has any arithmetic to get
    * wrong, only wiring.
    */
+  /* From nothing. What you kept lives in localStorage and outlives the page, so
+     without this the group inherits whatever the last visit -- or the last hand
+     test on this origin -- left behind, and every count below is off by it. The
+     suite puts the real value back at the end either way. */
+  localStorage.removeItem('coc.chips.taken');
+
   const frame = frameFor('chips.html');
   await frame.ready;
   const C = frame.contentDocument;

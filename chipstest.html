@@ -18,7 +18,7 @@
  * checked is the predicate, not the drag.
  */
 import { load, state } from './assets/js/data.js';
-import { scoreOne, elementSplit } from './assets/js/chips.js';
+import { scoreOne, elementSplit, moveInto } from './assets/js/chips.js';
 
 const out = document.getElementById('log');
 let pass = 0, fail = 0;
@@ -178,6 +178,47 @@ await Promise.all(book.chips.map((c) => new Promise((done) => {
 ok('every chip has an icon that loads', missing.length === 0, missing.join(', '));
 ok('and no two chips share one',
    new Set(book.chips.map(iconFor)).size === book.chips.length);
+
+// ------------------------------------------------- dragging a kept chip
+/*
+ * Where a dragged chip lands, as arithmetic on two lists.
+ *
+ * The gesture is dnd.js, which the field and the plan already exercise; what is
+ * new is the destination, and driving that through a synthetic pointer would be
+ * testing the browser rather than this. So the reducer is pure and gets driven
+ * with plain arrays.
+ */
+const L = (main, extra) => ({ main, extra });
+const shape = (r) => `${r.main.join(',')} | ${r.extra.join(',')}`;
+
+eq('dragging the third pick to the front reorders the three',
+   shape(moveInto(L(['a', 'b', 'c'], []), 'c', 'main', 0)), 'c,a,b | ');
+eq('dragging the first to the end reorders it too',
+   shape(moveInto(L(['a', 'b', 'c'], []), 'a', 'main', 2)), 'b,c,a | ');
+eq('a chip does not appear twice when it lands on itself',
+   shape(moveInto(L(['a', 'b', 'c'], []), 'b', 'main', 1)), 'a,b,c | ');
+
+eq('the shortlist takes one out of the three',
+   shape(moveInto(L(['a', 'b', 'c'], ['d']), 'b', 'extra', 0)), 'a,c | b,d');
+eq('and gives one back to it',
+   shape(moveInto(L(['a', 'b'], ['d']), 'd', 'main', 0)), 'd,a,b | ');
+
+/*
+ * The one case with a real decision in it. The three are full and a fourth is
+ * dragged in: the drag already said where it wanted to go, so it goes there, and
+ * the one it pushed out lands on the shortlist rather than being deleted.
+ */
+const pushed = moveInto(L(['a', 'b', 'c'], ['d']), 'd', 'main', 0);
+eq('dragging into a full three pushes the last one out', shape(pushed), 'd,a,b | c');
+ok('and nothing is lost on the way',
+   [...pushed.main, ...pushed.extra].sort().join(',') === 'a,b,c,d');
+
+eq('an index past the end lands at the end',
+   shape(moveInto(L(['a', 'b'], []), 'a', 'main', 99)), 'b,a | ');
+eq('a negative index lands at the front',
+   shape(moveInto(L(['a', 'b'], []), 'b', 'main', -5)), 'b,a | ');
+ok('the three never grow past three',
+   moveInto(L(['a', 'b', 'c'], ['d', 'e']), 'e', 'main', 1).main.length === 3);
 
 out.innerHTML += `<div style="margin-top:12px">${pass} passed, ${fail} failed`
   + `. ${book.chips.length} chips, ${book.chips.filter((c) => scoreOne(c, mixed)).length} of them scored`

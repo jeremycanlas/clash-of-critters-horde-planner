@@ -18,6 +18,7 @@
 
 import { load, state } from './data.js';
 import { applyPrefs } from './prefs.js';
+import { draggable, dropZone } from './dnd.js';
 import * as store from './store.js';
 import { $, artHTML, esc } from './ui.js';
 
@@ -292,6 +293,41 @@ function promote(player, name) {
     : { main: [...main, name], extra: extra.filter((n) => n !== name) }));
 }
 
+/**
+ * Drops `name` into `list` at `index`, taking it out of wherever it was.
+ *
+ * One function for all four directions a drag can go -- within the three,
+ * within the shortlist, and either way between them -- because they are the
+ * same operation and writing them as four was how the button versions ended up
+ * with four slightly different ideas of what "remove first" means.
+ *
+ * The three still cap at three. A drag into a full set of slots pushes the one
+ * it lands on down rather than refusing, since the drag already said where it
+ * wanted to go; the displaced chip goes to the shortlist rather than nowhere.
+ */
+export function moveInto({ main, extra }, name, list, index, cap = PER_PLAYER) {
+  let m = main.filter((n) => n !== name);
+  let x = extra.filter((n) => n !== name);
+  if (list === 'main') {
+    m.splice(Math.max(0, Math.min(index, m.length)), 0, name);
+    while (m.length > cap) x = [m.pop(), ...x];
+  } else {
+    x.splice(Math.max(0, Math.min(index, x.length)), 0, name);
+  }
+  return { main: m, extra: x };
+}
+
+/*
+ * Exported and pure, so chipstest.html can drive it with plain arrays.
+ *
+ * The gesture underneath it is dnd.js, which the field and the plan already
+ * prove; what is new here is where a chip ends up, and that is arithmetic on two
+ * lists. Testing it through a synthetic pointer would be testing the browser.
+ */
+function placeAt(player, name, list, index) {
+  update(player, (lists) => moveInto(lists, name, list, index));
+}
+
 function demote(player, name) {
   update(player, ({ main, extra }) => ({
     main: main.filter((n) => n !== name),
@@ -479,6 +515,69 @@ function renderFilters(all) {
       : `${shown} of ${all.length}`}</span>`;
 }
 
+/*
+ * Dragging the rows, on top of the buttons rather than instead of them.
+ *
+ * The buttons stay because they are the keyboard path and the screen-reader
+ * path, and because on a phone two taps beats a hold-and-drag for moving one
+ * row one place. Drag is for the case the buttons are bad at: taking the third
+ * pick and putting it first, or pulling something off the shortlist straight
+ * into slot 1.
+ *
+ * The grip is the sprite, not the row. `.prio` shipped in DRAG_SURFACES with no
+ * `touch-action: none` anywhere, so the browser had claimed the gesture as a
+ * scroll long before the hold fired and reordering the plan by touch simply did
+ * not happen. The whole row cannot take `touch-action: none` either -- this is a
+ * page you scroll, and rows that refuse to scroll under a thumb are worse than
+ * rows that do not drag. So the sprite is the handle, the way the rank number is
+ * on the plan.
+ */
+let zoneReady = false;
+function readyZone() {
+  if (zoneReady) return;
+  zoneReady = true;
+  dropZone({
+    selector: '.keptrow, .kept__slot, .kept__extra',
+    accepts: (target, payload) =>
+      payload?.from === 'kept' && target.dataset.name !== payload.name,
+    onHover: (target, ok) => target.classList.toggle('is-over', ok),
+    onDrop: (target, payload) => {
+      const player = store.formation.activePlayer;
+      const { main, extra } = keptBy(player);
+
+      // A row says exactly where; a container says "somewhere in here", which
+      // for the shortlist means the end and for an empty slot means the end of
+      // the three.
+      if (target.classList.contains('keptrow')) {
+        const name = target.dataset.name;
+        const inMain = main.indexOf(name);
+        if (inMain >= 0) placeAt(player, payload.name, 'main', inMain);
+        else placeAt(player, payload.name, 'extra', extra.indexOf(name));
+      } else if (target.classList.contains('kept__extra')) {
+        placeAt(player, payload.name, 'extra', extra.length);
+      } else {
+        placeAt(player, payload.name, 'main', main.length);
+      }
+      renderPage();
+    },
+  });
+}
+
+function bindDrag() {
+  readyZone();
+  for (const el of $$('.keptrow')) {
+    if (el.dataset.dragBound) continue;
+    el.dataset.dragBound = '1';
+    draggable(
+      el.querySelector('.keptrow__art') ?? el,
+      () => ({ from: 'kept', name: el.dataset.name }),
+      () => `<span class="keptghost">${esc(el.dataset.name)}</span>`,
+    );
+  }
+}
+
+const $$ = (sel) => [...document.querySelectorAll(sel)];
+
 function renderPage() {
   const all = BOOK?.chips ?? [];
   renderFilters(all);
@@ -564,6 +663,17 @@ function renderPage() {
     ${coop ? `<p class="kept__total muted">${
       store.players().reduce((n, p) => n + keptBy(p).main.length, 0)} of
       ${PER_PLAYER * store.players().length} kept between you.</p>` : ''}`;
+
+  // Bound after the rows exist, and every render, because renderPage() replaces
+  // them all and a handler on a detached node drags nothing.
+  bindDrag();
+
+  if (!chips.length) {
+    $('#chips-body').innerHTML = `
+      <p class="chipspage__none">No chips at that tier. The tiers you have not
+        pressed are still there, and pressing a tier again releases it.</p>`;
+    return;
+  }
 
   $('#chips-body').innerHTML = SHAPES.map(({ key, title, faces }) => {
     const group = chips.filter((c) => c.shape === key);

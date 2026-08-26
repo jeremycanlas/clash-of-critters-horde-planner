@@ -199,7 +199,7 @@ document.addEventListener('dragstart', (e) => {
  * sprite with a mouse is not a mistake and that menu is left alone, as is every
  * other image on the page -- long-pressing a posted card to save it still works.
  */
-const DRAG_SURFACES = '.card, .benchchip, .cell, .prio, .token';
+const DRAG_SURFACES = '.card, .benchchip, .cell, .prio, .token, .keptrow';
 let touchLast = false;
 window.addEventListener('pointerdown', (e) => { touchLast = e.pointerType !== 'mouse'; }, true);
 

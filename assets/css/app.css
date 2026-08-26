@@ -4654,3 +4654,31 @@ body.is-clean .clean-hint {
 @media (max-width: 760px) {
   .kept__list { grid-template-columns: 1fr; }
 }
+
+/* The kept rows drag as well as stepping with their buttons.
+ *
+ * The sprite is the handle, not the row. `.prio` shipped in dnd.js's
+ * DRAG_SURFACES with no `touch-action: none` anywhere, so the browser claimed
+ * the gesture as a scroll before the hold fired and reordering the plan by touch
+ * never happened at all. The whole row cannot take it either: this is a page you
+ * scroll, and a row that refuses to scroll under a thumb is worse than one that
+ * does not drag. */
+.keptrow__art { cursor: grab; }
+.keptrow.is-over { outline: 2px solid var(--accent); outline-offset: 1px; }
+.kept__extra.is-over { outline: 2px dashed var(--accent); outline-offset: 4px; border-radius: var(--r-md); }
+.keptghost {
+  display: inline-block;
+  padding: var(--s1) var(--s3);
+  border-radius: var(--r-md);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font: 600 13px/1.2 var(--ui, system-ui);
+  box-shadow: var(--lift-2);
+}
+
+@media (hover: none) {
+  /* Without this the drag is armed and then never receives a move. */
+  .keptrow__art { touch-action: none; }
+  /* A thumb-sized handle without making the row taller. */
+  .keptrow__art { width: 34px; height: 34px; }
+}
