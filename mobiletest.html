@@ -215,20 +215,31 @@ await runGroup('the filters fold away', async () => {
   ok('there is a way to fold them', !!fold);
   ok('and it is only on a phone', W.getComputedStyle(fold).display !== 'none');
 
-  const rosterPx = () => {
-    const sheet = $('.panel--roster').getBoundingClientRect();
-    const card = $('.panel--roster .card').getBoundingClientRect();
-    return Math.round(sheet.bottom - card.top);
-  };
+  /*
+   * Measured on the filter block itself, not on how much roster is left over.
+   *
+   * The obvious check -- sheet bottom minus first card top -- is not measurable
+   * here. The sheet is revealed by a transform, and a tab that is not being
+   * rendered never applies it: the panel reports the same rect open and closed,
+   * 700px tall with 650 of it below a 844px viewport. An earlier version of this
+   * check believed those numbers and reported a tidy "4.9 card rows" that was
+   * arithmetic on a rect nobody could see.
+   *
+   * The filter block's own height is plain layout and is honest either way, and
+   * it is the thing that actually changed: every pixel it gives up is a pixel
+   * the roster gets.
+   */
+  const filtersPx = () => Math.round($('.filters').getBoundingClientRect().height);
 
-  const folded = rosterPx();
+  const folded = filtersPx();
   ok('closed by default', fold.getAttribute('aria-expanded') === 'false');
-  ok('which leaves the roster most of the sheet', folded > 480, `${folded}px of roster`);
+  ok('and folded they cost almost nothing', folded < 60, `${folded}px of filters`);
   ok('the search is still out where you can reach it',
      W.getComputedStyle($('#search')).display !== 'none');
 
   await click(fold, 340);
-  ok('opening them costs that room back', rosterPx() < folded, `${rosterPx()} vs ${folded}`);
+  const opened = filtersPx();
+  ok('opening them costs real room', opened > folded * 3, `${opened}px open vs ${folded}px folded`);
   ok('and the element chips are reachable', W.getComputedStyle($('#filter-types')).display !== 'none');
 
   /*
@@ -240,7 +251,7 @@ await runGroup('the filters fold away', async () => {
   await click($('#filters-toggle'), 340);
   ok('folded again, it admits what is still on', /\d/.test(fold.textContent),
      `button reads "${fold.textContent.trim()}"`);
-  eq('and the roster is narrowed to match', cards() < total, true);
+  ok('and the roster is narrowed to match', cards() < total, `${cards()} of ${total}`);
 
   await click($('#btn-reset-filters'), 320);
   if (!wasOpen) await click(barBtn('roster'), 320);
@@ -343,6 +354,46 @@ await runGroup('drafting, the way a phone does it', async () => {
   await click(barBtn('summary'), 340);
   ok('the summary sheet has something to say', $('#summary').textContent.trim().length > 0);
   await click(barBtn('summary'), 320);
+});
+
+await runGroup('flex slots on a phone', async () => {
+  /*
+   * The mark exists for the screenshot, and three quarters of the screenshots
+   * are taken here. What matters at this width is that the control is reachable
+   * without opening a sheet -- the field owns the screen, and a toggle that
+   * lives behind a panel you have to open first is a toggle nobody finds.
+   */
+  const box = $('#opt-flex');
+  ok('the toggle is on the field, not behind a sheet', !!box);
+  ok('and it is on screen with the board',
+     !!box && W.getComputedStyle(box.closest('label')).display !== 'none');
+
+  const cell = (n) => $(`.cell[data-cell="${n}"]`);
+  const marked = () => $$('.cell.is-flex').length;
+
+  box.click();
+  await sleep(340);
+  ok('turning it on marks the board as markable', D.body.classList.contains('is-flexing'));
+
+  /* The empty squares have to look pressable, or the toggle reads as broken:
+     it is on, and nothing about the board changed. */
+  const empty = $$('.cell:not(.is-filled)')[0];
+  eq('empty squares show they are targets now',
+     W.getComputedStyle(empty).borderStyle, 'dashed');
+
+  await click(cell(3), 300);
+  eq('a tap marks one', marked(), 1);
+  const box3 = cell(3).getBoundingClientRect();
+  ok('and the square is a real target for a thumb', box3.width >= 24 && box3.height >= 24,
+     `${Math.round(box3.width)}x${Math.round(box3.height)}`);
+  ok('it says FLEX in the picture', !!cell(3).querySelector('.cell__flex'));
+
+  await click(cell(3), 300);
+  eq('tapping again clears it', marked(), 0);
+
+  box.click();
+  await sleep(300);
+  ok('and the mode ends', !D.body.classList.contains('is-flexing'));
 });
 
 await runGroup('past the contact line', async () => {
