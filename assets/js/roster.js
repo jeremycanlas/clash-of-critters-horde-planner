@@ -210,6 +210,29 @@ export function buildFilters(onChange, { onPick = bringToBench } = {}) {
     });
   }
 
+  const viewHost = $('#chip-view');
+  if (viewHost) {
+    const draw = () => {
+      viewHost.innerHTML = [
+        ['list', 'List', 'Every chip with what it does'],
+        ['grid', 'Grid', 'Just the tiles, as the gallery shows them'],
+      ].map(([key, label, why]) => `
+        <button class="segmented__btn" type="button" role="tab" data-view="${key}"
+          aria-selected="${chipView === key}" title="${esc(why)}"
+          aria-label="${esc(`${label} view: ${why.toLowerCase()}`)}"
+          >${key === 'list' ? viewIconList() : viewIconGrid()}<span>${label}</span></button>`).join('');
+    };
+    draw();
+    viewHost.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-view]');
+      if (!btn || btn.dataset.view === chipView) return;
+      chipView = btn.dataset.view;
+      try { localStorage.setItem(VIEW_KEY, chipView); } catch { /* private */ }
+      draw();
+      onChange();
+    });
+  }
+
   const tabs = $('#roster-tabs');
   if (tabs) {
     tabs.addEventListener('click', (e) => {
@@ -916,6 +939,18 @@ let chipShape = null;
    says nothing. */
 const PER = 3;
 
+/*
+ * Grid or list, remembered.
+ *
+ * They answer different questions. The grid is for somebody who already knows
+ * the chips and is looking for one by its face; the list is for somebody
+ * deciding, who needs the rule. Neither is the beginner view and neither is the
+ * advanced one, so the choice is kept rather than reset every visit.
+ */
+const VIEW_KEY = 'coc.chips.view';
+let chipView = 'list';
+try { chipView = localStorage.getItem(VIEW_KEY) === 'grid' ? 'grid' : 'list'; } catch { /* private */ }
+
 const CHIP_GROUPS = {
   placement: 'Position',
   element: 'Element',
@@ -925,6 +960,24 @@ const CHIP_GROUPS = {
   stat: 'Flat Buff',
   map: 'Map',
 };
+
+/* Drawn rather than lettered: at 12px a glyph says list-or-grid faster than the
+   word does, and the word is beside it anyway for anyone the shape fails. */
+const viewIconList = () => `
+  <svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true" focusable="false">
+    <rect x="0" y="1" width="3" height="3" rx=".6" fill="currentColor"/>
+    <rect x="4.5" y="2" width="7.5" height="1.2" rx=".6" fill="currentColor"/>
+    <rect x="0" y="7" width="3" height="3" rx=".6" fill="currentColor"/>
+    <rect x="4.5" y="8" width="7.5" height="1.2" rx=".6" fill="currentColor"/>
+  </svg>`;
+
+const viewIconGrid = () => `
+  <svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true" focusable="false">
+    <rect x="0" y="0" width="5" height="5" rx=".8" fill="currentColor"/>
+    <rect x="7" y="0" width="5" height="5" rx=".8" fill="currentColor"/>
+    <rect x="0" y="7" width="5" height="5" rx=".8" fill="currentColor"/>
+    <rect x="7" y="7" width="5" height="5" rx=".8" fill="currentColor"/>
+  </svg>`;
 
 function drawChipTiers() {
   const host = $('#filter-chip-tiers');
@@ -984,25 +1037,45 @@ function renderChips() {
     return !q || `${c.name} ${c.text}`.toLowerCase().includes(q);
   });
 
+  host.dataset.chipView = chipView;
+
   host.innerHTML = list.map((c) => {
     const score = board.length ? scoreOne(c, board) : null;
     const rank = kept.main.indexOf(c.name);
     const held = mine.includes(c.name);
+    const badges = `
+      <span class="chiptier" data-tier="${c.tier}"
+        title="${esc(`Tier ${'I'.repeat(c.tier)}`)}">${'I'.repeat(c.tier)}</span>
+      <span class="chiptype" data-shape="${c.shape}">${esc(CHIP_GROUPS[c.shape] ?? c.shape)}</span>`;
+
+    /*
+     * Faces, not a sentence. "3 of your 6 in your back 2 rows" made you go and
+     * look at the board to find out which three; the sprites are the answer.
+     * The count stays in front of them, since a capped row still has to say
+     * when there are more.
+     */
+    const who = !score?.who?.length ? '' : `
+      <p class="chipwho chipwho--row">
+        <span class="chipwho__n">${score.n}</span>
+        ${score.who.slice(0, 8).map((piece) => `
+          <span class="chipwho__art" data-type="${esc(piece.type)}" title="${esc(piece.name)}"
+            >${piece.t ? artHTML(piece.t, { priority: 'low' }) : esc(piece.name)}</span>`).join('')}
+        ${score.who.length > 8 ? `<span class="chipwho__more">+${score.who.length - 8}</span>` : ''}
+      </p>`;
+
+    const empty = score && score.n === 0
+      ? `<p class="chiprow__none">Nothing on your board qualifies</p>` : '';
+
     return `
       <div class="card card--chip${held ? ' is-benched' : ''}" role="listitem" tabindex="0"
            data-chip="${esc(c.name)}" data-tier="${c.tier}"
-           title="${esc(held ? `Keeping ${c.name}. Press to let it go.` : `Keep ${c.name}`)}">
+           title="${esc(`${c.name}
+${c.text}`)}">
         <img class="chiprow__art" src="${esc(iconFor(c))}" alt="" loading="lazy" decoding="async">
         <div class="chiprow__body">
-          <p class="chiprow__head">
-            <b>${esc(c.name)}</b>
-            <span class="chiprow__cat">${esc(CHIP_GROUPS[c.shape] ?? c.shape)}</span>
-            <span class="card__tier" data-tier="${c.tier}">${'I'.repeat(c.tier)}</span>
-          </p>
+          <p class="chiprow__head"><b>${esc(c.name)}</b>${badges}</p>
           <p class="chiprow__text">${esc(c.text)}</p>
-          ${score ? `<p class="chiprow__score" data-empty="${score.n === 0}">
-            <b>${score.n}</b> of your ${score.of} ${esc(score.why)}${
-            score.who?.length ? `: ${esc(score.who.map((p) => p.name).join(', '))}` : ''}</p>` : ''}
+          ${who}${empty}
         </div>
         ${rank >= 0 ? `<span class="card__rank" title="${esc(`Your pick ${rank + 1}`)}">${rank + 1}</span>` : ''}
       </div>`;

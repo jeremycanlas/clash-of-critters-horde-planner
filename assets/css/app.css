@@ -4744,10 +4744,6 @@ body[data-roster-list="chips"] .filters__row--meta .sortby { display: none; }
  * roster stops being a grid and becomes a list, and each row has room for the
  * whole sentence, which is the thing you are actually choosing between.
  */
-body[data-roster-list="chips"] .roster {
-  grid-template-columns: 1fr;
-  gap: var(--s1);
-}
 .card--chip {
   display: grid;
   grid-template-columns: auto 1fr auto;
@@ -4770,13 +4766,6 @@ body[data-roster-list="chips"] .roster {
 }
 .chiprow__head b { font-weight: 650; color: var(--text); }
 /* The category, on the chip and filterable beside it. */
-.chiprow__cat {
-  padding: 0 5px;
-  border-radius: var(--r-sm);
-  background: var(--surface-3);
-  font-size: 10px; font-weight: 650; letter-spacing: .03em;
-  color: var(--text-mute);
-}
 .chiprow__text {
   margin: 0;
   font-size: 11.5px; line-height: 1.4; color: var(--text-dim);
@@ -4876,4 +4865,121 @@ body.is-clean #chipbench { display: none !important; }
   }
   .chipbench__strip::-webkit-scrollbar { display: none; }
   .chipbench__chip { flex: none; width: 30px; height: 30px; }
+}
+
+/* ------------------------------------------------ chips: grid or list
+ *
+ * Two views because there are two questions. The grid is for somebody who knows
+ * the chips and is hunting for one by its face; the list is for somebody
+ * deciding, who needs the rule. Neither is the beginner view, so the choice is
+ * remembered rather than reset on every visit.
+ */
+#chip-view { flex: none; }
+#chip-view .segmented__btn { display: inline-flex; align-items: center; gap: 5px; }
+#chip-view svg { display: block; }
+
+/* ---- list ---- */
+.roster[data-chip-view="list"] { grid-template-columns: 1fr; gap: var(--s1); }
+
+/* ---- grid ----
+ * Back to tiles, the way the gallery shows them. The rule is not on the card at
+ * this size and cannot be, which is the whole reason the list exists; the tile
+ * carries the face, the tier and whether you kept it.
+ */
+.roster[data-chip-view="grid"] { grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); }
+.roster[data-chip-view="grid"] .card--chip {
+  display: grid;
+  grid-template-rows: 1fr auto;
+  gap: 2px;
+  padding: var(--s1);
+  text-align: center;
+}
+.roster[data-chip-view="grid"] .chiprow__art { width: 100%; height: auto; aspect-ratio: 1; }
+.roster[data-chip-view="grid"] .chiprow__text,
+.roster[data-chip-view="grid"] .chipwho,
+.roster[data-chip-view="grid"] .chiprow__none,
+.roster[data-chip-view="grid"] .chiptype { display: none; }
+.roster[data-chip-view="grid"] .chiprow__head {
+  justify-content: center; gap: 4px;
+  font-size: 11px;
+}
+.roster[data-chip-view="grid"] .chiprow__head b {
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;
+}
+
+/*
+ * The tier, said properly.
+ *
+ * It was grey text at 9.5px, which is the least readable thing on a card that
+ * also has to work in High contrast. Now it is a filled pill in the tier's own
+ * colour with ink chosen against that fill, and the numeral is still the
+ * numeral -- colour is the faster channel but never the only one.
+ */
+.chiptier {
+  padding: 1px 5px;
+  border-radius: var(--r-sm);
+  font-size: 10px; font-weight: 800; letter-spacing: .08em;
+  background: var(--surface-3);
+  color: var(--text-dim);
+}
+.chiptier[data-tier="1"] { background: color-mix(in srgb, var(--water) 26%, var(--surface-3)); color: var(--text); }
+.chiptier[data-tier="2"] { background: color-mix(in srgb, var(--fire) 30%, var(--surface-3)); color: var(--text); }
+.chiptier[data-tier="3"] { background: color-mix(in srgb, var(--accent) 34%, var(--surface-3)); color: var(--text); }
+
+/* The type, likewise: a real label rather than grey small print. */
+.chiptype {
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 10px; font-weight: 700; letter-spacing: .02em;
+  background: var(--surface-3);
+  color: var(--text-dim);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+/* Position and Element are the two that read your board, so they are the two
+   worth telling apart at a glance. The rest share the neutral. */
+.chiptype[data-shape="placement"] { color: var(--text); box-shadow: inset 0 0 0 1px var(--accent); }
+.chiptype[data-shape="element"] { color: var(--text); box-shadow: inset 0 0 0 1px var(--grass); }
+
+.chipwho--row {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 3px;
+  margin: 3px 0 0;
+}
+.chipwho__n {
+  font-size: 11px; font-weight: 700; color: var(--text);
+  font-variant-numeric: tabular-nums;
+  margin-right: 2px;
+}
+.chiprow__none { margin: 3px 0 0; font-size: 11px; color: var(--text-mute); }
+
+/*
+ * High contrast.
+ *
+ * The switch exists because colour alone is not a channel everyone has, so the
+ * tints above all gain a border and the fills go to full strength. The tier
+ * numeral and the type word were already carrying the meaning in text; what
+ * changes here is that they stop relying on a wash to be seen at all.
+ */
+:root[data-contrast="more"] .chiptier {
+  box-shadow: inset 0 0 0 1px currentColor;
+  color: var(--text);
+}
+:root[data-contrast="more"] .chiptier[data-tier="1"] { background: color-mix(in srgb, var(--water) 45%, var(--surface)); }
+:root[data-contrast="more"] .chiptier[data-tier="2"] { background: color-mix(in srgb, var(--fire) 45%, var(--surface)); }
+:root[data-contrast="more"] .chiptier[data-tier="3"] { background: color-mix(in srgb, var(--accent) 50%, var(--surface)); }
+:root[data-contrast="more"] .chiptype {
+  color: var(--text);
+  box-shadow: inset 0 0 0 1px var(--text-dim);
+}
+:root[data-contrast="more"] .chiptype[data-shape="placement"] { box-shadow: inset 0 0 0 2px var(--accent); }
+:root[data-contrast="more"] .chiptype[data-shape="element"] { box-shadow: inset 0 0 0 2px var(--grass); }
+/* The kept ring is a border colour on a card that is otherwise unchanged, which
+   is exactly the kind of single-channel state this switch is for. */
+:root[data-contrast="more"] .card--chip.is-benched { box-shadow: inset 0 0 0 2px var(--accent); }
+:root[data-contrast="more"] .chipwho__art { box-shadow: inset 0 0 0 1px var(--text-dim); }
+:root[data-contrast="more"] .card__rank { box-shadow: 0 0 0 1px var(--text); }
+:root[data-contrast="more"] .chipbench__chip { border-color: var(--text-dim); }
+
+@media (max-width: 760px) {
+  #chip-view .segmented__btn span { display: none; }
+  #chip-view .segmented__btn { padding: 6px 8px; }
 }

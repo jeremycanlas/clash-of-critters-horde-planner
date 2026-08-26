@@ -492,6 +492,18 @@ await runGroup('the chips tab in the roster', async () => {
    */
   localStorage.removeItem('coc.chips.taken');
   await reset();
+
+  /* Something on the field, or every chip that reads the board has nothing to
+     name and the sprite check below is vacuously true. */
+  if (!$('.cell.is-filled')) {
+    const pick = $$('.panel--roster .card')
+      .find((c) => !c.classList.contains('is-benched') && !c.dataset.switchFrom);
+    if (pick) { pick.click(); await sleep(260); }
+    const chipOnBench = $('.benchchip');
+    if (chipOnBench) { chipOnBench.click(); await sleep(320); }
+  }
+  ok('there is a formation to score chips against', !!$('.cell.is-filled'));
+
   const tab = (name) => $(`#roster-tabs [data-list="${name}"]`);
   ok('there is a Chips tab', !!tab('chips'));
 
@@ -550,9 +562,9 @@ await runGroup('the chips tab in the roster', async () => {
   ok('a chip says what it does without being hovered',
      lawn.querySelector('.chiprow__text')?.textContent.includes('lawn mowers'),
      lawn.querySelector('.chiprow__text')?.textContent ?? '(no text)');
-  eq('and says which kind it is', lawn.querySelector('.chiprow__cat').textContent.trim(), 'Map');
+  eq('and says which type it is', lawn.querySelector('.chiptype').textContent.trim(), 'Map');
   ok('every chip carries both', chips().every((c) =>
-    c.querySelector('.chiprow__text')?.textContent.trim() && c.querySelector('.chiprow__cat')));
+    c.querySelector('.chiprow__text')?.textContent.trim() && c.querySelector('.chiptype')));
 
   /* One column, or the sentence has nowhere to go. */
   eq('the list is one chip per row',
@@ -566,7 +578,7 @@ await runGroup('the chips tab in the roster', async () => {
   await click(mapBtn, 380);
   eq('filtering by type finds what it promised', chips().length, says);
   ok('and they really are that type',
-     chips().every((c) => c.querySelector('.chiprow__cat').textContent.trim() === 'Map'));
+     chips().every((c) => c.querySelector('.chiptype').textContent.trim() === 'Map'));
 
   const elemN = Number($('.chip--group[data-shape="element"] b').textContent);
   await click($('.chip--group[data-shape="element"]'), 380);
@@ -585,6 +597,57 @@ await runGroup('the chips tab in the roster', async () => {
   eq('the list is in the order the game shows them',
      chips().slice(0, 4).map((c) => c.dataset.chip).join(', '),
      'Photosynthesis III, Bounty Hunter III, Slot Machine 4, Water Form III');
+
+  /*
+   * Two views, because there are two questions.
+   *
+   * The list is for deciding and needs the rule spelled out; the grid is for
+   * finding a chip you already know by its face. The grid deliberately cannot
+   * show the rule -- that is what the list is for -- so what is checked here is
+   * that each view shows what it is meant to and that the choice survives.
+   */
+  const view = (k) => $(`#chip-view [data-view="${k}"]`);
+  ok('there is a grid and a list view', !!view('grid') && !!view('list'));
+  eq('the roster says which it is in', $('#roster').dataset.chipView, 'list');
+
+  await click(view('grid'), 420);
+  eq('choosing grid switches it', $('#roster').dataset.chipView, 'grid');
+  const gridCard = $('.card--chip');
+  ok('the grid hides the rule, which is what the list is for',
+     D.defaultView.getComputedStyle(gridCard.querySelector('.chiprow__text')).display === 'none');
+  ok('but keeps the tier',
+     D.defaultView.getComputedStyle(gridCard.querySelector('.chiptier')).display !== 'none');
+  ok('and the tiles are narrow again', gridCard.getBoundingClientRect().width < 140,
+     `${Math.round(gridCard.getBoundingClientRect().width)}px`);
+  eq('the choice is remembered', localStorage.getItem('coc.chips.view'), 'grid');
+
+  await click(view('list'), 420);
+  eq('and back', $('#roster').dataset.chipView, 'list');
+  ok('the rule is readable again',
+     D.defaultView.getComputedStyle($('.card--chip .chiprow__text')).display !== 'none');
+
+  /*
+   * The score answers in faces. "3 of your 6 in your back 2 rows" made you look
+   * back at the board to find out which three.
+   */
+  const scored = chips().find((c) => c.querySelector('.chipwho__art'));
+  ok('a chip that reads the board names it in sprites', !!scored,
+     'no chip drew any Tatari; is anything on the field?');
+  if (scored) {
+    ok('with a count in front of them', !!scored.querySelector('.chipwho__n'));
+    eq('and no sentence left behind', scored.querySelectorAll('.chiprow__score').length, 0);
+  }
+
+  /* High contrast has to reach this tab like it reaches everything else. */
+  const tierPill = $('.chiptier');
+  const ringBefore = D.defaultView.getComputedStyle(tierPill).boxShadow;
+  D.documentElement.dataset.contrast = 'more';
+  await sleep(200);
+  ok('High contrast gives the tier an edge of its own',
+     D.defaultView.getComputedStyle($('.chiptier')).boxShadow !== ringBefore,
+     `${ringBefore} unchanged`);
+  delete D.documentElement.dataset.contrast;
+  await sleep(150);
 
   /* The panel this replaced is gone, not hidden. */
   ok('the old panel under the Summary is gone', !$('#chips'));
