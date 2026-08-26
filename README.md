@@ -68,19 +68,19 @@ field, HAVE above LF.
 ### 1.7.0
 
 #### Changes:
-- **A "what changed" page.** Every line the last update touched, with the old and new numbers side by side, and the horde level that teaches each skill so you can see whether a change is one you'd even reach. It opens with what changed about the game mode itself — seasons, difficulty selection, the three-hour window. It has its own address, so on patch day you can paste the link straight into Discord instead of telling people where to click.
-- **The roster marks what moved.** A small green up, red down or grey plus-minus next to the tier on every Tatari the update touched — 135 of the 230 this time. Hover it for the actual numbers.
-- **A Patch filter** to show only what was buffed, nerfed or adjusted. One at a time, because a Tatari can only be one of the three; "adjusted" is the name for a line whose numbers moved both ways.
-- **Filter by a named effect.** The little arrow beside Heals, Buffs and Debuffs opens all 23 of them — Stun, Slow, Shield, ATK Boost and the rest — each with a count of how many Tatari bring it.
-- **Tell the filter how far you're willing to level.** Start / By 3 / By 5 / By 7, one per group. Stun looks like 55 Tatari until you ask what you get for free, and then it's 12. That gap was always there, it just had nowhere to show up.
-- **Every count now narrows with the filters**, the way "Roster 22 of 230" already did. Pick T2 and Water and the chips tell you what is left of *those*, not of the whole roster.
-- **Nothing the app draws sits on a critter any more.** The heal/buff/debuff badges moved off the artwork, so a screenshot of the roster is just the roster.
-- Filter labels are brighter. They were under the contrast standard at 11px, and turning on High contrast never reached them — it does now.
+- Patch notes page! You can now see everything the last update did in one place: every line it touched, the old and new numbers side by side, and which horde level teaches each skill so you can tell whether it's even one you'd reach. It starts with what changed about the game mode itself (seasons, difficulty picking, the 3 hour window). It's its own page, so on patch day you can just paste the link into Discord.
+- Tatari the update touched now have a little marker next to their tier on the roster. Green up arrow for buffed, red down for nerfed, grey plus-minus for the ones that went both ways. Hover it and you get the actual numbers. 135 of the 230 moved this time.
+- A Patch filter sits next to the tier buttons, so you can pull up only what got buffed, or only what got nerfed. One at a time, since a Tatari can only be one of them.
+- You can now filter by a specific effect instead of just heals/buffs/debuffs. Hit the little arrow next to Heals, Buffs or Debuffs and you get all 23 of them, Stun, Slow, Shield, ATK Boost and the rest, each with a count of how many Tatari bring it.
+- You can also tell it how far you're willing to level: Start, By 3, By 5 or By 7, one for each group. Stun reads 55 Tatari until you set it to Start, and then it's 12. Most of the crowd control in this game has to be paid for and there was never anywhere to see that.
+- Every count on the chips now narrows with your filters, the same way the roster count already did. Pick T2 and Water and they tell you what's left of those, not of the whole roster.
+- The heal/buff/debuff badges moved off the artwork. Nothing the app draws sits on top of a Tatari any more, so a screenshot of the roster is just the roster.
+- The filter labels are brighter. They were under the readable contrast standard at that size, and High Contrast Mode never reached them, it does now.
 
 #### Bug Fixes:
-- You could never drag to reorder the level-up plan on a phone. The browser was taking the gesture as a scroll before the drag started. Grab the step number and it moves now.
-- The Ranges tooltip claimed "only 72 of the 218 Tatari". The 72 was right; the 218 was two updates stale. It counts both ends itself now so it can't drift again.
-- Effect tooltips had the wiki's definition with a tally welded onto the end. They just show the definition, and say nothing at all where the wiki hasn't written one.
+- You could never drag to reorder the level-up plan on a phone. The browser was reading the gesture as a scroll before the drag even started. Grab the step number and it moves now.
+- The Ranges tooltip said "only 72 of the 218 Tatari". The 72 was right, the 218 was two updates old. It counts both itself now so it can't go stale again.
+- The effect tooltips had the wiki's definition with a tally stuck on the end. They just show the definition now, and nothing at all where the wiki hasn't written one yet.
 
 ### 1.6.1
 
