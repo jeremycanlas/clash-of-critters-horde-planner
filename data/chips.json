@@ -1,0 +1,334 @@
+{
+  "_readme": [
+    "Horde Invasion chips, read off the in-game Chip Gallery one tooltip at a time.",
+    "",
+    "Not scraped and not scrapeable: the wiki has no chip pages, so every line here",
+    "was captured from a screenshot of the game and typed in. If a number matters to",
+    "you, check it in game.",
+    "",
+    "`tier` comes from the tile colour rather than the name -- orange is II, the",
+    "rainbow tiles are III. Most chips put the numeral in their name, but the ones",
+    "that do not (Lawn Care, Glass Cannon) still sit in a tier, and a few carry a",
+    "number that is the effect rather than the tier: Slot Machine 4 is the III of",
+    "Slot Machine 3.",
+    "",
+    "`text` is verbatim. `shape` is this project's own grouping, added because the",
+    "drafter can only act on some of these: `placement` chips are decided by where",
+    "you put things, which is the one question this tool already answers.",
+    "",
+    "Complete: all 49 chips in the gallery were read from the game, none derived.",
+    "Every `text` is verbatim from its tooltip."
+  ],
+  "source": "In-game Chip Gallery, captured 26 August 2026",
+  "chips": [
+    {
+      "name": "Contract Employee",
+      "tier": 2,
+      "shape": "capacity",
+      "text": "Summon 1 random Tatari from your formation. Your summoned Tatari are fixed at Lvl 3 and will not count toward your deployment limit. They cannot be upgraded nor revived."
+    },
+    {
+      "name": "New Recruit",
+      "tier": 2,
+      "shape": "capacity",
+      "text": "Raise your deployment capacity by 1 and immediately obtain 250 energizers."
+    },
+    {
+      "name": "AFK",
+      "tier": 1,
+      "shape": "economy",
+      "text": "Enter mandatory auto-battle mode for 90 seconds and immediately obtain 300 energizers."
+    },
+    {
+      "name": "Bounty Hunter I",
+      "tier": 1,
+      "shape": "economy",
+      "text": "Obtain 2 extra energizers for each Zobo you kill within 120 seconds. Your Tatari can be upgraded to Lvl 8."
+    },
+    {
+      "name": "Bounty Hunter II",
+      "tier": 2,
+      "shape": "economy",
+      "text": "Obtain 3 extra energizers for each Zobo you kill within 120 seconds. Your Tatari can be upgraded to Lvl 8."
+    },
+    {
+      "name": "Bounty Hunter III",
+      "tier": 3,
+      "shape": "economy",
+      "text": "Obtain 4 extra energizers for each Zobo you kill within 120 seconds. Your Tatari can be upgraded to Lvl 8."
+    },
+    {
+      "name": "Parting Gift",
+      "tier": 1,
+      "shape": "economy",
+      "text": "Obtain 200 energizers whenever one of your Tatari is knocked down."
+    },
+    {
+      "name": "Photosynthesis I",
+      "tier": 1,
+      "shape": "economy",
+      "text": "Obtain 2 energizers every 5 seconds. Your Tatari can be upgraded to Lvl 8."
+    },
+    {
+      "name": "Photosynthesis II",
+      "tier": 2,
+      "shape": "economy",
+      "text": "Obtain 3 energizers every 5 seconds. Your Tatari can be upgraded to Lvl 8."
+    },
+    {
+      "name": "Photosynthesis III",
+      "tier": 3,
+      "shape": "economy",
+      "text": "Obtain 4 energizers every 5 seconds. Your Tatari can be upgraded to Lvl 8."
+    },
+    {
+      "name": "Roll of Fate I",
+      "tier": 1,
+      "shape": "economy",
+      "text": "Obtain another chip of the same tier at random, plus 100 energizers immediately."
+    },
+    {
+      "name": "Roll of Fate II",
+      "tier": 2,
+      "shape": "economy",
+      "text": "Obtain another chip of the same tier at random, plus 150 energizers immediately."
+    },
+    {
+      "name": "Roll of Fate III",
+      "tier": 3,
+      "shape": "economy",
+      "text": "Obtain another chip of the same tier at random, plus 200 energizers immediately."
+    },
+    {
+      "name": "Fire Form I",
+      "tier": 1,
+      "shape": "element",
+      "element": "Fire",
+      "text": "Your Fire Tatari gain a 20% DMG Boost."
+    },
+    {
+      "name": "Fire Form II",
+      "tier": 2,
+      "shape": "element",
+      "element": "Fire",
+      "text": "Your Fire Tatari gain a 30% DMG Boost."
+    },
+    {
+      "name": "Fire Form III",
+      "tier": 3,
+      "shape": "element",
+      "element": "Fire",
+      "text": "Your Fire Tatari gain a 40% DMG Boost."
+    },
+    {
+      "name": "Grass Form I",
+      "tier": 1,
+      "shape": "element",
+      "element": "Grass",
+      "text": "Your Grass Tatari gain a 20% DMG Boost."
+    },
+    {
+      "name": "Grass Form II",
+      "tier": 2,
+      "shape": "element",
+      "element": "Grass",
+      "text": "Your Grass Tatari gain a 30% DMG Boost."
+    },
+    {
+      "name": "Grass Form III",
+      "tier": 3,
+      "shape": "element",
+      "element": "Grass",
+      "text": "Your Grass Tatari gain a 40% DMG Boost."
+    },
+    {
+      "name": "Lightning Form I",
+      "tier": 1,
+      "shape": "element",
+      "element": "Lightning",
+      "text": "Your Lightning Tatari gain a 20% DMG Boost."
+    },
+    {
+      "name": "Lightning Form II",
+      "tier": 2,
+      "shape": "element",
+      "element": "Lightning",
+      "text": "Your Lightning Tatari gain a 30% DMG Boost."
+    },
+    {
+      "name": "Lightning Form III",
+      "tier": 3,
+      "shape": "element",
+      "element": "Lightning",
+      "text": "Your Lightning Tatari gain a 40% DMG Boost."
+    },
+    {
+      "name": "Rock Form I",
+      "tier": 1,
+      "shape": "element",
+      "element": "Rock",
+      "text": "Your Rock Tatari gain a 20% DMG Boost."
+    },
+    {
+      "name": "Rock Form II",
+      "tier": 2,
+      "shape": "element",
+      "element": "Rock",
+      "text": "Your Rock Tatari gain a 30% DMG Boost."
+    },
+    {
+      "name": "Rock Form III",
+      "tier": 3,
+      "shape": "element",
+      "element": "Rock",
+      "text": "Your Rock Tatari gain a 40% DMG Boost."
+    },
+    {
+      "name": "Underdog",
+      "tier": 2,
+      "shape": "element",
+      "text": "When your element is countered by the enemy, it is considered as countering the enemy instead."
+    },
+    {
+      "name": "Water Form I",
+      "tier": 1,
+      "shape": "element",
+      "element": "Water",
+      "text": "Your Water Tatari gain a 20% DMG Boost."
+    },
+    {
+      "name": "Water Form II",
+      "tier": 2,
+      "shape": "element",
+      "element": "Water",
+      "text": "Your Water Tatari gain a 30% DMG Boost."
+    },
+    {
+      "name": "Water Form III",
+      "tier": 3,
+      "shape": "element",
+      "element": "Water",
+      "text": "Your Water Tatari gain a 40% DMG Boost."
+    },
+    {
+      "name": "Weakest Link",
+      "tier": 2,
+      "shape": "element",
+      "text": "Your Tatari of the element with the fewest units deployed gain 10% ATK, DEF, and ATK Speed."
+    },
+    {
+      "name": "Count to Five",
+      "tier": 3,
+      "shape": "level",
+      "text": "The first time you have 3 Lvl 4 Tatari deployed together, upgrade all of them to Lvl 5."
+    },
+    {
+      "name": "Equalizer",
+      "tier": 3,
+      "shape": "level",
+      "text": "Reset all your deployed Tatari to Lvl 4."
+    },
+    {
+      "name": "Mission Reset",
+      "tier": 1,
+      "shape": "level",
+      "text": "Recall all of your deployed Tatari and obtain 200 energizers for each."
+    },
+    {
+      "name": "Patch Upgrade",
+      "tier": 2,
+      "shape": "level",
+      "text": "Replace all of your deployed Tatari below Lvl 3 with random Tatari from your formation. Replaced Tatari's levels are upgraded by 1."
+    },
+    {
+      "name": "Shuffle",
+      "tier": 2,
+      "shape": "level",
+      "text": "Replace all of your deployed Tatari with random Tatari from your formation and immediately obtain 600 energizers."
+    },
+    {
+      "name": "Slot Machine 2",
+      "tier": 1,
+      "shape": "level",
+      "text": "Randomly obtain 2 Tatari from your formation. If you exceed the deployment limit, randomly upgrade a number of your Tatari equal to the amount exceeded."
+    },
+    {
+      "name": "Slot Machine 3",
+      "tier": 2,
+      "shape": "level",
+      "text": "Randomly obtain 3 Tatari from your formation. If you exceed the deployment limit, randomly upgrade a number of your Tatari equal to the amount exceeded."
+    },
+    {
+      "name": "Slot Machine 4",
+      "tier": 3,
+      "shape": "level",
+      "text": "Randomly obtain 4 Tatari from your formation. If you exceed the deployment limit, randomly upgrade a number of your Tatari equal to the amount exceeded."
+    },
+    {
+      "name": "Lawn Care",
+      "tier": 3,
+      "shape": "map",
+      "text": "Generate 6 single-use lawn mowers at the bottom of the map. Once triggered, mowers kill 5 non-boss Zobos in front, and deal damage equal to 50% of Max HP to bosses and subsequent non-boss Zobos that are hit."
+    },
+    {
+      "name": "Make Waves",
+      "tier": 2,
+      "shape": "map",
+      "text": "River crossing time! Create a river that reduces Zobos' Move Speed by 40% when in it."
+    },
+    {
+      "name": "Backend Support",
+      "tier": 2,
+      "shape": "placement",
+      "text": "Your Tatari with only 1 Tatari in front of them gain a 30% DMG Boost."
+    },
+    {
+      "name": "Barricade",
+      "tier": 1,
+      "shape": "placement",
+      "text": "Tatari on your 2 front rows gain 40% Max HP and DEF, but deal 10% less damage."
+    },
+    {
+      "name": "Center Spotlight",
+      "tier": 3,
+      "shape": "placement",
+      "text": "Zobo bosses will only appear in the middle 2 columns."
+    },
+    {
+      "name": "First-Aid Kit",
+      "tier": 1,
+      "shape": "placement",
+      "text": "Tatari on your 2 front rows recover 15% of lost HP every 4 seconds."
+    },
+    {
+      "name": "Rear Guard",
+      "tier": 2,
+      "shape": "placement",
+      "text": "Tatari in your 2 back rows gain 30% ATK Speed."
+    },
+    {
+      "name": "The Exile",
+      "tier": 2,
+      "shape": "placement",
+      "text": "Your Tatari without adjacent allies gain 20% ATK, Max HP, and DEF."
+    },
+    {
+      "name": "Boss Killer",
+      "tier": 2,
+      "shape": "stat",
+      "text": "Your Tatari deal 25% more damage to Zobo bosses."
+    },
+    {
+      "name": "Glass Cannon",
+      "tier": 2,
+      "shape": "stat",
+      "text": "All of your Tatari gain 25% ATK, but lose 10% Max HP."
+    },
+    {
+      "name": "On the Move",
+      "tier": 3,
+      "shape": "stat",
+      "text": "After being moved, your Tatari gain 20% ATK and ATK Speed for 20 seconds."
+    }
+  ]
+}
