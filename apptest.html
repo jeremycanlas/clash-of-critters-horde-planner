@@ -503,6 +503,85 @@ await runGroup('a card you already have one of', async () => {
   if (clearBench) { clearBench.click(); await sleep(260); }
 });
 
+await runGroup('the level-up plan explains itself', async () => {
+  /*
+   * With no steps in it, this panel rendered as nothing: a heading, a Clear
+   * steps button, the adder, and an empty <ol> between them. It is the panel
+   * holding the one idea in the tool that is about a run rather than a lineup,
+   * and it was asking somebody to fill in a form without saying what filling it
+   * in would buy them. The Learner is a stated intended user, not an edge case.
+   */
+  /* The stage back first. An earlier group hides the app frame to make room for
+     the changes page, and a display:none frame is where several of this suite's
+     stranger failures have come from. */
+  app.style.display = '';
+  await sleep(200);
+
+  await reset();
+  $('#btn-clear-field').click();
+  await sleep(360);
+  const clearPlan = $('#btn-clear-plan');
+  if (clearPlan && !clearPlan.disabled) { clearPlan.click(); await sleep(320); }
+  const bench = $('[data-clear-bench]');
+  if (bench) { bench.click(); await sleep(320); }
+
+  const plan = () => $('#priority');
+  const saying = () => plan().textContent.replace(/\s+/g, ' ').trim();
+
+  ok('an empty board says what to do first', /Nothing to plan yet/.test(saying()), saying().slice(0, 80));
+  ok('and points at the field rather than at this panel', /put them on the field/.test(saying()));
+
+  /* Bring one. The answer changes, because the reason for the emptiness has. */
+  const pick = $$('.panel--roster .card')
+    .find((c) => !c.classList.contains('is-benched') && !c.dataset.switchFrom);
+  /* Waited for at each hop. Benching redraws the dock, so a bench chip queried
+     too early is null and the optional-chained click quietly does nothing --
+     which reads later as "it benched but never placed" and looks like a bug in
+     the app. */
+  /*
+   * Both paths, because this suite does not always get the one it expects.
+   *
+   * The stage is sized by the browser window, so on a narrow window it is under
+   * 760px and the app inside it is in the phone layout -- where a bench chip
+   * arms rather than auto-places, and you then tap the square you want. The
+   * check spent a run failing with "it never reached the field" while the app
+   * was politely waiting to be told where.
+   */
+  pick.click();
+  await until(() => !!$('.benchchip'), 'the Tatari to reach the bench', 4000);
+  $('.benchchip').click();
+  await sleep(320);
+  if (!$('.cell.is-filled')) {
+    /* A field square, not a Zobo-ground one. `.cell` covers both halves of the
+       board and the ground beyond the line is closed unless Sandbox opened it,
+       so the first match was a square the app correctly refused. */
+    const target = $$('.cell:not(.cell--enemy)').find((c) => !c.querySelector('.token'));
+    target?.click();
+    await sleep(360);
+  }
+  ok('a Tatari on the field is placed', !!$('.cell.is-filled'),
+     `bench had ${$$('.benchchip').length}, last toast: ${$('.toast')?.textContent?.trim() ?? '(none)'}`);
+  ok('and now it says what a step is', /A step is one or more Tatari/.test(saying()), saying().slice(0, 90));
+  ok('and why the order is worth thinking about', /Energizers run out/.test(saying()));
+
+  /* And it gets out of the way the moment there is a real step. */
+  await until(() => !!$('.step-pick'), 'the step picker to offer somebody', 4000)
+    .catch(() => {});
+  const step = $('.step-pick');
+  ok('there is somebody to plan for', !!step,
+     `adder hidden: ${$('#step-adder').hidden}, placed: ${$$('.cell.is-filled').length}`);
+  if (step) {
+    step.click();
+    await sleep(280);
+    $('#step-adder button[type="submit"]').click();
+    await sleep(460);
+    eq('adding a step clears the empty state', $$('.plan-empty').length, 0);
+    ok('and the step is really there', $$('#priority .prio:not(.prio--ghost)').length >= 1);
+    ok('with a count beside the heading', /step/.test($('#step-count').textContent),
+       `count reads "${$('#step-count').textContent}"`);
+  }
+});
+
 await runGroup('flex slots', async () => {
   /*
    * A square left open on purpose.

@@ -5174,3 +5174,26 @@ body.is-flexing .cell.is-filled { opacity: .55; }
   background: color-mix(in srgb, var(--accent) 20%, transparent);
 }
 :root[data-contrast="more"] .cell__flex { color: var(--text); }
+
+/* The level-up plan with nothing in it.
+ *
+ * It used to render as an empty <ol> between a heading and a form -- a panel
+ * asking you to fill something in without saying what filling it in buys you.
+ * The Learner is a stated intended user, and this is the panel that holds the
+ * one idea in the tool that is about a run rather than a lineup.
+ */
+.plan-empty {
+  list-style: none;
+  padding: var(--s3);
+  border: 1px dashed var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+}
+.plan-empty p {
+  margin: 0;
+  max-width: 54ch;
+  color: var(--text-mute);
+  font-size: 12.5px; line-height: 1.55;
+}
+.plan-empty p + p { margin-top: var(--s2); }
+.plan-empty b { color: var(--text); font-weight: 650; }

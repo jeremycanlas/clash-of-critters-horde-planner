@@ -359,6 +359,37 @@ export function renderPriority() {
   }
 
   const total = visible.length;
+
+  /*
+   * A plan with no steps in it used to render as nothing at all.
+   *
+   * The panel kept its heading, its Clear steps button and the adder, and
+   * between them an empty <ol>. Somebody who does not already know what a
+   * level-up plan is for -- a stated intended user, not an edge case -- got a
+   * form with no explanation of what filling it in would buy them.
+   *
+   * Two empty states, because there are two reasons to be here with nothing:
+   * an empty field, where the answer is to go and place something, and a full
+   * field where the answer is what a step is and why the order matters. The
+   * adder hides itself in the first case, so this says the same thing the rest
+   * of the panel is already saying rather than contradicting it.
+   */
+  if (!total) {
+    const anyone = store.placedFor(store.formation.activePlayer).length
+      || store.benchOf(store.formation.activePlayer).length;
+    host.innerHTML = anyone
+      ? `<li class="plan-empty">
+          <p><b>No steps yet.</b> A step is one or more Tatari and the level you
+            want them to reach.</p>
+          <p>Energizers run out long before everyone is maxed, so the order you
+            spend them in is most of the run. Pick somebody above to start one.</p>
+        </li>`
+      : `<li class="plan-empty">
+          <p><b>Nothing to plan yet.</b> Bring some Tatari and put them on the
+            field, and they will show up here to be ordered.</p>
+        </li>`;
+  }
+
   $('#step-count').textContent = total ? `${total} step${total === 1 ? '' : 's'}` : '';
   $('#btn-clear-plan').disabled = total === 0;
   renderAdder();
