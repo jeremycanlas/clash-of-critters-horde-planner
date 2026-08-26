@@ -338,13 +338,27 @@ function buildChangedChips(onChange) {
   const host = $('#filter-changed');
   if (!host || !state.changes.size) return;
 
-  // Counted from the flattened map rather than the file, so the numbers are of
-  // Tatari, which is what the roster is about to show, not of evolution lines.
-  const tally = { buff: 0, nerf: 0, adjusted: 0 };
-  for (const { direction } of state.changes.values()) tally[direction] += 1;
+  /*
+   * Counted as Tatari, not as the evolution lines the file is written in, and
+   * counted against whatever else is filtered rather than against the whole
+   * roster. Press T2 and Water and these say how many of *those* the update
+   * touched, the same way "Roster 22 of 230" says how many are left.
+   *
+   * The patch filter itself is left out of its own count -- see passes(). With
+   * it applied, choosing Nerfed would leave Buffed reading 0, which is true and
+   * tells you nothing about what pressing it would do.
+   */
+  const countFor = (dir) =>
+    countIf('changed', (t) => state.changes.get(t.slug)?.direction === dir);
+
+  // Which chips exist at all is decided once, from the unfiltered file: a chip
+  // that vanished when its count hit zero would move the two beside it under
+  // the pointer.
+  const present = { buff: 0, nerf: 0, adjusted: 0 };
+  for (const { direction } of state.changes.values()) present[direction] += 1;
 
   const label = state.patch?.label ? ` in the ${state.patch.label} update` : ' in the last update';
-  const shown = Object.entries(PATCH_MARKS).filter(([key]) => tally[key]);
+  const shown = Object.entries(PATCH_MARKS).filter(([key]) => present[key]);
 
   const draw = () => {
     host.innerHTML = `<span class="chips__label" aria-hidden="true">Patch</span>`
@@ -353,7 +367,7 @@ function buildChangedChips(onChange) {
           aria-checked="${filters.changed === key}" title="${esc(`${word}${label}`)}"
           tabindex="${filters.changed === key || (filters.changed === null && i === 0) ? 0 : -1}"
           ><span class="chip__glyph" data-patch="${key}" data-glyph="${glyph}" aria-hidden="true"></span>${
-          word}<b>${tally[key]}</b></button>`).join('');
+          word}<b>${countFor(key)}</b></button>`).join('');
   };
 
   host.hidden = false;
@@ -389,6 +403,14 @@ function buildChangedChips(onChange) {
     const all = [...host.querySelectorAll('.chip--changed')];
     choose(all[(all.indexOf(chip) + step + all.length) % all.length].dataset.changed);
   });
+
+  countUpdaters.push(() => {
+    for (const chip of host.querySelectorAll('.chip--changed')) {
+      const n = countFor(chip.dataset.changed);
+      chip.querySelector('b').textContent = String(n);
+      chip.toggleAttribute('data-empty', n === 0);
+    }
+  });
 }
 
 /**
@@ -418,6 +440,19 @@ function buildChangedChips(onChange) {
  * redrawing leaves the row quietly lying about how many of each there are.
  */
 let redrawEffectTypes = () => {};
+
+/*
+ * The chips' counts, refreshed in place after every render.
+ *
+ * In place rather than by redrawing: the rows are full of focusable chips, and
+ * rebuilding their markup on each keystroke in the search box would throw the
+ * keyboard out of whatever it was on. Only the number and the dimmed state
+ * change, so only those are written.
+ */
+const countUpdaters = [];
+export function refreshChipCounts() {
+  for (const update of countUpdaters) update();
+}
 
 function buildEffectTypes(onChange) {
   const host = $('#filter-effects');
@@ -468,7 +503,7 @@ function buildEffectTypes(onChange) {
    * roster's crowd control has to be paid for.
    */
   const countFor = (type) =>
-    state.all.reduce((n, t) => n + (bringsTypeBy(t, type, filters.effectBy[groupOf(type)]) ? 1 : 0), 0);
+    countIf('effectTypes', (t) => bringsTypeBy(t, type, filters.effectBy[groupOf(type)]));
 
   /* Which groups are carrying a ceiling, so a closed caret can say so. */
   const markCarets = () => {
@@ -550,6 +585,14 @@ function buildEffectTypes(onChange) {
 
   redrawEffectTypes = () => { draw(); markCarets(); };
   markCarets();
+
+  countUpdaters.push(() => {
+    for (const chip of sub.querySelectorAll('.chip--fxtype')) {
+      const n = countFor(chip.dataset.type);
+      chip.querySelector('b').textContent = String(n);
+      chip.toggleAttribute('data-empty', n === 0);
+    }
+  });
 
   host.addEventListener('click', (e) => {
     const caret = e.target.closest('.fxcaret');
@@ -680,39 +723,56 @@ export function resetFilters() {
   redrawEffectTypes();
 }
 
+/**
+ * Whether one Tatari survives the filters, optionally with one of them ignored.
+ *
+ * `skip` is what makes the counts on the chips mean anything. A chip has to say
+ * how many it would find if you pressed it, which is the roster narrowed by
+ * every *other* filter but not by its own group -- count Nerfed with the patch
+ * filter still applied and it reads 46 while Buffed reads 0, which is true and
+ * useless. Leave its own group out and the three read 12, 6 and 0 against the
+ * T2 Water you already picked, which is the number you wanted.
+ */
+function passes(t, player, skip) {
+  if (filters.types.size && !filters.types.has(t.type)) return false;
+  if (filters.roles.size && !filters.roles.has(t.role)) return false;
+  if (filters.tiers.size && !filters.tiers.has(t.tier)) return false;
+  if (skip !== 'changed' && filters.changed !== null
+    && state.changes.get(t.slug)?.direction !== filters.changed) return false;
+
+  // Every chosen effect, not any: picking Heals and Buffs together asks for one
+  // Tatari that does both, which is the question worth asking of a 15-slot
+  // bench. The type and role chips still read as "any". Each group answers under
+  // its own ceiling, not whichever was set last.
+  for (const group of ['heal', 'buff', 'debuff']) {
+    const by = filters.effectBy[group];
+    const named = skip === 'effectTypes' ? []
+      : [...filters.effectTypes].filter((x) => groupOf(x) === group);
+    // A budget with nothing picked under it still asks something worth asking:
+    // "anything from this group by then". Once a type is named, that is the more
+    // specific question and it wins.
+    if ((filters.effects.has(group) || (by !== null && !named.length))
+      && !bringsEffectBy(t, group, by)) return false;
+    for (const type of named) if (!bringsTypeBy(t, type, by)) return false;
+  }
+  if (!matches(t, filters.query)) return false;
+  // Only a per-Tatari reason hides a card. A full bench blocks every Tatari at
+  // once, and collapsing the roster to the 15 already brought reads as the
+  // filter being broken - the same call the card dimming makes below.
+  if (filters.hideBlocked && store.familyConflict(t, player)) return false;
+  return true;
+}
+
+/** How many Tatari a chip would find, counted against everything else you set. */
+function countIf(skip, test) {
+  const player = store.formation.activePlayer;
+  let n = 0;
+  for (const t of state.all) if (passes(t, player, skip) && test(t)) n += 1;
+  return n;
+}
+
 function visible(player) {
-  const list = state.all.filter((t) => {
-    if (filters.types.size && !filters.types.has(t.type)) return false;
-    if (filters.roles.size && !filters.roles.has(t.role)) return false;
-    if (filters.tiers.size && !filters.tiers.has(t.tier)) return false;
-    // Every chosen effect, not any: picking Heals and Buffs together asks for
-    // one Tatari that does both, which is the question worth asking of a
-    // 15-slot bench. The type and role chips still read as "any".
-    /*
-     * Each group answers for itself, under its own ceiling. Named effects are
-     * checked against the budget of the group they belong to, not against
-     * whichever budget happened to be set last.
-     */
-    if (filters.changed !== null && state.changes.get(t.slug)?.direction !== filters.changed) {
-      return false;
-    }
-    for (const group of ['heal', 'buff', 'debuff']) {
-      const by = filters.effectBy[group];
-      const named = [...filters.effectTypes].filter((x) => groupOf(x) === group);
-      // A budget with nothing picked under it still asks something worth asking:
-      // "anything from this group by then". Once a type is named, that is the
-      // more specific question and it wins.
-      if ((filters.effects.has(group) || (by !== null && !named.length))
-        && !bringsEffectBy(t, group, by)) return false;
-      for (const type of named) if (!bringsTypeBy(t, type, by)) return false;
-    }
-    if (!matches(t, filters.query)) return false;
-    // Only a per-Tatari reason hides a card. A full bench blocks every Tatari
-    // at once, and collapsing the roster to the 15 already brought reads as the
-    // filter being broken - the same call the card dimming makes below.
-    if (filters.hideBlocked && store.familyConflict(t, player)) return false;
-    return true;
-  });
+  const list = state.all.filter((t) => passes(t, player, null));
   return filters.sort === 'default' ? list : list.sort(SORTS[filters.sort]);
 }
 
@@ -777,6 +837,10 @@ ${esc(z.skill.name)}` : ''}">
 }
 
 export function renderRoster() {
+  // Every path that changes what the roster shows comes through here, so this is
+  // the one place the chips' counts have to be brought back into agreement with
+  // it -- including the search box, which never touches a chip.
+  refreshChipCounts();
   if (showing.value === 'zobos') { renderZobos(); return; }
   const player = store.formation.activePlayer;
   const list = visible(player);

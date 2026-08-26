@@ -2099,7 +2099,8 @@ body[data-switching="true"] .cell[data-zobo] { box-shadow: none; cursor: default
  * behind a level would produce it. This is a state the data can enter, not dead
  * code; deleting it would leave a bare "0" looking like any other chip.
  */
-.chips--sub .chip[data-empty="true"] { opacity: .4; }
+.chips--sub .chip[data-empty="true"],
+.chip--changed[data-empty="true"] { opacity: .4; }
 
 /* These carry a word, since a bare triangle means nothing — so they need to be
    a flex row rather than the base chip's centred inline-grid, and to size to
