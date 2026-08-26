@@ -2964,6 +2964,50 @@ body.is-dragging-active {
    * on the field's blank space.
    */
   .cell.is-filled, .benchchip { touch-action: none; }
+
+  /*
+   * Reordering the plan by touch, which until now simply did not happen.
+   *
+   * .prio was in dnd.js's DRAG_SURFACES from the start, so the long-press menu
+   * was suppressed over it and everything looked wired up -- but it never got
+   * the touch-action the cells and bench chips have. Without that the browser
+   * has claimed the gesture as a scroll of the plan list well before the 180ms
+   * hold fires, so setPointerCapture arrives to find the pointer already spoken
+   * for and the drag begins over a stream of moves that never come.
+   *
+   * The whole row cannot have touch-action: none, the way a field cell can. A
+   * cell sits in a grid with empty squares left to scroll the page by; the plan
+   * is a scrolling list made entirely of these, so claiming every row would
+   * leave a long plan with no way to scroll at all.
+   *
+   * So the rank number becomes the grip, which is the one part of the row that
+   * already means order -- you take hold of the number to change the number.
+   * Widened and given a dotted grip so it reads as something to grab, and only
+   * here: on a mouse the whole row stays draggable, which is what anyone with a
+   * cursor will try first.
+   */
+  .prio__rank {
+    position: relative;
+    width: 26px; align-self: stretch;
+    display: grid; place-items: center;
+    touch-action: none;
+    cursor: grab;
+  }
+  .prio__rank::after {
+    content: "";
+    position: absolute; left: 50%; bottom: 2px;
+    width: 10px; height: 3px;
+    transform: translateX(-50%);
+    background-image: radial-gradient(circle, var(--text-mute) 40%, transparent 45%);
+    background-size: 3px 3px;
+    opacity: .8;
+  }
+  /* The grip is the target, so it has to be worth aiming at. Stretched over the
+     row's padding rather than made taller, so the row keeps its height. */
+  .prio__rank::before {
+    content: "";
+    position: absolute; inset: -5px -3px -5px -5px;
+  }
 }
 
 /* ======================================================= phone app shell */
