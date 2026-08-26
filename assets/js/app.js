@@ -529,13 +529,26 @@ function wireToolbar() {
    * the same shape saves.js already uses for loading over unsaved work.
    */
   $('#btn-clear-field').addEventListener('click', () => {
-    if (!store.allPlaced().length) return;
+    /*
+     * Flex marks count as something on the field, because they are: a board
+     * with three squares reading FLEX is not a clear board, and pressing Clear
+     * field on one used to return here and leave them sitting there.
+     */
+    const marks = store.formation.flex.length;
+    if (!store.allPlaced().length && !marks) return;
     const before = store.snapshot();
     const steps = store.formation.plan.length;
+    const placed = store.allPlaced().length;
     store.clearField();
-    toast(steps
-      ? `Field cleared - benches kept, ${steps} level-up step${steps === 1 ? '' : 's'} gone`
-      : 'Field cleared - benches kept', 'info', undoTo(before));
+
+    const gone = [
+      steps ? `${steps} level-up step${steps === 1 ? '' : 's'}` : null,
+      marks ? `${marks} flex slot${marks === 1 ? '' : 's'}` : null,
+    ].filter(Boolean).join(' and ');
+    toast(placed
+      ? `Field cleared - benches kept${gone ? `, ${gone} gone` : ''}`
+      : `${marks} flex slot${marks === 1 ? '' : 's'} cleared`,
+    'info', undoTo(before));
   });
 
   // In co-op each player has their own plan and their own tab, so this clears

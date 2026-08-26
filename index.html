@@ -267,6 +267,16 @@
           <label class="check"
             title="Open the seven rows beyond the spawn line so Tatari can stand on them. Closing it puts whatever is out there back on the bench.">
             <input id="opt-zobo" type="checkbox"> <span class="check__text">Zobo ground</span></label>
+          <!--
+            Marking mode, not a property of the formation: while it is on, an
+            empty square is a thing to press rather than a thing to drop into.
+            A mode rather than a gesture because there is no spare gesture on a
+            phone that does not already mean place, drag or scroll, and a stray
+            tap while drafting must not silently mark the board.
+          -->
+          <label class="check"
+            title="Mark empty squares as somebody else's choice, so a posted formation reads as a template rather than as unfinished.">
+            <input id="opt-flex" type="checkbox"> <span class="check__text">Flex slots</span></label>
           <!-- Sandbox takes the caps off: bring as many as you like and place as
              many as there are cells. A checkbox rather than a third entry in the
              Solo/Co-op switch because it is not a mode — you can be in Sandbox
@@ -290,7 +300,9 @@
       <!-- Two hints, one shown. Telling a phone to double-click and press Delete
          describes a keyboard nobody holding it has. -->
       <p class="hint hint--pointer">Zobos advance from the top. Drag Tatari in from the roster, drag them between
-        cells to rearrange, and double-click or press <kbd>Delete</kbd> to take one off the field.</p>
+        cells to rearrange, and double-click or press <kbd>Delete</kbd> to take one off the field.
+        Turn on <b>Flex slots</b> and press an empty square to mark it as
+        somebody else's choice.</p>
       <!-- Short on purpose: this sits between the header and the field on a phone,
          and every line it takes is a line the grid does not get. -->
       <p class="hint hint--touch">Zobos advance from the top. Tap one on the bench to see where it lands,

@@ -482,6 +482,100 @@ await runGroup('a card you already have one of', async () => {
   if (clearBench) { clearBench.click(); await sleep(260); }
 });
 
+await runGroup('flex slots', async () => {
+  /*
+   * A square left open on purpose.
+   *
+   * Formations travel as a screenshot of the grid -- 286 opens against 4 card
+   * downloads and 0 link copies -- and in a picture "I could not fill this" and
+   * "bring what you like here" are the same empty square. The second is the
+   * more useful post and had no way to say so.
+   */
+  await reset();
+  /* From a clean board. Earlier groups leave Tatari there, and this browser may
+     carry marks from a previous visit -- the counts below are all absolute. */
+  $('#btn-clear-field').click();
+  await sleep(360);
+
+  const flexBox = $('#opt-flex');
+  ok('there is a way to mark them', !!flexBox);
+  const cell = (n) => $(`.cell[data-cell="${n}"]`);
+  const marked = () => $$('.cell.is-flex').length;
+
+  eq('nothing is marked to start', marked(), 0);
+  await click(cell(7), 260);
+  eq('and pressing a square does nothing until you turn it on', marked(), 0);
+
+  flexBox.click();
+  await sleep(320);
+  ok('turning it on says so on the board', D.body.classList.contains('is-flexing'));
+
+  await click(cell(7), 280);
+  await click(cell(9), 280);
+  eq('now a press marks the square', marked(), 2);
+  eq('and the square says what it is', $('.cell.is-flex .cell__flex').textContent.trim(), 'FLEX');
+  ok('in words a screen reader gets too',
+     /on purpose/.test(cell(7).getAttribute('aria-label')), cell(7).getAttribute('aria-label'));
+
+  await click(cell(7), 280);
+  eq('pressing it again takes the mark off', marked(), 1);
+
+  flexBox.click();
+  await sleep(320);
+  ok('the mode ends', !D.body.classList.contains('is-flexing'));
+  eq('but the mark stays, because it is part of the formation', marked(), 1);
+
+  /*
+   * It has to survive the trip. The mark is only worth having if it is still
+   * there in the file you send someone and the tab you come back to.
+   */
+  const saved = JSON.parse(localStorage.getItem('coc.formation.v4') ?? '{}');
+  ok('and it is saved with everything else', Array.isArray(saved.flex) && saved.flex.includes(9),
+     JSON.stringify(saved.flex));
+
+  /*
+   * A mark cannot outlive something arriving on the square. Checked through
+   * placement rather than by calling the store, because place() is not the only
+   * route onto a cell and the guard deliberately sits where they all meet.
+   */
+  flexBox.click(); await sleep(300);
+  const free = $$('.cell:not(.is-filled)')
+    .map((c) => Number(c.dataset.cell)).filter((n) => n < 36).sort((a, b) => b - a)[0];
+  await click(cell(free), 280);
+  ok('marked the square the next Tatari will land on', cell(free).classList.contains('is-flex'));
+  flexBox.click(); await sleep(300);
+
+  const pick = $$('.panel--roster .card')
+    .find((c) => !c.classList.contains('is-benched') && !c.dataset.switchFrom);
+  pick.click(); await sleep(260);
+  $('.benchchip')?.click();
+  await sleep(420);
+  ok('placing there fills the square', cell(free).classList.contains('is-filled'));
+  ok('and the mark is gone rather than hiding under it',
+     !cell(free).classList.contains('is-flex'));
+  const after = JSON.parse(localStorage.getItem('coc.formation.v4') ?? '{}');
+  ok('gone from the formation too, not just from the screen',
+     !(after.flex ?? []).includes(free), JSON.stringify(after.flex));
+
+  /* Clearing the field clears them: they describe a board that no longer exists. */
+  /*
+   * Clear field used to return early on a board with no Tatari on it, so marks
+   * on an otherwise empty board could not be cleared at all -- and a board
+   * showing three FLEX squares is not a clear board.
+   */
+  $('#btn-clear-field').click();
+  await sleep(380);
+  eq('clearing the field takes the marks with it', marked(), 0);
+
+  $('#opt-flex').click(); await sleep(300);
+  await click(cell(2), 260);
+  $('#opt-flex').click(); await sleep(300);
+  eq('a mark on an otherwise empty board', marked(), 1);
+  $('#btn-clear-field').click();
+  await sleep(380);
+  eq('and Clear field clears it', marked(), 0);
+});
+
 await runGroup('the chips tab in the roster', async () => {
   /*
    * Chips are a third list in the roster because a chip is a third thing you

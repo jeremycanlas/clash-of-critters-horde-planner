@@ -5126,3 +5126,51 @@ body[data-roster-list="chips"] #filter-chip-groups { order: 4; flex: 1 1 100%; }
   #filters-toggle.is-on { border-color: var(--accent); color: var(--text); }
   #filters-toggle[aria-expanded="true"] { background: var(--surface-3); color: var(--text); }
 }
+
+/* ------------------------------------------------- flex slots
+ *
+ * A square left open on purpose.
+ *
+ * Formations travel as a screenshot of the grid -- the analytics are blunt
+ * about it: 286 opens, 4 card downloads, 0 link copies. In a picture, "I could
+ * not fill this" and "bring what you like here" are the same empty square, so
+ * the second one, which is the more useful post, could not be made. Dashes say
+ * deliberate. The word says what the deliberate thing is, to a reader who has
+ * no legend and never opened the tool.
+ */
+.cell.is-flex {
+  border-style: dashed;
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+.cell__flex {
+  font-size: 8.5px; font-weight: 800; letter-spacing: .1em;
+  color: var(--accent-ink-on);
+  pointer-events: none;
+  user-select: none;
+}
+
+/*
+ * Marking mode. Every empty square becomes a thing to press, so it has to look
+ * like one -- otherwise the toggle is on and the board looks exactly as it did,
+ * which reads as the toggle being broken.
+ */
+body.is-flexing .cell:not(.is-filled) {
+  border-style: dashed;
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+  cursor: pointer;
+}
+body.is-flexing .cell:not(.is-filled):hover {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+/* The filled ones are not targets, and saying so beats a toast after the tap. */
+body.is-flexing .cell.is-filled { opacity: .55; }
+
+/* High contrast: the dash pattern is the only thing separating a flex square
+   from an empty one, and a dash pattern is a single channel. */
+:root[data-contrast="more"] .cell.is-flex {
+  border-width: 2px;
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
+}
+:root[data-contrast="more"] .cell__flex { color: var(--text); }

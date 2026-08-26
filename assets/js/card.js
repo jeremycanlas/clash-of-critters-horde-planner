@@ -305,11 +305,33 @@ function drawCell(ctx, colours, sprites, view, cx, cy, cell, coop) {
   const occ = view.formation.cells[cell];
 
     if (!occ) {
+      /*
+       * A square left open on purpose, drawn as one.
+       *
+       * This is the reason the whole feature exists. Formations travel as a
+       * screenshot of the grid, and in a picture "I could not fill this" and
+       * "bring what you like here" are the same empty square -- so the second
+       * one, which is the more useful post, could not be made. Dashes say
+       * deliberate; the word says what the deliberate thing is, to a reader who
+       * has no legend and never opened the tool.
+       */
+      const isFlex = view.formation.flex?.includes(cell);
       fill(ctx, colours.bg, cx, cy, CELL, CELL, 8);
-      ctx.strokeStyle = colours.line;
-      ctx.lineWidth = 1;
-      roundRect(ctx, cx + 0.5, cy + 0.5, CELL - 1, CELL - 1, 8);
+      ctx.save();
+      ctx.strokeStyle = isFlex ? colours.accent : colours.line;
+      ctx.lineWidth = isFlex ? 2 : 1;
+      if (isFlex) ctx.setLineDash([5, 4]);
+      roundRect(ctx, cx + 1, cy + 1, CELL - 2, CELL - 2, 8);
       ctx.stroke();
+      ctx.restore();
+
+      if (isFlex) {
+        ctx.font = font(9, 800);
+        ctx.fillStyle = colours.accent;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('FLEX', cx + CELL / 2, cy + CELL / 2);
+      }
       return;
     }
     // Tatari or Zobo: the field takes both and the card has to draw both.
