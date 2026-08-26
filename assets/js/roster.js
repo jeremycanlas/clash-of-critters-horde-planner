@@ -383,15 +383,28 @@ function buildEffectTypes(onChange) {
         >${b.label}</button>`).join('');
 
     const types = tallies[open].map((t) => {
-      // The wiki's own definition where it has one; the reach where it does not,
-      // which is still more use than repeating the chip's own label back.
-      const help = helpFor(t.type);
-      const reach = t.fromBase && t.fromLevel ? 'some from the start, some by levelling'
-        : t.fromLevel ? `only by levelling, from ${t.minLevel}` : 'from the start';
+      /*
+       * The wiki's own sentence, verbatim, or no tooltip at all.
+       *
+       * It used to be that sentence with a dash and a tally welded on, which
+       * repeated the number already printed on the chip and turned somebody
+       * else's clean definition into a fragment. Now the description is either
+       * the whole tooltip or there is no tooltip.
+       *
+       * Nothing invented for the tags the wiki has not written up yet -- 4 of
+       * the 10 buffs and 6 of the 11 debuffs have a definition, and guessing at
+       * the rest would be worse than silence. Paralyze is the proof: it reads
+       * like a plain stun and is actually Lightning damage over time that
+       * delays movement.
+       *
+       * Heals get none either way. "Heal" explains itself, and a tooltip that
+       * says a heal heals is noise on a chip you are trying to read past.
+       */
+      const help = open === 'heal' ? null : helpFor(t.type);
       const count = countFor(t.type);
       return `<button class="chip chip--fxtype" type="button" data-type="${esc(t.type)}"
         aria-pressed="${filters.effectTypes.has(t.type)}" ${count ? '' : 'data-empty="true"'}
-        title="${esc(`${help ?? t.type} — ${t.count} Tatari, ${reach}`)}"
+        ${help ? `title="${esc(help)}"` : ''}
         >${esc(t.type)}<b>${count}</b></button>`;
     }).join('');
 
@@ -554,7 +567,7 @@ function renderZobos() {
   host.innerHTML = list.map((z) => `
       <div class="card card--zobo" role="listitem" tabindex="0"
            data-slug="${esc(z.slug)}"${z.type ? ` data-type="${z.type}"` : ''}
-           title="${esc(z.name)}${z.type ? ` — ${z.type}` : ''}${z.boss ? ' — Boss' : ''}${
+           title="${esc(z.name)}${z.type ? `, ${z.type}` : ''}${z.boss ? ', Boss' : ''}${
   z.skill?.name ? `
 ${esc(z.skill.name)}` : ''}">
         <div class="card__art">${artHTML(z, { priority: 'low' })}</div>
@@ -618,9 +631,9 @@ export function renderRoster() {
         clash ? ' is-swap' : ''}"
            role="listitem" tabindex="0" data-slug="${esc(t.slug)}" data-type="${t.type}"${
         clash ? ` data-switch-from="${esc(clash.slug)}"` : ''}
-           title="${esc(t.name)} — ${t.type} ${t.role}, T${t.tier}${
+           title="${esc(t.name)}: ${t.type} ${t.role}, T${t.tier}${
              state_ ? `\n${state_}` : ''}${clash ? `\nTap to switch from ${clash.name}, keeping its plan` : ''}">
-        <!-- Last in the queue: 218 thumbnails will otherwise crowd out the
+        <!-- Last in the queue: 230 thumbnails will otherwise crowd out the
              dozen sprites the field and the benches are showing right now. -->
         <div class="card__art">${effectMarks(t)}${artHTML(t, { priority: 'low' })}</div>
         <div class="card__meta">
