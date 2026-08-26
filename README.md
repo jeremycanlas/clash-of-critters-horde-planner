@@ -568,6 +568,19 @@ http://localhost:8123/chipstest.html    the chip data, and what a chip is worth 
 http://localhost:8123/changestest.html  data/changes.json against the roster
 ```
 
+Or let them run themselves:
+
+```
+sh tools/check.sh              every suite, headless, about fifteen seconds
+sh tools/check.sh switching    only the groups matching that word
+```
+
+It serves the folder and drives all four pages through headless Chrome under a
+virtual clock, which is what makes it seconds instead of a forty-minute watch.
+`.githooks/pre-commit` calls it, so a red suite stops the commit; `git commit
+--no-verify` gets past it once and `git config --unset core.hooksPath` turns it
+off. On a machine with no Chrome the hook says so and stands aside.
+
 Add `?only=flex` to either of the first two to run just the groups whose name
 contains that word. Iterating on one group otherwise means sitting through the
 other twenty, and there is a second reason: a browser clamps every timer in a
