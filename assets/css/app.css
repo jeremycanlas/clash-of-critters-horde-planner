@@ -13,18 +13,27 @@
   /*
    * The third step of the de-emphasis ramp, and the quietest text on the page.
    *
-   * It was lightened to #8f97a8 for a while, and a --line-strong of #666b78 was
-   * added alongside it for control borders, on contrast grounds: this is 2.94:1
-   * on --surface-3 and the old borders were under 3:1, both short of what WCAG
-   * asks for small text and non-text. Reverted on looks -- 42 selectors inherit
-   * this one, and lifting it and every .btn and .field edge at once visibly
-   * brightened the roster, which is the densest surface in the app.
+   * This was #6f7788 and failed WCAG AA everywhere it was read: 3.37:1 on a
+   * chip, 2.94:1 on --surface-3, against the 4.5:1 small text needs. Not
+   * incidental text either -- it is every field placeholder, every card's tier,
+   * the roster counts, the empty-state lines and the version pill.
    *
-   * The measurements stand and the gap is real, so anything that revisits this
-   * should move the quiet text and the loud borders separately, and check the
-   * roster, not a button in isolation.
+   * It was lifted to almost exactly this value once before, to #8f97a8, and
+   * reverted on looks. That attempt also raised a --line-strong of #666b78 for
+   * every control border in the same change, and the two together visibly
+   * brightened the roster, which is the densest surface in the app. The note
+   * left behind asked that whoever came back move the quiet text and the loud
+   * borders separately and judge it on the roster rather than on a button.
+   *
+   * So: text only this time. The borders are untouched and still under 3:1,
+   * which remains a real 1.4.11 gap and a separate job.
+   *
+   * #8f99aa is the smallest step that clears 4.5:1 on --surface-3, the lightest
+   * surface this can land on: 4.60 there, 5.27 on a chip, 6.40 on the page. It
+   * stays a step below --text-dim rather than collapsing into it -- 4.60 against
+   * 5.67 on the same surface -- so the ramp still has three rungs.
    */
-  --text-mute: #6f7788;
+  --text-mute: #8f99aa;
 
   --accent:      #ffc93c;
   --accent-ink:  #2a2005;
@@ -138,7 +147,7 @@
     --line-soft: #e6e9f0;
     --text:      #1b1e26;
     --text-dim:  #565d6d;
-    --text-mute: #838b9c;      /* 2.95:1 on --surface-3; see the dark note above */
+    --text-mute: #646c7b;      /* 4.56:1 on --surface-3; see the dark note above */
     --accent:      #f0ab00;
     --accent-ink:  #241a00;
     --accent-ink-on: #a05b00;  /* the fill colour is 1.99:1 as text on white */
@@ -167,7 +176,7 @@
   --line-soft: #e6e9f0;
   --text:      #1b1e26;
   --text-dim:  #565d6d;
-  --text-mute: #838b9c;
+  --text-mute: #646c7b;
   --accent:      #f0ab00;
   --accent-ink:  #241a00;
   --accent-ink-on: #a05b00;
