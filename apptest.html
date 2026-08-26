@@ -777,6 +777,21 @@ await runGroup('the chips tab in the roster', async () => {
   eq('and the count agrees', $('#roster-count').textContent.trim(), '49');
 
   const hidden = (sel) => D.defaultView.getComputedStyle($(sel)).display === 'none';
+
+  /*
+   * Unfold first if this run is narrow enough to have folded.
+   *
+   * The stage is sized by the browser window, so under 760px the app inside it
+   * puts every filter behind the Filters button -- correctly. A check written
+   * before that existed read the tier row as missing when it was merely folded,
+   * which is the filter working rather than failing.
+   */
+  const foldBtn = $('#filters-toggle');
+  if (foldBtn && D.defaultView.getComputedStyle(foldBtn).display !== 'none'
+    && D.body.dataset.filters !== 'open') {
+    await click(foldBtn, 340);
+  }
+
   ok('the element filter steps aside', hidden('#filter-types'));
   ok('so do roles and evolution tiers', hidden('#filter-roles') && hidden('#filter-tiers'));
   ok('and the chip tier filter appears', !hidden('#filter-chip-tiers'));
