@@ -37,18 +37,40 @@ const ORDER = [
 const plural = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 const tatariCount = (n) => plural(n, 'Tatari', 'Tatari');
 
-/**
- * One evolution family, with its art.
+/*
+ * Which horde level teaches each skill, read off the wiki data rather than
+ * written into the notes.
  *
- * Every member is drawn, not just the one the notes named. Horde skills belong
- * to the line, so "Frostnip was buffed" is really "these four were buffed", and
- * a reader scanning for the sprite they actually field should find it here
- * rather than have to know which T1 it grows from.
+ * The patch notes name a skill and give its numbers; they never say when you get
+ * it, and that is half of what the reader needs -- a buff to a level 7 skill is
+ * a different proposition from one to a level 3. tatari.json has the answer, so
+ * the two are joined here.
+ *
+ * Matched by longest name first rather than by splitting on the first colon.
+ * Skinklet's level 5 is called "Technique: Veil", and a naive split files it
+ * under a skill named "Technique" that does not exist.
+ */
+function levelOf(head, text) {
+  const norm = (x) => x.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const skills = Object.entries(head?.hordeSkills ?? {})
+    .map(([key, skill]) => ({ level: key.replace('level', ''), name: skill.name }))
+    .sort((a, b) => b.name.length - a.name.length);
+  return skills.find((s) => norm(text).startsWith(norm(s.name))) ?? null;
+}
+
+/**
+ * One evolution family, as a card.
+ *
+ * Every member is drawn, not just the Tatari the notes named. Horde skills
+ * belong to the line, so "Frostnip was buffed" is really "these four were
+ * buffed", and a reader hunting for the sprite they actually field should find
+ * it without knowing which T1 it grows from.
  */
 function line(entry) {
   const members = (entry.members ?? [])
     .map((slug) => state.bySlug.get(slug))
     .filter(Boolean);
+  const head = members[0];
 
   const art = members.map((t) => `
     <span class="chline__art" data-type="${t.type}" title="${esc(t.name)}">
@@ -56,28 +78,26 @@ function line(entry) {
       <span class="chline__tier">T${t.tier}</span>
     </span>`).join('');
 
-  /*
-   * The skill name and its numbers are split apart, because they are read
-   * differently: you scan the left column for a skill you use and only then
-   * read the right. Anything without a colon is printed whole rather than
-   * guessed at -- the notes are prose and not every line is name-then-change.
-   */
   const changes = (entry.changes ?? []).map((text) => {
-    const at = text.indexOf(':');
-    if (at < 0) return `<li class="chline__change"><span class="chline__what">${esc(text)}</span></li>`;
-    return `<li class="chline__change">
-      <span class="chline__skill">${esc(text.slice(0, at))}</span>
-      <span class="chline__what">${esc(text.slice(at + 1).trim())}</span>
-    </li>`;
+    const skill = levelOf(head, text);
+    const rest = skill ? text.slice(skill.name.length).replace(/^\s*:\s*/, '') : text;
+    return `
+      <li class="chline__change">
+        <span class="chline__skill">
+          ${skill ? `<span class="chline__lv" title="Taught at horde level ${skill.level}"
+            >L${skill.level}</span>` : ''}${esc(skill ? skill.name : '')}
+        </span>
+        <span class="chline__what">${esc(rest)}</span>
+      </li>`;
   }).join('');
 
   return `
     <article class="chline" data-patch="${entry.direction}">
-      <div class="chline__arts">${art}</div>
-      <div class="chline__body">
+      <header class="chline__head">
+        <div class="chline__arts">${art}</div>
         <h3 class="chline__name">${esc(members.map((t) => t.name).join(' → ') || entry.line)}</h3>
-        <ul class="chline__changes">${changes}</ul>
-      </div>
+      </header>
+      <ul class="chline__changes">${changes}</ul>
     </article>`;
 }
 
@@ -114,7 +134,7 @@ function render(book) {
           <span class="chgroup__count">${plural(group.length, 'line')}, ${tatariCount(members)}</span>
         </h2>
         <p class="chgroup__blurb">${blurb}</p>
-        ${group.map(line).join('')}
+        <div class="chgroup__grid">${group.map(line).join('')}</div>
       </section>`;
   }).join('');
 }

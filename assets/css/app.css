@@ -3918,16 +3918,18 @@ body.is-clean .clean-hint {
  * morning an update lands, which is when it is read: once, scrolling, often by
  * somebody who does not have the drafter open.
  *
- * A reading measure rather than the app's full width. The drafter is a dense
- * three-panel tool and this is the opposite job -- prose and numbers, read top
- * to bottom -- so it takes the one column the rest of the app never needs.
+ * Wide rather than a reading column. It began at 68ch, on the theory that this
+ * is prose -- but it is not prose, it is 35 short records, and one column of
+ * them was five screens of scrolling with no way to see how much was left. Two
+ * columns halve that and let a whole group be taken in at once.
  */
 .changes__main {
-  max-width: 78ch;
+  max-width: 1180px;
   margin: 0 auto;
   padding: var(--s5) var(--s4) var(--s6);
 }
 .changes__intro {
+  max-width: 72ch;
   margin: 0 0 var(--s5);
   color: var(--text-dim); font-size: 14px; line-height: 1.55;
 }
@@ -3963,17 +3965,55 @@ body.is-clean .clean-hint {
   color: var(--text-mute); font-size: 12.5px;
 }
 
-.chline {
-  display: flex; flex-wrap: wrap; gap: var(--s2) var(--s3);
-  padding: var(--s3) 0;
-  border-top: 1px solid var(--line-soft);
+/* Two columns where there is room, one where there is not. auto-fill with a
+   floor rather than a fixed count, so a wide window gets a third column free
+   and nothing has to know how wide the window is. */
+.chgroup__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+  gap: var(--s3);
 }
-.chline__arts { display: flex; gap: 4px; flex: none; }
-/* Small: the sprite is here to be recognised, not admired. Four of them at card
-   size would push the numbers off a phone screen, and the numbers are the page. */
+
+/*
+ * Each family is a card with a real edge.
+ *
+ * These were rows divided by a hairline, and the page read as one undifferen-
+ * tiated column: nothing said where one family stopped and the next began until
+ * you had read far enough to notice the names. A border and a surface do that
+ * work before anything is read.
+ */
+.chline {
+  display: flex; flex-direction: column;
+  padding: var(--s3);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-md);
+  background: var(--surface);
+}
+/*
+ * The direction tints the whole edge, at 1px, rather than thickening one side.
+ *
+ * A 2px coloured border-left is the side-tab tell the project's own detector
+ * flags and the craft floor bans outright, and it went in here before either
+ * had a chance to catch it. All four sides at 1px says the same thing without
+ * the badge-of-honour stripe, and the group heading above has already named the
+ * direction in words anyway -- this is confirmation, not the announcement.
+ */
+.chline[data-patch="buff"]     { border-color: color-mix(in srgb, var(--ok) 34%, var(--line-soft)); }
+.chline[data-patch="nerf"]     { border-color: color-mix(in srgb, var(--danger) 34%, var(--line-soft)); }
+.chline[data-patch="adjusted"] { border-color: color-mix(in srgb, var(--text-dim) 34%, var(--line-soft)); }
+
+.chline__head {
+  display: flex; align-items: center; gap: var(--s2);
+  padding-bottom: var(--s2);
+  margin-bottom: var(--s2);
+  border-bottom: 1px solid var(--line-soft);
+}
+.chline__arts { display: flex; gap: 3px; flex: none; }
+/* Small: the sprite is here to be recognised, not admired. Four at card size
+   would push the numbers off a phone, and the numbers are the page. */
 .chline__art {
   position: relative;
-  width: 40px; height: 40px;
+  width: 34px; height: 34px;
   display: grid; place-items: center;
   border-radius: var(--r-sm);
   background: color-mix(in srgb, var(--type-color, var(--line)) 14%, transparent);
@@ -3981,36 +4021,36 @@ body.is-clean .clean-hint {
 .chline__art img { width: 100%; height: 100%; object-fit: contain; }
 .chline__tier {
   position: absolute; left: 2px; bottom: 0;
-  color: var(--text-mute); font-size: 8.5px; font-weight: 700;
+  color: var(--text-mute); font-size: 8px; font-weight: 700;
 }
-.chline__body { flex: 1 1 16rem; min-width: 0; }
 .chline__name {
-  margin: 0 0 4px;
-  font-size: 13px; font-weight: 650; line-height: 1.35;
+  margin: 0; min-width: 0;
+  font-size: 12.5px; font-weight: 650; line-height: 1.3;
 }
+
 .chline__changes { margin: 0; padding: 0; list-style: none; }
-.chline__change {
-  display: flex; flex-wrap: wrap; gap: 2px var(--s2);
-  padding: 1px 0;
-  font-size: 12.5px; line-height: 1.5;
+.chline__change { padding: 3px 0; font-size: 12.5px; line-height: 1.45; }
+.chline__change + .chline__change { border-top: 1px dashed var(--line-soft); }
+.chline__skill {
+  display: flex; align-items: center; gap: 5px;
+  color: var(--text); font-weight: 600;
 }
 /*
- * A fixed column so the skill names line up down the group and the eye can run
- * the left edge looking for one it fields, then step right into the numbers.
- *
- * The numbers take whatever is left and wrap inside it -- flex-basis 0 with
- * min-width 0, not a basis in rem. Given a rem basis they dropped to their own
- * line whenever the text was long, so Drilleroo read as two aligned columns and
- * Blueflick right under it read as stacked pairs, which is worse than either
- * arrangement chosen on purpose.
+ * Which horde level teaches it. The notes never say, and it changes what the
+ * number means: a buff to a level 7 skill is a different proposition from one
+ * to a level 3, because you have to take the Tatari that far to collect it.
  */
-.chline__skill { flex: none; width: 10rem; color: var(--text); font-weight: 600; }
-.chline__what { flex: 1 1 0; min-width: 0; color: var(--text-dim); }
+.chline__lv {
+  flex: none;
+  min-width: 20px; padding: 0 3px;
+  border-radius: 3px;
+  background: var(--surface-3);
+  color: var(--text-dim); font-size: 9.5px; font-weight: 800;
+  text-align: center; letter-spacing: .02em;
+}
+.chline__what { display: block; color: var(--text-dim); }
 
 @media (max-width: 760px) {
   .changes__main { padding: var(--s4) var(--s3) var(--s6); }
-  /* The two-column split needs width it does not have on a phone: the skill name
-     and its numbers stack instead, which is also how they read aloud. */
-  .chline__skill { width: auto; flex: 1 1 100%; }
-  .chline__what { flex: 1 1 100%; }
+  .chgroup__grid { grid-template-columns: 1fr; gap: var(--s2); }
 }
