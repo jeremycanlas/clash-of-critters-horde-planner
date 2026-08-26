@@ -65,6 +65,26 @@ field, HAVE above LF.
 
 ## Changelog
 
+### 1.8.0
+
+#### Changes:
+- Chips! All 49 of them are in the tool now, in their own tab next to Tatari and Zobos. Every one has its icon, what it does, its tier and its type, in the same order the game's gallery shows them.
+- The chips that read your board tell you what they'd be worth to it. Rear Guard shows you the actual Tatari in your back two rows, not just a number, so you can see whether those are the ones you care about.
+- Two views: a list with the full rule on every row, and a grid of just the tiles if you already know them. It remembers which you were using.
+- Keep the three you'd take and drag them into the order you'd take them, plus a shortlist with no limit for "these are also worth it on this board". They show up in a strip under the bench, so one screenshot catches the board, the bench and the chips.
+- Your chips go on the share card too, under the bench, with a line saying they're offered at random rather than chosen.
+- Flex slots! Turn on Flex slots and press any empty square to mark it as somebody else's choice. It shows as a dashed square reading FLEX, on the board and on the share card. This is for posting a formation as a template instead of a finished thing.
+- The level-up plan says what it's for when it's empty instead of showing nothing at all.
+- On a phone the filters fold behind a button with a count on it, so the roster gets the screen instead of the controls for narrowing it.
+- Took the em dashes out of everything you can read.
+
+#### Bug Fixes:
+- On a card in a line you already bring, "Switch from Frostique" was a bar across the bottom of the card that covered the name and then got cut off to "SWITCH FROM...". You lost both the name and which one you'd be switching from. It's a small arrows icon beside the name now.
+- Reset did nothing on the chips tab. It unpressed the buttons and left the filter on, so it looked like it hadn't worked because it hadn't.
+- Clear field did nothing if you had no Tatari placed, so flex marks on an otherwise empty board couldn't be cleared. A board showing three FLEX squares is not a clear board.
+- Center Spotlight was filed as a position chip and counted your Tatari in the middle two columns. It moves where Zobo bosses spawn and says nothing about your Tatari, so it's a map chip now and scores nothing.
+- The grid view of the chips had no picture on the tiles at all, and the names were squeezed to about nine characters next to the tier.
+
 ### 1.7.0
 
 #### Changes:
