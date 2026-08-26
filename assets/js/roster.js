@@ -7,8 +7,8 @@ import { $, artHTML, esc, typeIcon, roleIcon, toast } from './ui.js';
 import { draggable, dropZone } from './dnd.js';
 import { openDetail } from './detail.js';
 import {
-  effectGroupsOf, bringsEffect, effectsOf, helpFor, GROUP_LABELS,
-  bringsTypeBy, bringsEffectBy, bringsAnythingBy, effectSources, groupOf,
+  effectGroupsOf, effectsOf, helpFor, GROUP_LABELS,
+  bringsTypeBy, bringsEffectBy, groupOf,
 } from './effects.js';
 
 const TIERS = [1, 2, 3, 4];
@@ -61,12 +61,19 @@ export const filters = {
    */
   effectTypes: new Set(),
   /*
-   * How far you are willing to level, as a ceiling on where an effect may come
-   * from: null for "wherever", 0 for what a Tatari already does, 3/5/7 for what
-   * it will do if taken that far. One value rather than a Set, because a budget
-   * is a single number -- "by 5" already includes everything "by 3" would find.
+   * How far you are willing to level, per group rather than for the roster.
+   *
+   * One ceiling for everything was the wrong shape. What you are levelling to is
+   * a fact about each Tatari you are choosing, not about the search: a free heal
+   * is easy to come by and a Stun almost never is, so "a healer that heals from
+   * the start, and something that stuns by 7" is a real question and one global
+   * number could not ask it. Three independent budgets can, and each one only
+   * governs the effects in its own group.
+   *
+   * Still a single value per group, not a Set: a budget is one number, and "by
+   * 5" already contains everything "by 3" would find.
    */
-  effectBy: null,
+  effectBy: { heal: null, buff: null, debuff: null },
   hideBlocked: false,
   sort: 'default',
   /*
@@ -371,7 +378,19 @@ function buildEffectTypes(onChange) {
    * roster's crowd control has to be paid for.
    */
   const countFor = (type) =>
-    state.all.reduce((n, t) => n + (bringsTypeBy(t, type, filters.effectBy) ? 1 : 0), 0);
+    state.all.reduce((n, t) => n + (bringsTypeBy(t, type, filters.effectBy[groupOf(type)]) ? 1 : 0), 0);
+
+  /* Which groups are carrying a ceiling, so a closed caret can say so. */
+  const markCarets = () => {
+    for (const c of host.querySelectorAll('.fxcaret')) {
+      const by = filters.effectBy[c.dataset.group];
+      c.toggleAttribute('data-budgeted', by !== null);
+      const label = BUDGETS.find((b) => b.value === by)?.label;
+      c.title = by === null
+        ? `The specific ${GROUP_LABELS[c.dataset.group].toLowerCase()} a Tatari brings`
+        : `${GROUP_LABELS[c.dataset.group]}: ${label.toLowerCase()}`;
+    }
+  };
 
   const draw = () => {
     sub.hidden = !open;
@@ -379,7 +398,7 @@ function buildEffectTypes(onChange) {
 
     const budgets = BUDGETS.map((b) => `
       <button class="chip chip--budget" type="button" data-budget="${b.value}"
-        aria-pressed="${filters.effectBy === b.value}" title="${esc(b.title)}"
+        aria-pressed="${filters.effectBy[open] === b.value}" title="${esc(b.title)}"
         >${b.label}</button>`).join('');
 
     const types = tallies[open].map((t) => {
@@ -412,7 +431,8 @@ function buildEffectTypes(onChange) {
       + `<span class="chips__split" aria-hidden="true"></span>${types}`;
   };
 
-  redrawEffectTypes = draw;
+  redrawEffectTypes = () => { draw(); markCarets(); };
+  markCarets();
 
   host.addEventListener('click', (e) => {
     const caret = e.target.closest('.fxcaret');
@@ -430,8 +450,9 @@ function buildEffectTypes(onChange) {
       const value = Number(budget.dataset.budget);
       // Pressing the one already on clears it, so there is a way back to "any
       // level" without a fifth chip that only ever means "never mind".
-      filters.effectBy = filters.effectBy === value ? null : value;
+      filters.effectBy[open] = filters.effectBy[open] === value ? null : value;
       draw();
+      markCarets();
       onChange();
       return;
     }
@@ -499,7 +520,7 @@ export function resetFilters() {
   filters.tiers.clear();
   filters.effects.clear();
   filters.effectTypes.clear();
-  filters.effectBy = null;
+  for (const g of Object.keys(filters.effectBy)) filters.effectBy[g] = null;
   filters.hideBlocked = false;
   filters.sort = 'default';
   $('#search').value = '';
@@ -517,15 +538,21 @@ function visible(player) {
     // Every chosen effect, not any: picking Heals and Buffs together asks for
     // one Tatari that does both, which is the question worth asking of a
     // 15-slot bench. The type and role chips still read as "any".
-    if (filters.effects.size
-      && ![...filters.effects].every((g) => bringsEffectBy(t, g, filters.effectBy))) return false;
-    if (filters.effectTypes.size
-      && ![...filters.effectTypes].every((x) => bringsTypeBy(t, x, filters.effectBy))) return false;
-    // A level on its own still means something: "show me anything that brings
-    // an effect by then", which is the shape of the question before you have
-    // decided which effect you want.
-    if (filters.effectBy !== null && !filters.effects.size && !filters.effectTypes.size
-      && !bringsAnythingBy(t, filters.effectBy)) return false;
+    /*
+     * Each group answers for itself, under its own ceiling. Named effects are
+     * checked against the budget of the group they belong to, not against
+     * whichever budget happened to be set last.
+     */
+    for (const group of ['heal', 'buff', 'debuff']) {
+      const by = filters.effectBy[group];
+      const named = [...filters.effectTypes].filter((x) => groupOf(x) === group);
+      // A budget with nothing picked under it still asks something worth asking:
+      // "anything from this group by then". Once a type is named, that is the
+      // more specific question and it wins.
+      if ((filters.effects.has(group) || (by !== null && !named.length))
+        && !bringsEffectBy(t, group, by)) return false;
+      for (const type of named) if (!bringsTypeBy(t, type, by)) return false;
+    }
     if (!matches(t, filters.query)) return false;
     // Only a per-Tatari reason hides a card. A full bench blocks every Tatari
     // at once, and collapsing the roster to the 15 already brought reads as the

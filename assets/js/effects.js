@@ -227,13 +227,11 @@ export const bringsEffect = (t, group) => {
  * Whether this Tatari brings one named effect, from the start or by levelling.
  *
  * The narrow twin of bringsEffect. That one asks "any debuff at all", which is
- * the right question when you are filling a bench; this one asks "Stun", which
- * is the right question when a wave keeps killing you and you have worked out
- * why. Both read the same memoised sources, so asking 23 of these per card
- * costs no more than asking three.
+ * the right question when you are filling a bench; the By pair below ask "Stun,
+ * and only if I get it by 5", which is the right question when a wave keeps
+ * killing you and you have worked out why. All of them read the same memoised
+ * sources, so asking 23 per card costs no more than asking three.
  */
-export const bringsType = (t, type) => effectSources(t).some((s) => s.type === type);
-
 /**
  * How far you would have to level a Tatari before an effect turns up.
  *
@@ -256,9 +254,6 @@ export const bringsTypeBy = (t, type, maxLevel = null) =>
 export const bringsEffectBy = (t, group, maxLevel = null) =>
   effectSources(t).some((s) => groupOf(s.type) === group && reaches(s, maxLevel));
 
-/** Any tagged effect at all by then -- what a level chip means on its own. */
-export const bringsAnythingBy = (t, maxLevel) =>
-  effectSources(t).some((s) => groupOf(s.type) !== 'other' && reaches(s, maxLevel));
 
 /**
  * What each skill type does, in the wiki's own words.

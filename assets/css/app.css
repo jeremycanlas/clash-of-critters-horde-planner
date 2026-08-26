@@ -1908,6 +1908,23 @@ body[data-switching="true"] .cell[data-zobo] { box-shadow: none; cursor: default
   background: color-mix(in srgb, var(--accent) 20%, var(--surface-2));
   border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
 }
+/*
+ * A group carrying a level ceiling, while its row is shut.
+ *
+ * The three budgets are independent now, so at any moment up to three of these
+ * are narrowing the roster from behind a closed caret. Without a mark, the only
+ * way to find out which was to open all three, and a filter you cannot see is
+ * how people end up convinced the roster is broken. The dot says a ceiling is
+ * set; the caret's title says which, and opening it shows the chip pressed.
+ */
+.fxcaret[data-budgeted]::before {
+  content: "";
+  position: absolute; top: 3px; right: 3px;
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.fxcaret { position: relative; }
 .fxcaret[aria-expanded="true"]::after { content: "▴"; }
 
 /* The opened row. Indented and wrapping, so it reads as belonging to the chip
