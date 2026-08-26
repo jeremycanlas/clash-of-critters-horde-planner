@@ -72,15 +72,12 @@ field, HAVE above LF.
 - Added a patch filter to see who got buffed, nerfed and adjusted, and a small marker on their card in the roster so you can spot them without filtering
 - When a patch lands there's a line at the top of the page pointing at that page, and it goes away once you've read it
 - Reworked heals/buff/debuff filters so that you can filter tataris per horde skill level and per specific effect, all 23 of them (Stun, Slow, Shield, ATK Boost and the rest)
-- Every count on the chips now narrows with your filters, the same way the roster count already did. Pick T2 and Water and they tell you what's left of those, not of the whole roster
 - Rearranged the heals/buff/debuff icons in the roster into their own row above the sprite, along with the level they get it, so that nothing the app draws touches a tatari any more
-- The filter labels are brighter. They were under the readable contrast standard at that size, and High Contrast Mode never reached them, it does now.
-- Made more tests so that I don't break things more often (woops!). There's a phone one now too, since that's where three quarters of you are
+- The filter labels are brighter and High Contrast Mode also changes filter labels now.
+- Made more tests so that I don't break things more often (woops!).
 
 #### Bug Fixes:
 - You could never drag to reorder the level-up plan on a phone. The browser was reading the gesture as a scroll before the drag even started. Grab the step number and it moves now.
-- The Ranges tooltip said "only 72 of the 218 Tatari". The 72 was right, the 218 was two updates old. It counts both itself now so it can't go stale again.
-- The effect tooltips had the wiki's definition with a tally stuck on the end. They just show the definition now, and nothing at all where the wiki hasn't written one yet.
 
 ### 1.6.1
 
