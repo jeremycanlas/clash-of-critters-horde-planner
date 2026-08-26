@@ -276,7 +276,8 @@ export function buildFilters(onChange, { onPick = bringToBench } = {}) {
 }
 
 /**
- * The heal / buff / debuff markers on a card.
+ * The heal / buff / debuff markers on a card, in a row of their own under the
+ * sprite.
  *
  * A solid mark is something the Tatari has from the start. A hollow one with a
  * level number only arrives once you have levelled it that far, and a solid one
@@ -295,7 +296,12 @@ function effectMarks(t) {
     return `<span class="card__fx" data-fx="${key}" data-base="${g.base}" title="${esc(title)}"
       >${glyph}${g.level !== null ? `<b>${g.level}</b>` : ''}</span>`;
   }).filter(Boolean).join('');
-  return marks ? `<span class="card__fxrow">${marks}</span>` : '';
+  /*
+   * The wrapper goes out even with nothing in it. It is a row of the card grid
+   * now rather than an overlay, so an absent one would make the 34 Tatari with
+   * no effects at all shorter than the other 196 and leave the roster ragged.
+   */
+  return `<span class="card__fxrow">${marks}</span>`;
 }
 
 /**
@@ -449,7 +455,8 @@ export function renderRoster() {
              state_ ? `\n${state_}` : ''}${clash ? `\nTap to switch from ${clash.name}, keeping its plan` : ''}">
         <!-- Last in the queue: 218 thumbnails will otherwise crowd out the
              dozen sprites the field and the benches are showing right now. -->
-        <div class="card__art">${artHTML(t, { priority: 'low' })}${effectMarks(t)}</div>
+        <div class="card__art">${artHTML(t, { priority: 'low' })}</div>
+        ${effectMarks(t)}
         <div class="card__meta">
           ${patchMark(t)}<span class="card__tier">T${t.tier}</span>
           ${typeIcon(t.type)}${roleIcon(t.role)}

@@ -774,9 +774,26 @@ img { -webkit-user-drag: none; }
  * difference between "brings a heal" and "could bring a heal at 5", which is
  * exactly the call you are making while drafting.
  */
+/*
+ * A row under the sprite, not a stack on top of it.
+ *
+ * These sat in the top-left corner of the artwork until people started posting
+ * screenshots of the cards, at which point a badge over a Tatari's face travels
+ * with it. That is the same argument the note above .card__meta makes for tier,
+ * type and role -- no corner of a sprite is reliably empty -- and it applies
+ * here too; this one just took longer to notice.
+ *
+ * The cost is honest: the card is about 15px taller, so a phone screen holds
+ * fewer of them. What it buys is that nothing this app draws is ever on top of
+ * the art, which is the only version of the rule anyone can remember.
+ *
+ * Fixed height rather than content height, and rendered even when empty, so the
+ * 34 Tatari with no effects line up with the rest instead of sitting short.
+ */
 .card__fxrow {
-  position: absolute; top: 2px; left: 2px;
-  display: flex; flex-direction: column; gap: 2px;
+  display: flex; align-items: center; justify-content: center; gap: 3px;
+  height: 15px;
+  padding-top: 3px;
   pointer-events: none;
 }
 /*
@@ -1941,7 +1958,7 @@ body[data-switching="true"] .cell[data-zobo] { box-shadow: none; cursor: default
 
 .card {
   position: relative;
-  display: grid; grid-template-rows: 1fr auto auto;
+  display: grid; grid-template-rows: 1fr auto auto auto;
   padding: var(--s1);
   border: 1px solid var(--line-soft);
   border-radius: var(--r-md);
