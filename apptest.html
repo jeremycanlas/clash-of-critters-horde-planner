@@ -62,6 +62,22 @@ const runGroup = async (name, body) => {
       `<div style="color:#f0654f">  FAIL ${name} threw: ${err.message}</div>`);
   }
 };
+/*
+ * Some things cannot be checked in a tab nobody is looking at.
+ *
+ * A hidden document does not move focus: .focus() returns, activeElement stays
+ * on body, and an assertion about focus fails for a reason that has nothing to
+ * do with the app. Reported as skipped, with the reason, rather than counted as
+ * a pass it did not earn or a failure it did not cause -- a suite that cries
+ * wolf while the window is behind another app teaches you to ignore it.
+ */
+let skipped = 0;
+const skip = (name, why) => {
+  skipped += 1;
+  out.insertAdjacentHTML('beforeend',
+    `<div style="color:#8f99aa">  skip ${name}<div style="padding-left:7ch">${why}</div></div>`);
+};
+
 const ok = (name, cond, detail) => {
   if (cond) { pass++; out.insertAdjacentHTML('beforeend', `<div style="color:#55c98a">  ok   ${name}</div>`); }
   else {
@@ -237,7 +253,12 @@ await runGroup('effect groups, level ceilings and named effects', async () => {
     landed = !!D.activeElement?.classList.contains('chip');
     if (!landed) await sleep(50);
   }
-  ok('focus follows the disclosure', landed, D.activeElement?.className || '(nothing focused)');
+  if (!landed && document.hidden) {
+    skip('focus follows the disclosure',
+      'this tab is hidden, and a hidden document does not move focus');
+  } else {
+    ok('focus follows the disclosure', landed, D.activeElement?.className || '(nothing focused)');
+  }
 
   const stun = $('.chip--fxtype[data-type="Stun"]');
   const stunSays = Number(stun.querySelector('b').textContent);
@@ -563,6 +584,52 @@ await runGroup('flex slots', async () => {
    * on an otherwise empty board could not be cleared at all -- and a board
    * showing three FLEX squares is not a clear board.
    */
+  /*
+   * The card is the whole point, so the card is what gets checked.
+   *
+   * Not by reading the code that draws it -- by rendering the real PNG twice,
+   * once with marks and once without, and counting pixels of the accent colour.
+   * The share card is a canvas: there is no DOM to assert against, and a check
+   * that only proved drawCell was *called* would have passed just as happily
+   * while drawing nothing.
+   */
+  const accentPixels = async () => {
+    $('#btn-share').click();
+    /* Waited for, not slept through. The card is drawn to a canvas and handed
+       over as a blob, and how long that takes depends on the machine and on
+       whether the tab is being rendered at all -- a fixed sleep is either too
+       short somewhere or wasted everywhere. */
+    try {
+      await until(() => $('dialog[open] img')?.complete
+        && $('dialog[open] img')?.naturalWidth > 0, 'the share card', 12000);
+    } catch { return null; }
+    const img = $('dialog[open] img');
+    if (!img) return null;
+    const V = D.defaultView;
+    const bmp = await V.createImageBitmap(await (await V.fetch(img.src)).blob());
+    const cv = new V.OffscreenCanvas(bmp.width, bmp.height);
+    const cx = cv.getContext('2d');
+    cx.drawImage(bmp, 0, 0);
+    const d = cx.getImageData(0, 0, bmp.width, bmp.height).data;
+    let n = 0;
+    for (let i = 0; i < d.length; i += 4) {
+      if (Math.abs(d[i] - 255) < 26 && Math.abs(d[i + 1] - 201) < 26 && Math.abs(d[i + 2] - 60) < 40) n += 1;
+    }
+    $('dialog[open]')?.close();
+    await sleep(200);
+    return n;
+  };
+
+  const litUp = await accentPixels();
+  ok('the share card renders at all', litUp !== null);
+  if (litUp !== null) {
+    $('#btn-clear-field').click();
+    await sleep(380);
+    const plain = await accentPixels();
+    ok('and a marked square puts more of the accent colour in the picture',
+       plain !== null && litUp > plain, `${litUp} with marks, ${plain} without`);
+  }
+
   $('#btn-clear-field').click();
   await sleep(380);
   eq('clearing the field takes the marks with it', marked(), 0);
@@ -930,9 +997,10 @@ await runGroup('the chips page', async () => {
 localStorage.clear();
 for (const [k, v] of Object.entries(saved)) localStorage.setItem(k, v);
 
+const skipNote = skipped ? `, ${skipped} skipped` : '';
 document.getElementById('head').innerHTML = fail
-  ? `<b style="color:#f0654f">${fail} failed</b>, ${pass} passed`
-  : `<b style="color:#55c98a">${pass} passed</b>, 0 failed`;
+  ? `<b style="color:#f0654f">${fail} failed</b>, ${pass} passed${skipNote}`
+  : `<b style="color:#55c98a">${pass} passed</b>, 0 failed${skipNote}`;
 document.title = `${fail ? `FAIL (${fail})` : 'ok'}: end-to-end checks`;
 window.__done = { pass, fail };
 </script>
