@@ -404,9 +404,21 @@ function buildEffectTypes(onChange) {
      * own label carries the escape hatch, since clicking the checked one clears
      * it and that is not a thing radios normally do.
      */
-    const budgets = BUDGETS.map((b) => `
+    /*
+     * Roving tabindex, because role=radio is a promise about the keyboard.
+     *
+     * The first version set the role and left four ordinary tab stops behind,
+     * which is worse than the aria-pressed it replaced: a screen reader hears
+     * "radio group" and reaches for the arrow keys, and nothing happens. One
+     * stop into the group, arrows between the options, exactly as a native
+     * radio behaves. Nothing checked yet means the first one holds the stop, so
+     * the group is always reachable.
+     */
+    const stop = filters.effectBy[open];
+    const budgets = BUDGETS.map((b, i) => `
       <button class="chip chip--budget" type="button" role="radio" data-budget="${b.value}"
-        aria-checked="${filters.effectBy[open] === b.value}" title="${esc(b.title)}"
+        aria-checked="${stop === b.value}" title="${esc(b.title)}"
+        tabindex="${stop === b.value || (stop === null && i === 0) ? 0 : -1}"
         >${b.label}</button>`).join('');
 
     const types = tallies[open].map((t) => {
@@ -472,6 +484,20 @@ function buildEffectTypes(onChange) {
      */
     if (open) sub.querySelector('.chip')?.focus();
     else caret.focus();
+  });
+
+  /* Arrows move and choose, the way a radio does. Wrapping, because four chips
+     in a row have no meaningful ends to stop at. */
+  sub.addEventListener('keydown', (e) => {
+    const radio = e.target.closest('.chip--budget');
+    if (!radio) return;
+    const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
+    if (!step) return;
+    e.preventDefault();
+    const all = [...sub.querySelectorAll('.chip--budget')];
+    const next = all[(all.indexOf(radio) + step + all.length) % all.length];
+    next.click();                       // choosing is what an arrow does here
+    sub.querySelector(`.chip--budget[data-budget="${next.dataset.budget}"]`)?.focus();
   });
 
   sub.addEventListener('click', (e) => {
