@@ -2233,10 +2233,26 @@ body[data-switching="true"] .cell[data-zobo] { box-shadow: none; cursor: default
  * to fit under them. Roughly a fifth smaller, which is the price of the rule
  * that nothing this app draws is ever on top of the art.
  */
+/*
+ * The sprite sits inside the square with room to spare.
+ *
+ * Two changes met here and neither was wrong on its own. The sprite used to be
+ * inset to 92% of this box; that became 100% when the framing was normalised.
+ * Then the effect badges were given a band of their own inside the box rather
+ * than under it, which took 15px off the top of the sprite's row. Between them
+ * the artwork ended up flush against the bottom edge of the tint -- measured,
+ * exactly zero pixels of gap -- so anything drawn near the bottom of its canvas
+ * looked like it was falling out of the square. It never actually overflowed;
+ * object-fit: contain cannot. It just had nowhere left to breathe.
+ *
+ * The padding is the gap, put back where the 92% used to hold it, and stated as
+ * a length so it does not quietly change with the card size again.
+ */
 .card__art {
   position: relative;
   display: grid; grid-template-rows: 15px 1fr; place-items: center;
   aspect-ratio: 1;
+  padding: 0 4px 5px;
   border-radius: var(--r-sm);
   background: color-mix(in srgb, var(--type-color) 13%, transparent);
 }
@@ -2344,7 +2360,17 @@ body[data-switching="true"] .cell[data-zobo] { box-shadow: none; cursor: default
  * itself, so the ellipsis lands before the badge and cannot reach it. The name
  * re-centres in what is left, which is what the card's text-align already wants.
  */
-.card.is-swap .card__name { margin-right: 17px; }
+/*
+ * Room for the swap marker, measured rather than guessed.
+ *
+ * The marker is 15px wide and sits 3px in from the card's padding box, and the
+ * name's containing block runs to the border box -- so 17px left it two pixels
+ * short and the name ran under the marker again, which is the exact bug the
+ * marker was introduced to fix. 22px is the 15 and the 3 and the card's own
+ * 4px of padding, with the arithmetic written down so the next person does not
+ * have to re-derive it from a screenshot.
+ */
+.card.is-swap .card__name { margin-right: 22px; }
 
 /* ============================================================ modals */
 

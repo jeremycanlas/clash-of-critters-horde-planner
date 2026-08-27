@@ -438,6 +438,34 @@ await runGroup('markers on the cards', async () => {
   ok('the mark is not another circle in a row of circles',
      !/50%/.test(D.defaultView.getComputedStyle(marks[0]).borderRadius),
      D.defaultView.getComputedStyle(marks[0]).borderRadius);
+  /*
+   * And the artwork is not pressed against the edge of its own square.
+   *
+   * object-fit: contain cannot overflow, so nothing here was ever technically
+   * outside its box -- which is exactly why it went unnoticed. What happened was
+   * that the sprite lost its margin: the inset that used to hold it at 92% went
+   * to 100%, and then the effect badges took a 15px band off the top of its row.
+   * Between them the artwork ended up flush against the bottom of the tint, at
+   * measured zero, and every critter drawn near the bottom of its canvas looked
+   * like it was falling out of the square.
+   *
+   * Measured rather than eyeballed, on a sample big enough to include the wide
+   * sprites, because the ones that touch first are the ones that fill their
+   * canvas and those are not at the top of the list.
+   */
+  const flush = $$('.panel--roster .card').slice(0, 60).map((c) => {
+    const art = c.querySelector('.card__art');
+    const img = art?.querySelector('img');
+    if (!art || !img) return null;
+    const a = art.getBoundingClientRect();
+    const i = img.getBoundingClientRect();
+    if (a.width < 10) return null;                 // nothing is laid out; not this check's business
+    const gap = Math.min(i.left - a.left, a.right - i.right, a.bottom - i.bottom);
+    return gap < 2 ? `${c.dataset.slug} (${Math.round(gap)}px)` : null;
+  }).filter(Boolean);
+  ok('the artwork keeps a margin inside its square', flush.length === 0,
+     flush.slice(0, 5).join(', '));
+
   ok('no badge is drawn over the artwork', $$('.panel--roster .card').slice(0, 60).every((c) => {
     const img = c.querySelector('.card__art img');
     if (!img) return true;
