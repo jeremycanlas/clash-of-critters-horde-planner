@@ -1137,9 +1137,98 @@ await runGroup('chips are dragged into the dock, and around inside it', async ()
   ok('and carry no explanation hung off them',
      $$('#chiptray .chiptray__label span').length === 0);
 
+  /*
+   * What you are carrying, and nothing else.
+   *
+   * The ghost used to be a 62px square with a shadow, which is the size and the
+   * look of a Tatari token -- the first thing this app ever dragged. Everything
+   * dragged since brings its own shape, so a chip's name pill sat inside a box
+   * that had nothing to do with it and you dragged a stray rectangle around.
+   * The box carries a coordinate now; the thing inside decides how it looks.
+   *
+   * Both halves are checked, because the fix moved the square rather than
+   * deleting it and the token is the one that still wants it.
+   */
+  {
+    const s = $$('.card--chip').map((e) => e.dataset.chip).find((n) => !kept().includes(n));
+    const art = cardFor(s).querySelector('.chiprow__art');
+    bring(art);
+    const a = centre(art);
+    send('pointerdown', a.x, a.y, art);
+    send('pointermove', a.x + 12, a.y + 12, V);
+    await sleep(140);
+    const ghost = D.querySelector('.drag-ghost');
+    ok('dragging a chip puts a ghost under the pointer', !!ghost);
+    if (ghost) {
+      const pill = ghost.querySelector('.chipghost');
+      const g = ghost.getBoundingClientRect();
+      const p = pill && pill.getBoundingClientRect();
+      ok('the ghost is the name, which is the thing worth seeing',
+         !!pill && pill.textContent.trim() === s, pill && pill.textContent.trim());
+      ok('and the ghost is no bigger than the name it is carrying',
+         !!p && Math.abs(g.width - p.width) < 3 && Math.abs(g.height - p.height) < 3,
+         p ? `ghost ${Math.round(g.width)}x${Math.round(g.height)}, name ${Math.round(p.width)}x${Math.round(p.height)}` : 'no name');
+      const gs = D.defaultView.getComputedStyle(ghost);
+      ok('with no box of its own drawn round it',
+         gs.boxShadow === 'none' && gs.backgroundColor === 'rgba(0, 0, 0, 0)',
+         `${gs.boxShadow} / ${gs.backgroundColor}`);
+    }
+    send('pointerup', a.x + 12, a.y + 12, V);
+    await sleep(280);
+  }
+
+  /* And a chip is not text you can drag a highlight across. */
+  ok('chip cards cannot be highlighted',
+     D.defaultView.getComputedStyle($('.card--chip')).userSelect === 'none');
+  ok('nor the trays they go into',
+     D.defaultView.getComputedStyle($('#chiptray .chiptray__zone')).userSelect === 'none');
+
   localStorage.removeItem('coc.chips.taken');
   await click($('#roster-tabs [data-list="tatari"]'), 380);
 });
+
+/*
+ * The Tatari ghost still wants the square it always had.
+ *
+ * The chip ghost stopped drawing a box by moving that box off the container
+ * and onto the token, which is the only thing that ever wanted it. If this
+ * goes, dragging a critter is an unlifted picture with no edge, and the fix
+ * for the chips quietly cost the thing it was built around.
+ */
+await runGroup('a dragged critter still looks like a token', async () => {
+  await until(() => !!$('#roster'), 'the drafter to be in the frame', 8000);
+  const V = D.defaultView;
+  await click($('#roster-tabs [data-list="tatari"]'), 420);
+  const card = $$('.panel--roster .card').find((c) => !c.classList.contains('card--chip'));
+  ok('there is a critter to drag', !!card);
+  if (!card) return;
+  const r = card.getBoundingClientRect();
+  if (r.width < 10) { skip('the token ghost keeps its square', 'the roster has no size in this window'); return; }
+  const at = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+  const send = (type, x, y, to) => to.dispatchEvent(new V.PointerEvent(type, {
+    bubbles: true, cancelable: true, composed: true,
+    pointerId: 3, pointerType: 'mouse', isPrimary: true,
+    button: type === 'pointermove' ? -1 : 0, buttons: type === 'pointerup' ? 0 : 1,
+    clientX: x, clientY: y,
+  }));
+  send('pointerdown', at.x, at.y, card);
+  send('pointermove', at.x + 12, at.y + 12, V);
+  await sleep(150);
+  const ghost = $('.drag-ghost');
+  const token = ghost && ghost.querySelector('.token');
+  ok('picking a critter up gives you a token', !!token);
+  if (token) {
+    const t = token.getBoundingClientRect();
+    ok('the token is still a 62px square', Math.round(t.width) === 62 && Math.round(t.height) === 62,
+       `${Math.round(t.width)}x${Math.round(t.height)}`);
+    const ts = V.getComputedStyle(token);
+    ok('and still lifted off the page', ts.boxShadow !== 'none', ts.boxShadow);
+    ok('and still rounded', parseFloat(ts.borderRadius) > 0, ts.borderRadius);
+  }
+  send('pointerup', at.x + 12, at.y + 12, V);
+  await sleep(260);
+});
+
 
 /*
  * The drag as a finger does it.

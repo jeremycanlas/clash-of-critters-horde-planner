@@ -86,6 +86,7 @@ field, HAVE above LF.
 - Clear field did nothing if you had no Tatari placed, so flex marks on an otherwise empty board couldn't be cleared. A board showing three FLEX squares is not a clear board.
 - Center Spotlight was filed as a position chip and counted your Tatari in the middle two columns. It moves where Zobo bosses spawn and says nothing about your Tatari, so it's a map chip now and scores nothing.
 - The grid view of the chips had no picture on the tiles at all, and the names were squeezed to about nine characters next to the tier.
+- The thing you drag was a 62px square with a shadow round it, which is what a Tatari token looks like and nothing else does. Dragging a chip pulled that empty box around behind the chip's name. It's the name and nothing else now. Chip cards can't be highlighted either, so dragging one across the list no longer paints it blue.
 - Dragging on a phone, twice over. The thing you pick up was drawn behind the sheet you were dragging it inside, so you'd press a chip and see nothing move at all. And any surface set up to be dragged (a chip's icon, a bench chip, a placed Tatari, a step in the level-up plan) was still being made to prove it wasn't a scroll first, on surfaces where the page had already told the browser it wouldn't scroll there.
 
 ### 1.7.0

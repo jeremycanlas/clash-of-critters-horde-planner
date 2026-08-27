@@ -2597,15 +2597,30 @@ body.is-live-down .who-strip { opacity: .45; }
 
 /* ============================================================ dragging */
 
+/*
+ * The ghost is a position, not a shape.
+ *
+ * It used to be a 62px square with a shadow, which is the size and the look of
+ * a Tatari token -- the first thing that was ever dragged. Everything dragged
+ * since brings its own shape: a chip brings a pill with its name on it, a
+ * level-up step brings a row. Those sat inside a 62px shadowed box that had
+ * nothing to do with them, so dragging a chip drew a stray rectangle behind
+ * the name. The box carries a coordinate now and the thing inside it decides
+ * what it looks like.
+ */
 .drag-ghost {
   position: fixed; top: 0; left: 0; z-index: var(--z-drag);
-  width: 62px; height: 62px;
-  border-radius: var(--r-sm);
-  box-shadow: var(--lift-2);
+  width: max-content; height: auto;
   pointer-events: none;
   will-change: transform;
 }
-.drag-ghost .token { position: static; width: 100%; height: 100%; }
+/* The token keeps the square and the shadow it always had, on itself. */
+.drag-ghost .token {
+  position: static;
+  width: 62px; height: 62px;
+  border-radius: var(--r-sm);
+  box-shadow: var(--lift-2);
+}
 .drag-ghost .prio--ghost {
   display: flex; align-items: center; gap: var(--s2);
   width: max-content; height: auto; padding: var(--s1) var(--s3) var(--s1) var(--s1);
