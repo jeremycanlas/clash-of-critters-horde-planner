@@ -411,7 +411,7 @@ function card(chip, score, isTaken, faces) {
       <button class="chipcard__keep" type="button" data-keep="${esc(chip.name)}"
         aria-pressed="${isTaken}"
         aria-label="${esc(isTaken ? `Stop counting ${chip.name} as kept` : `I kept ${chip.name}`)}"
-        title="${esc(isTaken ? 'Keeping this' : 'Keep this: one of your three, or the shortlist once they are full')}"
+        title="${esc(isTaken ? 'Keeping this' : 'Keep this: one of your three, or an alternative once they are full')}"
         >${isTaken ? '&check;' : '+'}</button>
       <img class="chipcard__art" src="${esc(iconFor(chip))}" alt="" loading="lazy" decoding="async">
       <h3 class="chipcard__name">

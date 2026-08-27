@@ -1132,7 +1132,7 @@ await runGroup('chips are dragged into the dock, and around inside it', async ()
 
   /* Nothing but the name in the tray headings. */
   ok('the tray headings say their name and nothing else',
-     $$('#chiptray .chiptray__label').map((e) => e.textContent.trim()).join('|') === 'Your three|Shortlist',
+     $$('#chiptray .chiptray__label').map((e) => e.textContent.trim()).join('|') === 'Your three|Alternatives',
      $$('#chiptray .chiptray__label').map((e) => e.textContent.trim()).join('|'));
   ok('and carry no explanation hung off them',
      $$('#chiptray .chiptray__label span').length === 0);
@@ -1265,6 +1265,62 @@ await runGroup('a finger can drag a chip, and can still scroll the list', async 
   await sleep(300);
   ok('flicking the card without pausing does not start a drag', !dragging);
   eq('so the list is still something you can scroll', kept().join(), before);
+
+  /*
+   * The thing under your finger has to be the thing you can see.
+   *
+   * This is the check that was missing when a chip could not be dragged on a
+   * phone. The drag worked; the ghost was drawn at z-index 10 while the sheet
+   * it was being dragged inside sits at 70, so it was painted behind the list
+   * and you saw nothing move. Every check here confirmed the drag was running
+   * and not one of them asked whether anybody could tell.
+   *
+   * Asked by hit-testing the ghost's own middle: if something else answers,
+   * the ghost is underneath it, whatever the drag is doing.
+   */
+  {
+    const s = spare();
+    const card = cardFor(s);
+    bring(card);
+    const a = centre(card.querySelector('.chiprow__art'));
+    finger('pointerdown', a.x, a.y, card.querySelector('.chiprow__art'));
+    finger('pointermove', a.x + 14, a.y + 14, V);
+    await sleep(140);
+    const ghost = D.querySelector('.drag-ghost');
+    ok('picking a chip up puts something under your finger', !!ghost);
+    if (ghost) {
+      const g = ghost.getBoundingClientRect();
+      ok('and it has a size', g.width > 8 && g.height > 8,
+         `${Math.round(g.width)}x${Math.round(g.height)}`);
+      /*
+       * Asked as a number, not by hit-testing.
+       *
+       * The ghost is pointer-events: none -- it has to be, or it would answer
+       * every hit test the drop is decided by -- so elementFromPoint can never
+       * return it and cannot be used to ask what is on top. The layers are
+       * compared instead, which is the thing that actually went wrong: the
+       * ghost was 10, the sheet it was dragged inside is 70.
+       */
+      const zOf = (sel) => {
+        const el = $(sel);
+        return el ? (Number(D.defaultView.getComputedStyle(el).zIndex) || 0) : 0;
+      };
+      const ghostZ = Number(D.defaultView.getComputedStyle(ghost).zIndex) || 0;
+      const shell = { sheet: zOf('.panel--roster'), dock: zOf('#dock'), bar: zOf('#appbar') };
+      ok('and it is drawn over every layer of the phone shell',
+         ghostZ > Math.max(...Object.values(shell)),
+         `ghost ${ghostZ} against ${JSON.stringify(shell)}`);
+      /* The comparison above only means anything while both sit in the same
+         stacking context. If a wrapper ever gains a z-index of its own, the
+         numbers stop being comparable and this says so before the ghost
+         quietly disappears behind something again. */
+      ok('and both are stacked against the same thing, so those numbers compare',
+         D.defaultView.getComputedStyle($('.panel--roster').parentElement).zIndex === 'auto'
+         && ghost.parentElement === D.body);
+    }
+    finger('pointerup', a.x + 14, a.y + 14, V);
+    await sleep(300);
+  }
 
   localStorage.removeItem('coc.chips.taken');
   await click($('#roster-tabs [data-list="tatari"]'), 380);

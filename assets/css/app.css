@@ -113,7 +113,18 @@
   --lift-1: 0 1px 2px rgb(0 0 0 / .28), 0 2px 8px rgb(0 0 0 / .18);
   --lift-2: 0 2px 6px rgb(0 0 0 / .32), 0 12px 32px rgb(0 0 0 / .28);
 
-  --z-drag: 10; --z-sticky: 20; --z-modal: 30; --z-toast: 40;
+  /*
+   * --z-drag is 100 and the rest are small on purpose.
+   *
+   * The thing under your finger has to be the thing on top, always, and it is
+   * the one layer that has no business being ordered against anything else. The
+   * others are a 10/20/30/40 scale for the desktop page -- but the phone shell
+   * stacks on its own numbers, dock 62, sheets 70, app bar 75, and a ghost at
+   * 10 was drawn behind the sheet it was being dragged inside. You picked a
+   * chip up and saw nothing move, which reads as a drag that does not work,
+   * because from where you are sitting that is what it is.
+   */
+  --z-drag: 100; --z-sticky: 20; --z-modal: 30; --z-toast: 40;
 
   --ease-out: cubic-bezier(.2, .7, .3, 1);
   color-scheme: dark;
@@ -5432,3 +5443,15 @@ body.is-dragging-active .chipbench__slot { border-color: var(--accent); }
   box-shadow: inset 0 0 0 2px var(--accent);
   border-radius: var(--r-sm);
 }
+
+/*
+ * A press on a chip is a press, not the start of a text selection.
+ *
+ * body.is-dragging-active turns selection off, but only once the drag has
+ * started -- and the thing that stops a touch drag starting is the browser
+ * deciding the press was a selection and cancelling the pointer. So the
+ * surfaces you drag from say it up front, before there is a drag to protect.
+ */
+.card--chip,
+.chipbench__chip,
+.chiptray__zone { user-select: none; -webkit-user-select: none; }

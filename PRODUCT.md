@@ -122,7 +122,7 @@ Confirmed functionality:
   type, filterable by either, in a list or a grid. The six that read placement
   and the fifteen that read your element split are scored against the board on
   the field and name the Tatari they would touch. You keep three, ranked, plus
-  an unlimited shortlist; they ride the dock beside the bench and print on the
+  an unlimited list of alternatives; they ride the dock beside the bench and print on the
   full share card.
 - **Flex slots**: any empty square can be marked as deliberately open. It draws
   as a dashed FLEX tile on the board and on the share card, which is what makes

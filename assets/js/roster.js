@@ -1323,7 +1323,7 @@ export function renderChipTray() {
       <span class="chipbench__chip" data-chip="${esc(name)}" tabindex="0" role="listitem"
         title="${esc(c ? `${name}: ${c.text}` : name)}"
         aria-label="${esc(i === null
-          ? `${name}, shortlisted. Left and right arrows move it, Delete drops it.`
+          ? `${name}, an alternative. Left and right arrows move it, Delete drops it.`
           : `${name}, pick ${i + 1} of ${PER}. Left and right arrows move it, Delete drops it.`)}">
         ${c ? `<img src="${esc(iconFor(c))}" alt="" loading="lazy" decoding="async">`
           : `<span class="chipbench__missing">?</span>`}
@@ -1341,7 +1341,7 @@ export function renderChipTray() {
       </div>
     </div>
     <div class="chiptray__zone chiptray__zone--extra" data-list="extra">
-      <p class="chiptray__label">Shortlist</p>
+      <p class="chiptray__label">Alternatives</p>
       <div class="chiptray__row" role="list">
         ${extra.map((n) => chip(n, null)).join('')}
         ${extra.length ? '' : `<span class="chiptray__hint">Drop a chip here to keep it in mind</span>`}
@@ -1379,7 +1379,7 @@ export function renderChipBench() {
       <span class="chipbench__chip" data-chip="${esc(name)}" tabindex="0" role="listitem"
         title="${esc(c ? `${name}: ${c.text}` : name)}"
         aria-label="${esc(i === null
-          ? `${name}, shortlisted. Left and right arrows move it, Delete drops it.`
+          ? `${name}, an alternative. Left and right arrows move it, Delete drops it.`
           : `${name}, pick ${i + 1} of ${PER}. Left and right arrows move it, Delete drops it.`)}">
         ${c ? `<img src="${esc(iconFor(c))}" alt="" loading="lazy" decoding="async">`
           : `<span class="chipbench__missing">?</span>`}
@@ -1393,7 +1393,7 @@ export function renderChipBench() {
       <span class="chipbench__count">${bare
         ? 'Tap a chip to keep it, or drag one here to set its order'
         : `<b>${main.length}</b>/${PER}${
-          extra.length ? ` &middot; ${extra.length} shortlisted` : ''}`}</span>
+          extra.length ? ` &middot; ${extra.length} alternatives` : ''}`}</span>
     </div>
     <div class="chipbench__strip">
       ${main.map((n, i) => chip(n, i)).join('')}

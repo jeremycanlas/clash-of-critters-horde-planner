@@ -1651,7 +1651,7 @@ await runGroup('chips are dragged into the dock, and around inside it', async ()
 
   /* Nothing but the name in the tray headings. */
   ok('the tray headings say their name and nothing else',
-     $$('#chiptray .chiptray__label').map((e) => e.textContent.trim()).join('|') === 'Your three|Shortlist',
+     $$('#chiptray .chiptray__label').map((e) => e.textContent.trim()).join('|') === 'Your three|Alternatives',
      $$('#chiptray .chiptray__label').map((e) => e.textContent.trim()).join('|'));
   ok('and carry no explanation hung off them',
      $$('#chiptray .chiptray__label span').length === 0);
