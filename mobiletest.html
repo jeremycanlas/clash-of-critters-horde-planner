@@ -1092,6 +1092,51 @@ await runGroup('chips are dragged into the dock, and around inside it', async ()
     ticking = false;
   }
 
+  /*
+   * Picked up by any part of it, and dropped in either tray.
+   *
+   * The drop targets were always fine; the grab was not. Only the 34px sprite
+   * started a drag, so somebody who put a finger on the chip's name got
+   * nothing -- and "nothing happens" reads as a broken feature, not as a
+   * handle you were supposed to find. The name is the handle here on purpose:
+   * if this passes, so does every other part of the card.
+   */
+  localStorage.removeItem('coc.chips.taken');
+  await click($('#roster-tabs [data-list="tatari"]'), 320);
+  await click($('#roster-tabs [data-list="chips"]'), 440);
+  eq('nothing kept, so both trays are empty', kept().length, 0);
+
+  const byName = (n) => cardFor(n)?.querySelector('.chiprow__head b') ?? cardFor(n);
+  const three = () => $('#chiptray .chiptray__zone[data-list="main"]');
+  const inThree = () => [...three().querySelectorAll('.chipbench__chip')].map((e) => e.dataset.chip);
+
+  const [p1, p2] = $$('.card--chip').slice(0, 2).map((e) => e.dataset.chip);
+  ok('the chips have a name to grab them by', !!byName(p1) && byName(p1).tagName === 'B');
+
+  await dragTo(byName(p1), shortlist());
+  eq('dragging a chip by its name lands it in the shortlist', shortlisted().join(), p1);
+  eq('and it did not go into the three by mistake', inThree().length, 0);
+
+  await dragTo(byName(p2), three());
+  eq('and dragging another by its name lands it in the three', inThree().join(), p2);
+  eq('with the shortlist left alone', shortlisted().join(), p1);
+
+  /* The sprite still works, and with no hold, which is the point of keeping
+     touch-action on it alone. */
+  const p3 = $$('.card--chip').map((e) => e.dataset.chip).find((n) => !kept().includes(n));
+  await dragTo(grip(cardFor(p3)), shortlist());
+  ok('the sprite is still a handle too', shortlisted().includes(p3), shortlisted().join(', '));
+  ok('and only the sprite refuses the browser its scroll',
+     D.defaultView.getComputedStyle(cardFor(p3)).touchAction !== 'none'
+     && D.defaultView.getComputedStyle(cardFor(p3).querySelector('.chiprow__art')).touchAction === 'none');
+
+  /* Nothing but the name in the tray headings. */
+  ok('the tray headings say their name and nothing else',
+     $$('#chiptray .chiptray__label').map((e) => e.textContent.trim()).join('|') === 'Your three|Shortlist',
+     $$('#chiptray .chiptray__label').map((e) => e.textContent.trim()).join('|'));
+  ok('and carry no explanation hung off them',
+     $$('#chiptray .chiptray__label span').length === 0);
+
   localStorage.removeItem('coc.chips.taken');
   await click($('#roster-tabs [data-list="tatari"]'), 380);
 });

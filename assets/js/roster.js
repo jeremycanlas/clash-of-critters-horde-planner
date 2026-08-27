@@ -1224,20 +1224,27 @@ function readyChipZone() {
   });
 }
 
-/* The icon is the handle, not the whole card.
+/* The whole chip is the handle, the way a Tatari card already is.
  *
- * On a phone the roster is a list you scroll with your thumb, and a row that
- * refuses to scroll because it might be a drag is worse than a row that cannot
- * be dragged at all. So `touch-action: none` goes on the sprite only -- the same
- * trade the level-up plan makes with its rank number, and the chips page with
- * its sprite. */
+ * It was the sprite only, on the theory that a row which refuses to scroll under
+ * a thumb is worse than a row that cannot be dragged. That is true, and it is
+ * not what binding the whole card costs: a touch drag here waits out a short
+ * hold and gives up the moment the finger travels, so a flick still scrolls the
+ * list and a press still picks the chip up. Tatari cards have worked this way
+ * the whole time. Grabbing a chip by its name and having nothing happen was the
+ * bug -- the drop targets were fine, there was just no way to pick most of the
+ * card up.
+ *
+ * `touch-action: none` stays on the sprite alone. That makes the sprite an
+ * instant grip with no hold at all, the fast path once you know it is there,
+ * while the rest of the card keeps its ability to scroll the list. */
 function bindChipDrag(el, name) {
   if (el.dataset.dragBound) return;
   el.dataset.dragBound = '1';
   readyChipZone();
   const c = chipList().find((x) => x.name === name);
   draggable(
-    el.querySelector('img') ?? el,
+    el,
     () => ({ from: 'chip', name }),
     () => `<span class="chipghost">${c
       ? `<img src="${esc(iconFor(c))}" alt="">` : ''}${esc(name)}</span>`,
@@ -1326,7 +1333,7 @@ export function renderChipTray() {
 
   host.innerHTML = `
     <div class="chiptray__zone" data-list="main">
-      <p class="chiptray__label">Your three<span>the order you take them in</span></p>
+      <p class="chiptray__label">Your three</p>
       <div class="chiptray__row" role="list">
         ${main.map((n, i) => chip(n, i)).join('')}
         ${Array.from({ length: Math.max(0, PER - main.length) }, (_, i) => `
@@ -1334,7 +1341,7 @@ export function renderChipTray() {
       </div>
     </div>
     <div class="chiptray__zone chiptray__zone--extra" data-list="extra">
-      <p class="chiptray__label">Shortlist<span>as many as you like</span></p>
+      <p class="chiptray__label">Shortlist</p>
       <div class="chiptray__row" role="list">
         ${extra.map((n) => chip(n, null)).join('')}
         ${extra.length ? '' : `<span class="chiptray__hint">Drop a chip here to keep it in mind</span>`}
@@ -1398,8 +1405,7 @@ export function renderChipBench() {
       ${extra.length ? `<span class="chipbench__gap" aria-hidden="true"></span>` : ''}
       ${extra.map((n) => chip(n, null)).join('')}
       ${extra.length ? '' : `
-        <span class="chipbench__slot chipbench__slot--extra" data-list="extra"
-          title="Shortlist: as many as you like, for the situation">+</span>`}
+        <span class="chipbench__slot chipbench__slot--extra" data-list="extra">+</span>`}
     </div>`;
 
   readyChipZone();

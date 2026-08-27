@@ -5217,6 +5217,16 @@ body.is-flexing .cell.is-filled { opacity: .55; }
  * a row in a list people scroll with a thumb. So it goes on the icon, the way
  * the level-up plan puts it on the rank number.
  */
+/*
+ * The whole chip says it can be picked up; the sprite is the instant grip.
+ *
+ * touch-action: none means "this gesture is mine" and must not go on a card in
+ * a list people scroll with a thumb -- so it stays on the sprite, where it buys
+ * a drag that starts with no hold at all. The rest of the card is draggable
+ * too, by press-and-hold, which is what a Tatari card has always done.
+ */
+.card--chip { cursor: grab; }
+.card--chip:active { cursor: grabbing; }
 .card--chip .chiprow__art,
 .chipbench__chip img { touch-action: none; cursor: grab; }
 .card--chip.is-dragging,
@@ -5329,19 +5339,11 @@ body.is-dragging-active .chipbench__slot { border-color: var(--accent); }
 
 .chiptray__label {
   margin: 0 0 5px;
-  display: flex; align-items: baseline; gap: 6px;
+  display: block;
   font-size: 10.5px; font-weight: 800;
   letter-spacing: .09em; text-transform: uppercase;
   color: var(--text-dim);
 }
-/* The subtitle says what the tray is for in the words you would use, once,
-   where you are already looking. It is not a tooltip because this is a phone. */
-.chiptray__label span {
-  font-size: 10px; font-weight: 500;
-  letter-spacing: 0; text-transform: none;
-  color: var(--text-mute);
-}
-
 .chiptray__row {
   display: flex; flex-wrap: wrap; align-items: center;
   gap: var(--s1);
