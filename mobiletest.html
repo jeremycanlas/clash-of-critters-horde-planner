@@ -79,6 +79,11 @@ const until = async (test, what, ms = 25000) => {
  * stops. Halves finish.
  */
 const only = new URLSearchParams(location.search).get('only')?.toLowerCase() ?? '';
+/* Whether ?only= actually matched anything. A filter that matches no group runs
+   boot and nothing else, and then reports green -- which is a suite telling you
+   your code is fine when it has not looked at it. That happened twice while
+   these checks were being written, both times hiding a real failure. */
+let matchedOnly = false;
 
 /*
  * A third outcome, for the checks that need the window to actually be on
@@ -97,6 +102,7 @@ const runGroup = async (name, body) => {
      group reading properties of undefined -- which is what "?only=flex" did on
      its first outing. */
   if (only && !name.toLowerCase().includes('boot') && !name.toLowerCase().includes(only)) return;
+  if (only && name.toLowerCase().includes(only)) matchedOnly = true;
 
   /*
    * Re-point at the live document before every group.
@@ -1502,10 +1508,19 @@ localStorage.clear();
 for (const [k, v] of Object.entries(saved)) localStorage.setItem(k, v);
 
 const skipNote = skipped ? `, ${skipped} skipped` : '';
+/* A filter that matched nothing ran boot and stopped. That is not a failure --
+   the other suite legitimately has no group by that name -- but it must never
+   read as "checked and fine", so it is said in the log and in the title, where
+   the runner will repeat it. */
+const nothingMatched = Boolean(only) && !matchedOnly;
+if (nothingMatched) {
+  skipped += 1;
+  line(`<div style="color:#8f99aa">  skip ?only=${only} matched no group here, so nothing was checked</div>`);
+}
 document.getElementById('head').innerHTML = fail
   ? `<b style="color:#f0654f">${fail} failed</b>, ${pass} passed${skipNote}`
   : `<b style="color:#55c98a">${pass} passed</b>, 0 failed${skipNote}`;
-document.title = `${fail ? `FAIL (${fail})` : 'ok'}: phone checks`;
+document.title = `${fail ? `FAIL (${fail})` : (nothingMatched ? 'ok, nothing matched' : 'ok')}: phone checks`;
 window.__done = { pass, fail, skipped };
 </script>
 </body>

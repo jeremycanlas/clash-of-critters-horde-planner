@@ -2342,8 +2342,15 @@ body[data-switching="true"] .cell[data-zobo] { box-shadow: none; cursor: default
  * own title and in an .sr-only span -- both of which could already carry it,
  * and neither of which has 90px to fit in.
  */
+.card__nameline {
+  display: flex; align-items: center; justify-content: center;
+  gap: 3px;
+  min-width: 0;
+}
+.card__nameline .card__name { min-width: 0; flex: 0 1 auto; }
+
 .card__lock {
-  position: absolute; right: 3px; bottom: 2px;
+  flex: none;
   display: grid; place-items: center;
   width: 15px; height: 15px;
   border-radius: var(--r-sm);
@@ -2360,17 +2367,8 @@ body[data-switching="true"] .cell[data-zobo] { box-shadow: none; cursor: default
  * itself, so the ellipsis lands before the badge and cannot reach it. The name
  * re-centres in what is left, which is what the card's text-align already wants.
  */
-/*
- * Room for the swap marker, measured rather than guessed.
- *
- * The marker is 15px wide and sits 3px in from the card's padding box, and the
- * name's containing block runs to the border box -- so 17px left it two pixels
- * short and the name ran under the marker again, which is the exact bug the
- * marker was introduced to fix. 22px is the 15 and the 3 and the card's own
- * 4px of padding, with the arithmetic written down so the next person does not
- * have to re-derive it from a screenshot.
- */
-.card.is-swap .card__name { margin-right: 22px; }
+/* No reserved margin any more: .card__nameline is a flex row, so the name gets
+   exactly the space the marker leaves and the two cannot collide. */
 
 /* ============================================================ modals */
 

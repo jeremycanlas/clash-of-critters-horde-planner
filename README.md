@@ -588,6 +588,10 @@ virtual clock, which is what makes it seconds instead of a forty-minute watch.
 --no-verify` gets past it once and `git config --unset core.hooksPath` turns it
 off. On a machine with no Chrome the hook says so and stands aside.
 
+A filter that matches no group in a page reports "ok, nothing matched" rather than a
+plain ok, and the runner prints it as `--`. A page that checked nothing must never
+look like a page that checked everything and was happy.
+
 Add `?only=flex` to either of the first two to run just the groups whose name
 contains that word. Iterating on one group otherwise means sitting through the
 other twenty, and there is a second reason: a browser clamps every timer in a

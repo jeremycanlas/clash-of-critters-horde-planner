@@ -70,8 +70,20 @@ done
 
 # Its own profile, on E:, because Chrome will not run two instances against one
 # and the user's everyday profile is not this script's to touch.
-PROFILE="${COC_TEST_PROFILE:-E:/caches/chrome-test-profile}"
+#
+# A fresh one per run, and removed afterwards. A shared profile is fine until a
+# run is interrupted -- the shell dies, Chrome does not, and the orphan keeps the
+# profile locked. Every later run then produced an empty page and the script
+# reported four suites that "never reported", which looks like the app exploding
+# and is really just a lock. Nothing here is worth keeping between runs.
+PROFILES="${COC_TEST_PROFILE_DIR:-E:/caches/coc-test-profiles}"
+mkdir -p "$PROFILES"
+# Clear anything a previous interrupted run left behind. Best effort: a profile
+# still held by a live Chrome will refuse to go, which is fine, it is not ours.
+rm -rf "$PROFILES"/* 2>/dev/null || true
+PROFILE="$PROFILES/$$"
 mkdir -p "$PROFILE"
+trap 'kill $SERVER 2>/dev/null || true; rm -rf "$PROFILE" 2>/dev/null || true' EXIT INT TERM
 
 FAILED=0
 for page in apptest mobiletest chipstest changestest; do
@@ -90,6 +102,10 @@ for page in apptest mobiletest chipstest changestest; do
     | grep -E '^(ok|FAIL)' | tail -1)
 
   case "$title" in
+    # A filter can legitimately match nothing here while matching in the other
+    # suite. Said out loud rather than counted as a pass, because "ok" next to a
+    # page that checked nothing is the one thing a runner must never print.
+    "ok, nothing matched"*) printf '  --   %-14s %s\n' "$page" "$title" ;;
     ok:*)   printf '  ok   %-14s %s\n' "$page" "$title" ;;
     FAIL*)  printf '  FAIL %-14s %s\n' "$page" "$title"; FAILED=1 ;;
     *)      printf '  FAIL %-14s never reported (title was "%s")\n' "$page" "$title"; FAILED=1 ;;

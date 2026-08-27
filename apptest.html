@@ -65,6 +65,11 @@ const group = (name) => {
  * stops. Halves finish.
  */
 const only = new URLSearchParams(location.search).get('only')?.toLowerCase() ?? '';
+/* Whether ?only= actually matched anything. A filter that matches no group runs
+   boot and nothing else, and then reports green -- which is a suite telling you
+   your code is fine when it has not looked at it. That happened twice while
+   these checks were being written, both times hiding a real failure. */
+let matchedOnly = false;
 
 const runGroup = async (name, body) => {
   /* Boot is never skipped. It is where the frame is waited for and where D, W
@@ -72,6 +77,7 @@ const runGroup = async (name, body) => {
      group reading properties of undefined -- which is what "?only=flex" did on
      its first outing. */
   if (only && !name.toLowerCase().includes('boot') && !name.toLowerCase().includes(only)) return;
+  if (only && name.toLowerCase().includes(only)) matchedOnly = true;
 
   /*
    * Re-point at the live document before every group.
@@ -596,8 +602,47 @@ await runGroup('a card you already have one of', async () => {
   ok('the card is actually rendered, so the measurements mean something',
      n.width > 0 && n.height > 0 && b.width > 0 && b.height > 0,
      `name ${Math.round(n.width)}x${Math.round(n.height)}, marker ${Math.round(b.width)}x${Math.round(b.height)}`);
-  ok('and the marker does not sit on top of the name',
-     b.left >= n.right - 0.5, `name ends ${Math.round(n.right)}, marker starts ${Math.round(b.left)}`);
+  /*
+   * Not "the marker starts after the name ends" -- that only describes one
+   * arrangement. Two rectangles either overlap or they do not, and asking it
+   * that way survives the marker being moved, which it has been twice.
+   */
+  const overlaps = !(b.left >= n.right - 0.5 || b.right <= n.left + 0.5
+                  || b.top >= n.bottom - 0.5 || b.bottom <= n.top + 0.5);
+  ok('and the marker does not sit on top of the name', !overlaps,
+     `name ${Math.round(n.left)}..${Math.round(n.right)}, marker ${Math.round(b.left)}..${Math.round(b.right)}`);
+
+  /*
+   * And the name is still the name.
+   *
+   * Reserving a fixed margin for the marker cost a letter off the longer names
+   * -- Rockzilla became "Rockzilla…" -- which is the same loss the marker was
+   * introduced to prevent, arriving by a different route. The row is flex now
+   * so the name takes whatever the marker leaves, and this is the check that
+   * says whether it was enough.
+   */
+  const cut = $$('.card.is-swap').map((c) => {
+    const el = c.querySelector('.card__name');
+    return el && el.scrollWidth > el.clientWidth + 1
+      ? `${el.textContent.trim()} (${el.scrollWidth} into ${el.clientWidth})` : null;
+  }).filter(Boolean);
+  ok('and no swap card has its name cut short to make room for it',
+     cut.length === 0, cut.slice(0, 4).join(', '));
+
+  /*
+   * Asked of the layout, not of one name.
+   *
+   * Checking that a particular card is not truncated passes for as long as that
+   * card's name is short -- the first one this picks is "Zapup", which fits
+   * beside the marker no matter how much room is wasted. The rule is that the
+   * row reserves no fixed gutter at all: the marker takes what it needs and the
+   * name takes the rest. A margin big enough to cost a letter off Rockzilla is
+   * invisible on Zapup, so the margin is what gets measured.
+   */
+  const gut = D.defaultView.getComputedStyle(nameEl);
+  ok('and the layout reserves no fixed gutter beside the name',
+     parseFloat(gut.marginRight) < 6 && parseFloat(gut.marginLeft) < 6,
+     `margins ${gut.marginLeft} / ${gut.marginRight}`);
   ok('the marker is small enough to be a marker', b.width <= 20 && b.height <= 20,
      `${Math.round(b.width)}x${Math.round(b.height)}`);
 
@@ -2168,10 +2213,19 @@ localStorage.clear();
 for (const [k, v] of Object.entries(saved)) localStorage.setItem(k, v);
 
 const skipNote = skipped ? `, ${skipped} skipped` : '';
+/* A filter that matched nothing ran boot and stopped. That is not a failure --
+   the other suite legitimately has no group by that name -- but it must never
+   read as "checked and fine", so it is said in the log and in the title, where
+   the runner will repeat it. */
+const nothingMatched = Boolean(only) && !matchedOnly;
+if (nothingMatched) {
+  skipped += 1;
+  out.insertAdjacentHTML('beforeend', `<div style="color:#8f99aa">  skip ?only=${only} matched no group here, so nothing was checked</div>`);
+}
 document.getElementById('head').innerHTML = fail
   ? `<b style="color:#f0654f">${fail} failed</b>, ${pass} passed${skipNote}`
   : `<b style="color:#55c98a">${pass} passed</b>, 0 failed${skipNote}`;
-document.title = `${fail ? `FAIL (${fail})` : 'ok'}: end-to-end checks`;
+document.title = `${fail ? `FAIL (${fail})` : (nothingMatched ? 'ok, nothing matched' : 'ok')}: end-to-end checks`;
 window.__done = { pass, fail };
 </script>
 </body>
