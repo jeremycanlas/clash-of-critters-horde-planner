@@ -1,11 +1,15 @@
 /** The searchable, filterable roster you draft from. */
 
 import { state, matches } from './data.js';
+import {
+  boardFor, chipList, iconFor, keptBy, placeAt, scoreOne, toggleKept,
+} from './chips.js';
 import * as store from './store.js';
 import { TYPES, ROLES } from './icons.js';
 import { $, artHTML, esc, typeIcon, roleIcon, toast } from './ui.js';
 import { draggable, dropZone } from './dnd.js';
 import { openDetail } from './detail.js';
+import { measureDock } from './shell.js';
 import {
   effectGroupsOf, effectsOf, helpFor, GROUP_LABELS,
   bringsTypeBy, bringsEffectBy, groupOf,
@@ -173,6 +177,62 @@ export function buildFilters(onChange, { onPick = bringToBench } = {}) {
    * meaning for an enemy, so the body carries a flag and the CSS hides them
    * rather than each control learning about tabs.
    */
+  /*
+   * Tier, for the chips tab only.
+   *
+   * It cannot reuse #filter-tiers: that one means T1 to T4 of a Tatari, and a
+   * chip's tier is a different axis with three values. Two filters that both
+   * say "tier" and mean different things would be worse than a second row that
+   * only appears when it applies.
+   */
+  const chipTierHost = $('#filter-chip-tiers');
+  if (chipTierHost) {
+    /* Only the listener here. The buttons themselves are drawn by renderChips,
+       because their counts come from data/chips.json and that arrives after the
+       filters are built -- drawn once at boot, all three read "0" forever. */
+    chipTierHost.addEventListener('click', (e) => {
+      const btn = e.target.closest('.chip--rarity');
+      if (!btn) return;
+      const t = Number(btn.dataset.tier);
+      chipTier = chipTier === t ? null : t;
+      onChange();
+    });
+  }
+
+  const chipGroupHost = $('#filter-chip-groups');
+  if (chipGroupHost) {
+    chipGroupHost.addEventListener('click', (e) => {
+      const btn = e.target.closest('.chip--group');
+      if (!btn) return;
+      const k = btn.dataset.shape;
+      chipShape = chipShape === k ? null : k;
+      onChange();
+    });
+  }
+
+  const viewHost = $('#chip-view');
+  if (viewHost) {
+    const draw = () => {
+      viewHost.innerHTML = [
+        ['list', 'List', 'Every chip with what it does'],
+        ['grid', 'Grid', 'Just the tiles, as the gallery shows them'],
+      ].map(([key, label, why]) => `
+        <button class="segmented__btn" type="button" role="tab" data-view="${key}"
+          aria-selected="${chipView === key}" title="${esc(why)}"
+          aria-label="${esc(`${label} view: ${why.toLowerCase()}`)}"
+          >${key === 'list' ? viewIconList() : viewIconGrid()}<span>${label}</span></button>`).join('');
+    };
+    draw();
+    viewHost.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-view]');
+      if (!btn || btn.dataset.view === chipView) return;
+      chipView = btn.dataset.view;
+      try { localStorage.setItem(VIEW_KEY, chipView); } catch { /* private */ }
+      draw();
+      onChange();
+    });
+  }
+
   const tabs = $('#roster-tabs');
   if (tabs) {
     tabs.addEventListener('click', (e) => {
@@ -259,6 +319,24 @@ export function buildFilters(onChange, { onPick = bringToBench } = {}) {
     filters.hideBlocked = e.target.checked;
     onChange();
   });
+  /*
+   * The filters fold away on a phone.
+   *
+   * They are 225px of a 700px sheet and the sheet exists to show the roster:
+   * three card rows of 230 Tatari, with more screen spent describing the list
+   * than showing it. Closed by default, and the button carries a count so a
+   * filter is never quietly on behind it.
+   */
+  const foldToggle = $('#filters-toggle');
+  if (foldToggle) {
+    foldToggle.addEventListener('click', () => {
+      const open = document.body.dataset.filters !== 'open';
+      if (open) document.body.dataset.filters = 'open';
+      else delete document.body.dataset.filters;
+      foldToggle.setAttribute('aria-expanded', String(open));
+    });
+  }
+
   $('#btn-reset-filters').addEventListener('click', () => {
     resetFilters();
     onChange();
@@ -267,6 +345,15 @@ export function buildFilters(onChange, { onPick = bringToBench } = {}) {
   // Clicking does whatever the host page wants. Dragging is for putting it
   // somewhere specific on the field.
   $('#roster').addEventListener('click', (e) => {
+    /* A chip card is a different kind of card in the same grid, so it is
+       answered before anything that assumes a slug. */
+    const chipCard = e.target.closest('.card--chip');
+    if (chipCard) {
+      toggleKept(store.formation.activePlayer, chipCard.dataset.chip);
+      onChange();
+      return;
+    }
+
     if (e.target.closest('.card__info')) {
       openDetail(e.target.closest('.card').dataset.slug);
       return;
@@ -711,6 +798,26 @@ function patchMark(t) {
     title="${esc(title)}" aria-label="${esc(label)} in the latest update"></span>`;
 }
 
+/**
+ * How many questions you have asked, for the folded button to admit to.
+ *
+ * Counted rather than tracked as a flag: a count that says "3" is the
+ * difference between "I forgot a filter is on" and "I know exactly how much is
+ * hiding behind this button".
+ */
+export function activeFilterCount() {
+  let n = filters.types.size + filters.roles.size + filters.tiers.size
+    + filters.effects.size + filters.effectTypes.size;
+  if (filters.changed) n += 1;
+  if (filters.boss) n += 1;
+  if (filters.hideBlocked) n += 1;
+  if (filters.sort !== 'default') n += 1;
+  for (const g of Object.keys(filters.effectBy)) if (filters.effectBy[g] !== null) n += 1;
+  if (chipTier !== null) n += 1;
+  if (chipShape !== null) n += 1;
+  return n;
+}
+
 export function resetFilters() {
   filters.query = '';
   filters.types.clear();
@@ -722,6 +829,15 @@ export function resetFilters() {
   for (const g of Object.keys(filters.effectBy)) filters.effectBy[g] = null;
   filters.hideBlocked = false;
   filters.sort = 'default';
+  /*
+   * The chips tab's two filters, which Reset used to leave exactly where they
+   * were -- and worse than untouched: the loop below unpresses every .chip on
+   * the page, so the buttons went pale while the filter stayed on, and the next
+   * redraw put them back. Pressing Reset appeared to do nothing because, on this
+   * tab, it did nothing.
+   */
+  chipTier = null;
+  chipShape = null;
   $('#search').value = '';
   $('#sort').value = 'default';
   $('#opt-hide-blocked').checked = false;
@@ -842,12 +958,495 @@ ${esc(z.skill.name)}` : ''}">
     : `${list.length} of ${state.zobos.length}`;
 }
 
+/*
+ * The chips, as a third list in the roster.
+ *
+ * They belong here for the same reason Zobos do: the roster is the list of
+ * things you pick from, and a chip is a thing you pick. It also inherits the
+ * search box and the card grid, which a panel of its own had to grow copies of.
+ *
+ * The card says the two things a card can say at 79px: which chip, and what it
+ * would be worth to the board you have built. Which particular Tatari is in the
+ * tooltip and on chips.html, both of which have the room for it.
+ */
+/*
+ * One at a time, both rows.
+ *
+ * Multi-select was the wrong default here. "Tier II or III" reads like a real
+ * question but the answer is 35 of 49, which is not a filter; and two rows
+ * sitting next to each other behaving differently is worse than either
+ * behaviour on its own. Pressing the one already on releases it, the same as
+ * the Patch chips on the Tatari tab.
+ */
+let chipTier = null;
+let chipShape = null;
+
+/* The same names the page uses for its headings, minus the word "Chips" --
+   printed on a chip, on a page of chips, it is the only word on the label that
+   says nothing. */
+const PER = 3;
+
+/*
+ * Grid or list, remembered.
+ *
+ * They answer different questions. The grid is for somebody who already knows
+ * the chips and is looking for one by its face; the list is for somebody
+ * deciding, who needs the rule. Neither is the beginner view and neither is the
+ * advanced one, so the choice is kept rather than reset every visit.
+ */
+const VIEW_KEY = 'coc.chips.view';
+let chipView = 'list';
+try { chipView = localStorage.getItem(VIEW_KEY) === 'grid' ? 'grid' : 'list'; } catch { /* private */ }
+
+const CHIP_GROUPS = {
+  placement: 'Position',
+  element: 'Element',
+  level: 'Level up',
+  economy: 'Energizer',
+  capacity: 'More Tatari',
+  stat: 'Flat Buff',
+  map: 'Map',
+};
+
+/* Drawn rather than lettered: at 12px a glyph says list-or-grid faster than the
+   word does, and the word is beside it anyway for anyone the shape fails. */
+const viewIconList = () => `
+  <svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true" focusable="false">
+    <rect x="0" y="1" width="3" height="3" rx=".6" fill="currentColor"/>
+    <rect x="4.5" y="2" width="7.5" height="1.2" rx=".6" fill="currentColor"/>
+    <rect x="0" y="7" width="3" height="3" rx=".6" fill="currentColor"/>
+    <rect x="4.5" y="8" width="7.5" height="1.2" rx=".6" fill="currentColor"/>
+  </svg>`;
+
+const viewIconGrid = () => `
+  <svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true" focusable="false">
+    <rect x="0" y="0" width="5" height="5" rx=".8" fill="currentColor"/>
+    <rect x="7" y="0" width="5" height="5" rx=".8" fill="currentColor"/>
+    <rect x="0" y="7" width="5" height="5" rx=".8" fill="currentColor"/>
+    <rect x="7" y="7" width="5" height="5" rx=".8" fill="currentColor"/>
+  </svg>`;
+
+function drawChipTiers() {
+  const host = $('#filter-chip-tiers');
+  if (host) {
+    host.innerHTML = `<span class="chips__label" aria-hidden="true">Tier</span>`
+      + [1, 2, 3].map((t) => `
+        <button class="chip chip--rarity" type="button" data-tier="${t}"
+          aria-pressed="${chipTier === t}"
+          title="${esc(`Show only tier ${'I'.repeat(t)} chips`)}"
+          ><span class="chip__tier" data-tier="${t}" aria-hidden="true">${'I'.repeat(t)}</span
+          >${chipList().filter((c) => c.tier === t).length}</button>`).join('');
+  }
+
+  /* Every category on a chip is also a category you can ask for. Nothing on a
+     card in this app is decoration only. */
+  const cats = $('#filter-chip-groups');
+  if (!cats) return;
+  cats.innerHTML = `<span class="chips__label" aria-hidden="true">Type</span>`
+    + Object.entries(CHIP_GROUPS)
+      .filter(([key]) => chipList().some((c) => c.shape === key))
+      .map(([key, label]) => `
+        <button class="chip chip--group" type="button" data-shape="${key}"
+          aria-pressed="${chipShape === key}"
+          title="${esc(`Show only ${label} chips`)}"
+          >${esc(label)} <b>${chipList().filter((c) => c.shape === key).length}</b></button>`)
+      .join('');
+}
+
+function renderChips() {
+  drawChipTiers();
+  const host = $('#roster');
+  const q = filters.query.toLowerCase();
+  const player = store.formation.activePlayer;
+  const board = boardFor(player);
+  const kept = keptBy(player);
+  const mine = [...kept.main, ...kept.extra];
+
+  /* The gallery's own order, which is not tier and not alphabetical and not
+     anything this file could derive -- so it is copied into the data instead. */
+  /*
+   * What you keep rises to the top, then the gallery's own order.
+   *
+   * Forty-nine rows is a long scroll and the three you have chosen are the ones
+   * you come back to; leaving them wherever the gallery put them means hunting
+   * for your own picks. Within each half the game's order holds, so the list
+   * still reads the way the gallery does.
+   */
+  const rank = (c) => {
+    const i = kept.main.indexOf(c.name);
+    if (i >= 0) return i;                       // your three, in your order
+    if (kept.extra.includes(c.name)) return PER + kept.extra.indexOf(c.name);
+    return 1e6 + (c.order ?? 0);
+  };
+  const list = chipList().slice().sort((a, b) => rank(a) - rank(b)).filter((c) => {
+    if (chipTier !== null && c.tier !== chipTier) return false;
+    if (chipShape !== null && c.shape !== chipShape) return false;
+    return !q || `${c.name} ${c.text}`.toLowerCase().includes(q);
+  });
+
+  host.dataset.chipView = chipView;
+
+  host.innerHTML = list.map((c) => {
+    const score = board.length ? scoreOne(c, board) : null;
+    const rank = kept.main.indexOf(c.name);
+    const held = mine.includes(c.name);
+    const badges = `
+      <span class="chiptier" data-tier="${c.tier}"
+        title="${esc(`Tier ${'I'.repeat(c.tier)}`)}">${'I'.repeat(c.tier)}</span>
+      <span class="chiptype" data-shape="${c.shape}">${esc(CHIP_GROUPS[c.shape] ?? c.shape)}</span>`;
+
+    /*
+     * Faces, not a sentence. "3 of your 6 in your back 2 rows" made you go and
+     * look at the board to find out which three; the sprites are the answer.
+     * The count stays in front of them, since a capped row still has to say
+     * when there are more.
+     */
+    const who = !score?.who?.length ? '' : `
+      <p class="chipwho chipwho--row">
+        <span class="chipwho__n">${score.n}</span>
+        ${score.who.slice(0, 8).map((piece) => `
+          <span class="chipwho__art" data-type="${esc(piece.type)}" title="${esc(piece.name)}"
+            >${piece.t ? artHTML(piece.t, { priority: 'low' }) : esc(piece.name)}</span>`).join('')}
+        ${score.who.length > 8 ? `<span class="chipwho__more">+${score.who.length - 8}</span>` : ''}
+      </p>`;
+
+    const empty = score && score.n === 0
+      ? `<p class="chiprow__none">Nothing on your board qualifies</p>` : '';
+
+    return `
+      <div class="card card--chip${held ? ' is-benched' : ''}" role="listitem" tabindex="0"
+           data-chip="${esc(c.name)}" data-tier="${c.tier}"
+           title="${esc(`${c.name}
+${c.text}`)}">
+        <img class="chiprow__art" src="${esc(iconFor(c))}" alt="" loading="lazy" decoding="async">
+        <div class="chiprow__body">
+          <p class="chiprow__head"><b>${esc(c.name)}</b>${badges}</p>
+          <p class="chiprow__text">${esc(c.text)}</p>
+          ${who}${empty}
+        </div>
+        ${rank >= 0 ? `<span class="card__rank" title="${esc(`Your pick ${rank + 1}`)}">${rank + 1}</span>` : ''}
+      </div>`;
+  }).join('');
+
+  /* Drag a chip straight from the roster into the dock, at the position you
+     want it in rather than onto the end of whatever is there. */
+  for (const card of host.children) bindChipDrag(card, card.dataset.chip);
+
+  $('#roster-count').textContent = list.length === chipList().length
+    ? `${list.length}`
+    : `${list.length} of ${chipList().length}`;
+}
+
+/**
+ * The chips you are bringing, docked under the bench.
+ *
+ * The bench answers "what am I bringing" for Tatari; this answers it for chips,
+ * and it sits with the bench rather than in the roster so that one screenshot of
+ * the field carries the board, the bench and the chips together. On a phone both
+ * strips ride the same fixed shelf above the app bar for the same reason.
+ *
+ * Empty until something is kept: an always-visible row of three blank squares
+ * would cost the field height on every formation, most of which never pick a
+ * chip at all.
+ */
+/*
+ * Dragging a chip into the dock, and dragging one within it.
+ *
+ * Clicking a chip already keeps it, and that is still the fast path. What
+ * clicking cannot say is *where*: it appends, and the order of the three is the
+ * whole point of the dock -- it is the order you take them in during a run. So
+ * the drag exists for the thing the tap cannot express, which is the only good
+ * reason to add a second way to do something.
+ *
+ * The dock reads left to right: the numbered three, a gap, then the shortlist.
+ * A drop lands where it looks like it landed. Dropping onto a numbered chip
+ * takes that number and pushes the rest along, which is the same rule the chips
+ * page uses -- and when that pushes a fourth chip out of the three it drops into
+ * the shortlist rather than being thrown away, because losing a pick you made
+ * to a gesture you were still learning is the worst thing this could do.
+ */
+let chipZoneReady = false;
+function readyChipZone() {
+  if (chipZoneReady) return;
+  chipZoneReady = true;
+  dropZone({
+    selector: '.chipbench__chip, .chipbench__slot, .chipbench__strip, .chiptray__zone',
+    accepts: (target, payload) =>
+      payload?.from === 'chip' && target.dataset.chip !== payload.name,
+    onHover: (target, ok) => target.classList.toggle('is-over', ok),
+    onDrop: (target, payload) => {
+      const player = store.formation.activePlayer;
+      const { main, extra } = keptBy(player);
+      const onto = target.dataset.chip;
+
+      if (onto) {
+        /* A chip says exactly where: take its place. */
+        const at = main.indexOf(onto);
+        if (at >= 0) placeAt(player, payload.name, 'main', at);
+        else placeAt(player, payload.name, 'extra', Math.max(0, extra.indexOf(onto)));
+      } else if (target.dataset.list === 'extra') {
+        placeAt(player, payload.name, 'extra', extra.length);
+      } else {
+        /* The strip itself, or the empty dock, says "in here somewhere", and
+           the end of the three is where a new pick goes. placeAt spills into
+           the shortlist by itself once the three are full. */
+        placeAt(player, payload.name, 'main', main.length);
+      }
+      renderRoster();
+    },
+  });
+
+  /*
+   * And back out again: drop a kept chip anywhere on the list it came from and
+   * it stops being kept.
+   *
+   * The way out has to be as obvious as the way in. Tapping the card toggles it
+   * and always did, but somebody who learned "drag it in" will try "drag it
+   * out" first, and a gesture that does nothing reads as a broken app rather
+   * than as a gesture that was never offered.
+   *
+   * Only chips that are actually kept are accepted, so dragging a card around
+   * the list it already lives in stays a no-op instead of a silent toggle.
+   */
+  dropZone({
+    selector: '#roster',
+    accepts: (target, payload) => {
+      if (payload?.from !== 'chip') return false;
+      const { main, extra } = keptBy(store.formation.activePlayer);
+      return main.includes(payload.name) || extra.includes(payload.name);
+    },
+    onHover: (target, ok) => target.classList.toggle('is-dropping', ok),
+    onDrop: (target, payload) => {
+      toggleKept(store.formation.activePlayer, payload.name);
+      renderRoster();
+      toast(`${payload.name} dropped`);
+    },
+  });
+}
+
+/* The whole chip is the handle, the way a Tatari card already is.
+ *
+ * It was the sprite only, on the theory that a row which refuses to scroll under
+ * a thumb is worse than a row that cannot be dragged. That is true, and it is
+ * not what binding the whole card costs: a touch drag here waits out a short
+ * hold and gives up the moment the finger travels, so a flick still scrolls the
+ * list and a press still picks the chip up. Tatari cards have worked this way
+ * the whole time. Grabbing a chip by its name and having nothing happen was the
+ * bug -- the drop targets were fine, there was just no way to pick most of the
+ * card up.
+ *
+ * `touch-action: none` stays on the sprite alone. That makes the sprite an
+ * instant grip with no hold at all, the fast path once you know it is there,
+ * while the rest of the card keeps its ability to scroll the list. */
+function bindChipDrag(el, name) {
+  if (el.dataset.dragBound) return;
+  el.dataset.dragBound = '1';
+  readyChipZone();
+  const c = chipList().find((x) => x.name === name);
+  draggable(
+    el,
+    () => ({ from: 'chip', name }),
+    () => `<span class="chipghost">${c
+      ? `<img src="${esc(iconFor(c))}" alt="">` : ''}${esc(name)}</span>`,
+  );
+}
+
+/*
+ * The chips' bench, inside the tab you pick them on.
+ *
+ * Two trays with a border round each, because they are two different promises:
+ * the three you are taking, in the order you take them, and a shortlist of as
+ * many as you like for whatever the run turns out to be. A border is doing real
+ * work here -- it says where a chip can be dropped before you pick one up,
+ * which a bare row of icons never did.
+ *
+ * The dock at the bottom of the app still exists and still shows the same three
+ * chips. It is not a duplicate of this: it is what ends up in the screenshot,
+ * next to the grid, and it is behind the roster sheet on a phone, which is why
+ * it could never have been the place you edit.
+ */
+/*
+ * The same reorder, from a keyboard.
+ *
+ * Dragging is the good way to say where a chip goes and for a while it was the
+ * only way, which quietly made the order of your three something you needed a
+ * pointer to set. Arrows move a chip one place; Delete drops it. Bound to the
+ * container, which survives the re-render its own handler causes -- the chips
+ * inside it do not.
+ */
+function bindChipKeys(host) {
+  if (host.dataset.keysBound) return;
+  host.dataset.keysBound = '1';
+  host.addEventListener('keydown', (e) => {
+    const el = e.target.closest?.('.chipbench__chip');
+    if (!el) return;
+    const name = el.dataset.chip;
+    const p = store.formation.activePlayer;
+    const lists = keptBy(p);
+    const order = [...lists.main, ...lists.extra];
+    const at = order.indexOf(name);
+    if (at < 0) return;
+
+    const step = e.key === 'ArrowLeft' ? -1 : e.key === 'ArrowRight' ? 1 : 0;
+    if (step) {
+      const to = Math.max(0, Math.min(order.length - 1, at + step));
+      if (to === at) return;
+      e.preventDefault();
+      placeAt(p, name, to < PER ? 'main' : 'extra', to < PER ? to : to - PER);
+    } else if (e.key === 'Delete' || e.key === 'Backspace') {
+      e.preventDefault();
+      toggleKept(p, name);
+    } else {
+      return;
+    }
+    renderRoster();
+    /* Focus follows the chip, not the position. Moving something and then
+       finding your focus on whatever slid into its place is how you move it
+       twice by accident. */
+    host.querySelector(`.chipbench__chip[data-chip="${CSS.escape(name)}"]`)?.focus();
+  });
+}
+
+export function renderChipTray() {
+  const host = $('#chiptray');
+  if (!host) return;
+  if (showing.value !== 'chips') { host.hidden = true; return; }
+  host.hidden = false;
+
+  const player = store.formation.activePlayer;
+  const { main, extra } = keptBy(player);
+  const byName = new Map(chipList().map((c) => [c.name, c]));
+
+  const chip = (name, i) => {
+    const c = byName.get(name);
+    return `
+      <span class="chipbench__chip" data-chip="${esc(name)}" tabindex="0" role="listitem"
+        title="${esc(c ? `${name}: ${c.text}` : name)}"
+        aria-label="${esc(i === null
+          ? `${name}, an alternative. Left and right arrows move it, Delete drops it.`
+          : `${name}, pick ${i + 1} of ${PER}. Left and right arrows move it, Delete drops it.`)}">
+        ${c ? `<img src="${esc(iconFor(c))}" alt="" loading="lazy" decoding="async">`
+          : `<span class="chipbench__missing">?</span>`}
+        ${i === null ? '' : `<span class="chipbench__n">${i + 1}</span>`}
+      </span>`;
+  };
+
+  host.innerHTML = `
+    <div class="chiptray__zone" data-list="main">
+      <p class="chiptray__label">Your three</p>
+      <div class="chiptray__row" role="list">
+        ${main.map((n, i) => chip(n, i)).join('')}
+        ${Array.from({ length: Math.max(0, PER - main.length) }, (_, i) => `
+          <span class="chipbench__slot" data-list="main">${main.length + i + 1}</span>`).join('')}
+      </div>
+    </div>
+    <div class="chiptray__zone chiptray__zone--extra" data-list="extra">
+      <p class="chiptray__label">Alternatives</p>
+      <div class="chiptray__row" role="list">
+        ${extra.map((n) => chip(n, null)).join('')}
+        ${extra.length ? '' : `<span class="chiptray__hint">Drop a chip here to keep it in mind</span>`}
+      </div>
+    </div>`;
+
+  readyChipZone();
+  for (const el of host.querySelectorAll('.chipbench__chip')) bindChipDrag(el, el.dataset.chip);
+  bindChipKeys(host);
+}
+
+export function renderChipBench() {
+  const host = $('#chipbench');
+  if (!host) return;
+
+  const player = store.formation.activePlayer;
+  const { main, extra } = keptBy(player);
+  const byName = new Map(chipList().map((c) => [c.name, c]));
+
+  /*
+   * An empty dock is still a dock while you are on the chips tab.
+   *
+   * It was hidden until the first chip was kept, which left the first drag with
+   * nowhere to land -- the affordance appeared only after you had used the
+   * thing it teaches. On any other tab it stays out of the way, and it is also
+   * revealed by CSS for the length of any drag, so a chip dragged from a roster
+   * you scrolled has somewhere to go.
+   */
+  const bare = !main.length && !extra.length;
+  host.hidden = bare && showing.value !== 'chips';
+
+  const chip = (name, i) => {
+    const c = byName.get(name);
+    return `
+      <span class="chipbench__chip" data-chip="${esc(name)}" tabindex="0" role="listitem"
+        title="${esc(c ? `${name}: ${c.text}` : name)}"
+        aria-label="${esc(i === null
+          ? `${name}, an alternative. Left and right arrows move it, Delete drops it.`
+          : `${name}, pick ${i + 1} of ${PER}. Left and right arrows move it, Delete drops it.`)}">
+        ${c ? `<img src="${esc(iconFor(c))}" alt="" loading="lazy" decoding="async">`
+          : `<span class="chipbench__missing">?</span>`}
+        ${i === null ? '' : `<span class="chipbench__n">${i + 1}</span>`}
+      </span>`;
+  };
+
+  host.innerHTML = `
+    <div class="chipbench__head">
+      <span class="chipbench__label">Chips</span>
+      <span class="chipbench__count">${bare
+        ? 'Tap a chip to keep it, or drag one here to set its order'
+        : `<b>${main.length}</b>/${PER}${
+          extra.length ? ` &middot; ${extra.length} alternatives` : ''}`}</span>
+    </div>
+    <div class="chipbench__strip">
+      ${main.map((n, i) => chip(n, i)).join('')}
+      ${/* An outline for each pick you have not made yet: three boxes say the
+            number is three far better than a sentence does, and each one is a
+            target in its own right. */ ''}
+      ${Array.from({ length: Math.max(0, PER - main.length) }, () => `
+        <span class="chipbench__slot" data-list="main" aria-hidden="true"></span>`).join('')}
+      ${extra.length ? `<span class="chipbench__gap" aria-hidden="true"></span>` : ''}
+      ${extra.map((n) => chip(n, null)).join('')}
+      ${extra.length ? '' : `
+        <span class="chipbench__slot chipbench__slot--extra" data-list="extra">+</span>`}
+    </div>`;
+
+  readyChipZone();
+  for (const el of host.querySelectorAll('.chipbench__chip')) {
+    bindChipDrag(el, el.dataset.chip);
+  }
+
+  bindChipKeys(host);
+
+  /* The dock just changed height, and on a phone the page's bottom padding is
+     derived from it. Said directly rather than waited for: the observer that
+     would notice is deferred while the tab is not being rendered. */
+  measureDock();
+}
+
 export function renderRoster() {
   // Every path that changes what the roster shows comes through here, so this is
   // the one place the chips' counts have to be brought back into agreement with
   // it -- including the search box, which never touches a chip.
   refreshChipCounts();
+  /* And the dock, for the same reason: keeping a chip calls onChange, which is
+     renderRoster and not the whole app, so a dock drawn only from renderAll
+     never hears about it. */
+  renderChipBench();
+  renderChipTray();
+
+  const fold = $('#filters-toggle');
+  if (fold) {
+    const n = activeFilterCount();
+    fold.innerHTML = `Filters${n ? ` <b>${n}</b>` : ''}`;
+    fold.classList.toggle('is-on', n > 0);
+  }
+  /* data-chip-view belongs to the chips list and only to it: it decides the
+     roster's grid columns, and left behind on the way back to Tatari it laid
+     230 cards out one per row at full width. Cleared here rather than in each
+     of the other two render paths, because there is no fourth list yet and
+     there will be, and it would be forgotten. renderChips sets it again. */
+  $('#roster').removeAttribute('data-chip-view');
+
   if (showing.value === 'zobos') { renderZobos(); return; }
+  if (showing.value === 'chips') { renderChips(); return; }
   const player = store.formation.activePlayer;
   const list = visible(player);
   const host = $('#roster');
@@ -894,7 +1493,8 @@ export function renderRoster() {
                      title="P${otherPlayer[0]} is bringing this too">P${otherPlayer[0]}</span>` : ''}
         </div>
         <div class="card__name">${esc(t.name)}</div>
-        ${clash ? `<span class="card__lock">Switch from ${esc(clash.name)}</span>` : ''}
+        ${clash ? `<span class="card__lock" aria-hidden="true">&#8646;</span>
+        <span class="sr-only">Switch from ${esc(clash.name)}, keeping its plan</span>` : ''}
         <!-- Focusable. It was tabindex="-1", which took the detail sheet — and
              with it "Place on the field" — off the keyboard entirely. The
              reveal already handles :focus-visible, so it appears when tabbed

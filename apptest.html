@@ -54,14 +54,61 @@ const group = (name) => {
  * were never reported at all. A suite is most useful when something is broken,
  * which is exactly when it must keep going.
  */
+/*
+ * Run one group, or a few, instead of all of them.
+ *
+ * `?only=chips` runs every group whose name contains "chips". Two reasons it
+ * earns its place. Iterating on one group meant sitting through the other
+ * twenty every time; and a browser freezes a page that has been hidden for
+ * about five minutes, while clamping every timer in it to a second before that
+ * -- so a full run in a background window reaches roughly a hundred checks and
+ * stops. Halves finish.
+ */
+const only = new URLSearchParams(location.search).get('only')?.toLowerCase() ?? '';
+
 const runGroup = async (name, body) => {
+  /* Boot is never skipped. It is where the frame is waited for and where D, W
+     and the roster total come from, so filtering it out leaves every other
+     group reading properties of undefined -- which is what "?only=flex" did on
+     its first outing. */
+  if (only && !name.toLowerCase().includes('boot') && !name.toLowerCase().includes(only)) return;
+
+  /*
+   * Re-point at the live document before every group.
+   *
+   * D is the app frame's document, captured once at boot. If anything inside
+   * the app navigates that frame -- a link, a reload -- the old document is torn
+   * down and every querySelector against it starts answering null, which
+   * surfaces two groups later as "cannot read properties of null" and looks
+   * like a bug in whatever group happened to be running. It is not; it is a
+   * stale handle. One line, once, in the only place every group passes through.
+   */
+  if (app.contentDocument && app.contentDocument !== D) {
+    D = app.contentDocument;
+  }
   group(name);
   try { await body(); } catch (err) {
     fail++;
     out.insertAdjacentHTML('beforeend',
-      `<div style="color:#f0654f">  FAIL ${name} threw — ${err.message}</div>`);
+      `<div style="color:#f0654f">  FAIL ${name} threw: ${err.message}</div>`);
   }
 };
+/*
+ * Some things cannot be checked in a tab nobody is looking at.
+ *
+ * A hidden document does not move focus: .focus() returns, activeElement stays
+ * on body, and an assertion about focus fails for a reason that has nothing to
+ * do with the app. Reported as skipped, with the reason, rather than counted as
+ * a pass it did not earn or a failure it did not cause -- a suite that cries
+ * wolf while the window is behind another app teaches you to ignore it.
+ */
+let skipped = 0;
+const skip = (name, why) => {
+  skipped += 1;
+  out.insertAdjacentHTML('beforeend',
+    `<div style="color:#8f99aa">  skip ${name}<div style="padding-left:7ch">${why}</div></div>`);
+};
+
 const ok = (name, cond, detail) => {
   if (cond) { pass++; out.insertAdjacentHTML('beforeend', `<div style="color:#55c98a">  ok   ${name}</div>`); }
   else {
@@ -160,6 +207,38 @@ const reset = async () => {
   await click($$('button').find((b) => /^reset$/i.test(b.textContent.trim())));
 };
 
+/**
+ * Gets one Tatari onto the field, whichever way this run is being asked to.
+ *
+ * The stage is sized by the browser window, so on a narrow one it is under
+ * 760px and the app inside it is in the phone layout -- where a bench chip arms
+ * and waits for you to tap a square rather than auto-placing. Three separate
+ * groups worked that out the hard way, each of them reading a polite "tap the
+ * cell you want" as "it never reached the field".
+ *
+ * `into` picks the square when there is one that matters; otherwise the first
+ * free field square will do. Zobo-ground squares are excluded on purpose: they
+ * are closed unless Sandbox opened them, and the app correctly refuses them
+ * with a toast that reads exactly like a failure.
+ */
+const placeOne = async (into = null) => {
+  if (!$('.benchchip')) {
+    const pick = $$('.panel--roster .card')
+      .find((c) => !c.classList.contains('is-benched') && !c.dataset.switchFrom);
+    if (!pick) return false;
+    pick.click();
+    try { await until(() => !!$('.benchchip'), 'the bench', 4000); } catch { return false; }
+  }
+  $('.benchchip').click();
+  await sleep(300);
+  if (!$('.cell.is-filled') || into) {
+    const target = into ?? $$('.cell:not(.cell--enemy)').find((c) => !c.querySelector('.token'));
+    target?.click();
+    await sleep(360);
+  }
+  return !!$('.cell.is-filled');
+};
+
 // Each group runs sealed off from the others; see runGroup.
   // ---------------------------------------------------------------- boot
 await runGroup('boot', async () => {
@@ -222,8 +301,27 @@ await runGroup('effect groups, level ceilings and named effects', async () => {
   eq('the caret reports itself open', caret('debuff').getAttribute('aria-expanded'), 'true');
   const named = $$('.chip--fxtype');
   ok('opening a group reveals its named effects', named.length > 5, `${named.length} chips`);
-  ok('focus follows the disclosure',
-     D.activeElement?.classList.contains('chip'), D.activeElement?.className);
+  /*
+   * Waited for, not sampled.
+   *
+   * This read activeElement once after a fixed sleep, which is a race dressed up
+   * as an assertion: the focus call is synchronous inside the click handler, but
+   * whether this line runs before or after everything else the browser has queued
+   * is not something a 340ms sleep decides. It failed twice in a row, passed four
+   * times after, and cost an afternoon of blaming an unrelated change. Waiting
+   * still fails if focus never lands -- it just stops failing when it lands late.
+   */
+  let landed = false;
+  for (let i = 0; i < 20 && !landed; i++) {
+    landed = !!D.activeElement?.classList.contains('chip');
+    if (!landed) await sleep(50);
+  }
+  if (!landed && document.hidden) {
+    skip('focus follows the disclosure',
+      'this tab is hidden, and a hidden document does not move focus');
+  } else {
+    ok('focus follows the disclosure', landed, D.activeElement?.className || '(nothing focused)');
+  }
 
   const stun = $('.chip--fxtype[data-type="Stun"]');
   const stunSays = Number(stun.querySelector('b').textContent);
@@ -353,14 +451,31 @@ await runGroup('markers on the cards', async () => {
   // ------------------------------------------------- glyphs actually draw
 });
 await runGroup('glyphs render, not tofu', async () => {
+  /*
+   * Finds its own elements rather than borrowing them.
+   *
+   * `caret` and `marks` are set by two groups further up, so under ?only=glyphs
+   * this asked getComputedStyle for the style of undefined. A group that cannot
+   * be run on its own is a group you cannot iterate on, which is the whole
+   * point of the flag.
+   */
   const drawn = (el, pseudo) => {
     const c = D.defaultView.getComputedStyle(el, pseudo).content;
-    return c && c !== 'none' && c !== 'normal' && !/^"\\?[0-9a-fA-F]{2,6}"$/.test(c);
+    return c && c !== 'none' && c !== 'normal' && !/^"\?[0-9a-fA-F]{2,6}"$/.test(c);
   };
-  ok('the effect carets draw an arrow, not an escape', drawn(caret('heal'), '::after'),
-     D.defaultView.getComputedStyle(caret('heal'), '::after').content);
-  ok('the patch marks draw their glyph', drawn(marks[0], '::after'),
-     D.defaultView.getComputedStyle(marks[0], '::after').content);
+  const aCaret = caret('heal') ?? $('.fxcaret');
+  const aMark = (marks && marks[0]) ?? $('.card__patch');
+
+  ok('there is a caret to look at', !!aCaret);
+  ok('there is a patch mark to look at', !!aMark);
+  if (aCaret) {
+    ok('the effect carets draw an arrow, not an escape', drawn(aCaret, '::after'),
+       D.defaultView.getComputedStyle(aCaret, '::after').content);
+  }
+  if (aMark) {
+    ok('the patch marks draw their glyph', drawn(aMark, '::after'),
+       D.defaultView.getComputedStyle(aMark, '::after').content);
+  }
 
   // ------------------------------------------------------ the whole update
 });
@@ -399,14 +514,1376 @@ await runGroup('the what-changed page', async () => {
   frame.remove();
 });
 
+await runGroup('a card you already have one of', async () => {
+  /*
+   * Bring one Tatari and the rest of its line becomes swap targets. The marker
+   * that says so used to be a full-width bar pinned to the bottom of the card,
+   * which is where the name is: it covered the name, and its own text ("Switch
+   * from Frostique") was far too long for a 79px card, so it truncated to
+   * "SWITCH FROM...". Three cards of the same line all read those nine
+   * characters and nothing else.
+   *
+   * So this checks the two facts that were lost, not the styling that lost
+   * them: the card still says which Tatari it is, and nothing is drawn over it.
+   */
+  /* The bench first, not just the filters. Earlier groups leave Tatari on it,
+     and clicking a card that is already benched takes it off again -- which is
+     how this check first reported "nothing clashed" against a working app. */
+  /*
+   * The stage back, before anything is measured.
+   *
+   * The changes-page group hides the app frame to make room for the second
+   * page, and every rect inside a display:none frame is 0x0 at 0,0. This group
+   * is geometry, so on a hidden frame "the marker does not sit on top of the
+   * name" becomes 0 >= -0.5, which is true, and the whole group passes against
+   * a card it never saw. It did: the original bug was put back and all seven
+   * checks stayed green.
+   */
+  app.style.display = '';
+  await sleep(160);
+
+  await reset();
+  const clearFirst = $('[data-clear-bench]');
+  if (clearFirst) { clearFirst.click(); await sleep(300); }
+
+  const first = $$('.panel--roster .card').find((c) => !c.classList.contains('is-benched'));
+  const brought = first.querySelector('.card__name').textContent.trim();
+  first.click();
+  await sleep(420);
+
+  const swap = $('.card.is-swap');
+  ok('bringing one marks the rest of its line', !!swap, `nothing clashed with ${brought}`);
+  if (!swap) return;
+
+  const nameEl = swap.querySelector('.card__name');
+  const name = nameEl.textContent.trim();
+  ok('a swap card still says which Tatari it is', name.length > 0 && !/switch/i.test(name), name);
+  ok('and it is not the one you already brought', name !== brought, `${name} vs ${brought}`);
+
+  const badge = swap.querySelector('.card__lock');
+  ok('there is a marker saying it would swap', !!badge);
+  const n = nameEl.getBoundingClientRect();
+  const b = badge.getBoundingClientRect();
+  /* Both really on screen. Without this every comparison below is 0 against 0. */
+  ok('the card is actually rendered, so the measurements mean something',
+     n.width > 0 && n.height > 0 && b.width > 0 && b.height > 0,
+     `name ${Math.round(n.width)}x${Math.round(n.height)}, marker ${Math.round(b.width)}x${Math.round(b.height)}`);
+  ok('and the marker does not sit on top of the name',
+     b.left >= n.right - 0.5, `name ends ${Math.round(n.right)}, marker starts ${Math.round(b.left)}`);
+  ok('the marker is small enough to be a marker', b.width <= 20 && b.height <= 20,
+     `${Math.round(b.width)}x${Math.round(b.height)}`);
+
+  /* The sentence the bar was trying to fit still exists, somewhere that has room
+     for it. A screen reader gets it; 79px never could. */
+  const said = `${swap.querySelector('.sr-only')?.textContent ?? ''} ${swap.getAttribute('title') ?? ''}`;
+  ok('and it still says which one you would swap from', said.includes(brought), said.trim());
+
+  await reset();
+  const clearBench = $('[data-clear-bench]');
+  if (clearBench) { clearBench.click(); await sleep(260); }
+});
+
+await runGroup('the level-up plan explains itself', async () => {
+  /*
+   * With no steps in it, this panel rendered as nothing: a heading, a Clear
+   * steps button, the adder, and an empty <ol> between them. It is the panel
+   * holding the one idea in the tool that is about a run rather than a lineup,
+   * and it was asking somebody to fill in a form without saying what filling it
+   * in would buy them. The Learner is a stated intended user, not an edge case.
+   */
+  /* The stage back first. An earlier group hides the app frame to make room for
+     the changes page, and a display:none frame is where several of this suite's
+     stranger failures have come from. */
+  app.style.display = '';
+  await sleep(200);
+
+  await reset();
+  $('#btn-clear-field').click();
+  await sleep(360);
+  const clearPlan = $('#btn-clear-plan');
+  if (clearPlan && !clearPlan.disabled) { clearPlan.click(); await sleep(320); }
+  const bench = $('[data-clear-bench]');
+  if (bench) { bench.click(); await sleep(320); }
+
+  const plan = () => $('#priority');
+  const saying = () => plan().textContent.replace(/\s+/g, ' ').trim();
+
+  ok('an empty board says what to do first', /Nothing to plan yet/.test(saying()), saying().slice(0, 80));
+  ok('and points at the field rather than at this panel', /put them on the field/.test(saying()));
+
+  /* Bring one. The answer changes, because the reason for the emptiness has. */
+  await placeOne();
+  ok('a Tatari on the field is placed', !!$('.cell.is-filled'),
+     `bench had ${$$('.benchchip').length}, last toast: ${$('.toast')?.textContent?.trim() ?? '(none)'}`);
+  ok('and now it says what a step is', /A step is one or more Tatari/.test(saying()), saying().slice(0, 90));
+  ok('and why the order is worth thinking about', /Energizers run out/.test(saying()));
+
+  /* And it gets out of the way the moment there is a real step. */
+  await until(() => !!$('.step-pick'), 'the step picker to offer somebody', 4000)
+    .catch(() => {});
+  const step = $('.step-pick');
+  ok('there is somebody to plan for', !!step,
+     `adder hidden: ${$('#step-adder').hidden}, placed: ${$$('.cell.is-filled').length}`);
+  if (step) {
+    step.click();
+    await sleep(280);
+    $('#step-adder button[type="submit"]').click();
+    await sleep(460);
+    eq('adding a step clears the empty state', $$('.plan-empty').length, 0);
+    ok('and the step is really there', $$('#priority .prio:not(.prio--ghost)').length >= 1);
+    ok('with a count beside the heading', /step/.test($('#step-count').textContent),
+       `count reads "${$('#step-count').textContent}"`);
+  }
+});
+
+await runGroup('flex slots', async () => {
+  /*
+   * A square left open on purpose.
+   *
+   * Formations travel as a screenshot of the grid -- 286 opens against 4 card
+   * downloads and 0 link copies -- and in a picture "I could not fill this" and
+   * "bring what you like here" are the same empty square. The second is the
+   * more useful post and had no way to say so.
+   */
+  await reset();
+  /* From a clean board. Earlier groups leave Tatari there, and this browser may
+     carry marks from a previous visit -- the counts below are all absolute. */
+  $('#btn-clear-field').click();
+  await sleep(360);
+
+  const flexBox = $('#opt-flex');
+  ok('there is a way to mark them', !!flexBox);
+  const cell = (n) => $(`.cell[data-cell="${n}"]`);
+  const marked = () => $$('.cell.is-flex').length;
+
+  eq('nothing is marked to start', marked(), 0);
+  await click(cell(7), 260);
+  eq('and pressing a square does nothing until you turn it on', marked(), 0);
+
+  flexBox.click();
+  await sleep(320);
+  ok('turning it on says so on the board', D.body.classList.contains('is-flexing'));
+
+  await click(cell(7), 280);
+  await click(cell(9), 280);
+  eq('now a press marks the square', marked(), 2);
+  eq('and the square says what it is', $('.cell.is-flex .cell__flex').textContent.trim(), 'FLEX');
+  ok('in words a screen reader gets too',
+     /on purpose/.test(cell(7).getAttribute('aria-label')), cell(7).getAttribute('aria-label'));
+
+  await click(cell(7), 280);
+  eq('pressing it again takes the mark off', marked(), 1);
+
+  flexBox.click();
+  await sleep(320);
+  ok('the mode ends', !D.body.classList.contains('is-flexing'));
+  eq('but the mark stays, because it is part of the formation', marked(), 1);
+
+  /*
+   * It has to survive the trip. The mark is only worth having if it is still
+   * there in the file you send someone and the tab you come back to.
+   */
+  const saved = JSON.parse(localStorage.getItem('coc.formation.v4') ?? '{}');
+  ok('and it is saved with everything else', Array.isArray(saved.flex) && saved.flex.includes(9),
+     JSON.stringify(saved.flex));
+
+  /*
+   * A mark cannot outlive something arriving on the square. Checked through
+   * placement rather than by calling the store, because place() is not the only
+   * route onto a cell and the guard deliberately sits where they all meet.
+   */
+  flexBox.click(); await sleep(300);
+  const free = $$('.cell:not(.is-filled)')
+    .map((c) => Number(c.dataset.cell)).filter((n) => n < 36).sort((a, b) => b - a)[0];
+  await click(cell(free), 280);
+  ok('marked the square the next Tatari will land on', cell(free).classList.contains('is-flex'));
+  flexBox.click(); await sleep(300);
+
+  await placeOne(cell(free));
+  ok('placing there fills the square', cell(free).classList.contains('is-filled'),
+     `last toast: ${$('.toast')?.textContent?.trim() ?? '(none)'}`);
+  ok('and the mark is gone rather than hiding under it',
+     !cell(free).classList.contains('is-flex'));
+  const after = JSON.parse(localStorage.getItem('coc.formation.v4') ?? '{}');
+  ok('gone from the formation too, not just from the screen',
+     !(after.flex ?? []).includes(free), JSON.stringify(after.flex));
+
+  /* Clearing the field clears them: they describe a board that no longer exists. */
+  /*
+   * Clear field used to return early on a board with no Tatari on it, so marks
+   * on an otherwise empty board could not be cleared at all -- and a board
+   * showing three FLEX squares is not a clear board.
+   */
+  /*
+   * The card is the whole point, so the card is what gets checked.
+   *
+   * Not by reading the code that draws it -- by rendering the real PNG twice,
+   * once with marks and once without, and counting pixels of the accent colour.
+   * The share card is a canvas: there is no DOM to assert against, and a check
+   * that only proved drawCell was *called* would have passed just as happily
+   * while drawing nothing.
+   */
+  /*
+   * The previous card is still in the dialog when it reopens.
+   *
+   * Waiting for "an image that has loaded" is satisfied instantly by the one
+   * already sitting there, so two renders in a row returned the same picture
+   * and the comparison read 4223 against 4223 -- the feature looking broken
+   * because the check never saw the second render. Each draw gets a fresh blob
+   * URL, so the src changing is the signal that this is a new one.
+   */
+  let lastSrc = '';
+  const accentPixels = async () => {
+    $('#btn-share').click();
+    try {
+      await until(() => {
+        const el = $('dialog[open] img');
+        return el && el.src !== lastSrc && el.complete && el.naturalWidth > 0;
+      }, 'a freshly drawn share card', 14000);
+    } catch { return null; }
+    const img = $('dialog[open] img');
+    if (!img) return null;
+    lastSrc = img.src;
+    const V = D.defaultView;
+    let bmp;
+    /* Same guard as the chips group further down: headless Chrome will hand out
+       a blob: URL it then refuses to fetch. Null here already means "no card to
+       measure", which is what the caller reports. */
+    try { bmp = await V.createImageBitmap(await (await V.fetch(img.src)).blob()); }
+    catch { $('dialog[open]')?.close(); await sleep(200); return null; }
+    const cv = new V.OffscreenCanvas(bmp.width, bmp.height);
+    const cx = cv.getContext('2d');
+    cx.drawImage(bmp, 0, 0);
+    const d = cx.getImageData(0, 0, bmp.width, bmp.height).data;
+    let n = 0;
+    for (let i = 0; i < d.length; i += 4) {
+      if (Math.abs(d[i] - 255) < 26 && Math.abs(d[i + 1] - 201) < 26 && Math.abs(d[i + 2] - 60) < 40) n += 1;
+    }
+    $('dialog[open]')?.close();
+    await sleep(200);
+    return n;
+  };
+
+  const litUp = await accentPixels();
+  ok('the share card renders at all', litUp !== null);
+  if (litUp !== null) {
+    $('#btn-clear-field').click();
+    await sleep(380);
+    const plain = await accentPixels();
+    ok('and a marked square puts more of the accent colour in the picture',
+       plain !== null && litUp > plain, `${litUp} with marks, ${plain} without`);
+  }
+
+  $('#btn-clear-field').click();
+  await sleep(380);
+  eq('clearing the field takes the marks with it', marked(), 0);
+
+  $('#opt-flex').click(); await sleep(300);
+  await click(cell(2), 260);
+  $('#opt-flex').click(); await sleep(300);
+  eq('a mark on an otherwise empty board', marked(), 1);
+  $('#btn-clear-field').click();
+  await sleep(380);
+  eq('and Clear field clears it', marked(), 0);
+});
+
+await runGroup('the chips tab in the roster', async () => {
+  /*
+   * Chips are a third list in the roster because a chip is a third thing you
+   * pick. This is the tab, not the page: what it has to get right is that it
+   * shows all 49, that the Tatari filters get out of the way (none of element,
+   * role, evolution tier or bench means anything to a chip), and that a card
+   * says what the chip is worth to the board currently on the field.
+   */
+  localStorage.removeItem('coc.chips.taken');
+  await reset();
+
+  /* Something on the field, or every chip that reads the board has nothing to
+     name and the sprite check below is vacuously true. */
+  if (!$('.cell.is-filled')) await placeOne();
+  ok('there is a formation to score chips against', !!$('.cell.is-filled'));
+
+  const tab = (name) => $(`#roster-tabs [data-list="${name}"]`);
+  ok('there is a Chips tab', !!tab('chips'));
+
+  await click(tab('chips'), 420);
+  eq('choosing it marks the body', D.body.dataset.rosterList, 'chips');
+  const chips = () => $$('.card--chip');
+  eq('every chip is in the list', chips().length, 49);
+  eq('and the count agrees', $('#roster-count').textContent.trim(), '49');
+
+  const hidden = (sel) => D.defaultView.getComputedStyle($(sel)).display === 'none';
+
+  /*
+   * Unfold first if this run is narrow enough to have folded.
+   *
+   * The stage is sized by the browser window, so under 760px the app inside it
+   * puts every filter behind the Filters button -- correctly. A check written
+   * before that existed read the tier row as missing when it was merely folded,
+   * which is the filter working rather than failing.
+   */
+  const foldBtn = $('#filters-toggle');
+  if (foldBtn && D.defaultView.getComputedStyle(foldBtn).display !== 'none'
+    && D.body.dataset.filters !== 'open') {
+    await click(foldBtn, 340);
+  }
+
+  ok('the element filter steps aside', hidden('#filter-types'));
+  ok('so do roles and evolution tiers', hidden('#filter-roles') && hidden('#filter-tiers'));
+  ok('and the chip tier filter appears', !hidden('#filter-chip-tiers'));
+
+  const tierBtn = $('#filter-chip-tiers [data-tier="3"]');
+  const promised = Number(tierBtn.textContent.replace(/\D/g, ''));
+  await click(tierBtn, 380);
+  eq('filtering by tier finds what it promised', chips().length, promised);
+  /* One at a time here too, so the two rows do not behave differently. */
+  const tierII = Number($('#filter-chip-tiers [data-tier="2"]').textContent.replace(/\D/g, ''));
+  await click($('#filter-chip-tiers [data-tier="2"]'), 380);
+  eq('a second tier replaces rather than adds', chips().length, tierII);
+  await click($('#filter-chip-tiers [data-tier="2"]'), 380);
+  eq('and releases', chips().length, 49);
+
+  const box = $('#search');
+  box.value = 'lawn';
+  box.dispatchEvent(new D.defaultView.Event('input', { bubbles: true }));
+  await sleep(320);
+  ok('the search box searches chips too', chips().length > 0 && chips().length < 49,
+     `${chips().length} for "lawn"`);
+  await reset();
+  box.value = '';
+
+  /* Tapping keeps it, the same way tapping a Tatari benches one. */
+  const first = chips()[0];
+  const name = first.dataset.chip;
+  await click(first, 380);
+  ok('tapping a chip keeps it',
+     $(`.card--chip[data-chip="${CSS.escape(name)}"]`).classList.contains('is-benched'));
+  ok('and it says which of the three it is',
+     !!$(`.card--chip[data-chip="${CSS.escape(name)}"] .card__rank`));
+  await click($(`.card--chip[data-chip="${CSS.escape(name)}"]`), 380);
+  ok('tapping again lets it go',
+     !$(`.card--chip[data-chip="${CSS.escape(name)}"]`).classList.contains('is-benched'));
+
+  /*
+   * A chip is a rule, not a sprite, so the rule has to be on the row.
+   *
+   * These were 82px tiles with the text in a tooltip, which is unreadable on a
+   * phone -- there is no hover -- and slow everywhere else. A Tatari card works
+   * at 82px because a sprite is recognisable at 82px; "Generate 6 single-use
+   * lawn mowers at the bottom of the map" is not.
+   */
+  const lawn = $('.card--chip[data-chip="Lawn Care"]');
+  ok('a chip says what it does without being hovered',
+     lawn.querySelector('.chiprow__text')?.textContent.includes('lawn mowers'),
+     lawn.querySelector('.chiprow__text')?.textContent ?? '(no text)');
+  eq('and says which type it is', lawn.querySelector('.chiptype').textContent.trim(), 'Map');
+  ok('every chip carries both', chips().every((c) =>
+    c.querySelector('.chiprow__text')?.textContent.trim() && c.querySelector('.chiptype')));
+
+  /* One column, or the sentence has nowhere to go. */
+  eq('the list is one chip per row',
+     new Set(chips().slice(0, 5).map((c) => Math.round(c.getBoundingClientRect().left))).size, 1);
+
+  /* Every category on a card is also one you can ask for. */
+  const kinds = $$('.chip--group');
+  eq('there is a filter per kind', kinds.length, 7);
+  const mapBtn = $('.chip--group[data-shape="map"]');
+  const says = Number(mapBtn.querySelector('b').textContent);
+  await click(mapBtn, 380);
+  eq('filtering by type finds what it promised', chips().length, says);
+  ok('and they really are that type',
+     chips().every((c) => c.querySelector('.chiptype').textContent.trim() === 'Map'));
+
+  const elemN = Number($('.chip--group[data-shape="element"] b').textContent);
+  await click($('.chip--group[data-shape="element"]'), 380);
+  eq('a second type replaces the first', chips().length, elemN);
+  eq('and only one is pressed',
+     $$('.chip--group[aria-pressed="true"]').length, 1);
+  await click($('.chip--group[data-shape="element"]'), 380);
+  eq('releasing it puts them all back', chips().length, 49);
+
+  /*
+   * The gallery's order, which is not tier, not alphabetical, and nothing this
+   * app could work out -- so it is copied into data/chips.json from the same
+   * screenshots the icons were cut from. Sorting it any other way makes the tab
+   * disagree with the game a player is looking at while they read it.
+   */
+  eq('the list is in the order the game shows them',
+     chips().slice(0, 4).map((c) => c.dataset.chip).join(', '),
+     'Photosynthesis III, Bounty Hunter III, Slot Machine 4, Water Form III');
+
+  /*
+   * Two views, because there are two questions.
+   *
+   * The list is for deciding and needs the rule spelled out; the grid is for
+   * finding a chip you already know by its face. The grid deliberately cannot
+   * show the rule -- that is what the list is for -- so what is checked here is
+   * that each view shows what it is meant to and that the choice survives.
+   */
+  const view = (k) => $(`#chip-view [data-view="${k}"]`);
+  ok('there is a grid and a list view', !!view('grid') && !!view('list'));
+  eq('the roster says which it is in', $('#roster').dataset.chipView, 'list');
+
+  await click(view('grid'), 420);
+  eq('choosing grid switches it', $('#roster').dataset.chipView, 'grid');
+  const gridCard = $('.card--chip');
+  ok('the grid hides the rule, which is what the list is for',
+     D.defaultView.getComputedStyle(gridCard.querySelector('.chiprow__text')).display === 'none');
+  ok('but keeps the tier',
+     D.defaultView.getComputedStyle(gridCard.querySelector('.chiptier')).display !== 'none');
+  ok('and the tiles are narrow again', gridCard.getBoundingClientRect().width < 140,
+     `${Math.round(gridCard.getBoundingClientRect().width)}px`);
+
+  /*
+   * A tile is a picture and a name. Both were briefly neither: overriding only
+   * the rows left the icon in the list's first `auto` column, where width: 100%
+   * resolves against a column sized to its contents, so it measured 0x0 and the
+   * card was text with no picture in it. The name meanwhile had 52px of an 80px
+   * card because the tier pill sat beside it, which is nine characters --
+   * "Photosynthesis III" read "Photosynt".
+   */
+  const tile = gridCard.querySelector('.chiprow__art').getBoundingClientRect();
+  ok('the tile actually has a picture on it', tile.width > 40 && tile.height > 40,
+     `${Math.round(tile.width)}x${Math.round(tile.height)}`);
+  const gridName = gridCard.querySelector('.chiprow__head b');
+  ok('every tile is named', chips().every((c) => c.querySelector('.chiprow__head b')?.textContent.trim()));
+  ok('and the name is not cut off', gridName.scrollHeight <= gridName.clientHeight + 1,
+     `${gridName.textContent}: ${gridName.scrollHeight} into ${gridName.clientHeight}`);
+  ok('the name gets most of the tile rather than sharing a line with the tier',
+     gridName.getBoundingClientRect().width > gridCard.getBoundingClientRect().width * 0.7,
+     `${Math.round(gridName.getBoundingClientRect().width)} of ${Math.round(gridCard.getBoundingClientRect().width)}`);
+
+  /* Keeping one must not make its row taller than its neighbours. */
+  const before = new Set(chips().map((c) => Math.round(c.getBoundingClientRect().height)));
+  await click($('.card--chip'), 400);
+  const after = new Set(chips().map((c) => Math.round(c.getBoundingClientRect().height)));
+  eq('keeping a chip does not shove its row down', after.size, before.size);
+  await click($('.card--chip'), 400);
+
+  eq('the choice is remembered', localStorage.getItem('coc.chips.view'), 'grid');
+
+  await click(view('list'), 420);
+  eq('and back', $('#roster').dataset.chipView, 'list');
+  ok('the rule is readable again',
+     D.defaultView.getComputedStyle($('.card--chip .chiprow__text')).display !== 'none');
+
+  /*
+   * The score answers in faces. "3 of your 6 in your back 2 rows" made you look
+   * back at the board to find out which three.
+   */
+  const scored = chips().find((c) => c.querySelector('.chipwho__art'));
+  ok('a chip that reads the board names it in sprites', !!scored,
+     'no chip drew any Tatari; is anything on the field?');
+  if (scored) {
+    ok('with a count in front of them', !!scored.querySelector('.chipwho__n'));
+    eq('and no sentence left behind', scored.querySelectorAll('.chiprow__score').length, 0);
+  }
+
+  /* High contrast has to reach this tab like it reaches everything else. */
+  const tierPill = $('.chiptier');
+  const ringBefore = D.defaultView.getComputedStyle(tierPill).boxShadow;
+  D.documentElement.dataset.contrast = 'more';
+  await sleep(200);
+  ok('High contrast gives the tier an edge of its own',
+     D.defaultView.getComputedStyle($('.chiptier')).boxShadow !== ringBefore,
+     `${ringBefore} unchanged`);
+  delete D.documentElement.dataset.contrast;
+  await sleep(150);
+
+  /*
+   * Reset has to reach this tab's filters too.
+   *
+   * It did not, and the failure was quiet in the worst way: resetFilters
+   * unpresses every .chip on the page, so the buttons went pale while the
+   * filter stayed on, and the next redraw put them back. Pressing Reset looked
+   * like it did nothing because on this tab it did nothing.
+   */
+  await click($('#filter-chip-tiers [data-tier="2"]'), 340);
+  await click($('.chip--group[data-shape="element"]'), 340);
+  ok('two filters narrow it', chips().length < 49, `${chips().length}`);
+  await click($('#btn-reset-filters'), 420);
+  eq('Reset brings every chip back', chips().length, 49);
+  eq('and unpresses both rows',
+     $$('#filter-chip-tiers [aria-pressed="true"], .chip--group[aria-pressed="true"]').length, 0);
+
+  /* Seven types do not fit a phone, so the row scrolls rather than hiding two
+     of them off the edge with no way to reach them. */
+  const typeRow = $('#filter-chip-groups');
+  ok('the type row can reach all seven',
+     D.defaultView.getComputedStyle(typeRow).overflowX === 'auto');
+
+  /* The panel this replaced is gone, not hidden. */
+  ok('the old panel under the Summary is gone', !$('#chips'));
+
+  await click(tab('tatari'), 380);
+  eq('and the Tatari tab still works', D.body.dataset.rosterList, 'tatari');
+  ok('with its filters back', !hidden('#filter-types'));
+});
+
+await runGroup('the chips travel with the picture', async () => {
+  /*
+   * Formations travel as a picture, so what you would take travels with it or
+   * it does not travel at all. Only on the full card: the grid-only card is the
+   * tight crop people post, and a chip list is not part of the board -- it goes
+   * with the bench, which is also only on the full one.
+   *
+   * Checked by rendering the real PNG and measuring it, because a section the
+   * canvas was not sized for is not pushed into whitespace, it is cut off. That
+   * is the one failure a share card cannot have, and card.js says so about the
+   * board already.
+   */
+  app.style.display = '';
+  await sleep(200);
+  await reset();
+
+  const V = D.defaultView;
+  /* Same trap as the flex group's: the dialog reopens showing the last card it
+     drew, so "an image that has loaded" is true before this render begins. */
+  let lastCard = '';
+  const fullCard = async () => {
+    $('#btn-share').click();
+    await sleep(500);
+    $$('dialog[open] button, dialog[open] label')
+      .find((e) => /everything/i.test(e.textContent))?.click();
+    try {
+      await until(() => {
+        const el = $('dialog[open] img');
+        return el && el.src !== lastCard && el.complete && el.naturalWidth > 0;
+      }, 'a freshly drawn full card', 16000);
+    } catch { return null; }
+    lastCard = $('dialog[open] img').src;
+    let bmp;
+    try {
+      bmp = await V.createImageBitmap(await (await V.fetch($('dialog[open] img').src)).blob());
+    } catch {
+      /* Headless Chrome under a virtual clock hands out a blob: URL and then
+         declines to fetch it. The card did draw -- the wait above only returns
+         once the img has a natural width -- so this is the browser refusing to
+         read it back, not the app failing to make it. Reported as a skip and
+         measured properly the next time the group runs in a real window,
+         because a check that goes red for the harness gets ignored. */
+      $('dialog[open]')?.close();
+      await sleep(240);
+      return 'unreadable';
+    }
+    const cv = new V.OffscreenCanvas(bmp.width, bmp.height);
+    const cx = cv.getContext('2d');
+    cx.drawImage(bmp, 0, 0);
+    const low = cx.getImageData(0, Math.floor(bmp.height * 0.6), bmp.width,
+      Math.floor(bmp.height * 0.4)).data;
+    let accent = 0;
+    for (let i = 0; i < low.length; i += 4) {
+      if (Math.abs(low[i] - 255) < 26 && Math.abs(low[i + 1] - 201) < 26
+        && Math.abs(low[i + 2] - 60) < 40) accent += 1;
+    }
+    /* The last rows must be flat background. If the card is a section short,
+       this is where the evidence is. */
+    const tail = cx.getImageData(0, bmp.height - 8, bmp.width, 8).data;
+    let offBg = 0;
+    for (let i = 0; i < tail.length; i += 4) {
+      if (Math.abs(tail[i] - tail[0]) > 10 || Math.abs(tail[i + 1] - tail[1]) > 10
+        || Math.abs(tail[i + 2] - tail[2]) > 10) offBg += 1;
+    }
+    $('dialog[open]')?.close();
+    await sleep(240);
+    return { h: bmp.height, accent, offBg };
+  };
+
+  localStorage.removeItem('coc.chips.taken');
+  await click($('#roster-tabs [data-list="chips"]'), 420);
+  const bare = await fullCard();
+  const readable = bare !== 'unreadable';
+  if (!readable) skip('the chips are in the picture', 'this browser will not read its own blob: URL back');
+  else ok('the full card renders with no chips kept', bare !== null);
+
+  const names = $$('.card--chip').slice(0, 3).map((c) => c.dataset.chip);
+  for (const n of names) {
+    $(`.card--chip[data-chip="${CSS.escape(n)}"]`)?.click();
+    await sleep(260);
+  }
+  const withChips = await fullCard();
+  if (readable) ok('and with three kept', withChips !== null);
+
+  if (readable && bare && withChips && withChips !== 'unreadable') {
+    ok('keeping chips puts them in the picture', withChips.accent > bare.accent,
+       `${withChips.accent} accent pixels against ${bare.accent}`);
+    ok('and the card grows to make room rather than cropping them',
+       withChips.h > bare.h, `${withChips.h}px against ${bare.h}px`);
+    eq('nothing is cut off the bottom', withChips.offBg, 0);
+  }
+
+  await click($('#roster-tabs [data-list="tatari"]'), 380);
+});
+
+/*
+ * The bug this group exists for, reported from a phone with a screenshot.
+ *
+ * data-chip-view is written onto #roster when the chips list renders, and it
+ * describes only the chips list: in "list" it forces one full-width column.
+ * Going back to Tatari left it there, so 230 critters rendered one enormous
+ * card per row. Nothing threw. No count was wrong. The only symptom was the
+ * layout, which is exactly the kind of break every check written so far walks
+ * straight past.
+ *
+ * So the check is not "the chips tab tidies up after itself". It is the general
+ * shape: measure a list, leave by every route there is, come back, and find it
+ * exactly as it was -- attributes, columns, card count and the header number.
+ * That catches the next thing somebody leaves behind as well as this one.
+ */
+await runGroup('switching lists leaves nothing behind', async () => {
+  await reset();
+
+  const roster = $('#roster');
+  const tab = (name) => $(`#roster-tabs [data-list="${name}"]`);
+  const LISTS = ['tatari', 'zobos', 'chips'];
+  ok('all three lists have a tab', LISTS.every((l) => !!tab(l)));
+
+  const shapeOf = () => {
+    const cs = D.defaultView.getComputedStyle(roster);
+    return {
+      attrs: [...roster.attributes].map((a) => `${a.name}=${a.value}`).sort().join(' | '),
+      columns: cs.gridTemplateColumns.split(/\s+/).filter(Boolean).length,
+      cards: roster.children.length,
+      count: $('#roster-count').textContent.trim(),
+    };
+  };
+  const go = async (name) => { await click(tab(name), 420); return shapeOf(); };
+
+  const first = {};
+  for (const l of LISTS) first[l] = await go(l);
+
+  /*
+   * The failing symptom, said as a number: one column is the chips' list view
+   * wearing the Tatari roster's clothes.
+   *
+   * Only asked when the roster has a real width. auto-fill fits one 76px track
+   * into anything narrower than about 160px, and a window sitting behind
+   * another app reports its frame as four pixels wide -- so unguarded this
+   * fails for a reason the app had no part in. The round trips above are the
+   * check that does not care how wide anything is.
+   */
+  const wide = () => roster.getBoundingClientRect().width >= 200;
+  if (!wide()) {
+    skip('the roster is a grid of several columns',
+         `the roster measures ${Math.round(roster.getBoundingClientRect().width)}px, so this window is not on screen`);
+  } else {
+    ok('the Tatari list is a grid of several columns', first.tatari.columns > 1,
+       `${first.tatari.columns} column(s)`);
+    ok('and so is the Zobo list', first.zobos.columns > 1, `${first.zobos.columns} column(s)`);
+  }
+
+  const KEYS = ['attrs', 'columns', 'cards', 'count'];
+  for (const home of LISTS) {
+    for (const via of LISTS) {
+      if (via === home) continue;
+      await go(home);
+      await go(via);
+      const back = await go(home);
+      const drift = KEYS.filter((k) => back[k] !== first[home][k]);
+      ok(`${home} comes back unchanged from ${via}`, drift.length === 0,
+         drift.map((k) => `${k}: ${JSON.stringify(back[k])} not ${JSON.stringify(first[home][k])}`).join('; '));
+    }
+  }
+
+  /*
+   * The other half of the same fix. Clearing the attribute on the way out must
+   * not throw away the reader's choice on the way back in -- a view switch that
+   * forgets is a worse bug than the one being fixed, and the obvious fix for
+   * the leak (never write the attribute) would cause it.
+   */
+  const view = $('#chip-view');
+  ok('the chips have a view switch', !!view);
+  if (view) {
+    await go('chips');
+    await click(view.querySelector('[data-view="grid"]'), 400);
+    eq('grid can be chosen', roster.dataset.chipView, 'grid');
+    await go('tatari');
+    ok('leaving the chips takes their layout with them', !roster.dataset.chipView,
+       roster.dataset.chipView);
+    if (wide()) {
+      ok('and the critters are back in a grid of their own',
+         D.defaultView.getComputedStyle(roster).gridTemplateColumns.split(/\s+/).filter(Boolean).length > 1);
+    }
+    await go('chips');
+    eq('coming back remembers grid', roster.dataset.chipView, 'grid');
+    await click(view.querySelector('[data-view="list"]'), 400);
+    await go('tatari');
+  }
+});
+
+/*
+ * Dragging a chip into the dock, and dragging one around inside it.
+ *
+ * A tap already keeps a chip, and this could have stopped there. What a tap
+ * cannot say is *where*: it appends, and the order of the three is the whole
+ * reason the dock exists -- it is the order you take them in during a run. So
+ * the checks below are mostly about position, not about membership.
+ *
+ * Driven with real pointer events rather than by calling the handler, because
+ * the handler was never the part that broke. What breaks is the wiring: a grip
+ * that is not the element the drag was bound to, a drop zone whose selector
+ * misses, a payload the zone refuses. All of that is between pointerdown and
+ * pointerup, and none of it is exercised by calling placeAt directly.
+ */
+await runGroup('chips are dragged into the dock, and around inside it', async () => {
+  /*
+   * Waited for, not assumed.
+   *
+   * D is re-pointed at the frame's live document before every group, and a
+   * frame caught mid-navigation hands back a document that has loaded nothing
+   * yet -- so `$('#roster')` was null about one run in six and the group threw
+   * on its first line, blaming itself for something that happened before it
+   * started.
+   */
+  await until(() => !!$('#roster'), 'the drafter to be in the frame', 8000);
+  const V = D.defaultView;
+  const roster = $('#roster');
+
+  /* Every measurement below is a rectangle, and a window that is not on screen
+     reports every rectangle as empty. Nothing here can be asked in that state. */
+  await click($('#roster-tabs [data-list="chips"]'), 440);
+  if (roster.getBoundingClientRect().width < 200) {
+    skip('chips can be dragged into the dock',
+         'this window is not on screen, so nothing has a position to drag between');
+    await click($('#roster-tabs [data-list="tatari"]'), 380);
+    return;
+  }
+
+  const centre = (el) => {
+    const r = el.getBoundingClientRect();
+    return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+  };
+  const send = (type, x, y, to) => to.dispatchEvent(new V.PointerEvent(type, {
+    bubbles: true, cancelable: true, composed: true,
+    pointerId: 1, pointerType: 'mouse', isPrimary: true,
+    button: type === 'pointermove' ? -1 : 0, buttons: type === 'pointerup' ? 0 : 1,
+    clientX: x, clientY: y,
+  }));
+  /*
+   * Put the thing in the middle of the window, not merely on screen.
+   *
+   * scrollIntoView centres within the nearest scrollport, which for a dock
+   * inside a page with a sticky header left it at y=128 -- on screen, and
+   * underneath the header, so elementFromPoint answered <h1> and the drop went
+   * nowhere. The window is nudged afterwards to finish the job.
+   */
+  const bring = (el) => {
+    el.scrollIntoView({ block: 'center' });
+    const r = el.getBoundingClientRect();
+    const off = (r.top + r.height / 2) - V.innerHeight / 2;
+    if (Math.abs(off) > 40) V.scrollBy(0, off);
+  };
+
+  /* Mouse, not touch: a touch drag waits out a hold timer and this suite has
+     enough real waiting in it. The two paths meet at begin(). */
+  const dragTo = async (handle, target) => {
+    /* Both ends scrolled to before they are measured. A drag is hit-tested with
+       elementFromPoint, which only knows about the viewport -- point it at a
+       coordinate below the fold and it answers null, and the drop silently does
+       nothing. That is a fact about the test, not about the app: a person
+       dragging has both ends on their screen because they can see them. */
+    bring(handle);
+    await sleep(90);
+    const a = centre(handle);
+    send('pointerdown', a.x, a.y, handle);
+    send('pointermove', a.x + 9, a.y + 9, V);   // past the 5px the mouse waits for
+    await sleep(80);
+    /*
+     * Aim, then check the aim, then let go.
+     *
+     * A sleep is not a wait here. These suites run under a virtual clock when
+     * they are driven headlessly, which collapses every setTimeout to almost no
+     * real time -- so "scroll, sleep 90ms, measure" measured a scroll that had
+     * not landed, the pointer came down beside the target, and the drop did
+     * nothing. Roughly one run in two. It asks the page where the pointer
+     * actually is instead, which is the same question the drag itself asks.
+     */
+    let b = centre(target);
+    for (let tries = 0; tries < 5; tries += 1) {
+      bring(target);
+      b = centre(target);
+      send('pointermove', b.x, b.y, V);
+      await sleep(60);
+      const ghost = D.querySelector('.drag-ghost');
+      if (ghost) ghost.style.visibility = 'hidden';
+      const under = D.elementFromPoint(b.x, b.y);
+      if (ghost) ghost.style.visibility = '';
+      if (under && (under === target || target.contains(under))) break;
+    }
+    send('pointerup', b.x, b.y, V);
+    await sleep(340);
+  };
+
+  /*
+   * Scoped to the tray, because the same chip is now drawn twice on purpose:
+   * once in the tray you edit in, and once in the dock that ends up in the
+   * screenshot. An unscoped `.chipbench__chip` counted both and every number
+   * below doubled. The two agreeing is itself worth a check, and gets one.
+   */
+  const dock = () => $('#chipbench');
+  const tray = () => $('#chiptray');
+  const kept = () => $$('#chiptray .chipbench__chip').map((e) => e.dataset.chip);
+  const inDock = () => $$('#chipbench .chipbench__chip').map((e) => e.dataset.chip);
+  const numbered = () => $$('#chiptray .chipbench__chip')
+    .filter((e) => e.querySelector('.chipbench__n')).map((e) => e.dataset.chip);
+  const slots = () => $$('#chiptray .chipbench__slot');
+  const cardFor = (name) => $(`.card--chip[data-chip="${CSS.escape(name)}"]`);
+  const grip = (el) => el.querySelector('img') ?? el;
+
+  /* Nothing kept, so the dock is showing what it is for rather than what is in
+     it -- which is the state the first drag has to work from. */
+  localStorage.removeItem('coc.chips.taken');
+  await click($('#roster-tabs [data-list="tatari"]'), 320);
+  await click($('#roster-tabs [data-list="chips"]'), 440);
+  /* Both ends of the drag have to be on the screen, not merely in the page.
+     This is the check that says which one was not. */
+  const trayBox = tray().getBoundingClientRect();
+  ok('the tray has a real size to drop into',
+     trayBox.width > 40 && trayBox.height > 20,
+     `${Math.round(trayBox.width)}x${Math.round(trayBox.height)}`);
+
+  eq('nothing is kept to start', kept().length, 0);
+  ok('the tray is there before anything is in it, because that is where the first one goes',
+     !tray().hidden);
+  eq('and it shows a numbered outline for each of the three', slots().length, 3);
+  eq('the outlines are numbered rather than blank',
+     slots().map((e) => e.textContent.trim()).join(''), '123');
+  ok('and the shortlist says what it is for',
+     !!$('#chiptray .chiptray__hint'), $('#chiptray .chiptray__hint')?.textContent);
+
+  const names = $$('.card--chip').slice(0, 4).map((c) => c.dataset.chip);
+  ok('there are four chips to work with', names.length === 4, names.join(', '));
+  const [a, b, c, d] = names;
+
+  await dragTo(grip(cardFor(a)), slots()[0]);
+  eq('dragging one onto an empty slot keeps it', kept().join(), a);
+  eq('and it is your first pick', numbered().join(), a);
+
+  await dragTo(grip(cardFor(b)), slots()[0]);
+  await dragTo(grip(cardFor(c)), slots()[0]);
+  eq('three of them fill the three', numbered().join(), [a, b, c].join());
+  eq('and the outlines are used up', slots().length, 0);
+
+  /*
+   * The check this whole group is for. Dropping onto a numbered chip takes that
+   * number; everything from there down moves along rather than being swapped
+   * with, because a plan is a sequence and swapping two of its steps is not the
+   * edit anybody meant to make.
+   */
+  const third = $$('#chiptray .chipbench__chip')[2];
+  const first = $$('#chiptray .chipbench__chip')[0];
+  await dragTo(grip(third), first);
+  eq('dropping the third onto the first makes it the first',
+     numbered().join(), [c, a, b].join());
+  eq('and the numbers on the faces say so',
+     $$('#chiptray .chipbench__chip .chipbench__n').map((e) => e.textContent).join(''), '123');
+  /* The dock is a second view of one truth, not a second truth. If it can
+     disagree with the tray, one of them is lying in the screenshot. */
+  eq('and the dock in the picture agrees with the tray', inDock().join(), kept().join());
+  ok('the dock is not hidden while chips are kept', !dock().hidden);
+
+  /* And back again, so this is a reorder and not a one-way trick. */
+  await dragTo(grip($$('#chiptray .chipbench__chip')[0]), $$('#chiptray .chipbench__chip')[2]);
+  eq('and it goes back the other way', numbered().join(), [a, b, c].join());
+
+  /*
+   * A fourth pick when three are taken. The one pushed out lands in the
+   * shortlist rather than being dropped, because losing a choice you made to a
+   * gesture you were still learning is the worst thing this could do.
+   */
+  await dragTo(grip(cardFor(d)), $$('#chiptray .chipbench__chip')[0]);
+  eq('a fourth dropped onto the first takes first place', numbered()[0], d);
+  eq('the three are still three', numbered().length, 3);
+  ok('and the one it pushed out is shortlisted, not thrown away',
+     kept().includes(c), kept().join(', '));
+
+  /* The roster agrees with the dock: the badge on the card is the same number
+     as the badge on the face, which is the only reason to have both. */
+  const badge = cardFor(d)?.querySelector('.card__rank');
+  eq('the roster card carries the new rank too', badge?.textContent, '1');
+
+  /* Dropping a chip on itself is not an edit, and must not be treated as one. */
+  const before = kept().join();
+  await dragTo(grip($$('#chiptray .chipbench__chip')[1]), $$('#chiptray .chipbench__chip')[1]);
+  eq('dropping one onto itself changes nothing', kept().join(), before);
+
+  /*
+   * The same edit without a pointer.
+   *
+   * A reorder you can only do by dragging is a reorder some people cannot do at
+   * all, and the order of the three is the point of the dock. Arrows move a
+   * chip one place along; Delete drops it.
+   */
+  const chipAt = (i) => $$('#chiptray .chipbench__chip')[i];
+  const key = async (el, k) => {
+    el.focus();
+    el.dispatchEvent(new V.KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true }));
+    await sleep(300);
+  };
+  const order = kept().join();
+  await key(chipAt(2), 'ArrowLeft');
+  eq('the left arrow moves a chip one place along',
+     kept().join(), (() => { const o = order.split(','); [o[1], o[2]] = [o[2], o[1]]; return o.join(); })());
+  ok('and focus stays on the chip that moved, not on the slot it left',
+     D.activeElement?.dataset?.chip === order.split(',')[2],
+     `${D.activeElement?.dataset?.chip}`);
+  await key(D.activeElement, 'ArrowRight');
+  eq('the right arrow puts it back', kept().join(), order);
+
+  const doomed = kept()[0];
+  await key(chipAt(0), 'Delete');
+  ok('Delete drops the chip', !kept().includes(doomed), kept().join(', '));
+
+  /*
+   * The three ways a chip can leave where it is.
+   *
+   * Into the shortlist, back out of it, and off the list of kept chips
+   * entirely. The last one matters most: somebody who learned "drag it in"
+   * will try "drag it out" before they try tapping it, and a gesture that does
+   * nothing reads as a broken app rather than as one that was never offered.
+   */
+  localStorage.removeItem('coc.chips.taken');
+  await click($('#roster-tabs [data-list="tatari"]'), 320);
+  await click($('#roster-tabs [data-list="chips"]'), 440);
+  for (const n of [a, b, c]) await dragTo(grip(cardFor(n)), slots()[0]);
+  eq('three kept again, in order', numbered().join(), [a, b, c].join());
+
+  /* The zone, not the row inside it: the whole bordered square is the target
+     now, label included, which is what it looks like from the outside. */
+  const shortlist = () => $('#chiptray .chiptray__zone[data-list="extra"]');
+  const shortlisted = () => [...shortlist().querySelectorAll('.chipbench__chip')]
+    .map((e) => e.dataset.chip);
+  ok('the shortlist is a square you can drop into, not just its contents',
+     !!shortlist() && shortlist().classList.contains('chiptray__zone'));
+
+  await dragTo(grip(chipAt(0)), shortlist());
+  eq('dragging one of the three onto the shortlist moves it there',
+     shortlisted().join(), a);
+  eq('and the other two close up behind it', numbered().join(), [b, c].join());
+  eq('so a slot opens back up', slots().length, 1);
+  ok('and it is not in both places at once', kept().filter((n) => n === a).length === 1,
+     kept().join(', '));
+
+  await dragTo(grip($(`#chiptray .chipbench__chip[data-chip="${CSS.escape(a)}"]`)), slots()[0]);
+  eq('and dragging it back makes it one of the three again',
+     numbered().join(), [b, c, a].join());
+  eq('the shortlist is empty again', shortlisted().length, 0);
+
+  /* Out of the trays entirely. */
+  const evicted = numbered()[0];
+  await dragTo(grip($(`#chiptray .chipbench__chip[data-chip="${CSS.escape(evicted)}"]`)), roster);
+  ok('dragging a kept chip back onto the list unkeeps it',
+     !kept().includes(evicted), kept().join(', '));
+  eq('and the ones left move up', numbered().length, 2);
+  ok('the card in the list stops claiming a rank',
+     !cardFor(evicted)?.querySelector('.card__rank'));
+  ok('and stops looking kept', !cardFor(evicted)?.classList.contains('is-benched'));
+
+  /* Dragging a card around the list it already lives in is not a toggle. */
+  const untouched = kept().join();
+  const spare = $$('.card--chip').map((e) => e.dataset.chip).find((n) => !kept().includes(n));
+  await dragTo(grip(cardFor(spare)), roster);
+  eq('dragging an unkept chip onto the list does nothing at all', kept().join(), untouched);
+  ok('and it is still not kept', !kept().includes(spare), spare);
+
+  /*
+   * What it looks like while you are still holding the chip.
+   *
+   * Two questions get two answers. Hovering a tray asks "in or out", so the
+   * whole square lights up. Hovering one of the three asks "before which one",
+   * so a bar appears in the gap and the chip steps aside to make it -- a ring
+   * would have said "this one", which is not what is about to happen.
+   *
+   * Split in two on purpose. What it looks like is asked of the stylesheet,
+   * which answers the same way every time. Whether the drag actually applies it
+   * is asked of a real drag, and only when this browser is drawing frames at
+   * all: the hover state is applied on an animation frame, and the headless
+   * runner drives these pages under a virtual clock that advances timers
+   * without necessarily producing frames. Asserting through a frame that may
+   * never come is how you get a check that fails for the harness.
+   */
+  const styleWith = (el, cls, pseudo) => {
+    el.classList.add(cls);
+    const out = D.defaultView.getComputedStyle(el, pseudo ?? null);
+    const copy = {
+      boxShadow: out.boxShadow, transform: out.transform, content: out.content,
+      width: out.width, borderColor: out.borderColor, background: out.backgroundColor,
+    };
+    el.classList.remove(cls);
+    return copy;
+  };
+
+  const zoneLit = styleWith(shortlist(), 'is-over');
+  ok('a hovered tray rings the whole square',
+     zoneLit.boxShadow !== 'none' && !zoneLit.boxShadow.includes('inset'), zoneLit.boxShadow);
+  ok('and tints it, so it reads as a target rather than an outline',
+     zoneLit.background !== styleWith(shortlist(), 'nothing-at-all').background);
+
+  const aim = chipAt(0);
+  const barLit = styleWith(aim, 'is-over', '::before');
+  ok('a hovered chip draws a bar in the gap in front of it',
+     barLit.content === '""' && parseFloat(barLit.width) >= 2,
+     `content ${barLit.content}, width ${barLit.width}`);
+  const chipLit = styleWith(aim, 'is-over');
+  ok('and the chip steps aside to leave that gap',
+     chipLit.transform !== 'none', chipLit.transform);
+  ok('rather than being ringed, which would have meant "this one"',
+     chipLit.boxShadow === 'none', chipLit.boxShadow);
+  ok('and the number it is wearing inverts, because that is the number you take',
+     (() => {
+       aim.classList.add('is-over');
+       const n = aim.querySelector('.chipbench__n');
+       const lit = n && D.defaultView.getComputedStyle(n).backgroundColor;
+       aim.classList.remove('is-over');
+       const dim = n && D.defaultView.getComputedStyle(n).backgroundColor;
+       return !!n && lit !== dim;
+     })());
+
+  /*
+   * Now the wiring: does a real drag apply what the stylesheet describes.
+   *
+   * The mark goes on inside a requestAnimationFrame callback, so this can only
+   * be asked of a browser that is drawing. Rather than guess, the attempt
+   * counts frames while it runs: no frames and it is skipped with that said out
+   * loud, frames and no mark and it is a failure the app earned. A check that
+   * cannot tell those two apart is worth nothing.
+   */
+  {
+    let framesSeen = 0;
+    let ticking = true;
+    const tick = () => { framesSeen += 1; if (ticking) V.requestAnimationFrame(tick); };
+    V.requestAnimationFrame(tick);
+    const drew = () => framesSeen > 1;
+    const hoverOver = async (handle, target) => {
+      bring(handle);
+      const from = centre(handle);
+      send('pointerdown', from.x, from.y, handle);
+      send('pointermove', from.x + 9, from.y + 9, V);
+      await sleep(70);
+      for (let tries = 0; tries < 8; tries += 1) {
+        bring(target);
+        const to = centre(target);
+        send('pointermove', to.x, to.y, V);
+        /* Waited on a frame, not a timer: the frame is the thing the mark is
+           applied in, and a timer under a virtual clock returns before one. */
+        await Promise.race([new Promise((r) => { V.requestAnimationFrame(r); }), sleep(200)]);
+        if (target.classList.contains('is-over')) return true;
+      }
+      return false;
+    };
+    const endHover = async () => {
+      V.dispatchEvent(new V.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      await sleep(220);
+    };
+
+    /*
+     * Every attempt carries its own verdict.
+     *
+     * The gate has to be per attempt, not per group: frames can arrive for the
+     * first hover and stop before the second, and a gate consulted once turns
+     * that into a failure the app did not cause. Not lit and no frames drawn is
+     * a skip that says so; not lit while the browser was drawing is a real
+     * failure, which is the whole point of keeping the two apart.
+     */
+    const attempt = async (what, target) => {
+      const spare3 = $$('.card--chip').map((e) => e.dataset.chip).find((n) => !kept().includes(n));
+      const before = framesSeen;
+      const lit = await hoverOver(grip(cardFor(spare3)), target);
+      if (!lit && framesSeen - before < 2) {
+        skip(what, 'no frames were drawn during the attempt, and the mark is applied in one');
+        await endHover();
+        return false;
+      }
+      ok(what, lit);
+      return lit;
+    };
+
+    if (await attempt('dragging over the shortlist marks it', shortlist())) {
+      ok('and nothing else is marked at the same time',
+         $$('#chiptray .is-over').length === 1,
+         $$('#chiptray .is-over').map((e) => e.className).join(' / '));
+      await endHover();
+      ok('the mark goes when the drag is cancelled', !$('#chiptray .is-over'));
+    }
+
+    await attempt('dragging over one of the three marks that chip', chipAt(0));
+    await endHover();
+    ticking = false;
+  }
+
+  /*
+   * Picked up by any part of it, and dropped in either tray.
+   *
+   * The drop targets were always fine; the grab was not. Only the 34px sprite
+   * started a drag, so somebody who put a finger on the chip's name got
+   * nothing -- and "nothing happens" reads as a broken feature, not as a
+   * handle you were supposed to find. The name is the handle here on purpose:
+   * if this passes, so does every other part of the card.
+   */
+  localStorage.removeItem('coc.chips.taken');
+  await click($('#roster-tabs [data-list="tatari"]'), 320);
+  await click($('#roster-tabs [data-list="chips"]'), 440);
+  eq('nothing kept, so both trays are empty', kept().length, 0);
+
+  const byName = (n) => cardFor(n)?.querySelector('.chiprow__head b') ?? cardFor(n);
+  const three = () => $('#chiptray .chiptray__zone[data-list="main"]');
+  const inThree = () => [...three().querySelectorAll('.chipbench__chip')].map((e) => e.dataset.chip);
+
+  const [p1, p2] = $$('.card--chip').slice(0, 2).map((e) => e.dataset.chip);
+  ok('the chips have a name to grab them by', !!byName(p1) && byName(p1).tagName === 'B');
+
+  await dragTo(byName(p1), shortlist());
+  eq('dragging a chip by its name lands it in the shortlist', shortlisted().join(), p1);
+  eq('and it did not go into the three by mistake', inThree().length, 0);
+
+  await dragTo(byName(p2), three());
+  eq('and dragging another by its name lands it in the three', inThree().join(), p2);
+  eq('with the shortlist left alone', shortlisted().join(), p1);
+
+  /* The sprite still works, and with no hold, which is the point of keeping
+     touch-action on it alone. */
+  const p3 = $$('.card--chip').map((e) => e.dataset.chip).find((n) => !kept().includes(n));
+  await dragTo(grip(cardFor(p3)), shortlist());
+  ok('the sprite is still a handle too', shortlisted().includes(p3), shortlisted().join(', '));
+  ok('and only the sprite refuses the browser its scroll',
+     D.defaultView.getComputedStyle(cardFor(p3)).touchAction !== 'none'
+     && D.defaultView.getComputedStyle(cardFor(p3).querySelector('.chiprow__art')).touchAction === 'none');
+
+  /* Nothing but the name in the tray headings. */
+  ok('the tray headings say their name and nothing else',
+     $$('#chiptray .chiptray__label').map((e) => e.textContent.trim()).join('|') === 'Your three|Alternatives',
+     $$('#chiptray .chiptray__label').map((e) => e.textContent.trim()).join('|'));
+  ok('and carry no explanation hung off them',
+     $$('#chiptray .chiptray__label span').length === 0);
+
+  /*
+   * What you are carrying, and nothing else.
+   *
+   * The ghost used to be a 62px square with a shadow, which is the size and the
+   * look of a Tatari token -- the first thing this app ever dragged. Everything
+   * dragged since brings its own shape, so a chip's name pill sat inside a box
+   * that had nothing to do with it and you dragged a stray rectangle around.
+   * The box carries a coordinate now; the thing inside decides how it looks.
+   *
+   * Both halves are checked, because the fix moved the square rather than
+   * deleting it and the token is the one that still wants it.
+   */
+  {
+    const s = $$('.card--chip').map((e) => e.dataset.chip).find((n) => !kept().includes(n));
+    const art = cardFor(s).querySelector('.chiprow__art');
+    bring(art);
+    const a = centre(art);
+    send('pointerdown', a.x, a.y, art);
+    send('pointermove', a.x + 12, a.y + 12, V);
+    await sleep(140);
+    const ghost = D.querySelector('.drag-ghost');
+    ok('dragging a chip puts a ghost under the pointer', !!ghost);
+    if (ghost) {
+      const pill = ghost.querySelector('.chipghost');
+      const g = ghost.getBoundingClientRect();
+      const p = pill && pill.getBoundingClientRect();
+      ok('the ghost is the name, which is the thing worth seeing',
+         !!pill && pill.textContent.trim() === s, pill && pill.textContent.trim());
+      ok('and the ghost is no bigger than the name it is carrying',
+         !!p && Math.abs(g.width - p.width) < 3 && Math.abs(g.height - p.height) < 3,
+         p ? `ghost ${Math.round(g.width)}x${Math.round(g.height)}, name ${Math.round(p.width)}x${Math.round(p.height)}` : 'no name');
+      const gs = D.defaultView.getComputedStyle(ghost);
+      ok('with no box of its own drawn round it',
+         gs.boxShadow === 'none' && gs.backgroundColor === 'rgba(0, 0, 0, 0)',
+         `${gs.boxShadow} / ${gs.backgroundColor}`);
+    }
+    send('pointerup', a.x + 12, a.y + 12, V);
+    await sleep(280);
+  }
+
+  /* And a chip is not text you can drag a highlight across. */
+  ok('chip cards cannot be highlighted',
+     D.defaultView.getComputedStyle($('.card--chip')).userSelect === 'none');
+  ok('nor the trays they go into',
+     D.defaultView.getComputedStyle($('#chiptray .chiptray__zone')).userSelect === 'none');
+
+  localStorage.removeItem('coc.chips.taken');
+  await click($('#roster-tabs [data-list="tatari"]'), 380);
+});
+
+/*
+ * The Tatari ghost still wants the square it always had.
+ *
+ * The chip ghost stopped drawing a box by moving that box off the container
+ * and onto the token, which is the only thing that ever wanted it. If this
+ * goes, dragging a critter is an unlifted picture with no edge, and the fix
+ * for the chips quietly cost the thing it was built around.
+ */
+await runGroup('a dragged critter still looks like a token', async () => {
+  await until(() => !!$('#roster'), 'the drafter to be in the frame', 8000);
+  const V = D.defaultView;
+  await click($('#roster-tabs [data-list="tatari"]'), 420);
+  const card = $$('.panel--roster .card').find((c) => !c.classList.contains('card--chip'));
+  ok('there is a critter to drag', !!card);
+  if (!card) return;
+  const r = card.getBoundingClientRect();
+  if (r.width < 10) { skip('the token ghost keeps its square', 'the roster has no size in this window'); return; }
+  const at = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+  const send = (type, x, y, to) => to.dispatchEvent(new V.PointerEvent(type, {
+    bubbles: true, cancelable: true, composed: true,
+    pointerId: 3, pointerType: 'mouse', isPrimary: true,
+    button: type === 'pointermove' ? -1 : 0, buttons: type === 'pointerup' ? 0 : 1,
+    clientX: x, clientY: y,
+  }));
+  send('pointerdown', at.x, at.y, card);
+  send('pointermove', at.x + 12, at.y + 12, V);
+  await sleep(150);
+  const ghost = $('.drag-ghost');
+  const token = ghost && ghost.querySelector('.token');
+  ok('picking a critter up gives you a token', !!token);
+  if (token) {
+    const t = token.getBoundingClientRect();
+    ok('the token is still a 62px square', Math.round(t.width) === 62 && Math.round(t.height) === 62,
+       `${Math.round(t.width)}x${Math.round(t.height)}`);
+    const ts = V.getComputedStyle(token);
+    ok('and still lifted off the page', ts.boxShadow !== 'none', ts.boxShadow);
+    ok('and still rounded', parseFloat(ts.borderRadius) > 0, ts.borderRadius);
+  }
+  send('pointerup', at.x + 12, at.y + 12, V);
+  await sleep(260);
+});
+
+
+await runGroup('the chips page', async () => {
+  /*
+   * The engine behind this page is checked in chipstest.html against boards
+   * built on purpose. What is checked here is the page: the two controls on it
+   * are a tier filter and a keep button, and neither has any arithmetic to get
+   * wrong, only wiring.
+   */
+  /* From nothing. What you kept lives in localStorage and outlives the page, so
+     without this the group inherits whatever the last visit -- or the last hand
+     test on this origin -- left behind, and every count below is off by it. The
+     suite puts the real value back at the end either way. */
+  localStorage.removeItem('coc.chips.taken');
+
+  const frame = frameFor('chips.html');
+  await frame.ready;
+  const C = frame.contentDocument;
+  await until(() => C.querySelectorAll('.chipcard').length > 0, 'the chips page');
+  const cards = () => C.querySelectorAll('.chipcard').length;
+  const tier = (n) => C.querySelector(`.chip--rarity[data-tier="${n}"]`);
+
+  const all = cards();
+  eq('every chip is on the page', all, 49);
+  ok('and each one has an icon', C.querySelectorAll('.chipcard__art').length === all);
+
+  ok('there is a tier filter', !!tier(1) && !!tier(2) && !!tier(3));
+  const promised = Number(tier(3).textContent.replace(/\D/g, ''));
+  tier(3).click();
+  await sleep(220);
+  eq('pressing a tier finds exactly what it promised', cards(), promised);
+  eq('and says so', C.querySelector('.chipfilters__n').textContent.trim(), `${promised} of ${all}`);
+  ok('the pressed one reports itself', tier(3).getAttribute('aria-pressed') === 'true');
+
+  /* One at a time. "II or III" answers 35 of 49, which is not a filter, and the
+     same control on the roster tab behaves the same way. */
+  const alsoII = Number(tier(2).textContent.replace(/\D/g, ''));
+  tier(2).click();
+  await sleep(240);
+  eq('a second tier replaces the first rather than adding', cards(), alsoII);
+  eq('and only one is pressed',
+     C.querySelectorAll('.chip--rarity[aria-pressed="true"]').length, 1);
+
+  tier(2).click(); await sleep(240);
+  eq('pressing the one already on releases it', cards(), all);
+
+  // The three you kept are yours whatever the filter is doing.
+  const keep = C.querySelector('[data-keep]');
+  const name = keep.dataset.keep;
+  keep.click();
+  await sleep(240);
+  ok('keeping a chip fills a slot',
+     [...C.querySelectorAll('.kept__slot.is-filled')].some((el) => el.textContent.includes(name)),
+     name);
+  eq('and only one slot', C.querySelectorAll('.kept__slot.is-filled').length, 1);
+  ok('three slots, always', C.querySelectorAll('.kept__slot').length === 3);
+
+  C.querySelector(`[data-keep="${name}"]`).click();
+  await sleep(240);
+  eq('pressing it again gives the slot back', C.querySelectorAll('.kept__slot.is-filled').length, 0);
+
+  /*
+   * Three ranked, then a shortlist with no limit.
+   *
+   * The three are what a run hands you, in the order you would take them, so
+   * they move. The shortlist is the thinking done before any offer, which has
+   * no reason to stop at three -- a fourth press goes there rather than being
+   * refused or quietly pushing your first pick out.
+   */
+  const three = () => [...C.querySelectorAll('.kept__slot.is-filled .keptrow__name')]
+    .map((el) => el.textContent.trim());
+  const shortlist = () => [...C.querySelectorAll('.kept__list .keptrow__name')]
+    .map((el) => el.textContent.trim());
+  const slot = (i) => C.querySelectorAll('.kept__slot.is-filled')[i];
+
+  /* By name, re-queried each time. renderPage() replaces every node, so a list
+     of elements collected up front is four detached buttons after the first
+     click, and the other three do nothing at all. */
+  const wanted = [...C.querySelectorAll('[data-keep]')].slice(0, 4).map((b) => b.dataset.keep);
+  for (const n of wanted) {
+    C.querySelector(`[data-keep="${CSS.escape(n)}"]`).click();
+    await sleep(220);
+  }
+  eq('the first three fill the three', three().length, 3);
+  eq('and the fourth goes to the shortlist', shortlist().length, 1);
+
+  const order = three().join(',');
+  slot(2).querySelector('[data-act="up"]').click();
+  await sleep(240);
+  const moved = three();
+  eq('moving the third up swaps it with the second',
+     moved.join(','), order.split(',').map((n, i, a) => (i === 1 ? a[2] : i === 2 ? a[1] : n)).join(','));
+
+  ok('the first cannot move up', slot(0).querySelector('[data-act="up"]').disabled);
+  ok('and the last cannot move down', slot(2).querySelector('[data-act="down"]').disabled);
+
+  const demoted = three()[0];
+  slot(0).querySelector('[data-act="demote"]').click();
+  await sleep(240);
+  eq('demoting drops it out of the three', three().length, 2);
+  ok('and onto the shortlist', shortlist().includes(demoted), shortlist().join(', '));
+
+  C.querySelector(`.keptrow[data-name="${CSS.escape(demoted)}"] [data-act="promote"]`).click();
+  await sleep(240);
+  ok('promoting puts it back', three().includes(demoted), three().join(', '));
+  ok('and takes it off the shortlist', !shortlist().includes(demoted));
+
+  ok('promote is refused while the three are full',
+     C.querySelector('.kept__list [data-act="promote"]')?.disabled !== false,
+     'a fourth would have been promoted into three slots');
+
+  /* Renamed groups, and nothing under the headings. */
+  const heads = [...C.querySelectorAll('.chgroup__head')].map((h) => h.firstChild.textContent.trim());
+  ok('the groups are named as chips', heads.every((h) => /Chips$/.test(h)), heads.join(' | '));
+  eq('nothing explains a heading underneath it', C.querySelectorAll('.chgroup__blurb').length, 0);
+  eq('no co-op notes are printed on the cards', C.querySelectorAll('.chipcard__doubt').length, 0);
+
+  /* Position and Element answer in faces; the rest answer in words. */
+  const facesGroup = C.querySelector('.chgroup[data-shape="placement"]');
+  eq('a Position card says nothing in numbers',
+     facesGroup.querySelectorAll('.chipcard__count').length, 0);
+  eq('nor does an Element card',
+     C.querySelectorAll('.chgroup[data-shape="element"] .chipcard__count').length, 0);
+  ok('but the chips that read nothing still print their text',
+     C.querySelector('.chgroup[data-shape="economy"] .chipcard__text').textContent.trim().length > 10);
+  frame.remove();
+});
+
 /* Whatever happened, the reader gets their formation back. */
 localStorage.clear();
 for (const [k, v] of Object.entries(saved)) localStorage.setItem(k, v);
 
+const skipNote = skipped ? `, ${skipped} skipped` : '';
 document.getElementById('head').innerHTML = fail
-  ? `<b style="color:#f0654f">${fail} failed</b>, ${pass} passed`
-  : `<b style="color:#55c98a">${pass} passed</b>, 0 failed`;
-document.title = `${fail ? `FAIL (${fail})` : 'ok'} — end-to-end checks`;
+  ? `<b style="color:#f0654f">${fail} failed</b>, ${pass} passed${skipNote}`
+  : `<b style="color:#55c98a">${pass} passed</b>, 0 failed${skipNote}`;
+document.title = `${fail ? `FAIL (${fail})` : 'ok'}: end-to-end checks`;
 window.__done = { pass, fail };
 </script>
 </body>

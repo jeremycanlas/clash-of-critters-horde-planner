@@ -65,6 +65,30 @@ field, HAVE above LF.
 
 ## Changelog
 
+### 1.8.0
+
+#### Changes:
+- Chips! All 49 of them are in the tool now, in their own tab next to Tatari and Zobos. Every one has its icon, what it does, its tier and its type, in the same order the game's gallery shows them.
+- The chips that read your board tell you what they'd be worth to it. Rear Guard shows you the actual Tatari in your back two rows, not just a number, so you can see whether those are the ones you care about.
+- Two views: a list with the full rule on every row, and a grid of just the tiles if you already know them. It remembers which you were using.
+- Keep the three you'd take and put them in the order you'd take them. The chips tab has its own bench: two bordered trays, Your three and Alternatives. Drag a chip from the list into either one, drag chips between them, drag one back onto the list to stop keeping it. Dropping onto one of the three takes that position and pushes the rest along; a fourth pick lands in Alternatives rather than being thrown away.
+- While you're dragging, the tray you're over lights up whole. Aim at one of the three instead and a bar appears in the gap it would land in, with that chip stepping aside and wearing the number you're about to take.
+- On a phone, swipe straight off the chip's icon to drag it, or press and hold anywhere else on the card. A plain flick still scrolls the list. Arrow keys do the same edits if you'd rather not drag at all, and Delete drops a chip.
+- Your chips go on the share card too, under the bench, with a line saying they're offered at random rather than chosen.
+- Flex slots! Turn on Flex slots and press any empty square to mark it as somebody else's choice. It shows as a dashed square reading FLEX, on the board and on the share card. This is for posting a formation as a template instead of a finished thing.
+- The level-up plan says what it's for when it's empty instead of showing nothing at all.
+- On a phone the filters fold behind a button with a count on it, so the roster gets the screen instead of the controls for narrowing it.
+- Took the em dashes out of everything you can read.
+
+#### Bug Fixes:
+- On a card in a line you already bring, "Switch from Frostique" was a bar across the bottom of the card that covered the name and then got cut off to "SWITCH FROM...". You lost both the name and which one you'd be switching from. It's a small arrows icon beside the name now.
+- Reset did nothing on the chips tab. It unpressed the buttons and left the filter on, so it looked like it hadn't worked because it hadn't.
+- Clear field did nothing if you had no Tatari placed, so flex marks on an otherwise empty board couldn't be cleared. A board showing three FLEX squares is not a clear board.
+- Center Spotlight was filed as a position chip and counted your Tatari in the middle two columns. It moves where Zobo bosses spawn and says nothing about your Tatari, so it's a map chip now and scores nothing.
+- The grid view of the chips had no picture on the tiles at all, and the names were squeezed to about nine characters next to the tier.
+- The thing you drag was a 62px square with a shadow round it, which is what a Tatari token looks like and nothing else does. Dragging a chip pulled that empty box around behind the chip's name. It's the name and nothing else now. Chip cards can't be highlighted either, so dragging one across the list no longer paints it blue.
+- Dragging on a phone, twice over. The thing you pick up was drawn behind the sheet you were dragging it inside, so you'd press a chip and see nothing move at all. And any surface set up to be dragged (a chip's icon, a bench chip, a placed Tatari, a step in the level-up plan) was still being made to prove it wasn't a scroll first, on surfaces where the page had already told the browser it wouldn't scroll there.
+
 ### 1.7.0
 
 #### Changes:
@@ -78,15 +102,15 @@ field, HAVE above LF.
 
 #### Bug Fixes:
 - You could never drag to reorder the level-up plan on a phone. The browser was reading the gesture as a scroll before the drag even started. Grab the step number and it moves now.
-- With a boss pull on (or the Zobo ground open), double-clicking a Tatari out past the contact line didn't send it back to the bench. Turns out nothing worked out there except dragging — you couldn't click a bench chip into those rows either, and the arrow keys stopped at the line. All of it works now.
+- With a boss pull on (or the Zobo ground open), double-clicking a Tatari out past the contact line didn't send it back to the bench. Turns out nothing worked out there except dragging: you couldn't click a bench chip into those rows either, and the arrow keys stopped at the line. All of it works now.
 
 ### 1.6.1
 
 #### Changes:
-- Added the new Tatari: the polar bear line (Snowcub, Polarpaw, Blizzgrizz and Anglerbear), plus two new T4s — Dharmadder now caps the Taptail line and Lordopus caps the Dumbopus line. The roster is 230 now.
+- Added the new Tatari: the polar bear line (Snowcub, Polarpaw, Blizzgrizz and Anglerbear), plus two new T4s. Dharmadder now caps the Taptail line and Lordopus caps the Dumbopus line. The roster is 230 now.
 - Added the six new Zobos: Botanical, Chef, Golf and Totem (bosses), plus Spritz and Retriever. The wiki has no art for them yet, so they show up without pictures for now.
 - Picked up glitter art for Blastniff, Gigagnash and Technocan, and an attack range for Cheerstella.
-- There's a small "Say thanks" link next to my name in the header now. The tool is free and always will be — hosting costs nothing, so it's only there if you feel like it.
+- There's a small "Say thanks" link next to my name in the header now. The tool is free and always will be. Hosting costs nothing, so it's only there if you feel like it.
 
 ### 1.6.0
 
@@ -199,7 +223,7 @@ read its name.
 - The save that exactly matches what is on the field is marked **On the field**.
 - **Clear all does not touch saved formations.** Coming back to a kept draft
   after wiping the field is the point of keeping one.
-- The header's *Save* button is now called **Export** — it still downloads the
+- The header's *Save* button is now called **Export**. It still downloads the
   same `.json` file, but "Save" belongs to the in-browser list now, and
   Export/Import read as the pair they are.
 - Nothing new leaves the browser: saved formations are `localStorage` only, and
@@ -442,7 +466,7 @@ repo, running Python over a screenshot and hand-editing JSON.
 
 So there is a page for it: **[Record a range](https://jeremycanlas.github.io/clash-of-critters-horde-planner/contribute.html)**.
 Pick a Tatari, stand it where your screenshot had it, click what it reached, and
-it hands you the entry — copy it, download it, or let it open a filled-in issue
+it hands you the entry: copy it, download it, or let it open a filled-in issue
 for you. It writes nothing and uploads nothing.
 
 It also records **heal, buff and debuff reach**, which is not documented
@@ -462,7 +486,7 @@ something.
 Every roster card says two things at once, on two channels, because they are two
 different questions.
 
-Along the bottom, one bar per reach that Tatari can have — attack always, then a
+Along the bottom, one bar per reach that Tatari can have: attack always, then a
 heal, buff or debuff bar only if it has one, since "no heal reach recorded" is not
 a gap on something that has never healed. Each bar is empty for nothing recorded,
 grey for on file, and solid for checked by hand; the bar for the reach you are
@@ -537,15 +561,36 @@ all sit in the same box at the same apparent size; it needs Pillow
 
 ### Checking it still works
 
-Three self-checking pages, opened in a browser against the served folder. None
-needs a runner, a framework or a dependency; all three go red in the tab title
+Four self-checking pages, opened in a browser against the served folder. None
+needs a runner, a framework or a dependency; all four go red in the tab title
 when something is wrong.
 
 ```
 http://localhost:8123/apptest.html      the app on a desktop, driven like a person drives it
 http://localhost:8123/mobiletest.html   the same app in a 390x844 frame, which is a different app
+http://localhost:8123/chipstest.html    the chip data, and what a chip is worth to a board
 http://localhost:8123/changestest.html  data/changes.json against the roster
 ```
+
+Or let them run themselves:
+
+```
+sh tools/check.sh              every suite, headless, about fifteen seconds
+sh tools/check.sh switching    only the groups matching that word
+```
+
+It serves the folder and drives all four pages through headless Chrome under a
+virtual clock, which is what makes it seconds instead of a forty-minute watch.
+`.githooks/pre-commit` calls it, so a red suite stops the commit; `git commit
+--no-verify` gets past it once and `git config --unset core.hooksPath` turns it
+off. On a machine with no Chrome the hook says so and stands aside.
+
+Add `?only=flex` to either of the first two to run just the groups whose name
+contains that word. Iterating on one group otherwise means sitting through the
+other twenty, and there is a second reason: a browser clamps every timer in a
+hidden tab to a second and then freezes the page after about five minutes, so a
+full run in a window sitting behind another app stops partway. Keep the window
+visible for a full run, or take it in slices.
 
 `apptest.html` loads the real `index.html` and `changes.html` in frames, clicks
 the real controls and reads what the pages rendered. It is written that way on
@@ -558,16 +603,27 @@ imports a module and checks its return value passes all three.
 under 760px this stops being the same app: the field takes the whole screen, the
 three panels become sheets over it, and a fixed bar along the bottom is the only
 way into any of them. Three quarters of the people who use this never see the
-layout `apptest.html` checks. It walks the phone's own path end to end — tap a
-card, tap the chip, tap a square — and times the redraws that a thumb waits
+layout `apptest.html` checks. It walks the phone's own path end to end (tap a
+card, tap the chip, tap a square) and times the redraws that a thumb waits
 through.
 
 One thing it cannot do is pretend to be a touchscreen. `@media (hover: none)`
-never matches in a desktop browser at any width, so the rules in that block —
-the drag grip on the plan, the 28px targets, the effect row that scrolls instead
-of wrapping — are read out of the stylesheet rather than watched applying, and
-the checks say so in their names. That is still worth having: the grip shipped
+never matches in a desktop browser at any width, so the rules in that block
+(the drag grip on the plan, the 28px targets, the effect row that scrolls
+instead of wrapping) are read out of the stylesheet rather than watched
+applying, and the checks say so in their names. That is still worth having: the grip shipped
 broken because `.prio` was missing from exactly that block.
+
+`chipstest.html` checks the data against the roster and the six placement rules
+against boards it builds itself. Those rules are this project's own arithmetic
+rather than a tooltip reprinted, and arithmetic about a 6x6 grid is exactly the
+kind of thing that is off by one row and still looks plausible -- row 0 is the
+*front* row, and getting that backwards armours the two rows nothing was hitting.
+
+Two checks in `apptest.html` measure the share card by rendering the real PNG
+and counting pixels. The card is a canvas with no DOM to assert against, and a
+check that only proved the drawing function was *called* would pass just as
+happily while drawing nothing.
 
 Both restore whatever was in `localStorage` when they finish, so running them
 never costs you the formation you had open. Both also re-fetch every file the app

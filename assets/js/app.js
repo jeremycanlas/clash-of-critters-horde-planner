@@ -15,6 +15,7 @@ import { buildPriority, renderPriority } from './priority.js';
 import { buildShare, openShare } from './share.js';
 import { warmSprites } from './card.js';
 import { buildShell, renderShell } from './shell.js';
+import { loadChips } from './chips.js';
 import { buildSaves, savedById, keepQuietly } from './saves.js';
 import { buildSubmit, openSubmit, resumeSubmit } from './submit.js';
 import { buildSession } from './session.js';
@@ -93,6 +94,15 @@ async function main() {
   const pending = buildSubmit();
   buildAnalytics();
   buildFilters(() => renderRoster());
+
+  /*
+   * Chips arrive late and redraw once, rather than holding up the board.
+   *
+   * The Chips tab needs data/chips.json, which is another round trip, and the
+   * field is what somebody opened this for. So the roster renders without it
+   * and this redraws when the file lands; every later render has it already.
+   */
+  loadChips().then(() => renderRoster());
 
   store.subscribe(renderAll);
   countFirstUse();
@@ -456,7 +466,7 @@ function wireToolbar() {
      * the only place Undo can live.
      */
     if (unplaced) {
-      toast(`Zobo ground closed — benched ${unplaced}`, 'info', undoTo(before));
+      toast(`Zobo ground closed, benched ${unplaced}`, 'info', undoTo(before));
     }
   });
 
@@ -491,7 +501,7 @@ function wireToolbar() {
     if (got.dropped) said.push(`removed ${got.dropped} that would not fit`);
     if (!said.length) return;
 
-    toast(`Sandbox off — ${said.join(', ')}`,
+    toast(`Sandbox off: ${said.join(', ')}`,
       got.dropped ? 'warn' : 'info', undoTo(before));
   });
 
@@ -504,7 +514,7 @@ function wireToolbar() {
     if (trimmed) notes.push(`benched ${trimmed} over the new field cap`);
     toast(notes.length
       ? `${store.mode().label}: ${notes.join(', ')}`
-      : `${store.mode().label} — ${store.fieldCap()} on the field per player`);
+      : `${store.mode().label}: ${store.fieldCap()} on the field per player`);
   });
 
   /*
@@ -519,13 +529,26 @@ function wireToolbar() {
    * the same shape saves.js already uses for loading over unsaved work.
    */
   $('#btn-clear-field').addEventListener('click', () => {
-    if (!store.allPlaced().length) return;
+    /*
+     * Flex marks count as something on the field, because they are: a board
+     * with three squares reading FLEX is not a clear board, and pressing Clear
+     * field on one used to return here and leave them sitting there.
+     */
+    const marks = store.formation.flex.length;
+    if (!store.allPlaced().length && !marks) return;
     const before = store.snapshot();
     const steps = store.formation.plan.length;
+    const placed = store.allPlaced().length;
     store.clearField();
-    toast(steps
-      ? `Field cleared - benches kept, ${steps} level-up step${steps === 1 ? '' : 's'} gone`
-      : 'Field cleared - benches kept', 'info', undoTo(before));
+
+    const gone = [
+      steps ? `${steps} level-up step${steps === 1 ? '' : 's'}` : null,
+      marks ? `${marks} flex slot${marks === 1 ? '' : 's'}` : null,
+    ].filter(Boolean).join(' and ');
+    toast(placed
+      ? `Field cleared - benches kept${gone ? `, ${gone} gone` : ''}`
+      : `${marks} flex slot${marks === 1 ? '' : 's'} cleared`,
+    'info', undoTo(before));
   });
 
   // In co-op each player has their own plan and their own tab, so this clears

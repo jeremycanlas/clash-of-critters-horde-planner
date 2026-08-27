@@ -540,7 +540,7 @@ function cardHTML(row) {
              apart reads as a mistake — but a picture is nothing to a screen
              reader, so the words have to survive somewhere. -->
         <img class="community__shot" data-shot="${esc(row.id)}"
-             alt="${esc(row.note ? `${row.name} — ${row.note}` : row.name)}"
+             alt="${esc(row.note ? `${row.name}: ${row.note}` : row.name)}"
              width="1080" height="1220" decoding="async">
         <span class="community__shotwait">Drawing…</span>
       </button>
@@ -1090,7 +1090,7 @@ function sayIfEmpty() {
    */
   if (view.mine) {
     say('Nothing here that this browser posted. Posts made on another device, or '
-      + 'before this browser\'s storage was cleared, are still in the gallery — '
+      + 'before this browser\'s storage was cleared, are still in the gallery, '
       + 'they are just not on this list.');
     return;
   }

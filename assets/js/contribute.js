@@ -190,7 +190,7 @@ async function findOpenIssues() {
   }
 
   say.textContent = `${res.count} reach${res.count === 1 ? ' has' : 'es have'
-  } an open issue already — those cards carry the issue number, and recording one again would duplicate somebody's work.`;
+  } an open issue already. Those cards carry the issue number, and recording one again would duplicate somebody's work.`;
   say.hidden = false;
   refreshRoster();
 }
@@ -319,7 +319,7 @@ function wire() {
     picked.imported = false;
     refreshRoster();
     renderAll();
-    toast(`Queue cleared — ${n} edit${n === 1 ? '' : 's'} dropped`);
+    toast(`Queue cleared: ${n} edit${n === 1 ? '' : 's'} dropped`);
   });
 
   wireImport();
@@ -444,7 +444,7 @@ function takeIn(text, dialog) {
   renderAll();
   showBoard();
 
-  const summary = `${kept.length} entr${kept.length === 1 ? 'y' : 'ies'} imported — ${
+  const summary = `${kept.length} entr${kept.length === 1 ? 'y' : 'ies'} imported: ${
     kept.map((e) => `${state.bySlug.get(e.slug)?.name ?? e.slug} (${e.kind})`).join(', ')}.`;
 
   if (problems.length) {
@@ -453,7 +453,7 @@ function takeIn(text, dialog) {
     dialog.close();
   }
   toast(kept.length === 1
-    ? `Imported ${state.bySlug.get(kept[0].slug)?.name ?? kept[0].slug} — ${kept[0].kind}`
+    ? `Imported ${state.bySlug.get(kept[0].slug)?.name ?? kept[0].slug}: ${kept[0].kind}`
     : `Imported ${kept.length} entries`, 'ok');
 }
 
@@ -622,7 +622,7 @@ function renderQueue() {
     return `
       <button class="contrib__qitem" type="button" data-open="${esc(e.slug)}" data-kind="${esc(e.kind)}"
               data-imported="${e.imported === true}"
-              aria-current="${here}" title="${esc(t?.name ?? e.slug)} — ${e.kind}, ${e.tiles.length} tiles${
+              aria-current="${here}" title="${esc(t?.name ?? e.slug)}: ${e.kind}, ${e.tiles.length} tiles${
                 d?.was ? `, ${d.added.length} added and ${d.removed.length} dropped against the file` : ''}">
         ${t ? artHTML(t, { lazy: false }) : ''}
         <span class="contrib__qname">${esc(t?.name ?? e.slug)}</span>
@@ -1022,7 +1022,7 @@ function renderGrid(review) {
   $('#btn-move').disabled = everywhere;
   if (lost > 0) {
     $('#grid-hint').textContent
-      += ` ${lost} recorded tile${lost === 1 ? '' : 's'} sit outside the board from here — move it to see them.`;
+      += ` ${lost} recorded tile${lost === 1 ? '' : 's'} sit outside the board from here. Move it to see them.`;
   }
 }
 
@@ -1140,7 +1140,7 @@ function renderOutput() {
     : `Range data: ${all.length} entries`;
 
   const body = [
-    ...all.map((e) => `- **${nameOf(e.slug)}** (\`${e.slug}\`) — ${
+    ...all.map((e) => `- **${nameOf(e.slug)}** (\`${e.slug}\`): ${
       KINDS.find((k) => k.id === e.kind).label}, ${
       e.scope === 'all' ? 'reaches everything' : `${e.tiles.length} tiles`}`),
     '',

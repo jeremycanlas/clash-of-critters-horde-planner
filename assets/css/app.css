@@ -113,7 +113,18 @@
   --lift-1: 0 1px 2px rgb(0 0 0 / .28), 0 2px 8px rgb(0 0 0 / .18);
   --lift-2: 0 2px 6px rgb(0 0 0 / .32), 0 12px 32px rgb(0 0 0 / .28);
 
-  --z-drag: 10; --z-sticky: 20; --z-modal: 30; --z-toast: 40;
+  /*
+   * --z-drag is 100 and the rest are small on purpose.
+   *
+   * The thing under your finger has to be the thing on top, always, and it is
+   * the one layer that has no business being ordered against anything else. The
+   * others are a 10/20/30/40 scale for the desktop page -- but the phone shell
+   * stacks on its own numbers, dock 62, sheets 70, app bar 75, and a ghost at
+   * 10 was drawn behind the sheet it was being dragged inside. You picked a
+   * chip up and saw nothing move, which reads as a drag that does not work,
+   * because from where you are sitting that is what it is.
+   */
+  --z-drag: 100; --z-sticky: 20; --z-modal: 30; --z-toast: 40;
 
   --ease-out: cubic-bezier(.2, .7, .3, 1);
   color-scheme: dark;
@@ -2296,16 +2307,44 @@ body[data-switching="true"] .cell[data-zobo] { box-shadow: none; cursor: default
 .card.is-swap { opacity: .62; }
 .card.is-swap:hover { opacity: 1; }
 .card.is-swap .card__lock {
-  background: color-mix(in srgb, var(--accent) 22%, var(--surface));
+  background: color-mix(in srgb, var(--accent) 34%, var(--surface));
   color: var(--text);
 }
+/*
+ * The swap marker, which used to be a caption and could not be one.
+ *
+ * It was `inset: auto 0 0` -- a full-width bar pinned to the bottom edge, which
+ * is exactly where .card__name sits. So on every card in a line you already
+ * bring, the bar covered the name, and then its own text ("Switch from
+ * Frostique") was far too long for a 90px card and truncated to "SWITCH
+ * FROM...". Both facts were lost at once: which Tatari the card is, and which
+ * one you would be switching from. Three cards in a row of the same line all
+ * read the same nine characters.
+ *
+ * No text fits there, so it stops being text. The glyph sits beside the name
+ * rather than over it, and the sentence it was trying to say is on the card's
+ * own title and in an .sr-only span -- both of which could already carry it,
+ * and neither of which has 90px to fit in.
+ */
 .card__lock {
-  position: absolute; inset: auto 0 0; padding: 1px 3px;
-  background: color-mix(in srgb, var(--bg) 84%, transparent);
-  font-size: 8.5px; font-weight: 650; letter-spacing: .04em;
-  text-transform: uppercase; color: var(--text-mute);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  position: absolute; right: 3px; bottom: 2px;
+  display: grid; place-items: center;
+  width: 15px; height: 15px;
+  border-radius: var(--r-sm);
+  background: color-mix(in srgb, var(--accent) 26%, var(--surface));
+  color: var(--accent-ink-on);
+  font-size: 11px; line-height: 1;
 }
+/*
+ * Margin, not padding.
+ *
+ * `overflow: hidden` clips at the padding box, so padding-right reserves space
+ * the text is still free to paint across on its way to being clipped -- a long
+ * name would run under the badge and stop there. A margin shrinks the box
+ * itself, so the ellipsis lands before the badge and cannot reach it. The name
+ * re-centres in what is left, which is what the card's text-align already wants.
+ */
+.card.is-swap .card__name { margin-right: 17px; }
 
 /* ============================================================ modals */
 
@@ -2558,15 +2597,30 @@ body.is-live-down .who-strip { opacity: .45; }
 
 /* ============================================================ dragging */
 
+/*
+ * The ghost is a position, not a shape.
+ *
+ * It used to be a 62px square with a shadow, which is the size and the look of
+ * a Tatari token -- the first thing that was ever dragged. Everything dragged
+ * since brings its own shape: a chip brings a pill with its name on it, a
+ * level-up step brings a row. Those sat inside a 62px shadowed box that had
+ * nothing to do with them, so dragging a chip drew a stray rectangle behind
+ * the name. The box carries a coordinate now and the thing inside it decides
+ * what it looks like.
+ */
 .drag-ghost {
   position: fixed; top: 0; left: 0; z-index: var(--z-drag);
-  width: 62px; height: 62px;
-  border-radius: var(--r-sm);
-  box-shadow: var(--lift-2);
+  width: max-content; height: auto;
   pointer-events: none;
   will-change: transform;
 }
-.drag-ghost .token { position: static; width: 100%; height: 100%; }
+/* The token keeps the square and the shadow it always had, on itself. */
+.drag-ghost .token {
+  position: static;
+  width: 62px; height: 62px;
+  border-radius: var(--r-sm);
+  box-shadow: var(--lift-2);
+}
 .drag-ghost .prio--ghost {
   display: flex; align-items: center; gap: var(--s2);
   width: max-content; height: auto; padding: var(--s1) var(--s3) var(--s1) var(--s1);
@@ -3389,7 +3443,7 @@ body.is-dragging-active {
    * which put the fifteen you are bringing out of sight on the one screen whose
    * whole job is placing them.
    */
-  #bench {
+  #dock {
     position: fixed; left: 0; right: 0;
     /* Tucked 2px behind the bar rather than balanced exactly on its edge: two
        fixed elements meeting at a fractional device pixel leave a hairline the
@@ -4179,3 +4233,1240 @@ body.is-clean .clean-hint {
   .changes__main { padding: var(--s4) var(--s3) var(--s6); }
   .chgroup__grid { grid-template-columns: 1fr; gap: var(--s2); }
 }
+
+/* =======================================================  chips
+ *
+ * Two surfaces off one engine: a live block under the Summary in the drafter,
+ * and a page of its own. They share .chgroup and its children with the changes
+ * page above, deliberately -- both are "here is a body of reference, scored",
+ * and a second visual language for the same shape would only be a second thing
+ * to keep in step.
+ * ======================================================================== */
+
+/* --------------------------------------------------- the drafter block */
+
+.chipsblock {
+  margin-top: var(--s4); padding-top: var(--s3);
+  border-top: 1px solid var(--line-soft);
+}
+.chipsblock__head {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--s2);
+  margin: 0 0 var(--s2);
+  font-size: 12px; font-weight: 650; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--text-mute);
+}
+.chipsblock__sub {
+  font-size: 11px; font-weight: 500; letter-spacing: 0; text-transform: none;
+  color: var(--text-mute);
+}
+.chipsblock__empty, .chipsblock__more {
+  margin: 0; color: var(--text-mute); font-size: 12.5px; line-height: 1.5;
+}
+.chipsblock__more { margin-top: var(--s2); }
+.chipsblock__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; }
+
+/*
+ * One row per chip: the chip, its name, the count, and the Tatari it means.
+ *
+ * This used to draw the count as a fill across the row. The fill was easy to
+ * catch out of the corner of the eye while dragging, which was the argument for
+ * it, but it answered the wrong question -- "four of your six" still leaves you
+ * looking back at the field to see which four, and that is the whole decision.
+ */
+.chipbar {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto auto 1fr auto;
+  align-items: center;
+  gap: 0 var(--s2);
+  padding: 4px var(--s2);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-sm);
+  font-size: 12.5px;
+}
+.chipbar__name {
+  font-weight: 600; color: var(--text); white-space: nowrap;
+}
+.chipbar__n { color: var(--text-dim); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.chipbar__n b { color: var(--text); }
+.chipbar__why {
+  grid-column: 3;
+  justify-self: start;
+  color: var(--text-mute); font-size: 11px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.chipbar.is-taken {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--line));
+}
+/*
+ * A word in the corner rather than a coloured left edge. A 2px border on one
+ * side is the side-tab this project bans everywhere else, and it reads as a nav
+ * item rather than as a state.
+ */
+.chipbar.is-taken::after {
+  content: "kept";
+  position: absolute; top: 4px; right: var(--s2);
+  font-size: 9px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--accent-ink-on);
+}
+.chipbar.is-taken .chipbar__n { padding-right: 30px; }
+
+/* ------------------------------------------------------------- the page */
+
+/*
+ * `chipspage`, not `chips`. `.chips` is already the filter-chip row in the
+ * roster -- `display: flex` -- so `<body class="chips">` turned the whole
+ * document into a flex container and squashed an 1180px page down to 362px
+ * inside a 1280px window, looking for all the world like a broken max-width.
+ */
+.chipspage__main {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: var(--s5) var(--s4) var(--s6);
+}
+.chipspage__intro {
+  max-width: 72ch;
+  margin: 0 0 var(--s5);
+  color: var(--text-dim); font-size: 14px; line-height: 1.55;
+}
+/* Empty on the normal path, so it must not leave its margin behind. */
+.chipspage__intro:empty { display: none; }
+
+/* The three you kept, above everything else. Mid-run this is the only part you
+   open the page for, so it does not sit below forty-nine cards. */
+.kept { margin-bottom: var(--s6); }
+.kept__head {
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2) var(--s3);
+  margin-bottom: var(--s3);
+}
+.kept__head h2 { margin: 0; font-size: 15px; font-weight: 650; }
+.kept__who { display: flex; gap: var(--s1); }
+.kept__who .is-on {
+  background: var(--accent); color: var(--accent-ink); border-color: transparent;
+}
+.kept__slots {
+  list-style: none; margin: 0; padding: 0;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--s2);
+  counter-reset: slot;
+}
+.kept__slot {
+  counter-increment: slot;
+  display: flex; flex-direction: column; gap: 2px;
+  min-height: 62px;
+  padding: var(--s2) var(--s3);
+  border: 1px dashed var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  font-size: 12.5px;
+}
+.kept__slot::before {
+  content: counter(slot);
+  font-size: 10px; font-weight: 700; color: var(--text-mute);
+}
+.kept__slot.is-filled { border-style: solid; border-color: var(--accent); }
+.kept__slot b { color: var(--text); font-size: 13.5px; }
+.kept__slot span { color: var(--text-mute); line-height: 1.45; }
+.kept__wait { color: var(--text-mute); font-style: italic; }
+.kept__total { margin: var(--s2) 0 0; font-size: 12px; }
+
+.chipcard {
+  position: relative;
+  padding: var(--s3);
+  padding-right: var(--s6);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface);
+}
+.chipcard.is-taken { border-color: var(--accent); }
+.chipcard__keep {
+  position: absolute; top: var(--s2); right: var(--s2);
+  width: 26px; height: 26px;
+  display: grid; place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--text-mute);
+  font-size: 14px; line-height: 1;
+  cursor: pointer;
+}
+.chipcard__keep:hover { color: var(--text); border-color: var(--accent); }
+.chipcard__keep[aria-pressed="true"] {
+  background: var(--accent); border-color: transparent; color: var(--accent-ink);
+}
+.chipcard__name {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--s2);
+  margin: 0 0 var(--s1);
+  font-size: 14px; font-weight: 650;
+}
+/* The gallery colours its tiers, so this does too, but with the numeral as
+   well: colour on its own is not a channel every reader has. */
+.chipcard__tier {
+  padding: 0 5px;
+  border-radius: var(--r-sm);
+  font-size: 9.5px; font-weight: 700; letter-spacing: .1em;
+  background: var(--surface-3); color: var(--text-mute);
+}
+.chipcard__tier[data-tier="2"] { color: var(--fire); }
+.chipcard__tier[data-tier="3"] { color: var(--water); }
+.chipcard__text {
+  margin: 0; color: var(--text-dim); font-size: 12.5px; line-height: 1.5;
+}
+.chipcard__score {
+  margin: var(--s2) 0 0;
+  padding: var(--s1) var(--s2);
+  border-radius: var(--r-sm);
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface-2));
+  font-size: 12.5px; color: var(--text-dim);
+}
+.chipcard__score b { color: var(--text); font-variant-numeric: tabular-nums; }
+/* Zero is a real answer and worth printing, but it should not read as a result. */
+.chipcard__score[data-empty="true"] { background: var(--surface-2); color: var(--text-mute); }
+.chipcard__score[data-empty="true"] b { color: var(--text-mute); }
+
+@media (max-width: 760px) {
+  .chipspage__main { padding: var(--s4) var(--s3) var(--s6); }
+  .kept__slots { grid-template-columns: 1fr; }
+}
+
+/* Chip icons, cut out of the in-game gallery by tools/cut_chips.py.
+ *
+ * The tile background comes with them and is kept: the gallery uses it to say
+ * which tier a chip is, and throwing it away would leave the numeral as the only
+ * thing carrying that. `object-fit: cover` because the crops are not all exactly
+ * square -- Mission Reset sits alone on a row the screenshot clipped, so it is a
+ * few pixels shorter than the other 48. */
+/*
+ * One line, not two.
+ *
+ * The sprites started on a row of their own under the name, which read well and
+ * cost 66px a row -- ten rows of that made the field column 1854px tall and
+ * pushed the level-up plan below the roster on a desktop, which is a worse
+ * answer than any layout of this panel. On one line the sprites take the space
+ * the name does not want, and the row is 34px.
+ */
+.chipbar__art {
+  width: 26px; height: 26px;
+  border-radius: var(--r-sm);
+  object-fit: cover;
+  align-self: center;
+}
+.chipbar__why { grid-column: 2 / -1; }
+
+.chipcard {
+  padding-left: 74px;
+}
+.chipcard__art {
+  position: absolute; left: var(--s3); top: var(--s3);
+  width: 46px; height: 46px;
+  border-radius: var(--r-sm);
+  object-fit: cover;
+  box-shadow: 0 0 0 1px var(--line);
+}
+/* The card is short when a chip has no score and no doubts, and a 46px icon
+   beside two lines of text then hangs below them. */
+.chipcard { min-height: 74px; }
+
+/* Who a chip would actually touch.
+ *
+ * This replaced a bar filled to the fraction of the board a chip reaches. The
+ * bar answered "how much" and left you looking back at the field to find out
+ * which -- which is the question, since four Tatari can be the four carrying the
+ * run or the four you are about to bench. Faces answer it without the trip.
+ *
+ * The element ring is the same wash the field tokens use, so a row of Water
+ * sprites reads as Water at a glance and Water Form II needs no reading at all.
+ */
+.chipwho {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 3px;
+  min-width: 0;
+}
+.chipwho__art {
+  display: grid; place-items: center;
+  width: 26px; height: 26px;
+  border-radius: var(--r-sm);
+  background: var(--surface-3);
+  box-shadow: inset 0 0 0 1px var(--line-soft);
+}
+.chipwho__art img { width: 100%; height: 100%; object-fit: contain; }
+.chipwho__art[data-type="Water"]     { background: color-mix(in srgb, var(--water) 22%, var(--surface-3)); }
+.chipwho__art[data-type="Fire"]      { background: color-mix(in srgb, var(--fire) 22%, var(--surface-3)); }
+.chipwho__art[data-type="Grass"]     { background: color-mix(in srgb, var(--grass) 22%, var(--surface-3)); }
+.chipwho__art[data-type="Rock"]      { background: color-mix(in srgb, var(--rock) 22%, var(--surface-3)); }
+.chipwho__art[data-type="Lightning"] { background: color-mix(in srgb, var(--lightning) 22%, var(--surface-3)); }
+.chipwho__more {
+  padding: 0 5px;
+  font-size: 11px; font-weight: 650; color: var(--text-mute);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The panel row, without the fill it used to carry. */
+.chipbar {
+  background: var(--surface-2);
+  padding: var(--s2);
+}
+/* Takes whatever the name leaves, and scrolls rather than wrapping if a big
+   board brings more sprites than the row can hold. */
+.chipbar .chipwho {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+  justify-content: flex-end;
+}
+.chipbar .chipwho::-webkit-scrollbar { display: none; }
+.chipbar .chipwho__art { flex: none; width: 22px; height: 22px; }
+/* Nothing to draw, so the row says what it was looking for instead, and steps
+   back rather than sitting at the same weight as one that found something. */
+.chipbar.is-empty { opacity: .62; }
+
+.chipcard__score {
+  display: flex; flex-direction: column; gap: var(--s2);
+}
+.chipcard__count { margin: 0; }
+.chipcard__score[data-empty="true"] .chipwho { display: none; }
+
+/* The Form chips get the same row as the board chips.
+ *
+ * They were a line of pills reading "Fire 1  Grass 1  Lightning 1", which is the
+ * element split the summary already shows and not an answer about chips at all.
+ * A Form chip touches every Tatari of its element, so the sprites are the
+ * answer -- and there is one Form chip per element, so a row per element is a
+ * row per chip, exactly like the six above it. */
+.chipsblock__head--sub { margin-top: var(--s3); }
+
+/* Stands in for the chip icon on the left of a Form row: the element's own
+   colour, rather than one of the fifteen tile crops, since a single row is
+   speaking for all three tiers of that element at once. */
+.chipbar__elem {
+  width: 26px; height: 26px;
+  border-radius: var(--r-sm);
+  align-self: center;
+  box-shadow: inset 0 0 0 1px var(--line-soft);
+}
+.chipbar__elem[data-type="Water"]     { background: color-mix(in srgb, var(--water) 55%, var(--surface-3)); }
+.chipbar__elem[data-type="Fire"]      { background: color-mix(in srgb, var(--fire) 55%, var(--surface-3)); }
+.chipbar__elem[data-type="Grass"]     { background: color-mix(in srgb, var(--grass) 55%, var(--surface-3)); }
+.chipbar__elem[data-type="Rock"]      { background: color-mix(in srgb, var(--rock) 55%, var(--surface-3)); }
+.chipbar__elem[data-type="Lightning"] { background: color-mix(in srgb, var(--lightning) 55%, var(--surface-3)); }
+
+/* Filter by tier, which is what the game calls rarity.
+ *
+ * One row, three buttons, and the same contract as every filter in the roster:
+ * nothing pressed shows everything, pressing the one already on releases it, and
+ * the count beside each says how many it would find. Multi-select, because "II
+ * or III" is a real question when you are deciding whether an offer is worth
+ * taking and the low tier of the same chip is not.
+ */
+.chipfilters {
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2);
+  margin-bottom: var(--s5);
+  padding-bottom: var(--s3);
+  border-bottom: 1px solid var(--line-soft);
+}
+.chipfilters[hidden] { display: none; }
+.chipfilters__label {
+  font-size: 10.5px; font-weight: 650; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--text-mute);
+}
+.chipfilters__n {
+  margin-left: auto;
+  font-size: 12px; color: var(--text-mute); font-variant-numeric: tabular-nums;
+}
+
+/* Wider than the roster's square chips, because each carries a numeral and a
+   count rather than one glyph. */
+.chip--rarity {
+  display: inline-flex; align-items: center; gap: var(--s2);
+  width: auto; padding: 0 var(--s3);
+  font-variant-numeric: tabular-nums;
+}
+/* The same colour the card badge uses for that tier, so the filter and the thing
+   it filters agree without anyone having to learn a second key. The numeral is
+   there as well: colour alone is not a channel every reader has. */
+.chip__tier {
+  font-size: 10px; font-weight: 700; letter-spacing: .1em;
+  color: var(--text-mute);
+}
+.chip__tier[data-tier="1"] { color: var(--text-dim); }
+.chip__tier[data-tier="2"] { color: var(--fire); }
+.chip__tier[data-tier="3"] { color: var(--water); }
+.chip--rarity[aria-pressed="true"] .chip__tier { color: inherit; }
+.chipspage__none {
+  max-width: 60ch;
+  color: var(--text-mute); font-size: 13px; line-height: 1.55;
+}
+
+/* The three you keep, and the shortlist under them.
+ *
+ * Three ranked slots plus a list with no limit. The three are what a run gives
+ * you, in the order you would take them, so they move. The shortlist is the
+ * thinking you did before the offer, which has no reason to be capped at three.
+ */
+/* The slot IS the row now, so its own flex column layout would stack the sprite,
+   the name and the controls on top of each other. */
+.kept__slot.keptrow { display: grid; }
+.kept__slot:not(.is-filled) { display: flex; align-items: center; }
+
+.keptrow {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--s2);
+  width: 100%;
+  min-width: 0;
+}
+.keptrow__art {
+  width: 30px; height: 30px;
+  border-radius: var(--r-sm);
+  object-fit: cover;
+}
+.keptrow__name {
+  font-size: 13px; font-weight: 600; color: var(--text);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.keptrow__ctl { display: flex; gap: 2px; }
+
+/*
+ * 26px, which clears WCAG 2.5.8's 24px floor without turning four controls into
+ * 176px of buttons beside a 30px sprite. Mistapping one is cheap: every action
+ * here is reversible with the button next to it.
+ */
+.keptrow__btn {
+  width: 26px; height: 26px;
+  display: grid; place-items: center;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  color: var(--text-dim);
+  font-size: 11px; line-height: 1;
+  cursor: pointer;
+}
+.keptrow__btn:hover:not(:disabled) { color: var(--text); border-color: var(--accent); }
+/* Disabled rather than absent: the top row's "up" going missing would shift the
+   other three controls under the pointer between presses. */
+.keptrow__btn:disabled { opacity: .3; cursor: default; }
+
+.kept__extra { margin-top: var(--s4); }
+.kept__extra h3 {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--s2);
+  margin: 0 0 var(--s2);
+  font-size: 13px; font-weight: 650;
+}
+.kept__hint {
+  font-size: 11.5px; font-weight: 500; color: var(--text-mute);
+}
+.kept__list {
+  list-style: none; margin: 0; padding: 0;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--s1) var(--s2);
+}
+.kept__list .keptrow {
+  padding: var(--s1) var(--s2);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-md);
+  background: var(--surface);
+}
+.kept__none {
+  max-width: 62ch;
+  margin: 0; color: var(--text-mute); font-size: 12.5px; line-height: 1.5;
+}
+
+/* Faces instead of a sentence, on the two groups that have particular Tatari to
+   point at. No count line, so the row is the whole answer. */
+.chipcard__score[data-faces="true"] {
+  background: none; padding: 0;
+}
+
+@media (max-width: 760px) {
+  .kept__list { grid-template-columns: 1fr; }
+}
+
+/* The kept rows drag as well as stepping with their buttons.
+ *
+ * The sprite is the handle, not the row. `.prio` shipped in dnd.js's
+ * DRAG_SURFACES with no `touch-action: none` anywhere, so the browser claimed
+ * the gesture as a scroll before the hold fired and reordering the plan by touch
+ * never happened at all. The whole row cannot take it either: this is a page you
+ * scroll, and a row that refuses to scroll under a thumb is worse than one that
+ * does not drag. */
+.keptrow__art { cursor: grab; }
+.keptrow.is-over { outline: 2px solid var(--accent); outline-offset: 1px; }
+.kept__extra.is-over { outline: 2px dashed var(--accent); outline-offset: 4px; border-radius: var(--r-md); }
+.keptghost {
+  display: inline-block;
+  padding: var(--s1) var(--s3);
+  border-radius: var(--r-md);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font: 600 13px/1.2 var(--ui, system-ui);
+  box-shadow: var(--lift-2);
+}
+
+@media (hover: none) {
+  /* Without this the drag is armed and then never receives a move. */
+  .keptrow__art { touch-action: none; }
+  /* A thumb-sized handle without making the row taller. */
+  .keptrow__art { width: 34px; height: 34px; }
+}
+
+/* ---------------------------------------------------- the chips tab
+ *
+ * A third list in the roster, next to Tatari and Zobos, because a chip is a
+ * third thing you pick and the roster is where picking happens. It also
+ * inherits the search box, the card grid and the tab strip, all of which the
+ * panel it replaced had grown its own copies of at a cost of 559px under the
+ * Summary.
+ */
+body:not([data-roster-list="chips"]) .chips-only { display: none; }
+
+/* Nothing in the Tatari filter block means anything to a chip: no element, no
+   role, no evolution tier, no bench. Same approach as the Zobo tab -- the body
+   carries the flag and the CSS hides them, rather than each control learning
+   about tabs. */
+body[data-roster-list="chips"] #filter-types,
+body[data-roster-list="chips"] #filter-roles,
+body[data-roster-list="chips"] #filter-effects,
+body[data-roster-list="chips"] #filter-tiers,
+body[data-roster-list="chips"] #filter-changed,
+body[data-roster-list="chips"] #filter-boss,
+body[data-roster-list="chips"] #filter-effect-types,
+body[data-roster-list="chips"] .filters__row--meta .check,
+body[data-roster-list="chips"] .filters__row--meta .sortby { display: none; }
+
+/* The tile art is the whole card face: it is already a framed icon on a
+   coloured ground, so the card's own padding around it would be a frame on a
+   frame. */
+.card--chip { cursor: pointer; }
+.card--chip .card__art img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  border-radius: var(--r-sm);
+}
+.card--chip .card__meta { justify-content: center; gap: var(--s1); }
+.card__score {
+  padding: 0 4px;
+  border-radius: var(--r-sm);
+  background: color-mix(in srgb, var(--accent) 22%, var(--surface-3));
+  font-size: 10px; font-weight: 700; color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+/* Nothing on this board qualifies. Still shown, because "0 of your 6" is an
+   answer and hiding it would read as the chip having no rule at all. */
+.card__score[data-empty="true"] { background: var(--surface-3); color: var(--text-mute); }
+/* Which of your three it is, if it is one of them. */
+.card__rank {
+  min-width: 14px; height: 14px;
+  display: grid; place-items: center;
+  border-radius: 999px;
+  background: var(--accent); color: var(--accent-ink);
+  font-size: 9px; font-weight: 700;
+}
+
+/* Chips read as rows, not as tiles.
+ *
+ * A Tatari card works at 82px because a sprite is recognisable at 82px. A chip
+ * is a rule -- "Generate 6 single-use lawn mowers at the bottom of the map" --
+ * and no amount of grid tuning makes that legible in a tile. So on this tab the
+ * roster stops being a grid and becomes a list, and each row has room for the
+ * whole sentence, which is the thing you are actually choosing between.
+ */
+.card--chip {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: start;
+  gap: var(--s2);
+  padding: 5px var(--s2);
+  text-align: left;
+  cursor: pointer;
+}
+.chiprow__art {
+  width: 34px; height: 34px;
+  border-radius: var(--r-sm);
+  object-fit: cover;
+}
+.chiprow__body { min-width: 0; }
+.chiprow__head {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px var(--s2);
+  margin: 0;
+  font-size: 12.5px;
+}
+.chiprow__head b { font-weight: 650; color: var(--text); }
+/* The category, on the chip and filterable beside it. */
+.chiprow__text {
+  margin: 0;
+  font-size: 11.5px; line-height: 1.4; color: var(--text-dim);
+}
+.chiprow__score {
+  margin: 1px 0 0;
+  font-size: 11px; line-height: 1.35; color: var(--text-dim);
+}
+.chiprow__score b { color: var(--text); font-variant-numeric: tabular-nums; }
+.chiprow__score[data-empty="true"] { color: var(--text-mute); }
+.chiprow__score[data-empty="true"] b { color: var(--text-mute); }
+
+/*
+ * inline-flex, not the base chip's inline-grid.
+ *
+ * `.chip` is a 30px box with `place-items: center`, which puts every child in
+ * the same grid cell -- so the label and its count were drawn on top of each
+ * other and the number bled through the word. Widening it did not help, because
+ * the problem was never the width.
+ */
+.chip--group {
+  display: inline-flex; align-items: center; gap: 5px;
+  width: auto; padding: 0 var(--s2);
+}
+.chip--group b { font-variant-numeric: tabular-nums; }
+
+@media (max-width: 760px) {
+  /* The sprite gives up the most: the sentence is why the row exists. */
+  .chiprow__art { width: 30px; height: 30px; }
+  .card--chip { gap: var(--s2); padding: 5px var(--s2); }
+}
+
+/* ------------------------------------------------ the chip dock
+ *
+ * The bench answers "what am I bringing" for Tatari. This answers it for chips,
+ * and it sits with the bench rather than in the roster so that one screenshot of
+ * the field carries the board, the bench and the chips at once. On a phone both
+ * ride the same fixed shelf above the app bar, for the same reason.
+ */
+.dock { display: grid; gap: var(--s2); }
+
+.chipbench { margin-top: var(--s1); }
+.chipbench[hidden] { display: none; }
+.chipbench__head {
+  display: flex; align-items: baseline; gap: var(--s2);
+  margin-bottom: var(--s1);
+}
+.chipbench__label {
+  font-size: 10.5px; font-weight: 650; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--text-mute);
+}
+.chipbench__count { color: var(--text-dim); font-size: 11.5px; }
+.chipbench__count b { color: var(--text); font-weight: 700; }
+.chipbench__strip { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s1); }
+
+.chipbench__chip {
+  position: relative;
+  width: 34px; height: 34px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--line);
+  /* No overflow:hidden. It was here to clip the sprite to the rounded corner,
+     which the sprite can do for itself -- and it also clipped the insertion bar
+     that has to sit in the gap outside this box to mean anything. */
+}
+.chipbench__chip img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+  border-radius: calc(var(--r-sm) - 1px);
+}
+.chipbench__missing {
+  display: grid; place-items: center; width: 100%; height: 100%;
+  background: var(--surface-3); color: var(--text-mute); font-size: 13px;
+}
+/* Which of the three it is. Only the three are numbered; the shortlist is not
+   an order, it is a set. */
+.chipbench__n {
+  position: absolute; left: 1px; top: 1px;
+  min-width: 12px; height: 12px;
+  display: grid; place-items: center;
+  border-radius: 999px;
+  background: var(--accent); color: var(--accent-ink);
+  font-size: 8px; font-weight: 700;
+}
+/* A gap, not a heading: the shortlist is the same kind of thing, further down
+   your list, and a second label for it would cost more room than it explains. */
+.chipbench__gap {
+  width: 1px; height: 22px;
+  background: var(--line);
+  margin: 0 var(--s1);
+}
+.chipbench .chipbench__chip:not([data-rank]) { opacity: .82; }
+
+/* Clean view is the field and nothing else, so the chips go with the bench. */
+body.is-clean #chipbench { display: none !important; }
+
+@media (max-width: 760px) {
+  .chipbench { margin-top: 0; }
+  .chipbench__strip {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+  }
+  .chipbench__strip::-webkit-scrollbar { display: none; }
+  .chipbench__chip { flex: none; width: 30px; height: 30px; }
+}
+
+/* ------------------------------------------------ chips: grid or list
+ *
+ * Two views because there are two questions. The grid is for somebody who knows
+ * the chips and is hunting for one by its face; the list is for somebody
+ * deciding, who needs the rule. Neither is the beginner view, so the choice is
+ * remembered rather than reset on every visit.
+ */
+#chip-view { flex: none; }
+#chip-view .segmented__btn { display: inline-flex; align-items: center; gap: 5px; }
+#chip-view svg { display: block; }
+
+/* ---- list ---- */
+.roster[data-chip-view="list"] { grid-template-columns: 1fr; gap: var(--s1); }
+
+/* ---- grid ----
+ * Back to tiles, the way the gallery shows them. The rule is not on the card at
+ * this size and cannot be, which is the whole reason the list exists; the tile
+ * carries the face, the tier and whether you kept it.
+ */
+.roster[data-chip-view="grid"] { grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); }
+.roster[data-chip-view="grid"] .card--chip {
+  display: grid;
+  /*
+   * The columns have to be reset, not just the rows. The list lays the card out
+   * as `auto 1fr auto` -- sprite, body, rank -- and overriding only the rows
+   * left the tile in that first `auto` column, where `width: 100%` resolves
+   * against a column sized to its contents: the icon came out 0x0 and the whole
+   * card was 57px of text with no picture in it.
+   */
+  grid-template-columns: 1fr;
+  grid-template-rows: auto auto;
+  gap: 2px;
+  padding: var(--s1);
+  text-align: center;
+}
+.roster[data-chip-view="grid"] .chiprow__art {
+  width: 100%; height: auto; aspect-ratio: 1;
+  border-radius: var(--r-sm);
+}
+.roster[data-chip-view="grid"] .chiprow__text,
+.roster[data-chip-view="grid"] .chipwho,
+.roster[data-chip-view="grid"] .chiprow__none,
+.roster[data-chip-view="grid"] .chiptype { display: none; }
+/*
+ * Name over tier, not beside it.
+ *
+ * On one row the tier pill took 23px of an 80px card and left the name 52px --
+ * about nine characters, so "Photosynthesis III" read "Photosynt". Stacked, the
+ * name gets the whole width and two lines, which fits every name in the file.
+ * The fixed height on it keeps the tiles level: a grid row is as tall as its
+ * tallest card, so one two-line name would otherwise pad out its whole row.
+ */
+.roster[data-chip-view="grid"] .chiprow__head {
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 10.5px;
+}
+.roster[data-chip-view="grid"] .chiprow__body { min-width: 0; }
+/*
+ * The pick number goes in the corner rather than in the flow.
+ *
+ * In the list it is a third grid column and costs nothing. Here the card is a
+ * single column, so it became a third row -- and only on the chips you kept,
+ * which made those rows 16px taller than their neighbours and the whole grid
+ * step up and down as you picked things.
+ */
+.roster[data-chip-view="grid"] .card--chip { position: relative; }
+.roster[data-chip-view="grid"] .card__rank {
+  position: absolute; top: 3px; left: 3px;
+  box-shadow: 0 0 0 2px var(--surface-2);
+}
+.roster[data-chip-view="grid"] .chiprow__head b {
+  width: 100%;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  max-width: 100%;
+  min-height: 2.4em;
+  line-height: 1.2;
+  text-align: center;
+  white-space: normal;
+}
+
+/*
+ * The tier, said properly.
+ *
+ * It was grey text at 9.5px, which is the least readable thing on a card that
+ * also has to work in High contrast. Now it is a filled pill in the tier's own
+ * colour with ink chosen against that fill, and the numeral is still the
+ * numeral -- colour is the faster channel but never the only one.
+ */
+.chiptier {
+  padding: 1px 5px;
+  border-radius: var(--r-sm);
+  font-size: 10px; font-weight: 800; letter-spacing: .08em;
+  background: var(--surface-3);
+  color: var(--text-dim);
+}
+.chiptier[data-tier="1"] { background: color-mix(in srgb, var(--water) 26%, var(--surface-3)); color: var(--text); }
+.chiptier[data-tier="2"] { background: color-mix(in srgb, var(--fire) 30%, var(--surface-3)); color: var(--text); }
+.chiptier[data-tier="3"] { background: color-mix(in srgb, var(--accent) 34%, var(--surface-3)); color: var(--text); }
+
+/* The type, likewise: a real label rather than grey small print. */
+.chiptype {
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 10px; font-weight: 700; letter-spacing: .02em;
+  background: var(--surface-3);
+  color: var(--text-dim);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+/* Position and Element are the two that read your board, so they are the two
+   worth telling apart at a glance. The rest share the neutral. */
+.chiptype[data-shape="placement"] { color: var(--text); box-shadow: inset 0 0 0 1px var(--accent); }
+.chiptype[data-shape="element"] { color: var(--text); box-shadow: inset 0 0 0 1px var(--grass); }
+
+.chipwho--row {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 3px;
+  margin: 3px 0 0;
+}
+.chipwho__n {
+  font-size: 11px; font-weight: 700; color: var(--text);
+  font-variant-numeric: tabular-nums;
+  margin-right: 2px;
+}
+.chiprow__none { margin: 3px 0 0; font-size: 11px; color: var(--text-mute); }
+
+/*
+ * High contrast.
+ *
+ * The switch exists because colour alone is not a channel everyone has, so the
+ * tints above all gain a border and the fills go to full strength. The tier
+ * numeral and the type word were already carrying the meaning in text; what
+ * changes here is that they stop relying on a wash to be seen at all.
+ */
+:root[data-contrast="more"] .chiptier {
+  box-shadow: inset 0 0 0 1px currentColor;
+  color: var(--text);
+}
+:root[data-contrast="more"] .chiptier[data-tier="1"] { background: color-mix(in srgb, var(--water) 45%, var(--surface)); }
+:root[data-contrast="more"] .chiptier[data-tier="2"] { background: color-mix(in srgb, var(--fire) 45%, var(--surface)); }
+:root[data-contrast="more"] .chiptier[data-tier="3"] { background: color-mix(in srgb, var(--accent) 50%, var(--surface)); }
+:root[data-contrast="more"] .chiptype {
+  color: var(--text);
+  box-shadow: inset 0 0 0 1px var(--text-dim);
+}
+:root[data-contrast="more"] .chiptype[data-shape="placement"] { box-shadow: inset 0 0 0 2px var(--accent); }
+:root[data-contrast="more"] .chiptype[data-shape="element"] { box-shadow: inset 0 0 0 2px var(--grass); }
+/* The kept ring is a border colour on a card that is otherwise unchanged, which
+   is exactly the kind of single-channel state this switch is for. */
+:root[data-contrast="more"] .card--chip.is-benched { box-shadow: inset 0 0 0 2px var(--accent); }
+:root[data-contrast="more"] .chipwho__art { box-shadow: inset 0 0 0 1px var(--text-dim); }
+:root[data-contrast="more"] .card__rank { box-shadow: 0 0 0 1px var(--text); }
+:root[data-contrast="more"] .chipbench__chip { border-color: var(--text-dim); }
+
+@media (max-width: 760px) {
+  #chip-view .segmented__btn span { display: none; }
+  #chip-view .segmented__btn { padding: 6px 8px; }
+}
+
+/* ------------------------------------- the chips tab's filter block
+ *
+ * Three problems, one shape. The panel head was carrying the panel name, three
+ * tabs and a two-button view switch on one line: 366px of controls in 358px of
+ * phone. Reset sat alone on a line of its own, because every other control in
+ * the meta row is hidden on this tab and it was the only thing left. And the
+ * seven type buttons ran off the right edge with no way to reach the last two.
+ */
+
+/*
+ * The rows that belong to Tatari go entirely, not just their contents. Hiding
+ * the chips inside them left two empty rows still spending the grid's gap.
+ */
+body[data-roster-list="chips"] .filters__row:not(.filters__row--meta) { display: none; }
+
+/*
+ * Flex rather than the usual single column, so tier and Reset can share a line.
+ * The order is set explicitly because the meta row sits after the type row in
+ * the markup, and wrapping follows source order: without it Reset lands under
+ * the types instead of beside the tiers.
+ */
+body[data-roster-list="chips"] .filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s2);
+}
+body[data-roster-list="chips"] .filters > .field[type="search"] { order: 1; flex: 1 1 100%; }
+body[data-roster-list="chips"] #filter-chip-tiers { order: 2; flex: 1 1 auto; }
+body[data-roster-list="chips"] .filters__row--meta { order: 3; flex: 0 0 auto; margin-left: auto; }
+body[data-roster-list="chips"] #filter-chip-groups { order: 4; flex: 1 1 100%; }
+
+/*
+ * Seven types do not fit a phone and never will, so the row scrolls sideways
+ * rather than hiding its last two off the edge. Same trade the opened effect
+ * row makes: one line that moves beats four that stand still above a roster
+ * that wanted the room.
+ */
+#filter-chip-groups {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+#filter-chip-groups::-webkit-scrollbar { display: none; }
+#filter-chip-groups .chip--group { flex: none; }
+#filter-chip-groups .chips__label { flex: none; }
+
+@media (max-width: 760px) {
+  /*
+   * The head gives the tabs their own line. The panel name, three tabs and the
+   * view switch came to more than the width, so everything got squeezed towards
+   * illegible rather than one thing giving way.
+   */
+  body[data-roster-list="chips"] .panel--roster .panel__head h2 { flex: 1 1 100%; }
+  body[data-roster-list="chips"] .panel--roster .panel__head #roster-tabs { margin-left: 0; }
+}
+
+/* ------------------------------------ the filters, folded away on a phone
+ *
+ * They were 225px of a 700px sheet, so 230 Tatari got three card rows and the
+ * rest of the screen went on describing the list rather than showing it. The
+ * search stays out because it is the fastest filter and the one people reach
+ * for first; everything else folds behind a button that says how much is
+ * behind it.
+ *
+ * Above 760px nothing here applies: .touch-only hides the button, and the rows
+ * are a column as they always were.
+ */
+@media (max-width: 760px) {
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--s2);
+  }
+  .filters > #search { flex: 1 1 auto; width: auto; min-width: 0; }
+  .filters > #filters-toggle { flex: none; }
+  /* Everything else takes a line of its own when it is shown at all. */
+  .filters > *:not(#search):not(#filters-toggle) { flex: 1 1 100%; }
+
+  body:not([data-filters="open"]) .filters > *:not(#search):not(#filters-toggle) {
+    display: none;
+  }
+
+  /* The count is the whole point of the closed state: a filter that is on and
+     out of sight is worse than no filter at all. */
+  #filters-toggle b {
+    display: inline-grid; place-items: center;
+    min-width: 16px; height: 16px; margin-left: 3px; padding: 0 3px;
+    border-radius: 999px;
+    background: var(--accent); color: var(--accent-ink);
+    font-size: 10px; font-weight: 800;
+  }
+  #filters-toggle.is-on { border-color: var(--accent); color: var(--text); }
+  #filters-toggle[aria-expanded="true"] { background: var(--surface-3); color: var(--text); }
+}
+
+/* ------------------------------------------------- flex slots
+ *
+ * A square left open on purpose.
+ *
+ * Formations travel as a screenshot of the grid -- the analytics are blunt
+ * about it: 286 opens, 4 card downloads, 0 link copies. In a picture, "I could
+ * not fill this" and "bring what you like here" are the same empty square, so
+ * the second one, which is the more useful post, could not be made. Dashes say
+ * deliberate. The word says what the deliberate thing is, to a reader who has
+ * no legend and never opened the tool.
+ */
+.cell.is-flex {
+  border-style: dashed;
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+.cell__flex {
+  font-size: 8.5px; font-weight: 800; letter-spacing: .1em;
+  color: var(--accent-ink-on);
+  pointer-events: none;
+  user-select: none;
+}
+
+/*
+ * Marking mode. Every empty square becomes a thing to press, so it has to look
+ * like one -- otherwise the toggle is on and the board looks exactly as it did,
+ * which reads as the toggle being broken.
+ */
+body.is-flexing .cell:not(.is-filled) {
+  border-style: dashed;
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+  cursor: pointer;
+}
+body.is-flexing .cell:not(.is-filled):hover {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+/* The filled ones are not targets, and saying so beats a toast after the tap. */
+body.is-flexing .cell.is-filled { opacity: .55; }
+
+/* High contrast: the dash pattern is the only thing separating a flex square
+   from an empty one, and a dash pattern is a single channel. */
+:root[data-contrast="more"] .cell.is-flex {
+  border-width: 2px;
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
+}
+:root[data-contrast="more"] .cell__flex { color: var(--text); }
+
+/* The level-up plan with nothing in it.
+ *
+ * It used to render as an empty <ol> between a heading and a form -- a panel
+ * asking you to fill something in without saying what filling it in buys you.
+ * The Learner is a stated intended user, and this is the panel that holds the
+ * one idea in the tool that is about a run rather than a lineup.
+ */
+.plan-empty {
+  list-style: none;
+  padding: var(--s3);
+  border: 1px dashed var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+}
+.plan-empty p {
+  margin: 0;
+  max-width: 54ch;
+  color: var(--text-mute);
+  font-size: 12.5px; line-height: 1.55;
+}
+.plan-empty p + p { margin-top: var(--s2); }
+.plan-empty b { color: var(--text); font-weight: 650; }
+
+/* ------------------------------------- dragging chips into the dock
+ *
+ * A tap keeps a chip; a drag says where it goes. The second exists because the
+ * order of the three is the thing the dock is for, and a tap can only append.
+ */
+
+/*
+ * The sprite is the handle, and only the sprite.
+ *
+ * touch-action: none tells the browser "this gesture is mine", which is what
+ * makes a touch drag possible at all -- and is exactly what you must not put on
+ * a row in a list people scroll with a thumb. So it goes on the icon, the way
+ * the level-up plan puts it on the rank number.
+ */
+/*
+ * The whole chip says it can be picked up; the sprite is the instant grip.
+ *
+ * touch-action: none means "this gesture is mine" and must not go on a card in
+ * a list people scroll with a thumb -- so it stays on the sprite, where it buys
+ * a drag that starts with no hold at all. The rest of the card is draggable
+ * too, by press-and-hold, which is what a Tatari card has always done.
+ */
+.card--chip { cursor: grab; }
+.card--chip:active { cursor: grabbing; }
+.card--chip .chiprow__art,
+.chipbench__chip img { touch-action: none; cursor: grab; }
+.card--chip.is-dragging,
+.chipbench__chip.is-dragging { opacity: .4; }
+
+/* The ghost under the finger: the face, so you can see what you are carrying,
+   and the name, because at 26px several chip faces are hard to tell apart. */
+.chipghost {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 9px 4px 4px;
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  box-shadow: 0 0 0 1px var(--accent), var(--shadow-2);
+  font-size: 12px; font-weight: 700; color: var(--text);
+  white-space: nowrap;
+}
+.chipghost img { width: 24px; height: 24px; border-radius: 4px; display: block; }
+
+/*
+ * An outline for each pick not yet made.
+ *
+ * Three boxes say "three of these" in a way the text "0/3" does not, and each
+ * one is a drop target, so the empty dock teaches the gesture instead of just
+ * announcing a rule.
+ */
+.chipbench__slot {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px;
+  border-radius: var(--r-sm);
+  border: 1px dashed var(--line-2);
+  color: var(--text-mute); font-size: 12px; font-weight: 700;
+  flex: none;
+}
+.chipbench__slot--extra { border-style: dotted; }
+
+/* Where it would land. The chip being pushed aside leans out of the way, which
+   is the only motion here that carries information. */
+
+.chipbench__strip.is-over { box-shadow: inset 0 0 0 2px var(--accent); border-radius: var(--r-sm); }
+.chipbench__chip, .chipbench__slot {
+  position: relative;
+  transition: transform .12s ease, box-shadow .12s ease, background-color .12s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  .chipbench__chip, .chipbench__slot, .chiptray__zone { transition: none; }
+  /* The bar still moves, because it is not decoration: without the gap it
+     draws on top of the chip it is meant to sit in front of. */
+}
+
+/*
+ * Somewhere to drop, even when the dock had no reason to be on screen.
+ *
+ * Scroll the roster far enough and the dock can be off the top of a phone, or
+ * hidden entirely because nothing is kept yet. For the length of a drag it is
+ * there regardless: the first drag is the one that most needs a target, and it
+ * is the one that had none.
+ */
+body.is-dragging-active #chipbench[hidden] { display: block; }
+body.is-dragging-active .chipbench__slot { border-color: var(--accent); }
+
+:root[data-contrast="more"] .chipbench__slot { border-color: var(--text-dim); border-style: solid; }
+
+@media (max-width: 760px) {
+  /*
+   * The dock comes up over the sheet for the length of a drag.
+   *
+   * On a phone the roster is a sheet at z-index 70 and the dock sits at 62,
+   * which means the dock is behind the only surface you would ever drag a chip
+   * from -- you could pick one up and there was nowhere on screen to put it
+   * down. Raised above the sheet while a drag is live, and only then, so the
+   * target rises to meet the thing you are carrying and drops back the moment
+   * you let go. The app bar is 75 and stays clear of it.
+   */
+  body.is-dragging-active #dock {
+    z-index: 78;
+    box-shadow: 0 -10px 26px -10px rgb(0 0 0 / .6);
+  }
+  body.is-dragging-active #chipbench { box-shadow: inset 0 0 0 1px var(--accent); border-radius: var(--r-sm); }
+}
+
+/* The dock's chips are focusable now that arrows reorder them, so they need to
+   say when they have focus. Same ring the rest of the app uses. */
+.chipbench__chip:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ------------------------------------------ the chips' bench, in the tab
+ *
+ * Two trays with a border round each, because they are two different promises:
+ * the three you are taking, in order, and a shortlist of as many as you like.
+ * The border is doing real work -- it says where a chip can be put down before
+ * you have picked one up, which a bare row of icons never did.
+ */
+.chiptray {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--s2);
+  margin: 0 0 var(--s2);
+}
+.chiptray[hidden] { display: none; }
+
+.chiptray__zone {
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  padding: var(--s1) var(--s2) var(--s2);
+  min-width: 0;
+}
+
+.chiptray__label {
+  margin: 0 0 5px;
+  display: block;
+  font-size: 10.5px; font-weight: 800;
+  letter-spacing: .09em; text-transform: uppercase;
+  color: var(--text-dim);
+}
+.chiptray__row {
+  display: flex; flex-wrap: wrap; align-items: center;
+  gap: var(--s1);
+  min-height: 30px;
+}
+.chiptray__hint { font-size: 11px; color: var(--text-mute); }
+
+/* Numbered outlines rather than blank ones: the empty tray already says the
+   answer is three, and which position you are about to fill. */
+.chiptray .chipbench__slot { width: 30px; height: 30px; }
+.chiptray .chipbench__chip { width: 30px; height: 30px; }
+
+/*
+ * The whole square lights up, not a line inside it.
+ *
+ * The highlight was drawn inside the tray's own border, so at a glance you saw
+ * two rectangles a couple of pixels apart and had to work out which one meant
+ * something. The tray is the thing you are dropping into; the tray is what
+ * should say so. The label is inside the target now too, which it should always
+ * have been -- aiming at a box and being told to hit the row inside the box is
+ * a distinction only the code cared about.
+ */
+.chiptray__zone { transition: border-color .12s ease, box-shadow .12s ease, background-color .12s ease; }
+.chiptray__zone.is-over {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface-2));
+}
+
+/*
+ * Order is a different question, and gets a different answer.
+ *
+ * Dropping into a tray asks "in or out". Dropping onto one of the three asks
+ * "before which one", and a ring round a chip cannot say that -- a ring means
+ * "this one", and the thing you are about to do is land in front of it. So it
+ * is a bar in the gap, the chip steps aside to open that gap, and the number
+ * the chip is wearing is the number you are about to take. That last part is
+ * why the badge inverts rather than just glowing: it is the answer, not
+ * decoration.
+ */
+.chiptray .chipbench__chip.is-over,
+.chipbench__strip .chipbench__chip.is-over {
+  transform: translateX(8px);
+  box-shadow: none;
+  border-color: var(--line);
+}
+.chiptray .chipbench__chip.is-over::before,
+.chipbench__strip .chipbench__chip.is-over::before {
+  content: "";
+  position: absolute;
+  left: -8px; top: -3px; bottom: -3px;
+  width: 4px;
+  border-radius: 3px;
+  background: var(--accent);
+}
+.chiptray .chipbench__chip.is-over .chipbench__n,
+.chipbench__strip .chipbench__chip.is-over .chipbench__n {
+  background: var(--text);
+  color: var(--surface);
+  min-width: 14px; height: 14px;
+  font-size: 9px;
+}
+/* An empty position is a position too, so it fills rather than outlines. */
+.chipbench__slot.is-over {
+  border-style: solid;
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+/* Both trays go full width once there is not room for two, which on a phone is
+   immediately -- three 30px chips and a label do not share 358px with a
+   shortlist that can hold any number of them. */
+@media (max-width: 760px) {
+  .chiptray { grid-template-columns: 1fr; gap: var(--s1); }
+  .chiptray__zone { padding: 5px var(--s1) var(--s1); }
+  .chiptray__label { margin-bottom: 3px; }
+}
+
+:root[data-contrast="more"] .chiptray__zone { border-color: var(--text-dim); }
+:root[data-contrast="more"] .chiptray__label { color: var(--text); }
+
+/* The list saying it will take a chip back. Same language the roster already
+   speaks when you drag a Tatari onto it to un-bench one. */
+.roster.is-dropping {
+  box-shadow: inset 0 0 0 2px var(--accent);
+  border-radius: var(--r-sm);
+}
+
+/*
+ * A press on a chip is a press, not the start of a text selection.
+ *
+ * body.is-dragging-active turns selection off, but only once the drag has
+ * started -- and the thing that stops a touch drag starting is the browser
+ * deciding the press was a selection and cancelling the pointer. So the
+ * surfaces you drag from say it up front, before there is a drag to protect.
+ */
+.card--chip,
+.chipbench__chip,
+.chiptray__zone { user-select: none; -webkit-user-select: none; }

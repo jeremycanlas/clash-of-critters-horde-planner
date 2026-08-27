@@ -1,0 +1,238 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>chips test</title>
+<body style="font:14px monospace;background:#111;color:#ddd;padding:16px">
+<div id="log">loading…</div>
+<script type="module">
+/*
+ * The six board rules, against boards built here on purpose.
+ *
+ * These are the whole point of the chips page: every other chip on it is its own
+ * tooltip reprinted, but these six are this project's arithmetic, and arithmetic
+ * about a 6x6 grid is exactly the kind of thing that is off by one row and looks
+ * completely plausible. Row 0 is the FRONT row, nearest the enemy -- get that
+ * backwards and Barricade armours the two rows that were never being hit, which
+ * is a wrong answer that no screenshot would catch.
+ *
+ * Boards are made here rather than driven through the app, because what is being
+ * checked is the predicate, not the drag.
+ */
+import { load, state } from './assets/js/data.js';
+import { scoreOne, elementSplit, moveInto } from './assets/js/chips.js';
+
+const out = document.getElementById('log');
+let pass = 0, fail = 0;
+const ok = (name, cond, detail) => {
+  if (cond) { pass++; out.innerHTML += `<div style="color:#7c7">ok   ${name}</div>`; }
+  else { fail++; out.innerHTML += `<div style="color:#f77">FAIL ${name}${detail ? ': ' + detail : ''}</div>`; }
+};
+const eq = (name, got, want) =>
+  ok(name, got === want, `got ${JSON.stringify(got)}, wanted ${JSON.stringify(want)}`);
+
+await load();
+const book = await fetch('data/chips.json').then((r) => r.json());
+out.innerHTML = '';
+
+const chip = (name) => book.chips.find((c) => c.name === name);
+/* A board is just cells plus an element. `at` keeps the tests readable: at(row,
+   col) rather than a bare index nobody can check by eye. */
+const at = (row, col) => row * 6 + col;
+const board = (cells, type = 'Water') => cells.map((cell) => ({ cell, slug: `x${cell}`, name: `x${cell}`, type }));
+const n = (name, b) => scoreOne(chip(name), b).n;
+
+// ---------------------------------------------------------------- the file
+ok('all 49 chips are in the file', book.chips.length === 49, `${book.chips.length}`);
+ok('every chip has a name, tier and text',
+   book.chips.every((c) => c.name && c.tier >= 1 && c.tier <= 3 && c.text));
+ok('every chip has a shape the page renders',
+   book.chips.every((c) => ['placement', 'element', 'level', 'economy', 'capacity', 'stat', 'map'].includes(c.shape)),
+   book.chips.filter((c) => !c.shape).map((c) => c.name).join(', '));
+ok('no chip is listed twice', new Set(book.chips.map((c) => c.name)).size === 49);
+// The four suspected of reaching a co-op partner must say why, or the page
+// prints a bare "might affect both players" that the reader cannot weigh.
+ok('every unknown scope carries its reason',
+   book.chips.filter((c) => c.scope === 'unknown').every((c) => c.scopeNote));
+
+// -------------------------------------------------------- front and back
+// Row 0 is the front. If this is ever flipped, these two swap and both still
+// look sane in isolation -- which is why they are checked against each other.
+const frontOnly = board([at(0, 0), at(1, 3)]);
+const backOnly = board([at(4, 0), at(5, 3)]);
+eq('Barricade counts the front two rows', n('Barricade', frontOnly), 2);
+eq('Barricade counts none at the back', n('Barricade', backOnly), 0);
+eq('First-Aid Kit agrees with Barricade', n('First-Aid Kit', frontOnly), 2);
+eq('Rear Guard counts the back two rows', n('Rear Guard', backOnly), 2);
+eq('Rear Guard counts none at the front', n('Rear Guard', frontOnly), 0);
+// Row 2 and row 3 are the middle: neither chip may claim them.
+const middle = board([at(2, 0), at(3, 0)]);
+eq('nothing in the middle rows is front', n('Barricade', middle), 0);
+eq('nothing in the middle rows is back', n('Rear Guard', middle), 0);
+
+// -------------------------------------------------------- the enemy's business
+/*
+ * Center Spotlight moves where Zobo bosses spawn. It says nothing about your
+ * Tatari, so it scores nothing about them either -- it used to count how many
+ * of yours stood in the middle two columns, which was a reading invented here
+ * rather than read off the chip. It is a map chip.
+ */
+ok('Center Spotlight is filed with the map chips', chip('Center Spotlight').shape === 'map',
+   chip('Center Spotlight').shape);
+ok('and scores nothing about your Tatari',
+   scoreOne(chip('Center Spotlight'), board([at(0, 2), at(3, 3)])) === null);
+
+// --------------------------------------------------------------- The Exile
+// One alone is alone. Two side by side are not, and neither is either of them --
+// the count is of Tatari, not of pairs, so a touching pair contributes zero.
+eq('a lone Tatari has no neighbour', n('The Exile', board([at(2, 2)])), 1);
+eq('two side by side are both neighboured', n('The Exile', board([at(2, 2), at(2, 3)])), 0);
+eq('two stacked are both neighboured', n('The Exile', board([at(2, 2), at(3, 2)])), 0);
+// The reading this file admits to: diagonals do not count as adjacent.
+eq('a diagonal is not adjacent, on the reading used',
+   n('The Exile', board([at(2, 2), at(3, 3)])), 2);
+eq('a gap of one is not adjacent', n('The Exile', board([at(2, 0), at(2, 2)])), 2);
+// A corner has two neighbours at most, so the edge of the board must not be
+// read as an ally standing there.
+eq('the board edge is not an ally', n('The Exile', board([at(0, 0)])), 1);
+
+// --------------------------------------------------- Backend Support
+// "Only 1 Tatari in front of them", counted down the column.
+const lane = board([at(0, 1), at(1, 1), at(2, 1)]);
+eq('exactly one ahead in the lane qualifies', n('Backend Support', lane), 1);
+eq('the one at the front has nobody ahead', n('Backend Support', board([at(0, 1)])), 0);
+eq('two ahead is too many', n('Backend Support', board([at(0, 1), at(1, 1), at(2, 1), at(3, 1)])), 1);
+// The other half of the reading: a Tatari in a different column is not "in
+// front", however far up the board it stands.
+eq('a different column does not count as in front',
+   n('Backend Support', board([at(0, 5), at(2, 1)])), 0);
+
+// ------------------------------------------------------------- elements
+const mixed = [
+  ...board([at(0, 0), at(0, 1), at(0, 2)], 'Water'),
+  ...board([at(1, 0), at(1, 1)], 'Fire'),
+  ...board([at(2, 0)], 'Grass'),
+];
+eq('Water Form counts your Water', n('Water Form III', mixed), 3);
+eq('Fire Form counts your Fire', n('Fire Form I', mixed), 2);
+eq('an element you did not bring counts zero', n('Rock Form II', mixed), 0);
+eq('every tier of one element counts the same',
+   n('Water Form I', mixed), n('Water Form III', mixed));
+eq('Weakest Link finds the smallest group', n('Weakest Link', mixed), 1);
+ok('and names it', scoreOne(chip('Weakest Link'), mixed).why.startsWith('Grass'),
+   scoreOne(chip('Weakest Link'), mixed).why);
+// A tie has no answer in the tooltip, so the page must say so rather than pick.
+const tied = [...board([at(0, 0)], 'Water'), ...board([at(1, 0)], 'Fire')];
+ok('a tie for smallest is admitted, not resolved', !!scoreOne(chip('Weakest Link'), tied).assumes);
+
+eq('the split is biggest first', elementSplit(mixed).map((e) => e.type).join(','), 'Water,Fire,Grass');
+eq('the split totals the board', elementSplit(mixed).reduce((t, e) => t + e.count, 0), mixed.length);
+
+// --------------------------------------------------------- who, not just how many
+/*
+ * Every score names the Tatari it is talking about, and the page draws those as
+ * sprites instead of a bar. The number and the faces come from the same filter,
+ * so they cannot disagree -- these checks are here to keep it that way, because
+ * the failure if they ever do is a card reading "4 of your 6" above three
+ * sprites, which looks like a rendering bug and is a counting one.
+ */
+const scored = book.chips.map((c) => scoreOne(c, mixed)).filter(Boolean);
+ok('every score names who it means', scored.every((sc) => Array.isArray(sc.who)));
+ok('and names exactly as many as it counted', scored.every((sc) => sc.who.length === sc.n));
+ok('a Form chip names only that element',
+   scoreOne(chip('Fire Form II'), mixed).who.every((p) => p.type === 'Fire'));
+ok('a board chip names only Tatari that pass its own rule',
+   scoreOne(chip('Rear Guard'), board([at(4, 0), at(5, 3), at(0, 0)]))
+     .who.every((p) => Math.floor(p.cell / 6) >= 4));
+eq('and leaves out the ones that do not',
+   scoreOne(chip('Rear Guard'), board([at(4, 0), at(5, 3), at(0, 0)])).who.length, 2);
+ok('a chip that finds nothing names nobody',
+   scoreOne(chip('Rock Form II'), mixed).who.length === 0);
+// The one that reads a derived group rather than a fixed one.
+ok('Weakest Link names the element it picked',
+   scoreOne(chip('Weakest Link'), mixed).who.every((p) => p.type === 'Grass'));
+
+// ----------------------------------------------------------- no answer
+// Twenty-eight chips read nothing about the board. They must return null rather
+// than 0, or the page prints "0 of your 6" beside an income chip.
+const readsNothing = book.chips.filter((c) => scoreOne(c, mixed) === null);
+eq('the chips that read nothing return no score', readsNothing.length, 49 - 5 - 15 - 1);
+ok('and none of them is a placement chip',
+   !readsNothing.some((c) => c.shape === 'placement'),
+   readsNothing.filter((c) => c.shape === 'placement').map((c) => c.name).join(', '));
+ok('every placement and element chip does score',
+   book.chips.filter((c) => c.shape === 'placement' || c.element).every((c) => scoreOne(c, mixed)));
+
+// An empty board must not throw, and must not claim anything.
+ok('an empty board scores zero rather than throwing',
+   book.chips.filter((c) => scoreOne(c, [])).every((c) => scoreOne(c, []).n === 0));
+
+/*
+ * Every icon actually loads.
+ *
+ * The filename is built from the chip's name in two places -- here in JS and in
+ * tools/cut_chips.py -- and the two agreeing is the whole contract. Rename a
+ * chip in chips.json and the page silently shows 48 icons and one gap, which is
+ * the sort of thing nobody notices until they scroll that far. Checked by
+ * loading them, not by listing a directory, because a page cannot list one.
+ */
+const { iconFor } = await import('./assets/js/chips.js');
+const missing = [];
+await Promise.all(book.chips.map((c) => new Promise((done) => {
+  const img = new Image();
+  img.onload = () => done();
+  img.onerror = () => { missing.push(c.name); done(); };
+  img.src = iconFor(c);
+})));
+ok('every chip has an icon that loads', missing.length === 0, missing.join(', '));
+ok('and no two chips share one',
+   new Set(book.chips.map(iconFor)).size === book.chips.length);
+
+// ------------------------------------------------- dragging a kept chip
+/*
+ * Where a dragged chip lands, as arithmetic on two lists.
+ *
+ * The gesture is dnd.js, which the field and the plan already exercise; what is
+ * new is the destination, and driving that through a synthetic pointer would be
+ * testing the browser rather than this. So the reducer is pure and gets driven
+ * with plain arrays.
+ */
+const L = (main, extra) => ({ main, extra });
+const shape = (r) => `${r.main.join(',')} | ${r.extra.join(',')}`;
+
+eq('dragging the third pick to the front reorders the three',
+   shape(moveInto(L(['a', 'b', 'c'], []), 'c', 'main', 0)), 'c,a,b | ');
+eq('dragging the first to the end reorders it too',
+   shape(moveInto(L(['a', 'b', 'c'], []), 'a', 'main', 2)), 'b,c,a | ');
+eq('a chip does not appear twice when it lands on itself',
+   shape(moveInto(L(['a', 'b', 'c'], []), 'b', 'main', 1)), 'a,b,c | ');
+
+eq('the shortlist takes one out of the three',
+   shape(moveInto(L(['a', 'b', 'c'], ['d']), 'b', 'extra', 0)), 'a,c | b,d');
+eq('and gives one back to it',
+   shape(moveInto(L(['a', 'b'], ['d']), 'd', 'main', 0)), 'd,a,b | ');
+
+/*
+ * The one case with a real decision in it. The three are full and a fourth is
+ * dragged in: the drag already said where it wanted to go, so it goes there, and
+ * the one it pushed out lands on the shortlist rather than being deleted.
+ */
+const pushed = moveInto(L(['a', 'b', 'c'], ['d']), 'd', 'main', 0);
+eq('dragging into a full three pushes the last one out', shape(pushed), 'd,a,b | c');
+ok('and nothing is lost on the way',
+   [...pushed.main, ...pushed.extra].sort().join(',') === 'a,b,c,d');
+
+eq('an index past the end lands at the end',
+   shape(moveInto(L(['a', 'b'], []), 'a', 'main', 99)), 'b,a | ');
+eq('a negative index lands at the front',
+   shape(moveInto(L(['a', 'b'], []), 'b', 'main', -5)), 'b,a | ');
+ok('the three never grow past three',
+   moveInto(L(['a', 'b', 'c'], ['d', 'e']), 'e', 'main', 1).main.length === 3);
+
+out.innerHTML += `<div style="margin-top:12px">${pass} passed, ${fail} failed`
+  + `. ${book.chips.length} chips, ${book.chips.filter((c) => scoreOne(c, mixed)).length} of them scored`
+  + ` against a board of ${mixed.length}</div>`;
+/* In the title so a headless run can read the verdict without running
+   script of its own -- tools/check.sh greps exactly this. */
+document.title = `${fail ? `FAIL (${fail})` : 'ok'}: chip data`;
+window.__done = { pass, fail };
+</script>
+</body>

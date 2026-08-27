@@ -1,0 +1,36 @@
+#!/bin/sh
+#
+# No commit goes in red.
+#
+# Sixteen seconds against a bug that shipped to a phone and had to be reported
+# with a screenshot is a trade worth making every time. If Chrome or python is
+# missing the hook says so and gets out of the way rather than blocking work on
+# a machine that cannot run it.
+#
+# Skip a single commit with `git commit --no-verify`.
+# Turn it off entirely with `git config --unset core.hooksPath`.
+
+echo "running the suites..."
+sh tools/check.sh
+status=$?
+
+if [ "$status" -eq 2 ]; then
+  echo "hook: skipped, nothing here can run the suites" >&2
+  exit 0
+fi
+
+if [ "$status" -ne 0 ]; then
+  cat >&2 <<'MSG'
+
+Commit stopped: a suite is red.
+
+Open the failing page to see which check and why:
+  python -m http.server 8000
+  http://127.0.0.1:8000/apptest.html
+  http://127.0.0.1:8000/mobiletest.html
+
+Add ?only=<word> to run one group. Commit anyway with --no-verify.
+MSG
+fi
+
+exit "$status"

@@ -118,6 +118,15 @@ Confirmed functionality:
 - Share as PNG (drawn to canvas), copy image, copy link; save/import `.json`;
   imported files may register custom Tatari.
 - Glitter-art toggle for alternate sprites.
+- Horde Invasion chips as a third roster list: all 49 with icon, rule, tier and
+  type, filterable by either, in a list or a grid. The six that read placement
+  and the fifteen that read your element split are scored against the board on
+  the field and name the Tatari they would touch. You keep three, ranked, plus
+  an unlimited list of alternatives; they ride the dock beside the bench and print on the
+  full share card.
+- **Flex slots**: any empty square can be marked as deliberately open. It draws
+  as a dashed FLEX tile on the board and on the share card, which is what makes
+  a posted formation readable as a template rather than as unfinished.
 
 Technical constraints, **confirmed as not binding**:
 
@@ -172,17 +181,23 @@ Data constraints that are product truth, not implementation detail:
 
 Real, in-repo, no fabrication needed:
 
-- `data/tatari.json` — 230 Tatari with type, role, tier, evolution line, rarity,
+- `data/tatari.json`: 230 Tatari with type, role, tier, evolution line, rarity,
   skill, flavour text, etymology.
-- `data/meta.json` — types, roles, type-effectiveness chart, skill-type
+- `data/meta.json`: types, roles, type-effectiveness chart, skill-type
   definitions, grid size, level cap.
-- `data/aliases.json` — community nicknames and the real animal per line. The
+- `data/aliases.json`: community nicknames and the real animal per line. The
   one file not scraped; inferred, and some entries are probably wrong.
-- `data/ranges.json` — attack ranges as tile offsets, measured and eye-checked.
+- `data/ranges.json`: attack ranges as tile offsets, measured and eye-checked.
+- `data/chips.json`: all 49 Horde Invasion chips. The one file with no upstream
+  at all -- the wiki has no chip pages -- so every line was read off the in-game
+  gallery by hand and the icons cut from screenshots of it by
+  `tools/cut_chips.py`.
+- `docs/personas.md`: four users assembled from the analytics and the named
+  requests, with inference labelled as inference.
 - `data/images/tatari/` (230 sprites), `glitter/` (207), `icons/` (11),
   `range/` (115 diagrams).
-- `docs/screenshot.jpg`, `docs/media/` — the incumbent interface and share card.
-- `assets/img/jacc6475.jpg` — the author's avatar.
+- `docs/screenshot.jpg`, `docs/media/`: the incumbent interface and share card.
+- `assets/img/jacc6475.jpg`: the author's avatar.
 
 Absences future work must not paper over: there are no testimonials, no usage
 numbers beyond anonymous GoatCounter visit/button counts, no user quotes, no

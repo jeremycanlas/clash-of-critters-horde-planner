@@ -52,7 +52,7 @@ export function parseContribution(text) {
   }
 
   if (broken) {
-    problems.push(`${broken === 1 ? 'A block' : `${broken} blocks`} in there could not be read as JSON — look for a missing bracket or a stray comma.`);
+    problems.push(`${broken === 1 ? 'A block' : `${broken} blocks`} in there could not be read as JSON. Look for a missing bracket or a stray comma.`);
   }
   if (!readAny && !broken) {
     problems.push('No JSON was found in that. Paste the issue body, or the block the recorder gave you.');

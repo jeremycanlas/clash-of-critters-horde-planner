@@ -28,15 +28,31 @@ export function draggable(el, getPayload, getGhostHTML) {
     if (!payload) return;
 
     disarm();
+    /*
+     * Does this surface already own the gesture?
+     *
+     * `touch-action: none` is the page telling the browser it will not scroll
+     * here -- so on those surfaces the hold and the give-up-if-you-move rule
+     * below are protecting a scroll that cannot happen. They only made the
+     * gesture fail: press the sprite, swipe, and you got a cancelled drag and
+     * no scroll either, which is nothing at all happening. A surface that has
+     * declared itself gets the mouse's behaviour, moving straight into a drag.
+     */
+    const pressed = e.target instanceof Element ? e.target : el;
+    const owns = e.pointerType !== 'mouse'
+      && getComputedStyle(pressed).touchAction === 'none';
+
     armed = {
       el, payload, getGhostHTML,
       pointerId: e.pointerId,
       x0: e.clientX, y0: e.clientY,
       touch: e.pointerType !== 'mouse',
+      owns,
       timer: null,
     };
 
-    if (armed.touch) {
+    /* Only a surface that still has to share the gesture waits. */
+    if (armed.touch && !owns) {
       armed.timer = setTimeout(() => {
         if (armed) begin(armed.x0, armed.y0);
       }, TOUCH_HOLD_MS);
@@ -89,17 +105,29 @@ function moveGhost(x, y) {
   active.ghost.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
 }
 
-/** Finds the drop zone under the pointer, ignoring the ghost itself. */
+/**
+ * Finds the drop zone under the pointer, ignoring the ghost itself.
+ *
+ * The innermost match wins, not the first one registered. Zones nest: the whole
+ * roster panel is a zone -- drag a Tatari back onto it to un-bench it -- and the
+ * chips' tray sits inside that panel. First-registered meant the panel answered
+ * for every point inside it, refused the chip payload, and the drop quietly did
+ * nothing. Registration order is an accident of module load order and should
+ * never have decided this.
+ */
 function hitTest(x, y) {
   active.ghost.style.visibility = 'hidden';
   const el = document.elementFromPoint(x, y);
   active.ghost.style.visibility = '';
   if (!el) return null;
+  let best = null;
   for (const zone of zones) {
     const target = el.closest(zone.selector);
-    if (target) return { zone, target };
+    if (!target) continue;
+    // Deeper wins; unrelated matches keep whichever was found first.
+    if (!best || best.target.contains(target)) best = { zone, target };
   }
-  return null;
+  return best;
 }
 
 function setHover(hit) {
@@ -144,7 +172,7 @@ function onMove(e) {
   const dy = e.clientY - armed.y0;
   const dist = Math.hypot(dx, dy);
 
-  if (armed.touch) {
+  if (armed.touch && !armed.owns) {
     if (dist > TOUCH_SLOP) disarm();          // the user is scrolling, not dragging
   } else if (dist > MOUSE_THRESHOLD) {
     begin(e.clientX, e.clientY);
@@ -199,7 +227,7 @@ document.addEventListener('dragstart', (e) => {
  * sprite with a mouse is not a mistake and that menu is left alone, as is every
  * other image on the page -- long-pressing a posted card to save it still works.
  */
-const DRAG_SURFACES = '.card, .benchchip, .cell, .prio, .token';
+const DRAG_SURFACES = '.card, .benchchip, .cell, .prio, .token, .keptrow, .chipbench__chip';
 let touchLast = false;
 window.addEventListener('pointerdown', (e) => { touchLast = e.pointerType !== 'mouse'; }, true);
 

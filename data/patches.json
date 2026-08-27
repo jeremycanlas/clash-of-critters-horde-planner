@@ -2,7 +2,7 @@
   "_readme": [
     "When the game changed, as far as anyone here can tell.",
     "",
-    "Clash of Critters publishes no patch identifier that this tool can read —",
+    "Clash of Critters publishes no patch identifier that this tool can read,",
     "not in the wiki data, not anywhere the scraper reaches. So a 'patch' here is",
     "an editorial judgement by the maintainer about when the game changed enough",
     "that formations from before and after should not be ranked against each",
@@ -15,7 +15,7 @@
     "refuses overlapping windows anyway.",
     "",
     "A formation is filed under the patch whose window contains the moment it",
-    "was posted. That is derived, not stored by the client — so correcting a",
+    "was posted. That is derived, not stored by the client, so correcting a",
     "boundary here and re-running the tool re-files every affected formation",
     "rather than losing anything.",
     "",

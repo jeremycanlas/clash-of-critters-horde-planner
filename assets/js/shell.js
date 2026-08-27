@@ -132,13 +132,26 @@ function buildCleanView() {
  * height is not a constant: co-op shows two benches, and an empty one collapses
  * to a line. Measuring it is shorter than the cases would be.
  */
+/**
+ * Republishes the dock's height as --dock-h.
+ *
+ * Exported as well as observed, because the observer is not something to lean
+ * on alone: ResizeObserver callbacks are deferred while a tab is not being
+ * rendered, and the dock changing height is exactly what happens the moment
+ * somebody keeps their first chip. Whoever changes what is in the dock can say
+ * so directly, and the observer stays for everything else -- rotation, a second
+ * bench appearing in co-op, a long name wrapping.
+ */
+export function measureDock() {
+  const dock = $('#dock');
+  if (dock) document.documentElement.style.setProperty('--dock-h', `${dock.offsetHeight}px`);
+}
+
 function watchDock() {
-  const dock = $('#bench');
+  const dock = $('#dock');
   if (!dock) return;
-  const apply = () =>
-    document.documentElement.style.setProperty('--dock-h', `${dock.offsetHeight}px`);
-  new ResizeObserver(apply).observe(dock);
-  apply();
+  new ResizeObserver(measureDock).observe(dock);
+  measureDock();
 }
 
 /**

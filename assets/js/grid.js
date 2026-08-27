@@ -320,6 +320,19 @@ export function buildGrid() {
       if (occ) { toast('A Zobo belongs to nobody', 'error'); return; }
     }
 
+    /*
+     * While marking, an empty square is a button. Answered before the armed
+     * chip below, because the two modes cannot both own a tap and the one you
+     * switched on deliberately is the one that should win.
+     */
+    if (document.body.classList.contains('is-flexing')) {
+      const cell = e.target.closest('.cell');
+      if (!cell) return;
+      const i = Number(cell.dataset.cell);
+      if (!store.toggleFlex(i)) toast('That square is taken', 'error');
+      return;
+    }
+
     const add = e.target.closest('[data-add-step]');
     if (add) {
       const occ = store.formation.cells[Number(add.closest('.cell').dataset.cell)];
@@ -334,6 +347,24 @@ export function buildGrid() {
     if (!cell) return;
     commit(Number(cell.dataset.cell));
   });
+
+  /*
+   * Flex marking is a mode, and the mode lives here rather than in the store.
+   *
+   * Which squares are marked is part of the formation: saved, shared and undone
+   * with it. Whether you are currently *marking* is a state of the pointer, like
+   * an armed bench chip -- it should not survive a reload or ride along in a
+   * share link, and a co-op partner opening your board should not arrive in
+   * marking mode because you were in it.
+   */
+  const flexBox = $('#opt-flex');
+  if (flexBox) {
+    flexBox.addEventListener('change', () => {
+      document.body.classList.toggle('is-flexing', flexBox.checked);
+      if (flexBox.checked) disarm();     // marking and placing cannot both own a tap
+      renderGrid();
+    });
+  }
 
   onBoard('dblclick', (e) => {
     const cell = e.target.closest('.cell');
@@ -558,7 +589,7 @@ function renderRangeGap(on) {
     ? 'Nothing is on the field yet.'
     : missing.length
       ? `${missing.length} on your field ${missing.length === 1 ? 'has' : 'have'} none, so ${
-        missing.length === 1 ? 'its' : 'their'} reach is not drawn — ${
+        missing.length === 1 ? 'its' : 'their'} reach is not drawn: ${
         missing.map((p) => esc(state.bySlug.get(p.slug)?.name ?? p.slug)).join(', ')}.`
       : 'Every Tatari on your field has one.';
 
@@ -898,15 +929,30 @@ export function renderGrid() {
       : `Row ${store.cellRow(i) + 1}, column ${store.cellCol(i) + 1}`;
 
     cell.classList.toggle('is-filled', !!t);
+    /*
+     * Drawn whether or not marking is on. The mark is a statement in the
+     * formation, and the formation is mostly read as a screenshot by somebody
+     * who was never in marking mode -- if it only showed while you were editing
+     * it would be invisible in the one place it exists for.
+     */
+    const flex = !t && store.isFlex(i);
+    cell.classList.toggle('is-flex', flex);
     cell.classList.toggle('is-carried', carried === i);
     cell.classList.remove('is-over');
 
     if (!t) {
-      cell.innerHTML = '';
       delete cell.dataset.type;
       delete cell.dataset.player;
       delete cell.dataset.zobo;
-      cell.setAttribute('aria-label', `${where}, empty`);
+      /*
+       * The word, not just the dashes. A screenshot is read by somebody who was
+       * never in marking mode and has no legend to check, so the square has to
+       * say what it means in the picture itself.
+       */
+      cell.innerHTML = flex ? '<span class="cell__flex" aria-hidden="true">FLEX</span>' : '';
+      cell.setAttribute('aria-label', flex
+        ? `${where}: left open on purpose, anyone's choice`
+        : `${where}, empty`);
       continue;
     }
 
@@ -1097,7 +1143,7 @@ function switchOwner(slug, player) {
   const name = state.bySlug.get(slug)?.name ?? slug;
   const to = player === 1 ? 2 : 1;
   toast(result.swapped
-    ? `${name} swapped — P${to} and P${player} traded, plans included`
+    ? `${name} swapped: P${to} and P${player} traded, plans included`
     : `${name} is P${to}'s now, plan and all`);
 }
 
@@ -1321,7 +1367,7 @@ function effectRows(list, player) {
 
   if (!rows) {
     return `<p class="summary__note">Nothing on the field has a heal, buff or debuff${
-      found.untagged ? ` — ${found.untagged} of them are untagged on the wiki` : ''}.</p>`;
+      found.untagged ? `, and ${found.untagged} of them are untagged on the wiki` : ''}.</p>`;
   }
 
   /*

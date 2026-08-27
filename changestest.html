@@ -22,7 +22,7 @@ const out = document.getElementById('log');
 let pass = 0, fail = 0;
 const ok = (name, cond, detail) => {
   if (cond) { pass++; out.innerHTML += `<div style="color:#7c7">ok   ${name}</div>`; }
-  else { fail++; out.innerHTML += `<div style="color:#f77">FAIL ${name}${detail ? ' — ' + detail : ''}</div>`; }
+  else { fail++; out.innerHTML += `<div style="color:#f77">FAIL ${name}${detail ? ': ' + detail : ''}</div>`; }
 };
 
 await load();
@@ -146,7 +146,10 @@ ok('an adjusted line really does move both ways',
 
 const counts = DIRECTIONS.map((d) => `${d} ${lines.filter((l) => l.direction === d).length}`).join(', ');
 out.innerHTML += `<div style="margin-top:12px">${pass} passed, ${fail} failed`
-  + ` &mdash; ${lines.length} lines (${counts}) covering ${state.changes.size} of ${state.all.length} Tatari</div>`;
+  + `. ${lines.length} lines (${counts}) covering ${state.changes.size} of ${state.all.length} Tatari</div>`;
+/* In the title so a headless run can read the verdict without running
+   script of its own -- tools/check.sh greps exactly this. */
+document.title = `${fail ? `FAIL (${fail})` : 'ok'}: patch changes`;
 window.__done = { pass, fail };
 </script>
 </body>

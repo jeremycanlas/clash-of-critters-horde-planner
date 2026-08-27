@@ -109,6 +109,21 @@ export const formation = {
     lf: { wants: [], note: '' },
     have: { wants: [], note: '' },
   },
+  /**
+   * Cells you have deliberately left open.
+   *
+   * A posted formation is nearly always a screenshot of the grid, and an empty
+   * square in one says two different things that look identical: "I could not
+   * fill this" and "bring what you like here". The second is the more useful
+   * post -- it is a template rather than a boast -- and it had no way to say so.
+   *
+   * Cell indices, not a per-cell flag on `cells`, because a flex slot is the
+   * absence of an occupant: putting it in `cells` would mean the one array is
+   * sometimes a Tatari and sometimes a note about there not being one, and
+   * every reader of it would have to know the difference.
+   */
+  flex: [],
+
   /** Which of the two the editor is pointed at. */
   lfMode: 'lf',
   activePlayer: 1,
@@ -875,8 +890,29 @@ export function unplace(slug, player = formation.activePlayer) {
  * promise that it is separate. The answer is not to pretend it survives — it is
  * for the caller to say so plainly and offer the way back. app.js does both.
  */
+/** Whether this cell is marked as somebody else's choice. */
+export const isFlex = (cell) => formation.flex.includes(cell);
+
+/**
+ * Marks or unmarks a cell as flexible.
+ *
+ * An occupied cell cannot be one: the mark says "nothing is here on purpose",
+ * and something is here. Placing into a flex cell clears the mark for the same
+ * reason -- see place(), which is where that happens rather than here, so every
+ * route onto the board goes through it.
+ */
+export function toggleFlex(cell) {
+  if (!cellInPlay(cell) || formation.cells[cell]) return false;
+  const at = formation.flex.indexOf(cell);
+  if (at >= 0) formation.flex.splice(at, 1);
+  else formation.flex.push(cell);
+  emit();
+  return true;
+}
+
 export function clearField() {
   formation.cells = Array(ALL_CELLS).fill(null);
+  formation.flex = [];
   formation.plan = [];
   emit();
 }
@@ -1185,6 +1221,21 @@ function reconcile() {
   const active = players();
   if (!active.includes(formation.activePlayer)) formation.activePlayer = 1;
 
+  /*
+   * A flex mark says "nothing is here on purpose", so it cannot outlive
+   * something arriving on that square, and it cannot point off the board when
+   * Sandbox or the Zobo ground closes underneath it.
+   *
+   * Here rather than in place(), because place() is not the only way onto the
+   * board: placeCopy, the boss pull, restorePositions, a shared link and undo
+   * all write cells too. Every one of them ends in emit(), and emit() calls
+   * this -- so this is the one spot they all pass through. Marking each caller
+   * instead is how five of them end up agreeing and the sixth does not.
+   */
+  formation.flex = formation.flex.filter(
+    (i) => cellInPlay(i) && !formation.cells[i],
+  );
+
   for (const player of [1, 2]) {
     if (!active.includes(player)) { formation.bench[player] = []; continue; }
     const seenFamilies = new Set();
@@ -1301,6 +1352,7 @@ export function snapshot() {
     zoboGround: formation.zoboGround,
     pullRows: formation.pullRows,
     cells: formation.cells.map((o) => (o ? { ...o } : null)),
+    flex: [...formation.flex],
     bench: { 1: [...formation.bench[1]], 2: [...formation.bench[2]] },
     plan: formation.plan.map((s) => ({ ...s, members: s.members.map((m) => ({ ...m })) })),
     name: formation.name,
@@ -1330,7 +1382,7 @@ export function restore() {
 }
 
 /** Loads a raw state blob, letting reconcile() enforce every invariant. */
-function apply({ mode: m, sandbox, zoboGround, pullRows: rows, cells, bench, plan, name, lf, lfWants, lfMode, lines }) {
+function apply({ mode: m, sandbox, zoboGround, pullRows: rows, cells, flex, bench, plan, name, lf, lfWants, lfMode, lines }) {
   formation.mode = MODES[m] ? m : 'solo';
   /*
    * Set before anything else reads a cap. reconcile() at the end of this
@@ -1345,6 +1397,12 @@ function apply({ mode: m, sandbox, zoboGround, pullRows: rows, cells, bench, pla
     1: Array.isArray(bench?.[1]) ? [...bench[1]] : [],
     2: Array.isArray(bench?.[2]) ? [...bench[2]] : [],
   };
+  /* Filtered rather than trusted: an older save has no flex at all, and a hand
+     edited or hostile one could carry an index off the end of the board. */
+  formation.flex = (Array.isArray(flex) ? flex : [])
+    .map(Number)
+    .filter((i) => Number.isInteger(i) && i >= 0 && i < ALL_CELLS);
+
   formation.cells = Array(ALL_CELLS).fill(null);
   (Array.isArray(cells) ? cells : []).slice(0, ALL_CELLS).forEach((occ, i) => {
     if (!occ) return;
