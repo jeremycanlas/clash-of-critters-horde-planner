@@ -1267,6 +1267,105 @@ await runGroup('switching lists leaves nothing behind', async () => {
  * the thing all of them share went out green: each route was fine on its own
  * terms and nothing asked whether they still all worked at once.
  */
+/*
+ * A card that cannot be placed still picks up, and still says why.
+ *
+ * Reported as "I cannot drag Tatari with ease -- they seem to need to be on my
+ * bench already". They did. With the bench or the field full, the roster card
+ * refused to start a drag at all: no lift, no message, nothing. Clicking that
+ * same card has always answered "P1's bench is full (15 max)", so the rule was
+ * never the problem -- one of the two ways of asking simply did not reply.
+ *
+ * A gesture that dies in silence reads as a broken app rather than as a rule,
+ * which is exactly how it was reported.
+ */
+await runGroup('a card that cannot be brought still explains itself', async () => {
+  await until(() => !!$('#roster'), 'the drafter to be in the frame', 8000);
+  const V = D.defaultView;
+  await click($('#roster-tabs [data-list="tatari"]'), 400);
+  await reset();
+  $('#btn-clear-field')?.click();
+  await sleep(320);
+  const clearBench = $$('button').find((b) => /clear bench/i.test(b.textContent));
+  if (clearBench && !clearBench.disabled) { clearBench.click(); await sleep(320); }
+
+  if ($('#roster').getBoundingClientRect().width < 200) {
+    skip('a blocked card still explains itself', 'the roster has no size in this window');
+    return;
+  }
+
+  const centre = (el) => {
+    const r = el.getBoundingClientRect();
+    return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+  };
+  const bring = (el) => {
+    el.scrollIntoView({ block: 'center' });
+    const r = el.getBoundingClientRect();
+    const off = (r.top + r.height / 2) - V.innerHeight / 2;
+    if (Math.abs(off) > 40) V.scrollBy(0, off);
+  };
+  const send = (type, x, y, to) => to.dispatchEvent(new V.PointerEvent(type, {
+    bubbles: true, cancelable: true, composed: true,
+    pointerId: 9, pointerType: 'mouse', isPrimary: true,
+    button: type === 'pointermove' ? -1 : 0, buttons: type === 'pointerup' ? 0 : 1,
+    clientX: x, clientY: y,
+  }));
+
+  /* Fill the bench by tapping, which is the path that already works and
+     already explains itself. */
+  const free = () => $$('.panel--roster .card')
+    .find((c) => !c.classList.contains('is-benched') && !c.dataset.switchFrom);
+  for (let i = 0; i < 18; i += 1) {
+    const c = free();
+    if (!c) break;
+    c.click();
+    await sleep(110);
+  }
+  await sleep(360);
+
+  const blocked = free();
+  ok('the bench filled up and there is still a card it will not take', !!blocked,
+     `${$$('.benchchip').length} benched`);
+  if (!blocked) return;
+
+  /* Tapping it says why. This is the answer the drag has to match. */
+  blocked.click();
+  await sleep(420);
+  const spoken = $('.toast')?.textContent.trim() ?? '';
+  ok('tapping it explains the refusal', /full|already/i.test(spoken), spoken || 'said nothing');
+
+  /* Now the same card, dragged. */
+  const cell = $$('.cell:not(.cell--enemy)').find((c) => !c.querySelector('.token'));
+  ok('there is an empty square to aim at', !!cell);
+  if (!cell) return;
+
+  bring(blocked);
+  const a = centre(blocked);
+  send('pointerdown', a.x, a.y, blocked);
+  send('pointermove', a.x + 12, a.y + 12, V);
+  await sleep(140);
+  ok('it can still be picked up, so the gesture is alive', !!D.querySelector('.drag-ghost'));
+
+  const wasPlaced = $$('.cell.is-filled').length;
+  bring(cell);
+  const b = centre(cell);
+  send('pointermove', b.x, b.y, V);
+  await sleep(120);
+  send('pointerup', b.x, b.y, V);
+  await sleep(520);
+
+  const told = $('.toast')?.textContent.trim() ?? '';
+  ok('and dropping it on the field says why it will not go', /full|already/i.test(told),
+     told || 'said nothing at all, which is the bug');
+  eq('nothing was placed', $$('.cell.is-filled').length, wasPlaced);
+
+  $('#btn-clear-field')?.click();
+  await sleep(300);
+  const clear2 = $$('button').find((bt) => /clear bench/i.test(bt.textContent));
+  if (clear2 && !clear2.disabled) { clear2.click(); await sleep(320); }
+  await reset();
+});
+
 await runGroup('every drag route still lands', async () => {
   await until(() => !!$('#roster'), 'the drafter to be in the frame', 8000);
   const V = D.defaultView;

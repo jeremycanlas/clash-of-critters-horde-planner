@@ -1514,7 +1514,17 @@ export function renderRoster() {
         const p = store.formation.activePlayer;
         // A card that would swap a tier is draggable: the drop resolves it.
         const swapFrom = store.isSandbox() ? null : (store.familyConflict(t, p)?.slug ?? null);
-        if (!swapFrom && !store.onBench(slug, p) && store.placeBlockedReason(t, p)) return null;
+        /*
+         * Every card can be picked up, including the ones that cannot be
+         * placed.
+         *
+         * This used to refuse the drag outright when the bench or the field was
+         * full, which meant the card simply would not move and nothing said
+         * why -- while clicking that same card has always answered "P1's bench
+         * is full (15 max)". A gesture that dies in silence reads as a broken
+         * app, not as a rule. It lifts now, the field and the bench still
+         * refuse the drop, and the refusal is what does the explaining.
+         */
         return { slug, player: p, from: 'roster', swapFrom };
       },
       () => {

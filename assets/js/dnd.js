@@ -66,6 +66,8 @@ export function draggable(el, getPayload, getGhostHTML) {
  * @param {(target: HTMLElement, payload: any) => boolean} spec.accepts
  * @param {(target: HTMLElement, payload: any) => void} spec.onDrop
  * @param {(target: HTMLElement|null, ok: boolean) => void} [spec.onHover]
+ * @param {(target: HTMLElement, payload: any) => void} [spec.onRefuse]
+ *        Dropped here, but `accepts` said no. For saying why.
  */
 const zones = [];
 export function dropZone(spec) { zones.push(spec); }
@@ -203,7 +205,18 @@ function onUp(e) {
   const hit = hitTest(e.clientX, e.clientY);
   const { payload } = active;
   finish();
-  if (hit && hit.zone.accepts(hit.target, payload)) hit.zone.onDrop(hit.target, payload);
+  if (!hit) return;
+  if (hit.zone.accepts(hit.target, payload)) { hit.zone.onDrop(hit.target, payload); return; }
+  /*
+   * A refusal is an answer. Say it.
+   *
+   * Letting go over somewhere that will not take what you are carrying used to
+   * do nothing whatsoever -- no move, no message -- which is indistinguishable
+   * from a drag that failed to work. Clicking the same card has always
+   * explained itself. A zone that has something to say implements onRefuse;
+   * the ones where "no" is obvious from where you dropped it stay quiet.
+   */
+  hit.zone.onRefuse?.(hit.target, payload);
 }
 
 function finish() {

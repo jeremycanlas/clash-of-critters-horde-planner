@@ -93,6 +93,14 @@ function buildBenchDropZone() {
       return !store.benchBlockedReason(t, player);
     },
     onHover: (target, ok) => target.classList.toggle('is-taking', ok),
+    /* Same as the field: a bench that will not take this one says so. */
+    onRefuse: (target, payload) => {
+      target.classList.remove('is-taking');
+      const t = state.bySlug.get(payload.slug);
+      if (!t || payload.from !== 'roster') return;
+      const why = store.benchBlockedReason(t, Number(target.dataset.player));
+      if (why) toast(why, 'error');
+    },
     onDrop: (target, payload) => {
       const player = Number(target.dataset.player);
       const who = store.isCoop() ? ` (P${player})` : '';
@@ -226,6 +234,15 @@ export function buildGrid() {
       target.classList.toggle('is-over', ok);
       if (ok) previewRange(Number(target.dataset.cell), payload?.slug);
       else clearRangePreview();
+    },
+    /* Dropped on the field and refused. The reason is the same one clicking the
+       card has always given; it just had no way out of the drag before. */
+    onRefuse: (target, payload) => {
+      clearRangePreview();
+      const t = pieceBySlug(payload.slug);
+      if (!t || t.kind === 'zobo') return;
+      const why = store.placeBlockedReason(t, payload.player);
+      if (why) toast(why, 'error');
     },
     onDrop: (target, payload) => {
       clearRangePreview();
