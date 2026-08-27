@@ -5197,3 +5197,172 @@ body.is-flexing .cell.is-filled { opacity: .55; }
 }
 .plan-empty p + p { margin-top: var(--s2); }
 .plan-empty b { color: var(--text); font-weight: 650; }
+
+/* ------------------------------------- dragging chips into the dock
+ *
+ * A tap keeps a chip; a drag says where it goes. The second exists because the
+ * order of the three is the thing the dock is for, and a tap can only append.
+ */
+
+/*
+ * The sprite is the handle, and only the sprite.
+ *
+ * touch-action: none tells the browser "this gesture is mine", which is what
+ * makes a touch drag possible at all -- and is exactly what you must not put on
+ * a row in a list people scroll with a thumb. So it goes on the icon, the way
+ * the level-up plan puts it on the rank number.
+ */
+.card--chip .chiprow__art,
+.chipbench__chip img { touch-action: none; cursor: grab; }
+.card--chip.is-dragging,
+.chipbench__chip.is-dragging { opacity: .4; }
+
+/* The ghost under the finger: the face, so you can see what you are carrying,
+   and the name, because at 26px several chip faces are hard to tell apart. */
+.chipghost {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 9px 4px 4px;
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  box-shadow: 0 0 0 1px var(--accent), var(--shadow-2);
+  font-size: 12px; font-weight: 700; color: var(--text);
+  white-space: nowrap;
+}
+.chipghost img { width: 24px; height: 24px; border-radius: 4px; display: block; }
+
+/*
+ * An outline for each pick not yet made.
+ *
+ * Three boxes say "three of these" in a way the text "0/3" does not, and each
+ * one is a drop target, so the empty dock teaches the gesture instead of just
+ * announcing a rule.
+ */
+.chipbench__slot {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px;
+  border-radius: var(--r-sm);
+  border: 1px dashed var(--line-2);
+  color: var(--text-mute); font-size: 12px; font-weight: 700;
+  flex: none;
+}
+.chipbench__slot--extra { border-style: dotted; }
+
+/* Where it would land. The chip being pushed aside leans out of the way, which
+   is the only motion here that carries information. */
+.chipbench__chip.is-over,
+.chipbench__slot.is-over {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent);
+}
+.chipbench__chip.is-over { transform: translateX(5px); }
+.chipbench__strip.is-over { box-shadow: inset 0 0 0 2px var(--accent); border-radius: var(--r-sm); }
+.chipbench__chip, .chipbench__slot { transition: transform .12s ease, box-shadow .12s ease; }
+@media (prefers-reduced-motion: reduce) {
+  .chipbench__chip, .chipbench__slot { transition: none; }
+  .chipbench__chip.is-over { transform: none; }
+}
+
+/*
+ * Somewhere to drop, even when the dock had no reason to be on screen.
+ *
+ * Scroll the roster far enough and the dock can be off the top of a phone, or
+ * hidden entirely because nothing is kept yet. For the length of a drag it is
+ * there regardless: the first drag is the one that most needs a target, and it
+ * is the one that had none.
+ */
+body.is-dragging-active #chipbench[hidden] { display: block; }
+body.is-dragging-active .chipbench__slot { border-color: var(--accent); }
+
+:root[data-contrast="more"] .chipbench__slot { border-color: var(--text-dim); border-style: solid; }
+
+@media (max-width: 760px) {
+  /*
+   * The dock comes up over the sheet for the length of a drag.
+   *
+   * On a phone the roster is a sheet at z-index 70 and the dock sits at 62,
+   * which means the dock is behind the only surface you would ever drag a chip
+   * from -- you could pick one up and there was nowhere on screen to put it
+   * down. Raised above the sheet while a drag is live, and only then, so the
+   * target rises to meet the thing you are carrying and drops back the moment
+   * you let go. The app bar is 75 and stays clear of it.
+   */
+  body.is-dragging-active #dock {
+    z-index: 78;
+    box-shadow: 0 -10px 26px -10px rgb(0 0 0 / .6);
+  }
+  body.is-dragging-active #chipbench { box-shadow: inset 0 0 0 1px var(--accent); border-radius: var(--r-sm); }
+}
+
+/* The dock's chips are focusable now that arrows reorder them, so they need to
+   say when they have focus. Same ring the rest of the app uses. */
+.chipbench__chip:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ------------------------------------------ the chips' bench, in the tab
+ *
+ * Two trays with a border round each, because they are two different promises:
+ * the three you are taking, in order, and a shortlist of as many as you like.
+ * The border is doing real work -- it says where a chip can be put down before
+ * you have picked one up, which a bare row of icons never did.
+ */
+.chiptray {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--s2);
+  margin: 0 0 var(--s2);
+}
+.chiptray[hidden] { display: none; }
+
+.chiptray__zone {
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  padding: var(--s1) var(--s2) var(--s2);
+  min-width: 0;
+}
+
+.chiptray__label {
+  margin: 0 0 5px;
+  display: flex; align-items: baseline; gap: 6px;
+  font-size: 10.5px; font-weight: 800;
+  letter-spacing: .09em; text-transform: uppercase;
+  color: var(--text-dim);
+}
+/* The subtitle says what the tray is for in the words you would use, once,
+   where you are already looking. It is not a tooltip because this is a phone. */
+.chiptray__label span {
+  font-size: 10px; font-weight: 500;
+  letter-spacing: 0; text-transform: none;
+  color: var(--text-mute);
+}
+
+.chiptray__row {
+  display: flex; flex-wrap: wrap; align-items: center;
+  gap: var(--s1);
+  min-height: 30px;
+}
+.chiptray__hint { font-size: 11px; color: var(--text-mute); }
+
+/* Numbered outlines rather than blank ones: the empty tray already says the
+   answer is three, and which position you are about to fill. */
+.chiptray .chipbench__slot { width: 30px; height: 30px; }
+.chiptray .chipbench__chip { width: 30px; height: 30px; }
+
+.chiptray__row.is-over {
+  box-shadow: inset 0 0 0 2px var(--accent);
+  border-radius: var(--r-sm);
+}
+
+/* Both trays go full width once there is not room for two, which on a phone is
+   immediately -- three 30px chips and a label do not share 358px with a
+   shortlist that can hold any number of them. */
+@media (max-width: 760px) {
+  .chiptray { grid-template-columns: 1fr; gap: var(--s1); }
+  .chiptray__zone { padding: 5px var(--s1) var(--s1); }
+  .chiptray__label { margin-bottom: 3px; }
+}
+
+:root[data-contrast="more"] .chiptray__zone { border-color: var(--text-dim); }
+:root[data-contrast="more"] .chiptray__label { color: var(--text); }

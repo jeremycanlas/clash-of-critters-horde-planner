@@ -89,17 +89,29 @@ function moveGhost(x, y) {
   active.ghost.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
 }
 
-/** Finds the drop zone under the pointer, ignoring the ghost itself. */
+/**
+ * Finds the drop zone under the pointer, ignoring the ghost itself.
+ *
+ * The innermost match wins, not the first one registered. Zones nest: the whole
+ * roster panel is a zone -- drag a Tatari back onto it to un-bench it -- and the
+ * chips' tray sits inside that panel. First-registered meant the panel answered
+ * for every point inside it, refused the chip payload, and the drop quietly did
+ * nothing. Registration order is an accident of module load order and should
+ * never have decided this.
+ */
 function hitTest(x, y) {
   active.ghost.style.visibility = 'hidden';
   const el = document.elementFromPoint(x, y);
   active.ghost.style.visibility = '';
   if (!el) return null;
+  let best = null;
   for (const zone of zones) {
     const target = el.closest(zone.selector);
-    if (target) return { zone, target };
+    if (!target) continue;
+    // Deeper wins; unrelated matches keep whichever was found first.
+    if (!best || best.target.contains(target)) best = { zone, target };
   }
-  return null;
+  return best;
 }
 
 function setHover(hit) {
@@ -199,7 +211,7 @@ document.addEventListener('dragstart', (e) => {
  * sprite with a mouse is not a mistake and that menu is left alone, as is every
  * other image on the page -- long-pressing a posted card to save it still works.
  */
-const DRAG_SURFACES = '.card, .benchchip, .cell, .prio, .token, .keptrow';
+const DRAG_SURFACES = '.card, .benchchip, .cell, .prio, .token, .keptrow, .chipbench__chip';
 let touchLast = false;
 window.addEventListener('pointerdown', (e) => { touchLast = e.pointerType !== 'mouse'; }, true);
 

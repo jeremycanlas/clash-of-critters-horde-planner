@@ -39,7 +39,25 @@ fi
 PY="$(command -v python || command -v python3 || true)"
 if [ -z "$PY" ]; then echo "check: no python to serve the folder with." >&2; exit 2; fi
 
-"$PY" -m http.server "$PORT" --bind 127.0.0.1 >/dev/null 2>&1 &
+# Served no-store, which is not a detail.
+#
+# python -m http.server sends no Cache-Control at all, so Chrome caches by
+# heuristic and its profile persists between runs. Edit a module, run the hook,
+# and the first result can be the previous version of your code passing or
+# failing -- which is the single worst thing a check can do, because it is
+# indistinguishable from a real answer. Every file is served no-store instead.
+"$PY" - "$PORT" >/dev/null 2>&1 <<'SERVE' &
+import functools, http.server, os, sys
+class H(http.server.SimpleHTTPRequestHandler):
+    def end_headers(self):
+        self.send_header('Cache-Control', 'no-store, must-revalidate')
+        super().end_headers()
+    def log_message(self, *a): pass
+http.server.ThreadingHTTPServer(
+    ('127.0.0.1', int(sys.argv[1])),
+    functools.partial(H, directory=os.getcwd()),
+).serve_forever()
+SERVE
 SERVER=$!
 trap 'kill $SERVER 2>/dev/null || true' EXIT INT TERM
 
@@ -57,13 +75,17 @@ mkdir -p "$PROFILE"
 
 FAILED=0
 for page in apptest mobiletest chipstest changestest; do
-  url="http://127.0.0.1:$PORT/$page.html"
-  [ -n "$ONLY" ] && url="$url?only=$ONLY"
+  # perf=off because the virtual clock below makes wall-clock budgets
+  # meaningless -- the suites report those as skipped rather than inventing a
+  # verdict. Open the page in a browser for the real numbers.
+  url="http://127.0.0.1:$PORT/$page.html?perf=off"
+  [ -n "$ONLY" ] && url="$url&only=$ONLY"
 
   title=$("$CHROME" \
     --headless=new --disable-gpu --no-first-run --no-default-browser-check \
     --user-data-dir="$PROFILE" --window-size=1440,960 \
     --virtual-time-budget=900000 --dump-dom "$url" 2>/dev/null \
+    | tee "${COC_TEST_DUMP:-/dev/null}${COC_TEST_DUMP:+/$page.html}" \
     | grep -o '<title>[^<]*</title>' | sed 's/<[^>]*>//g' \
     | grep -E '^(ok|FAIL)' | tail -1)
 

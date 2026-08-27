@@ -320,7 +320,13 @@ export function moveInto({ main, extra }, name, list, index, cap = PER_PLAYER) {
  * prove; what is new here is where a chip ends up, and that is arithmetic on two
  * lists. Testing it through a synthetic pointer would be testing the browser.
  */
-function placeAt(player, name, list, index) {
+/**
+ * Put a chip at an exact position in one of the two lists.
+ *
+ * Exported because the roster's dock does the same thing the chips page does,
+ * and a second copy of the overflow rule is a second place to get it wrong.
+ */
+export function placeAt(player, name, list, index) {
   update(player, (lists) => moveInto(lists, name, list, index));
 }
 

@@ -71,7 +71,7 @@ field, HAVE above LF.
 - Chips! All 49 of them are in the tool now, in their own tab next to Tatari and Zobos. Every one has its icon, what it does, its tier and its type, in the same order the game's gallery shows them.
 - The chips that read your board tell you what they'd be worth to it. Rear Guard shows you the actual Tatari in your back two rows, not just a number, so you can see whether those are the ones you care about.
 - Two views: a list with the full rule on every row, and a grid of just the tiles if you already know them. It remembers which you were using.
-- Keep the three you'd take and drag them into the order you'd take them, plus a shortlist with no limit for "these are also worth it on this board". They show up in a strip under the bench, so one screenshot catches the board, the bench and the chips.
+- Keep the three you'd take and drag them into the order you'd take them. The chips tab has its own bench for this: two bordered trays, one for the three and one for the shortlist, and you drag chips between them to say what goes first. Arrow keys do the same thing if you'd rather not drag, and Delete drops one.
 - Your chips go on the share card too, under the bench, with a line saying they're offered at random rather than chosen.
 - Flex slots! Turn on Flex slots and press any empty square to mark it as somebody else's choice. It shows as a dashed square reading FLEX, on the board and on the share card. This is for posting a formation as a template instead of a finished thing.
 - The level-up plan says what it's for when it's empty instead of showing nothing at all.
