@@ -120,14 +120,32 @@ function hitTest(x, y) {
   const el = document.elementFromPoint(x, y);
   active.ghost.style.visibility = '';
   if (!el) return null;
-  let best = null;
+  let best = null;      // innermost zone that will actually take this
+  let shown = null;     // innermost zone under the pointer, accepting or not
+
   for (const zone of zones) {
     const target = el.closest(zone.selector);
     if (!target) continue;
     // Deeper wins; unrelated matches keep whichever was found first.
+    if (!shown || shown.target.contains(target)) shown = { zone, target };
+    if (!zone.accepts(target, active.payload)) continue;
     if (!best || best.target.contains(target)) best = { zone, target };
   }
-  return best;
+
+  /*
+   * A zone that will not take what you are carrying does not get to stand in
+   * front of one that will.
+   *
+   * Depth alone was not enough. The roster panel takes a Tatari dragged off the
+   * field, and the chips' own zone -- the card list inside that panel, which
+   * only takes chips -- is deeper. So dragging a critter back to the roster
+   * landed on the chip zone, which refused it, and the panel behind it never
+   * heard about the drop. Nothing happened and nothing said why.
+   *
+   * When nothing will take it, the innermost is still returned so it can draw
+   * the refusal. Being told no is not the same as being ignored.
+   */
+  return best ?? shown;
 }
 
 function setHover(hit) {

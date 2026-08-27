@@ -1225,6 +1225,167 @@ await runGroup('switching lists leaves nothing behind', async () => {
  * misses, a payload the zone refuses. All of that is between pointerdown and
  * pointerup, and none of it is exercised by calling placeAt directly.
  */
+/*
+ * Every route a drag can take, in one place.
+ *
+ * This group exists because of a regression I shipped. Drop zones nest -- the
+ * whole roster panel takes a Tatari dragged off the field, and the chips' card
+ * list sits inside that panel and takes only chips -- and the hit test was
+ * changed to prefer the innermost. So a critter dragged back to the roster
+ * landed on the chip list, which refused it, and the panel behind it never
+ * heard about the drop. Nothing happened and nothing said why.
+ *
+ * Every other check for dragging is about one route. That is how a change to
+ * the thing all of them share went out green: each route was fine on its own
+ * terms and nothing asked whether they still all worked at once.
+ */
+await runGroup('every drag route still lands', async () => {
+  await until(() => !!$('#roster'), 'the drafter to be in the frame', 8000);
+  const V = D.defaultView;
+  await click($('#roster-tabs [data-list="tatari"]'), 420);
+  await reset();
+
+  const box = $('#roster').getBoundingClientRect();
+  if (box.width < 200) {
+    skip('every drag route still lands', 'the roster has no size in this window, so nothing has a position');
+    return;
+  }
+
+  const centre = (el) => {
+    const r = el.getBoundingClientRect();
+    return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+  };
+  const bring = (el) => {
+    el.scrollIntoView({ block: 'center' });
+    const r = el.getBoundingClientRect();
+    const off = (r.top + r.height / 2) - V.innerHeight / 2;
+    if (Math.abs(off) > 40) V.scrollBy(0, off);
+  };
+  const send = (type, x, y, to) => to.dispatchEvent(new V.PointerEvent(type, {
+    bubbles: true, cancelable: true, composed: true,
+    pointerId: 5, pointerType: 'mouse', isPrimary: true,
+    button: type === 'pointermove' ? -1 : 0, buttons: type === 'pointerup' ? 0 : 1,
+    clientX: x, clientY: y,
+  }));
+  const drag = async (handle, target) => {
+    if (!handle || !target) return false;
+    bring(handle);
+    const a = centre(handle);
+    send('pointerdown', a.x, a.y, handle);
+    send('pointermove', a.x + 9, a.y + 9, V);
+    await sleep(80);
+    for (let tries = 0; tries < 6; tries += 1) {
+      bring(target);
+      const b = centre(target);
+      send('pointermove', b.x, b.y, V);
+      await sleep(70);
+      const ghost = D.querySelector('.drag-ghost');
+      if (ghost) ghost.style.visibility = 'hidden';
+      const under = D.elementFromPoint(b.x, b.y);
+      if (ghost) ghost.style.visibility = '';
+      if (under && (under === target || target.contains(under))) {
+        send('pointerup', b.x, b.y, V);
+        await sleep(380);
+        return true;
+      }
+    }
+    V.dispatchEvent(new V.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    await sleep(200);
+    return false;
+  };
+
+  const filled = () => $$('.cell.is-filled').length;
+  const benched = () => $$('.benchchip').length;
+  const freeCell = () => $$('.cell:not(.cell--enemy)').find((c) => !c.querySelector('.token'));
+  const freeCard = () => $$('.panel--roster .card')
+    .find((c) => !c.classList.contains('card--chip')
+      && !c.classList.contains('is-benched') && !c.dataset.switchFrom);
+
+  /* 1. the roster onto the field, which is what the app is for */
+  const wasFilled = filled();
+  await drag(freeCard(), freeCell());
+  ok('a critter goes from the roster onto the field', filled() > wasFilled,
+     `${wasFilled} to ${filled()}`);
+
+  /* 2. the field back to the roster. This is the one that broke. */
+  const beforeBack = filled();
+  await drag($('.cell.is-filled .token'), $('#roster'));
+  ok('and off the field back onto the roster', filled() < beforeBack,
+     `${beforeBack} to ${filled()}`);
+
+  /* 3. the roster onto the bench */
+  const wasBench = benched();
+  await drag(freeCard(), $('.bench__player'));
+  ok('a critter goes from the roster onto the bench', benched() > wasBench,
+     `${wasBench} to ${benched()}`);
+
+  /* 4. the bench onto the field */
+  const beforePlace = filled();
+  await drag($('.benchchip'), freeCell());
+  ok('and from the bench onto the field', filled() > beforePlace,
+     `${beforePlace} to ${filled()}`);
+
+  /* 5. one square to another */
+  const from = $('.cell.is-filled');
+  const to = freeCell();
+  const movedSlug = from?.querySelector('.token')?.dataset.slug ?? null;
+  await drag(from?.querySelector('.token'), to);
+  ok('a critter moves from one square to another',
+     !!to && to.classList.contains('is-filled'),
+     movedSlug ? `moving ${movedSlug}` : 'nothing to move');
+
+  /* 6. the field back to the bench */
+  const beforeReturn = benched();
+  await drag($('.cell.is-filled .token'), $('.bench__player'));
+  ok('and off the field back to the bench', benched() >= beforeReturn,
+     `${beforeReturn} to ${benched()}`);
+
+  /* 7. the level-up plan reorders by its rank number.
+     Two on the field first: the steps come from the board, and the checks above
+     have just finished taking everything off it. */
+  await placeOne();
+  await placeOne();
+  /* Steps are added, not implied: putting a critter on the field offers it in
+     the picker and you say yes. Two, so there is an order to change. */
+  for (let i = 0; i < 2; i += 1) {
+    const pick = $('.step-pick');
+    if (!pick) break;
+    pick.click();
+    await sleep(240);
+    $('#step-adder button[type="submit"]')?.click();
+    await sleep(340);
+  }
+  const steps = $$('#priority .prio:not(.prio--ghost)');
+  if (steps.length < 2) {
+    skip('the level-up plan reorders',
+         `only ${steps.length} step(s): ${filled()} on the field, ${benched()} benched, `
+         + `${$$('#priority .prio').length} rows in the panel, count says "${$('#step-count')?.textContent?.trim()}"`);
+  } else {
+    /*
+     * One of them gets a note, because both steps can be the same critter and
+     * two identical rows cannot show you a swap. Not data-index either: that is
+     * the position, renumbered on every render, so comparing it would say the
+     * order changed no matter what happened.
+     */
+    const note = steps[0].querySelector('.prio__note');
+    if (!note) {
+      skip('the level-up plan reorders', 'no note field to tell two identical steps apart');
+    } else {
+      note.value = 'marked';
+      note.dispatchEvent(new V.Event('input', { bubbles: true }));
+      await sleep(320);
+      const order = () => $$('#priority .prio:not(.prio--ghost)')
+        .map((p) => p.querySelector('.prio__note')?.value || '-').join('|');
+      const was = order();
+      await drag(steps[1], steps[0]);
+      ok('a step in the plan moves to another position', order() !== was,
+         `${was} -> ${order()}`);
+    }
+  }
+
+  await reset();
+});
+
 await runGroup('chips are dragged into the dock, and around inside it', async () => {
   /*
    * Waited for, not assumed.
