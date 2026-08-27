@@ -4826,9 +4826,14 @@ body[data-roster-list="chips"] .filters__row--meta .sortby { display: none; }
   width: 34px; height: 34px;
   border-radius: var(--r-sm);
   border: 1px solid var(--line);
-  overflow: hidden;
+  /* No overflow:hidden. It was here to clip the sprite to the rounded corner,
+     which the sprite can do for itself -- and it also clipped the insertion bar
+     that has to sit in the gap outside this box to mean anything. */
 }
-.chipbench__chip img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.chipbench__chip img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+  border-radius: calc(var(--r-sm) - 1px);
+}
 .chipbench__missing {
   display: grid; place-items: center; width: 100%; height: 100%;
   background: var(--surface-3); color: var(--text-mute); font-size: 13px;
@@ -5249,17 +5254,16 @@ body.is-flexing .cell.is-filled { opacity: .55; }
 
 /* Where it would land. The chip being pushed aside leans out of the way, which
    is the only motion here that carries information. */
-.chipbench__chip.is-over,
-.chipbench__slot.is-over {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px var(--accent);
-}
-.chipbench__chip.is-over { transform: translateX(5px); }
+
 .chipbench__strip.is-over { box-shadow: inset 0 0 0 2px var(--accent); border-radius: var(--r-sm); }
-.chipbench__chip, .chipbench__slot { transition: transform .12s ease, box-shadow .12s ease; }
+.chipbench__chip, .chipbench__slot {
+  position: relative;
+  transition: transform .12s ease, box-shadow .12s ease, background-color .12s ease;
+}
 @media (prefers-reduced-motion: reduce) {
-  .chipbench__chip, .chipbench__slot { transition: none; }
-  .chipbench__chip.is-over { transform: none; }
+  .chipbench__chip, .chipbench__slot, .chiptray__zone { transition: none; }
+  /* The bar still moves, because it is not decoration: without the gap it
+     draws on top of the chip it is meant to sit in front of. */
 }
 
 /*
@@ -5350,9 +5354,62 @@ body.is-dragging-active .chipbench__slot { border-color: var(--accent); }
 .chiptray .chipbench__slot { width: 30px; height: 30px; }
 .chiptray .chipbench__chip { width: 30px; height: 30px; }
 
-.chiptray__row.is-over {
-  box-shadow: inset 0 0 0 2px var(--accent);
-  border-radius: var(--r-sm);
+/*
+ * The whole square lights up, not a line inside it.
+ *
+ * The highlight was drawn inside the tray's own border, so at a glance you saw
+ * two rectangles a couple of pixels apart and had to work out which one meant
+ * something. The tray is the thing you are dropping into; the tray is what
+ * should say so. The label is inside the target now too, which it should always
+ * have been -- aiming at a box and being told to hit the row inside the box is
+ * a distinction only the code cared about.
+ */
+.chiptray__zone { transition: border-color .12s ease, box-shadow .12s ease, background-color .12s ease; }
+.chiptray__zone.is-over {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface-2));
+}
+
+/*
+ * Order is a different question, and gets a different answer.
+ *
+ * Dropping into a tray asks "in or out". Dropping onto one of the three asks
+ * "before which one", and a ring round a chip cannot say that -- a ring means
+ * "this one", and the thing you are about to do is land in front of it. So it
+ * is a bar in the gap, the chip steps aside to open that gap, and the number
+ * the chip is wearing is the number you are about to take. That last part is
+ * why the badge inverts rather than just glowing: it is the answer, not
+ * decoration.
+ */
+.chiptray .chipbench__chip.is-over,
+.chipbench__strip .chipbench__chip.is-over {
+  transform: translateX(8px);
+  box-shadow: none;
+  border-color: var(--line);
+}
+.chiptray .chipbench__chip.is-over::before,
+.chipbench__strip .chipbench__chip.is-over::before {
+  content: "";
+  position: absolute;
+  left: -8px; top: -3px; bottom: -3px;
+  width: 4px;
+  border-radius: 3px;
+  background: var(--accent);
+}
+.chiptray .chipbench__chip.is-over .chipbench__n,
+.chipbench__strip .chipbench__chip.is-over .chipbench__n {
+  background: var(--text);
+  color: var(--surface);
+  min-width: 14px; height: 14px;
+  font-size: 9px;
+}
+/* An empty position is a position too, so it fills rather than outlines. */
+.chipbench__slot.is-over {
+  border-style: solid;
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-ink);
 }
 
 /* Both trays go full width once there is not room for two, which on a phone is

@@ -1170,7 +1170,7 @@ function readyChipZone() {
   if (chipZoneReady) return;
   chipZoneReady = true;
   dropZone({
-    selector: '.chipbench__chip, .chipbench__slot, .chipbench__strip, .chiptray__row',
+    selector: '.chipbench__chip, .chipbench__slot, .chipbench__strip, .chiptray__zone',
     accepts: (target, payload) =>
       payload?.from === 'chip' && target.dataset.chip !== payload.name,
     onHover: (target, ok) => target.classList.toggle('is-over', ok),
@@ -1325,17 +1325,17 @@ export function renderChipTray() {
   };
 
   host.innerHTML = `
-    <div class="chiptray__zone">
+    <div class="chiptray__zone" data-list="main">
       <p class="chiptray__label">Your three<span>the order you take them in</span></p>
-      <div class="chiptray__row" data-list="main" role="list">
+      <div class="chiptray__row" role="list">
         ${main.map((n, i) => chip(n, i)).join('')}
         ${Array.from({ length: Math.max(0, PER - main.length) }, (_, i) => `
           <span class="chipbench__slot" data-list="main">${main.length + i + 1}</span>`).join('')}
       </div>
     </div>
-    <div class="chiptray__zone chiptray__zone--extra">
+    <div class="chiptray__zone chiptray__zone--extra" data-list="extra">
       <p class="chiptray__label">Shortlist<span>as many as you like</span></p>
-      <div class="chiptray__row" data-list="extra" role="list">
+      <div class="chiptray__row" role="list">
         ${extra.map((n) => chip(n, null)).join('')}
         ${extra.length ? '' : `<span class="chiptray__hint">Drop a chip here to keep it in mind</span>`}
       </div>

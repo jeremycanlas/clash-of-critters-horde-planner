@@ -1259,6 +1259,21 @@ await runGroup('chips are dragged into the dock, and around inside it', async ()
     button: type === 'pointermove' ? -1 : 0, buttons: type === 'pointerup' ? 0 : 1,
     clientX: x, clientY: y,
   }));
+  /*
+   * Put the thing in the middle of the window, not merely on screen.
+   *
+   * scrollIntoView centres within the nearest scrollport, which for a dock
+   * inside a page with a sticky header left it at y=128 -- on screen, and
+   * underneath the header, so elementFromPoint answered <h1> and the drop went
+   * nowhere. The window is nudged afterwards to finish the job.
+   */
+  const bring = (el) => {
+    el.scrollIntoView({ block: 'center' });
+    const r = el.getBoundingClientRect();
+    const off = (r.top + r.height / 2) - V.innerHeight / 2;
+    if (Math.abs(off) > 40) V.scrollBy(0, off);
+  };
+
   /* Mouse, not touch: a touch drag waits out a hold timer and this suite has
      enough real waiting in it. The two paths meet at begin(). */
   const dragTo = async (handle, target) => {
@@ -1267,20 +1282,6 @@ await runGroup('chips are dragged into the dock, and around inside it', async ()
        coordinate below the fold and it answers null, and the drop silently does
        nothing. That is a fact about the test, not about the app: a person
        dragging has both ends on their screen because they can see them. */
-    /*
-     * Put the thing in the middle of the window, not merely on screen.
-     *
-     * scrollIntoView centres within the nearest scrollport, which for a dock
-     * inside a page with a sticky header left it at y=128 -- on screen, and
-     * underneath the header, so elementFromPoint answered <h1> and the drop
-     * went nowhere. The window is nudged afterwards to finish the job.
-     */
-    const bring = (el) => {
-      el.scrollIntoView({ block: 'center' });
-      const r = el.getBoundingClientRect();
-      const off = (r.top + r.height / 2) - V.innerHeight / 2;
-      if (Math.abs(off) > 40) V.scrollBy(0, off);
-    };
     bring(handle);
     await sleep(90);
     const a = centre(handle);
@@ -1447,11 +1448,15 @@ await runGroup('chips are dragged into the dock, and around inside it', async ()
   for (const n of [a, b, c]) await dragTo(grip(cardFor(n)), slots()[0]);
   eq('three kept again, in order', numbered().join(), [a, b, c].join());
 
-  const shortlistRow = () => $('#chiptray .chiptray__row[data-list="extra"]');
-  const shortlisted = () => [...shortlistRow().querySelectorAll('.chipbench__chip')]
+  /* The zone, not the row inside it: the whole bordered square is the target
+     now, label included, which is what it looks like from the outside. */
+  const shortlist = () => $('#chiptray .chiptray__zone[data-list="extra"]');
+  const shortlisted = () => [...shortlist().querySelectorAll('.chipbench__chip')]
     .map((e) => e.dataset.chip);
+  ok('the shortlist is a square you can drop into, not just its contents',
+     !!shortlist() && shortlist().classList.contains('chiptray__zone'));
 
-  await dragTo(grip(chipAt(0)), shortlistRow());
+  await dragTo(grip(chipAt(0)), shortlist());
   eq('dragging one of the three onto the shortlist moves it there',
      shortlisted().join(), a);
   eq('and the other two close up behind it', numbered().join(), [b, c].join());
@@ -1480,6 +1485,131 @@ await runGroup('chips are dragged into the dock, and around inside it', async ()
   await dragTo(grip(cardFor(spare)), roster);
   eq('dragging an unkept chip onto the list does nothing at all', kept().join(), untouched);
   ok('and it is still not kept', !kept().includes(spare), spare);
+
+  /*
+   * What it looks like while you are still holding the chip.
+   *
+   * Two questions get two answers. Hovering a tray asks "in or out", so the
+   * whole square lights up. Hovering one of the three asks "before which one",
+   * so a bar appears in the gap and the chip steps aside to make it -- a ring
+   * would have said "this one", which is not what is about to happen.
+   *
+   * Split in two on purpose. What it looks like is asked of the stylesheet,
+   * which answers the same way every time. Whether the drag actually applies it
+   * is asked of a real drag, and only when this browser is drawing frames at
+   * all: the hover state is applied on an animation frame, and the headless
+   * runner drives these pages under a virtual clock that advances timers
+   * without necessarily producing frames. Asserting through a frame that may
+   * never come is how you get a check that fails for the harness.
+   */
+  const styleWith = (el, cls, pseudo) => {
+    el.classList.add(cls);
+    const out = D.defaultView.getComputedStyle(el, pseudo ?? null);
+    const copy = {
+      boxShadow: out.boxShadow, transform: out.transform, content: out.content,
+      width: out.width, borderColor: out.borderColor, background: out.backgroundColor,
+    };
+    el.classList.remove(cls);
+    return copy;
+  };
+
+  const zoneLit = styleWith(shortlist(), 'is-over');
+  ok('a hovered tray rings the whole square',
+     zoneLit.boxShadow !== 'none' && !zoneLit.boxShadow.includes('inset'), zoneLit.boxShadow);
+  ok('and tints it, so it reads as a target rather than an outline',
+     zoneLit.background !== styleWith(shortlist(), 'nothing-at-all').background);
+
+  const aim = chipAt(0);
+  const barLit = styleWith(aim, 'is-over', '::before');
+  ok('a hovered chip draws a bar in the gap in front of it',
+     barLit.content === '""' && parseFloat(barLit.width) >= 2,
+     `content ${barLit.content}, width ${barLit.width}`);
+  const chipLit = styleWith(aim, 'is-over');
+  ok('and the chip steps aside to leave that gap',
+     chipLit.transform !== 'none', chipLit.transform);
+  ok('rather than being ringed, which would have meant "this one"',
+     chipLit.boxShadow === 'none', chipLit.boxShadow);
+  ok('and the number it is wearing inverts, because that is the number you take',
+     (() => {
+       aim.classList.add('is-over');
+       const n = aim.querySelector('.chipbench__n');
+       const lit = n && D.defaultView.getComputedStyle(n).backgroundColor;
+       aim.classList.remove('is-over');
+       const dim = n && D.defaultView.getComputedStyle(n).backgroundColor;
+       return !!n && lit !== dim;
+     })());
+
+  /*
+   * Now the wiring: does a real drag apply what the stylesheet describes.
+   *
+   * The mark goes on inside a requestAnimationFrame callback, so this can only
+   * be asked of a browser that is drawing. Rather than guess, the attempt
+   * counts frames while it runs: no frames and it is skipped with that said out
+   * loud, frames and no mark and it is a failure the app earned. A check that
+   * cannot tell those two apart is worth nothing.
+   */
+  {
+    let framesSeen = 0;
+    let ticking = true;
+    const tick = () => { framesSeen += 1; if (ticking) V.requestAnimationFrame(tick); };
+    V.requestAnimationFrame(tick);
+    const drew = () => framesSeen > 1;
+    const hoverOver = async (handle, target) => {
+      bring(handle);
+      const from = centre(handle);
+      send('pointerdown', from.x, from.y, handle);
+      send('pointermove', from.x + 9, from.y + 9, V);
+      await sleep(70);
+      for (let tries = 0; tries < 8; tries += 1) {
+        bring(target);
+        const to = centre(target);
+        send('pointermove', to.x, to.y, V);
+        /* Waited on a frame, not a timer: the frame is the thing the mark is
+           applied in, and a timer under a virtual clock returns before one. */
+        await Promise.race([new Promise((r) => { V.requestAnimationFrame(r); }), sleep(200)]);
+        if (target.classList.contains('is-over')) return true;
+      }
+      return false;
+    };
+    const endHover = async () => {
+      V.dispatchEvent(new V.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      await sleep(220);
+    };
+
+    /*
+     * Every attempt carries its own verdict.
+     *
+     * The gate has to be per attempt, not per group: frames can arrive for the
+     * first hover and stop before the second, and a gate consulted once turns
+     * that into a failure the app did not cause. Not lit and no frames drawn is
+     * a skip that says so; not lit while the browser was drawing is a real
+     * failure, which is the whole point of keeping the two apart.
+     */
+    const attempt = async (what, target) => {
+      const spare3 = $$('.card--chip').map((e) => e.dataset.chip).find((n) => !kept().includes(n));
+      const before = framesSeen;
+      const lit = await hoverOver(grip(cardFor(spare3)), target);
+      if (!lit && framesSeen - before < 2) {
+        skip(what, 'no frames were drawn during the attempt, and the mark is applied in one');
+        await endHover();
+        return false;
+      }
+      ok(what, lit);
+      return lit;
+    };
+
+    if (await attempt('dragging over the shortlist marks it', shortlist())) {
+      ok('and nothing else is marked at the same time',
+         $$('#chiptray .is-over').length === 1,
+         $$('#chiptray .is-over').map((e) => e.className).join(' / '));
+      await endHover();
+      ok('the mark goes when the drag is cancelled', !$('#chiptray .is-over'));
+    }
+
+    await attempt('dragging over one of the three marks that chip', chipAt(0));
+    await endHover();
+    ticking = false;
+  }
 
   localStorage.removeItem('coc.chips.taken');
   await click($('#roster-tabs [data-list="tatari"]'), 380);
