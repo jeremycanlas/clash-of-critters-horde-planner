@@ -2342,15 +2342,21 @@ body[data-switching="true"] .cell[data-zobo] { box-shadow: none; cursor: default
  * own title and in an .sr-only span -- both of which could already carry it,
  * and neither of which has 90px to fit in.
  */
-.card__nameline {
-  display: flex; align-items: center; justify-content: center;
-  gap: 3px;
-  min-width: 0;
-}
-.card__nameline .card__name { min-width: 0; flex: 0 1 auto; }
-
+/*
+ * The marker sits in the badge band at the top of the art.
+ *
+ * It has been three places now. A bar across the bottom covered the name. A
+ * glyph beside the name with a reserved margin ate a letter off it. Sharing a
+ * flex row stopped the overlap but still took 18px out of a 71px line, and six
+ * names in the roster need between 55 and 64 -- so the row was never big enough
+ * for both, whatever the arrangement.
+ *
+ * The band is the top 15px of the art box: space already reserved for the
+ * effect badges, above the sprite rather than over it, and nothing else wants
+ * the left corner. The name gets its whole row back.
+ */
 .card__lock {
-  flex: none;
+  position: absolute; left: 5px; top: 5px;
   display: grid; place-items: center;
   width: 15px; height: 15px;
   border-radius: var(--r-sm);
@@ -2367,8 +2373,9 @@ body[data-switching="true"] .cell[data-zobo] { box-shadow: none; cursor: default
  * itself, so the ellipsis lands before the badge and cannot reach it. The name
  * re-centres in what is left, which is what the card's text-align already wants.
  */
-/* No reserved margin any more: .card__nameline is a flex row, so the name gets
-   exactly the space the marker leaves and the two cannot collide. */
+/* The name has no gutter reserved beside it: the marker is not in its row. */
+/* The effect badges keep out of the marker's corner when there is one. */
+.card.is-swap .card__fxrow { padding-left: 17px; }
 
 /* ============================================================ modals */
 

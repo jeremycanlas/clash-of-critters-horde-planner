@@ -476,7 +476,9 @@ await runGroup('markers on the cards', async () => {
     const img = c.querySelector('.card__art img');
     if (!img) return true;
     const art = img.getBoundingClientRect();
-    return [...c.querySelectorAll('.card__fx, .card__patch')].every((b) => {
+    /* .card__lock joined these when it moved into the badge band. It sits in
+       the art box now, so it has to obey the same rule they do. */
+    return [...c.querySelectorAll('.card__fx, .card__patch, .card__lock')].every((b) => {
       const r = b.getBoundingClientRect();
       return r.bottom <= art.top + 1 || r.top >= art.bottom - 1;
     });
@@ -621,28 +623,25 @@ await runGroup('a card you already have one of', async () => {
    * so the name takes whatever the marker leaves, and this is the check that
    * says whether it was enough.
    */
-  const cut = $$('.card.is-swap').map((c) => {
-    const el = c.querySelector('.card__name');
-    return el && el.scrollWidth > el.clientWidth + 1
-      ? `${el.textContent.trim()} (${el.scrollWidth} into ${el.clientWidth})` : null;
-  }).filter(Boolean);
-  ok('and no swap card has its name cut short to make room for it',
-     cut.length === 0, cut.slice(0, 4).join(', '));
-
   /*
-   * Asked of the layout, not of one name.
+   * The marker costs the name nothing.
    *
-   * Checking that a particular card is not truncated passes for as long as that
-   * card's name is short -- the first one this picks is "Zapup", which fits
-   * beside the marker no matter how much room is wasted. The rule is that the
-   * row reserves no fixed gutter at all: the marker takes what it needs and the
-   * name takes the rest. A margin big enough to cost a letter off Rockzilla is
-   * invisible on Zapup, so the margin is what gets measured.
+   * Asked as an equality rather than by looking for truncation, because whether
+   * a name is cut also depends on how long it is: Zapup fits beside anything and
+   * proves nothing, and Newflamander is too long for a 79px card with no marker
+   * in sight. The question is whether having a marker makes the row smaller. It
+   * used to, three ways running -- a bar over the name, a reserved margin, then
+   * a flex row that still took 18px of 71. Now the marker is not in that row and
+   * the two numbers should be identical.
    */
-  const gut = D.defaultView.getComputedStyle(nameEl);
-  ok('and the layout reserves no fixed gutter beside the name',
-     parseFloat(gut.marginRight) < 6 && parseFloat(gut.marginLeft) < 6,
-     `margins ${gut.marginLeft} / ${gut.marginRight}`);
+  const plain = $$('.panel--roster .card')
+    .find((c) => !c.classList.contains('is-swap') && c.querySelector('.card__name'));
+  ok('there is an ordinary card to compare against', !!plain);
+  if (plain) {
+    const plainW = plain.querySelector('.card__name').clientWidth;
+    eq('a swap card gives its name exactly as much room as any other card',
+       nameEl.clientWidth, plainW);
+  }
   ok('the marker is small enough to be a marker', b.width <= 20 && b.height <= 20,
      `${Math.round(b.width)}x${Math.round(b.height)}`);
 

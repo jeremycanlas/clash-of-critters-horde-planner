@@ -1492,16 +1492,14 @@ export function renderRoster() {
             ? `<span class="card__other" data-player="${otherPlayer[0]}"
                      title="P${otherPlayer[0]} is bringing this too">P${otherPlayer[0]}</span>` : ''}
         </div>
-        ${/* Name and marker share one row rather than the marker floating over
-              the name's corner with a margin reserved for it. A reserved margin
-              is a magic number, and on a 79px card getting it wrong by two
-              pixels either hides the marker behind the name or eats a letter
-              off names like Rockzilla. In a flex row the name simply takes
-              every pixel the marker does not, and the two cannot overlap. */ ''}
-        <div class="card__nameline">
-          <div class="card__name">${esc(t.name)}</div>
-          ${clash ? `<span class="card__lock" aria-hidden="true">&#8646;</span>` : ''}
-        </div>
+        ${/* The marker is not in this row at all. Sharing the row stopped it
+              overlapping the name but it still ate 18px of a 71px line, and
+              Scorchwing, Boltskipper, Pyrohound, Pyrodaemon, Frugantuan and
+              Cobbledon all need between 55 and 64. It lives in the badge band
+              at the top of the art instead, which is reserved space that is not
+              artwork and not text. */ ''}
+        <div class="card__name">${esc(t.name)}</div>
+        ${clash ? `<span class="card__lock" aria-hidden="true">&#8646;</span>` : ''}
         ${clash ? `<span class="sr-only">Switch from ${esc(clash.name)}, keeping its plan</span>` : ''}
         <!-- Focusable. It was tabindex="-1", which took the detail sheet — and
              with it "Place on the field" — off the keyboard entirely. The
