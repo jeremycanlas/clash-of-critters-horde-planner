@@ -28,15 +28,31 @@ export function draggable(el, getPayload, getGhostHTML) {
     if (!payload) return;
 
     disarm();
+    /*
+     * Does this surface already own the gesture?
+     *
+     * `touch-action: none` is the page telling the browser it will not scroll
+     * here -- so on those surfaces the hold and the give-up-if-you-move rule
+     * below are protecting a scroll that cannot happen. They only made the
+     * gesture fail: press the sprite, swipe, and you got a cancelled drag and
+     * no scroll either, which is nothing at all happening. A surface that has
+     * declared itself gets the mouse's behaviour, moving straight into a drag.
+     */
+    const pressed = e.target instanceof Element ? e.target : el;
+    const owns = e.pointerType !== 'mouse'
+      && getComputedStyle(pressed).touchAction === 'none';
+
     armed = {
       el, payload, getGhostHTML,
       pointerId: e.pointerId,
       x0: e.clientX, y0: e.clientY,
       touch: e.pointerType !== 'mouse',
+      owns,
       timer: null,
     };
 
-    if (armed.touch) {
+    /* Only a surface that still has to share the gesture waits. */
+    if (armed.touch && !owns) {
       armed.timer = setTimeout(() => {
         if (armed) begin(armed.x0, armed.y0);
       }, TOUCH_HOLD_MS);
@@ -156,7 +172,7 @@ function onMove(e) {
   const dy = e.clientY - armed.y0;
   const dist = Math.hypot(dx, dy);
 
-  if (armed.touch) {
+  if (armed.touch && !armed.owns) {
     if (dist > TOUCH_SLOP) disarm();          // the user is scrolling, not dragging
   } else if (dist > MOUSE_THRESHOLD) {
     begin(e.clientX, e.clientY);

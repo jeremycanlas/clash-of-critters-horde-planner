@@ -1141,6 +1141,135 @@ await runGroup('chips are dragged into the dock, and around inside it', async ()
   await click($('#roster-tabs [data-list="tatari"]'), 380);
 });
 
+/*
+ * The drag as a finger does it.
+ *
+ * Everything above drives the chips with mouse events, and a mouse takes a
+ * different road through dnd.js: it starts a drag after five pixels of travel
+ * and that is all. A finger has to be told apart from a scroll first, so it
+ * goes through a hold timer, a give-up-if-you-move rule, and whatever the
+ * browser decides about `touch-action` -- none of which the checks above touch.
+ * Three quarters of this tool's traffic is on a phone. This is the road they
+ * are on, and it was the one road nothing was driving.
+ *
+ * It found a real one: the sprite declares `touch-action: none`, which means
+ * the page will not scroll there, and the hold rules were still being applied
+ * to it. Press it and swipe and the drag was cancelled for a scroll that could
+ * not happen -- so nothing moved and nothing scrolled either.
+ */
+await runGroup('a finger can drag a chip, and can still scroll the list', async () => {
+  await until(() => !!$('#roster'), 'the drafter to be in the frame', 8000);
+  const V = D.defaultView;
+  if (D.body.dataset.sheet !== 'roster') await click(barBtn('roster'), 400);
+  await click($('#roster-tabs [data-list="chips"]'), 460);
+
+  const tray = $('#chiptray');
+  if (!tray || tray.getBoundingClientRect().width < 40) {
+    skip('a finger can drag a chip', 'the tray has no size in this window');
+    return;
+  }
+
+  const centre = (el) => {
+    const r = el.getBoundingClientRect();
+    return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+  };
+  const bring = (el) => {
+    el.scrollIntoView({ block: 'center' });
+    const r = el.getBoundingClientRect();
+    const off = (r.top + r.height / 2) - V.innerHeight / 2;
+    if (Math.abs(off) > 40) V.scrollBy(0, off);
+  };
+  /* pointerType 'touch', which is the whole point: it is what picks the branch
+     in dnd.js that a real phone takes. */
+  const finger = (type, x, y, to) => to.dispatchEvent(new V.PointerEvent(type, {
+    bubbles: true, cancelable: true, composed: true,
+    pointerId: 7, pointerType: 'touch', isPrimary: true,
+    button: type === 'pointermove' ? -1 : 0,
+    buttons: type === 'pointerup' ? 0 : 1,
+    clientX: x, clientY: y,
+  }));
+
+  const three = () => $('#chiptray .chiptray__zone[data-list="main"]');
+  const inThree = () => [...three().querySelectorAll('.chipbench__chip')].map((e) => e.dataset.chip);
+  const kept = () => $$('#chiptray .chipbench__chip').map((e) => e.dataset.chip);
+  const cardFor = (n) => $(`.card--chip[data-chip="${CSS.escape(n)}"]`);
+  const spare = () => $$('.card--chip').map((e) => e.dataset.chip).find((n) => !kept().includes(n));
+
+  /* hold: wait past the press-and-hold before moving. Everything a finger does
+     is timing, so the timing is the parameter. */
+  const swipe = async (handle, target, { hold }) => {
+    bring(handle);
+    const a = centre(handle);
+    finger('pointerdown', a.x, a.y, handle);
+    if (hold) await sleep(420);
+    for (let tries = 0; tries < 6; tries += 1) {
+      bring(target);
+      const b = centre(target);
+      finger('pointermove', b.x, b.y, V);
+      await sleep(90);
+      const ghost = D.querySelector('.drag-ghost');
+      if (ghost) ghost.style.visibility = 'hidden';
+      const under = D.elementFromPoint(b.x, b.y);
+      if (ghost) ghost.style.visibility = '';
+      if (under && (under === target || target.contains(under))) {
+        finger('pointerup', b.x, b.y, V);
+        await sleep(360);
+        return;
+      }
+    }
+    finger('pointerup', 0, 0, V);
+    await sleep(360);
+  };
+
+  localStorage.removeItem('coc.chips.taken');
+  await click($('#roster-tabs [data-list="tatari"]'), 320);
+  await click($('#roster-tabs [data-list="chips"]'), 460);
+  eq('nothing kept to start', kept().length, 0);
+
+  /*
+   * The sprite: no hold at all.
+   *
+   * It is the one part of the card that has told the browser it will not
+   * scroll, so it does not have to prove it is a drag and not a scroll first.
+   * A swipe straight off the press has to work, and that is the check that was
+   * failing on a real phone.
+   */
+  const one = spare();
+  await swipe(cardFor(one).querySelector('.chiprow__art'), three(), { hold: false });
+  ok('a swipe straight off the sprite drops it in the three',
+     inThree().includes(one), `three: ${inThree().join(', ') || 'empty'}`);
+
+  /* The rest of the card: press, hold, then move. It has to share the gesture
+     with the list, so the hold is what says which one you meant. */
+  const two = spare();
+  await swipe(cardFor(two).querySelector('.chiprow__head b') ?? cardFor(two), three(), { hold: true });
+  ok('and a press-and-hold anywhere else on the card does the same',
+     inThree().includes(two), `three: ${inThree().join(', ')}`);
+
+  /*
+   * And the half that has to keep working: a flick is a scroll, not a drag.
+   *
+   * If this ever passes by starting a drag, the roster has stopped scrolling
+   * under a thumb, which costs far more than dragging ever bought.
+   */
+  const three3 = spare();
+  const before = kept().join();
+  const card = cardFor(three3);
+  bring(card);
+  const from = centre(card);
+  finger('pointerdown', from.x, from.y, card);
+  finger('pointermove', from.x, from.y - 40, V);
+  await sleep(120);
+  const dragging = !!D.querySelector('.drag-ghost');
+  finger('pointerup', from.x, from.y - 40, V);
+  await sleep(300);
+  ok('flicking the card without pausing does not start a drag', !dragging);
+  eq('so the list is still something you can scroll', kept().join(), before);
+
+  localStorage.removeItem('coc.chips.taken');
+  await click($('#roster-tabs [data-list="tatari"]'), 380);
+});
+
 await runGroup('touch rules are in the stylesheet', async () => {
   /*
    * Read, not rendered. (hover: none) never matches in a desktop browser at any
