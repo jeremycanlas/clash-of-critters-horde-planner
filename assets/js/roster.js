@@ -1195,6 +1195,33 @@ function readyChipZone() {
       renderRoster();
     },
   });
+
+  /*
+   * And back out again: drop a kept chip anywhere on the list it came from and
+   * it stops being kept.
+   *
+   * The way out has to be as obvious as the way in. Tapping the card toggles it
+   * and always did, but somebody who learned "drag it in" will try "drag it
+   * out" first, and a gesture that does nothing reads as a broken app rather
+   * than as a gesture that was never offered.
+   *
+   * Only chips that are actually kept are accepted, so dragging a card around
+   * the list it already lives in stays a no-op instead of a silent toggle.
+   */
+  dropZone({
+    selector: '#roster',
+    accepts: (target, payload) => {
+      if (payload?.from !== 'chip') return false;
+      const { main, extra } = keptBy(store.formation.activePlayer);
+      return main.includes(payload.name) || extra.includes(payload.name);
+    },
+    onHover: (target, ok) => target.classList.toggle('is-dropping', ok),
+    onDrop: (target, payload) => {
+      toggleKept(store.formation.activePlayer, payload.name);
+      renderRoster();
+      toast(`${payload.name} dropped`);
+    },
+  });
 }
 
 /* The icon is the handle, not the whole card.

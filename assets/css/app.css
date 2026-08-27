@@ -5366,3 +5366,10 @@ body.is-dragging-active .chipbench__slot { border-color: var(--accent); }
 
 :root[data-contrast="more"] .chiptray__zone { border-color: var(--text-dim); }
 :root[data-contrast="more"] .chiptray__label { color: var(--text); }
+
+/* The list saying it will take a chip back. Same language the roster already
+   speaks when you drag a Tatari onto it to un-bench one. */
+.roster.is-dropping {
+  box-shadow: inset 0 0 0 2px var(--accent);
+  border-radius: var(--r-sm);
+}

@@ -1433,6 +1433,54 @@ await runGroup('chips are dragged into the dock, and around inside it', async ()
   await key(chipAt(0), 'Delete');
   ok('Delete drops the chip', !kept().includes(doomed), kept().join(', '));
 
+  /*
+   * The three ways a chip can leave where it is.
+   *
+   * Into the shortlist, back out of it, and off the list of kept chips
+   * entirely. The last one matters most: somebody who learned "drag it in"
+   * will try "drag it out" before they try tapping it, and a gesture that does
+   * nothing reads as a broken app rather than as one that was never offered.
+   */
+  localStorage.removeItem('coc.chips.taken');
+  await click($('#roster-tabs [data-list="tatari"]'), 320);
+  await click($('#roster-tabs [data-list="chips"]'), 440);
+  for (const n of [a, b, c]) await dragTo(grip(cardFor(n)), slots()[0]);
+  eq('three kept again, in order', numbered().join(), [a, b, c].join());
+
+  const shortlistRow = () => $('#chiptray .chiptray__row[data-list="extra"]');
+  const shortlisted = () => [...shortlistRow().querySelectorAll('.chipbench__chip')]
+    .map((e) => e.dataset.chip);
+
+  await dragTo(grip(chipAt(0)), shortlistRow());
+  eq('dragging one of the three onto the shortlist moves it there',
+     shortlisted().join(), a);
+  eq('and the other two close up behind it', numbered().join(), [b, c].join());
+  eq('so a slot opens back up', slots().length, 1);
+  ok('and it is not in both places at once', kept().filter((n) => n === a).length === 1,
+     kept().join(', '));
+
+  await dragTo(grip($(`#chiptray .chipbench__chip[data-chip="${CSS.escape(a)}"]`)), slots()[0]);
+  eq('and dragging it back makes it one of the three again',
+     numbered().join(), [b, c, a].join());
+  eq('the shortlist is empty again', shortlisted().length, 0);
+
+  /* Out of the trays entirely. */
+  const evicted = numbered()[0];
+  await dragTo(grip($(`#chiptray .chipbench__chip[data-chip="${CSS.escape(evicted)}"]`)), roster);
+  ok('dragging a kept chip back onto the list unkeeps it',
+     !kept().includes(evicted), kept().join(', '));
+  eq('and the ones left move up', numbered().length, 2);
+  ok('the card in the list stops claiming a rank',
+     !cardFor(evicted)?.querySelector('.card__rank'));
+  ok('and stops looking kept', !cardFor(evicted)?.classList.contains('is-benched'));
+
+  /* Dragging a card around the list it already lives in is not a toggle. */
+  const untouched = kept().join();
+  const spare = $$('.card--chip').map((e) => e.dataset.chip).find((n) => !kept().includes(n));
+  await dragTo(grip(cardFor(spare)), roster);
+  eq('dragging an unkept chip onto the list does nothing at all', kept().join(), untouched);
+  ok('and it is still not kept', !kept().includes(spare), spare);
+
   localStorage.removeItem('coc.chips.taken');
   await click($('#roster-tabs [data-list="tatari"]'), 380);
 });
