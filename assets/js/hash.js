@@ -35,8 +35,17 @@ const FRAGMENT = /(?:v6|v5|v4)=([^&]+)/;
  * before splitting it. Encoding twice means that after that first pass a note
  * still holds none of the separators this grammar uses - `,` `+` `.` and `$`
  * all survive as escapes until the note itself is decoded.
+ *
+ * Except `~`. encodeURIComponent leaves it untouched (it is "unreserved"), so a
+ * note or a name with a `~` in it sailed through both passes intact and then got
+ * cut in half by the `~` that separates the meta fields -- everything after the
+ * `~` silently dropped from the link. It is escaped by hand to `%257E`, which the
+ * first whole-fragment decode turns back into `%7E` (no `~` to split on) and the
+ * per-field decode then restores. Links without a `~` are byte-for-byte
+ * unchanged, so nothing already shared reads differently.
  */
-const encodeNote = (note) => encodeURIComponent(encodeURIComponent(note));
+const encodeNote = (note) =>
+  encodeURIComponent(encodeURIComponent(note)).replace(/~/g, '%257E');
 
 /** A hand-edited link can hold a stray `%`, which decodeURIComponent throws on. */
 function safeDecode(text) {

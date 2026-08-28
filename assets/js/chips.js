@@ -221,6 +221,33 @@ const PER_PLAYER = 3;
  *
  *   { "1": { main: [name, name, name], extra: [name, ...] } }
  */
+/*
+ * `main` is three fixed slots, not a list.
+ *
+ * A run offers you chips one at a time and you keep three, in slots -- so drop
+ * the middle pick and the slot it held stays empty rather than the third sliding
+ * up into it. Nothing fills a hole on its own; you drag or click a chip into it.
+ * That is why main is a length-three array carrying `null` for an empty slot,
+ * where extra is a plain list with no gaps and no cap.
+ */
+const emptyMain = () => Array(PER_PLAYER).fill(null);
+
+/** A stored main, normalised to three positional slots with null holes. */
+function slotsOf(main) {
+  const slots = emptyMain();
+  if (Array.isArray(main) && main.length === PER_PLAYER) {
+    // Already positional (this is how it is written now): keep every position,
+    // holes included.
+    for (let i = 0; i < PER_PLAYER; i++) slots[i] = main[i] ?? null;
+  } else {
+    // A compact list, from before slots existed: fill from the front, no holes,
+    // which is exactly what it looked like then.
+    (Array.isArray(main) ? main : []).filter(Boolean).slice(0, PER_PLAYER)
+      .forEach((n, i) => { slots[i] = n; });
+  }
+  return slots;
+}
+
 function readAll() {
   let raw;
   try { raw = JSON.parse(localStorage.getItem(TAKEN_KEY) || '{}') || {}; } catch { return {}; }
@@ -228,8 +255,8 @@ function readAll() {
   for (const [player, value] of Object.entries(raw)) {
     // The first version of this stored a bare array. Anybody who used it keeps
     // what they marked, as their main three, rather than losing it silently.
-    if (Array.isArray(value)) out[player] = { main: value.slice(0, PER_PLAYER), extra: [] };
-    else out[player] = { main: value?.main ?? [], extra: value?.extra ?? [] };
+    if (Array.isArray(value)) out[player] = { main: slotsOf(value), extra: [] };
+    else out[player] = { main: slotsOf(value?.main), extra: value?.extra ?? [] };
   }
   return out;
 }
@@ -238,17 +265,20 @@ function writeAll(next) {
   try { localStorage.setItem(TAKEN_KEY, JSON.stringify(next)); } catch { /* private window */ }
 }
 
-export function keptBy(player) { return readAll()[player] ?? { main: [], extra: [] }; }
+export function keptBy(player) { return readAll()[player] ?? { main: emptyMain(), extra: [] }; }
 
-/** Both lists at once, for "is this chip spoken for". */
+/** Both lists at once, for "is this chip spoken for". Holes are not chips. */
 function allKept(player) {
   const { main, extra } = keptBy(player);
-  return [...main, ...extra];
+  return [...main.filter(Boolean), ...extra];
 }
+
+/** The first empty slot in the three, or -1 when they are full. */
+const firstOpen = (main) => main.indexOf(null);
 
 function update(player, fn) {
   const all = readAll();
-  const mine = all[player] ?? { main: [], extra: [] };
+  const mine = all[player] ?? { main: emptyMain(), extra: [] };
   all[player] = fn({ main: [...mine.main], extra: [...mine.extra] });
   writeAll(all);
 }
@@ -256,21 +286,24 @@ function update(player, fn) {
 /**
  * Keeping a chip, and letting go of it.
  *
- * One button on the card rather than two. It fills the three first because that
- * is what a run asks for, and once they are full it goes on the shortlist --
- * which is the honest answer to a fourth press, rather than refusing or silently
- * pushing the first pick out.
+ * One press on the card. Keeping fills the first empty slot of the three, then
+ * the shortlist once they are full. Letting go empties whatever slot it was in
+ * and leaves that slot empty -- a hole is a decision the run makes for you, and
+ * nothing slides up to fill it.
  */
 export function toggleKept(player, name) {
   update(player, ({ main, extra }) => {
-    if (main.includes(name)) return { main: main.filter((n) => n !== name), extra };
+    const at = main.indexOf(name);
+    if (at >= 0) { const m = [...main]; m[at] = null; return { main: m, extra }; }
     if (extra.includes(name)) return { main, extra: extra.filter((n) => n !== name) };
-    if (main.length < PER_PLAYER) return { main: [...main, name], extra };
+    const open = firstOpen(main);
+    if (open >= 0) { const m = [...main]; m[open] = name; return { main: m, extra }; }
     return { main, extra: [...extra, name] };
   });
 }
 
-/** Moves one of the three up or down. `step` is -1 or 1. */
+/** Moves one of the three up or down, swapping with the next slot -- which may
+    be empty, in which case the chip simply moves into it. `step` is -1 or 1. */
 function reorder(player, name, step) {
   update(player, ({ main, extra }) => {
     const i = main.indexOf(name);
@@ -282,11 +315,14 @@ function reorder(player, name, step) {
   });
 }
 
-/** Shortlist to the three, and back. */
+/** Shortlist into the first empty slot of the three, if there is one. */
 function promote(player, name) {
-  update(player, ({ main, extra }) => (main.length >= PER_PLAYER
-    ? { main, extra }
-    : { main: [...main, name], extra: extra.filter((n) => n !== name) }));
+  update(player, ({ main, extra }) => {
+    const open = firstOpen(main);
+    if (open < 0) return { main, extra };
+    const m = [...main]; m[open] = name;
+    return { main: m, extra: extra.filter((n) => n !== name) };
+  });
 }
 
 /**
@@ -301,12 +337,27 @@ function promote(player, name) {
  * it lands on down rather than refusing, since the drag already said where it
  * wanted to go; the displaced chip goes to the shortlist rather than nowhere.
  */
-export function moveInto({ main, extra }, name, list, index, cap = PER_PLAYER) {
-  let m = main.filter((n) => n !== name);
-  let x = extra.filter((n) => n !== name);
+export function moveInto({ main, extra }, name, list, index) {
+  const m = [...main];
+  const x = [...extra];
+  // Lift the chip out of wherever it is now, leaving a hole in the three or
+  // closing the gap in the shortlist. Its old spot is remembered so a swap can
+  // send whatever it displaces back to it.
+  const fromMain = m.indexOf(name);
+  const fromExtra = x.indexOf(name);
+  if (fromMain >= 0) m[fromMain] = null;
+  if (fromExtra >= 0) x.splice(fromExtra, 1);
+
   if (list === 'main') {
-    m.splice(Math.max(0, Math.min(index, m.length)), 0, name);
-    while (m.length > cap) x = [m.pop(), ...x];
+    const i = Math.max(0, Math.min(index, PER_PLAYER - 1));
+    const occupant = m[i];
+    m[i] = name;
+    // Dropping onto a filled slot swaps: the one that was there takes the spot
+    // the dragged chip came from, so nothing is ever pushed off the edge.
+    if (occupant && occupant !== name) {
+      if (fromMain >= 0) m[fromMain] = occupant;
+      else x.splice(fromExtra >= 0 ? fromExtra : x.length, 0, occupant);
+    }
   } else {
     x.splice(Math.max(0, Math.min(index, x.length)), 0, name);
   }
@@ -331,10 +382,11 @@ export function placeAt(player, name, list, index) {
 }
 
 function demote(player, name) {
-  update(player, ({ main, extra }) => ({
-    main: main.filter((n) => n !== name),
-    extra: [...extra, name],
-  }));
+  update(player, ({ main, extra }) => {
+    const at = main.indexOf(name);
+    const m = [...main]; if (at >= 0) m[at] = null;
+    return { main: m, extra: [...extra, name] };
+  });
 }
 
 /**
@@ -491,10 +543,15 @@ function readyZone() {
         const inMain = main.indexOf(name);
         if (inMain >= 0) placeAt(player, payload.name, 'main', inMain);
         else placeAt(player, payload.name, 'extra', extra.indexOf(name));
+      } else if (target.dataset.slot != null) {
+        // An empty slot in the three: land in that exact slot, not the next free one.
+        placeAt(player, payload.name, 'main', Number(target.dataset.slot));
       } else if (target.classList.contains('kept__extra')) {
         placeAt(player, payload.name, 'extra', extra.length);
       } else {
-        placeAt(player, payload.name, 'main', main.length);
+        const open = main.indexOf(null);
+        if (open >= 0) placeAt(player, payload.name, 'main', open);
+        else placeAt(player, payload.name, 'extra', extra.length);
       }
       renderPage();
     },
@@ -573,10 +630,10 @@ function renderPage() {
     <ol class="kept__slots">
       ${Array.from({ length: PER_PLAYER }, (_, i) => {
         const name = main[i];
-        if (!name) return '<li class="kept__slot"><span class="kept__wait">Nothing yet</span></li>';
-        return `<li class="kept__slot is-filled keptrow" data-name="${esc(name)}">${row(name, [
+        if (!name) return `<li class="kept__slot" data-slot="${i}"><span class="kept__wait">Nothing yet</span></li>`;
+        return `<li class="kept__slot is-filled keptrow" data-name="${esc(name)}" data-slot="${i}">${row(name, [
           btn('up', name, '&uarr;', `Move ${name} up`, i === 0),
-          btn('down', name, '&darr;', `Move ${name} down`, i === main.length - 1),
+          btn('down', name, '&darr;', `Move ${name} down`, i === PER_PLAYER - 1),
           btn('demote', name, '&darr;&darr;', `Move ${name} to the shortlist`),
           btn('drop', name, '&times;', `Stop keeping ${name}`),
         ].join(''))}</li>`;
@@ -591,7 +648,7 @@ function renderPage() {
       </h3>
       ${extra.length ? `<ul class="kept__list">
         ${extra.map((name) => `<li class="keptrow" data-name="${esc(name)}">${row(name, [
-          btn('promote', name, '&uarr;', `Move ${name} into the three`, main.length >= PER_PLAYER),
+          btn('promote', name, '&uarr;', `Move ${name} into the three`, firstOpen(main) < 0),
           btn('drop', name, '&times;', `Take ${name} off the shortlist`),
         ].join(''))}</li>`).join('')}
       </ul>` : `<p class="kept__none">Keep a fourth chip and it lands here. Nothing on this
@@ -599,7 +656,7 @@ function renderPage() {
     </div>
 
     ${coop ? `<p class="kept__total muted">${
-      store.players().reduce((n, p) => n + keptBy(p).main.length, 0)} of
+      store.players().reduce((n, p) => n + keptBy(p).main.filter(Boolean).length, 0)} of
       ${PER_PLAYER * store.players().length} kept between you.</p>` : ''}`;
 
   // Bound after the rows exist, and every render, because renderPage() replaces
@@ -687,5 +744,15 @@ if ($('#chips-body')) {
       store.setActivePlayer(Number(who.dataset.player));
       renderPage();
     }
+  });
+
+  // Double-tap a kept row -- in the three or on the shortlist -- to send it back
+  // to the list, the same gesture the drafter's dock uses. The buttons on the
+  // row keep their own jobs, so a double-click on one is left to them.
+  document.addEventListener('dblclick', (e) => {
+    const row = e.target.closest('.keptrow');
+    if (!row || e.target.closest('.keptrow__btn')) return;
+    toggleKept(store.formation.activePlayer, row.dataset.name);
+    renderPage();
   });
 }

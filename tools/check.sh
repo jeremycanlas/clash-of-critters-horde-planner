@@ -86,7 +86,7 @@ mkdir -p "$PROFILE"
 trap 'kill $SERVER 2>/dev/null || true; rm -rf "$PROFILE" 2>/dev/null || true' EXIT INT TERM
 
 FAILED=0
-for page in apptest mobiletest chipstest changestest; do
+for page in apptest mobiletest chipstest changestest logictest; do
   # perf=off because the virtual clock below makes wall-clock budgets
   # meaningless -- the suites report those as skipped rather than inventing a
   # verdict. Open the page in a browser for the real numbers.

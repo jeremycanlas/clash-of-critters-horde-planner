@@ -166,6 +166,25 @@ function bringToBench(slug) {
   if (!result.ok) toast(result.reason, 'error');
 }
 
+/*
+ * One search box, three lists, so it has to say what it is searching. The Tatari
+ * text stays as it was; the other two match different things -- a Zobo by name
+ * and element, a chip by name and what it does -- and the box should promise
+ * exactly that rather than offering "nickname or skill" over a list of chips.
+ */
+const SEARCH_HINTS = {
+  tatari: ['Search name, animal, nickname or skill…', 'Search Tatari'],
+  zobos: ['Search Zobos by name or element…', 'Search Zobos'],
+  chips: ['Search chips by name or what they do…', 'Search chips'],
+};
+function setSearchHint(list) {
+  const box = $('#search');
+  if (!box) return;
+  const [placeholder, label] = SEARCH_HINTS[list] ?? SEARCH_HINTS.tatari;
+  box.placeholder = placeholder;
+  box.setAttribute('aria-label', label);
+}
+
 export function buildFilters(onChange, { onPick = bringToBench } = {}) {
   buildRosterDropZone();
 
@@ -243,9 +262,11 @@ export function buildFilters(onChange, { onPick = bringToBench } = {}) {
         b.setAttribute('aria-selected', String(b.dataset.list === showing.value));
       }
       document.body.dataset.rosterList = showing.value;
+      setSearchHint(showing.value);
       onChange();
     });
     document.body.dataset.rosterList = showing.value;
+    setSearchHint(showing.value);
   }
 
   /*
@@ -1180,17 +1201,22 @@ function readyChipZone() {
       const onto = target.dataset.chip;
 
       if (onto) {
-        /* A chip says exactly where: take its place. */
+        /* A chip says exactly where: take its place, swapping the one already
+           there rather than pushing it off the edge. */
         const at = main.indexOf(onto);
         if (at >= 0) placeAt(player, payload.name, 'main', at);
         else placeAt(player, payload.name, 'extra', Math.max(0, extra.indexOf(onto)));
+      } else if (target.dataset.slot != null) {
+        /* An empty slot in the three lands in that exact slot. */
+        placeAt(player, payload.name, 'main', Number(target.dataset.slot));
       } else if (target.dataset.list === 'extra') {
         placeAt(player, payload.name, 'extra', extra.length);
       } else {
-        /* The strip itself, or the empty dock, says "in here somewhere", and
-           the end of the three is where a new pick goes. placeAt spills into
-           the shortlist by itself once the three are full. */
-        placeAt(player, payload.name, 'main', main.length);
+        /* The strip itself says "in here somewhere": the first empty slot, or the
+           shortlist once the three are full. Nothing slides to make room. */
+        const open = main.indexOf(null);
+        if (open >= 0) placeAt(player, payload.name, 'main', open);
+        else placeAt(player, payload.name, 'extra', extra.length);
       }
       renderRoster();
     },
@@ -1221,6 +1247,22 @@ function readyChipZone() {
       renderRoster();
       toast(`${payload.name} dropped`);
     },
+  });
+
+  /*
+   * Double-tap a chip in the dock or the tray to send it back to the list.
+   *
+   * A single tap is the start of a drag, so removing on it would fight the
+   * gesture that reorders; a double-tap is unambiguous and is the one a phone
+   * offers for "undo this". The slot it leaves stays empty -- toggleKept nulls
+   * the slot rather than closing it -- which is the whole point of the change.
+   * Bound once, on the document, because both strips are redrawn constantly.
+   */
+  document.addEventListener('dblclick', (e) => {
+    const chip = e.target.closest('.chipbench__chip');
+    if (!chip) return;
+    toggleKept(store.formation.activePlayer, chip.dataset.chip);
+    renderRoster();
   });
 }
 
@@ -1335,9 +1377,9 @@ export function renderChipTray() {
     <div class="chiptray__zone" data-list="main">
       <p class="chiptray__label">Your three</p>
       <div class="chiptray__row" role="list">
-        ${main.map((n, i) => chip(n, i)).join('')}
-        ${Array.from({ length: Math.max(0, PER - main.length) }, (_, i) => `
-          <span class="chipbench__slot" data-list="main">${main.length + i + 1}</span>`).join('')}
+        ${main.map((n, i) => (n
+    ? chip(n, i)
+    : `<span class="chipbench__slot" data-list="main" data-slot="${i}">${i + 1}</span>`)).join('')}
       </div>
     </div>
     <div class="chiptray__zone chiptray__zone--extra" data-list="extra">
@@ -1370,7 +1412,8 @@ export function renderChipBench() {
    * revealed by CSS for the length of any drag, so a chip dragged from a roster
    * you scrolled has somewhere to go.
    */
-  const bare = !main.length && !extra.length;
+  const kept = main.filter(Boolean).length;
+  const bare = !kept && !extra.length;
   host.hidden = bare && showing.value !== 'chips';
 
   const chip = (name, i) => {
@@ -1392,16 +1435,15 @@ export function renderChipBench() {
       <span class="chipbench__label">Chips</span>
       <span class="chipbench__count">${bare
         ? 'Tap a chip to keep it, or drag one here to set its order'
-        : `<b>${main.length}</b>/${PER}${
+        : `<b>${kept}</b>/${PER}${
           extra.length ? ` &middot; ${extra.length} alternatives` : ''}`}</span>
     </div>
     <div class="chipbench__strip">
-      ${main.map((n, i) => chip(n, i)).join('')}
-      ${/* An outline for each pick you have not made yet: three boxes say the
-            number is three far better than a sentence does, and each one is a
-            target in its own right. */ ''}
-      ${Array.from({ length: Math.max(0, PER - main.length) }, () => `
-        <span class="chipbench__slot" data-list="main" aria-hidden="true"></span>`).join('')}
+      ${/* Three slots, always: a filled one is the chip, an empty one is an
+            outline that stays put and is a drop target in its own right. */ ''}
+      ${main.map((n, i) => (n
+    ? chip(n, i)
+    : `<span class="chipbench__slot" data-list="main" data-slot="${i}" aria-hidden="true"></span>`)).join('')}
       ${extra.length ? `<span class="chipbench__gap" aria-hidden="true"></span>` : ''}
       ${extra.map((n) => chip(n, null)).join('')}
       ${extra.length ? '' : `

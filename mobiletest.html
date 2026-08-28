@@ -494,6 +494,62 @@ await runGroup('past the contact line', async () => {
   await click($('#opt-zobo'), 420);
 });
 
+await runGroup('the board stays in its lane, whatever is turned on', async () => {
+  /*
+   * The field's own version of the roster-spill guard. The roster overflowing
+   * its column was found and fixed more than once; the field has more shapes than
+   * the roster does -- co-op adds player tabs and a second bench, the boss pull
+   * and the Zobo ground open rows past the contact line -- and none of those
+   * states had a "nothing goes off the side" check. The phone is where a stray
+   * pixel of width becomes a horizontal scroll, so it is checked here, at 390.
+   */
+  const W1 = 390 + 1;
+  const wide = () => D.documentElement.scrollWidth;
+  const sixWide = (sel) => W.getComputedStyle($(sel)).gridTemplateColumns.split(/\s+/).filter(Boolean).length === 6;
+
+  ok('the plain field stays within the phone', wide() <= W1, `${wide()}px`);
+  ok('and the field is six columns', sixWide('#grid'));
+
+  // Co-op: player tabs above, a second player's bench below.
+  await click($('#mode-switch [data-mode="coop"]'), 380);
+  ok('co-op does not push anything off the side', wide() <= W1, `${wide()}px`);
+  ok('the player tabs are shown in co-op', !$('#player-tabs').hidden);
+  await click($('#mode-switch [data-mode="solo"]'), 380);
+
+  // Boss pull, both rounds. Even with no lane full enough to reach past the line,
+  // arming it must not resize the board off the screen.
+  await click($('#opt-pull'), 320);
+  await click($('#opt-pull-2'), 320);
+  ok('a boss pull keeps the board within the phone', wide() <= W1, `${wide()}px`);
+  await click($('#opt-pull-2'), 220);
+  await click($('#opt-pull'), 320);
+
+  // The Zobo ground: the tallest, fullest board there is, every row past the line open.
+  await click($('#opt-zobo'), 440);
+  ok('the full Zobo-ground board stays within the phone', wide() <= W1, `${wide()}px`);
+  ok('and the enemy rows are six columns too', sixWide('#enemy'));
+  await click($('#opt-zobo'), 440);
+});
+
+await runGroup('the detail sheet fits the phone', async () => {
+  await click(barBtn('roster'), 340);
+  const info = $('.panel--roster .card .card__info');
+  ok('a roster card has an info button', !!info);
+  info.click();
+  await sleep(360);
+
+  const dlg = $('#detail');
+  ok('the detail dialog opens', dlg.open || dlg.hasAttribute('open'));
+  ok('it has something in it', dlg.textContent.trim().length > 0);
+  ok('and it does not spill off the phone',
+     dlg.getBoundingClientRect().right <= 390 + 1 && D.documentElement.scrollWidth <= 390 + 1,
+     `right ${Math.round(dlg.getBoundingClientRect().right)}, page ${D.documentElement.scrollWidth}`);
+
+  $('#detail [data-close]')?.click();
+  await sleep(300);
+  ok('and closes again', !dlg.open);
+});
+
 await runGroup('keeping and sharing it', async () => {
   await click(barBtn('saves'), 340);
   const before = $$('.save').length;
@@ -852,17 +908,15 @@ await runGroup('chips are dragged into the dock, and around inside it', async ()
   eq('and the outlines are used up', slots().length, 0);
 
   /*
-   * The check this whole group is for. Dropping onto a numbered chip takes that
-   * number; everything from there down moves along rather than being swapped
-   * with, because a plan is a sequence and swapping two of its steps is not the
-   * edit anybody meant to make.
+   * The three are slots, so dropping onto a filled one swaps: the dropped chip
+   * takes that slot and the one that was there takes the spot yours came from.
    */
   const third = $$('#chiptray .chipbench__chip')[2];
   const first = $$('#chiptray .chipbench__chip')[0];
   await dragTo(grip(third), first);
-  eq('dropping the third onto the first makes it the first',
-     numbered().join(), [c, a, b].join());
-  eq('and the numbers on the faces say so',
+  eq('dropping the third onto the first swaps the two',
+     numbered().join(), [c, b, a].join());
+  eq('and the numbers on the faces still run 1-2-3',
      $$('#chiptray .chipbench__chip .chipbench__n').map((e) => e.textContent).join(''), '123');
   /* The dock is a second view of one truth, not a second truth. If it can
      disagree with the tray, one of them is lying in the screenshot. */
@@ -874,15 +928,14 @@ await runGroup('chips are dragged into the dock, and around inside it', async ()
   eq('and it goes back the other way', numbered().join(), [a, b, c].join());
 
   /*
-   * A fourth pick when three are taken. The one pushed out lands in the
-   * shortlist rather than being dropped, because losing a choice you made to a
-   * gesture you were still learning is the worst thing this could do.
+   * A fourth pick dropped onto a taken slot. Order is a,b,c, so the first slot
+   * holds a; a is displaced to the shortlist rather than thrown away.
    */
   await dragTo(grip(cardFor(d)), $$('#chiptray .chipbench__chip')[0]);
   eq('a fourth dropped onto the first takes first place', numbered()[0], d);
   eq('the three are still three', numbered().length, 3);
-  ok('and the one it pushed out is shortlisted, not thrown away',
-     kept().includes(c), kept().join(', '));
+  ok('and the one it displaced is shortlisted, not thrown away',
+     kept().includes(a) && !numbered().includes(a), kept().join(', '));
 
   /* The roster agrees with the dock: the badge on the card is the same number
      as the badge on the face, which is the only reason to have both. */
@@ -946,14 +999,14 @@ await runGroup('chips are dragged into the dock, and around inside it', async ()
   await dragTo(grip(chipAt(0)), shortlist());
   eq('dragging one of the three onto the shortlist moves it there',
      shortlisted().join(), a);
-  eq('and the other two close up behind it', numbered().join(), [b, c].join());
-  eq('so a slot opens back up', slots().length, 1);
+  eq('and the other two keep the slots they were in', numbered().join(), [b, c].join());
+  eq('so the slot it left is empty and waiting', slots().length, 1);
   ok('and it is not in both places at once', kept().filter((n) => n === a).length === 1,
      kept().join(', '));
 
   await dragTo(grip($(`#chiptray .chipbench__chip[data-chip="${CSS.escape(a)}"]`)), slots()[0]);
-  eq('and dragging it back makes it one of the three again',
-     numbered().join(), [b, c, a].join());
+  eq('and dragging it into the empty slot makes it one of the three again',
+     numbered().join(), [a, b, c].join());
   eq('the shortlist is empty again', shortlisted().length, 0);
 
   /* Out of the trays entirely. */
@@ -961,7 +1014,7 @@ await runGroup('chips are dragged into the dock, and around inside it', async ()
   await dragTo(grip($(`#chiptray .chipbench__chip[data-chip="${CSS.escape(evicted)}"]`)), roster);
   ok('dragging a kept chip back onto the list unkeeps it',
      !kept().includes(evicted), kept().join(', '));
-  eq('and the ones left move up', numbered().length, 2);
+  eq('and the slot it held is left empty rather than closing up', numbered().length, 2);
   ok('the card in the list stops claiming a rank',
      !cardFor(evicted)?.querySelector('.card__rank'));
   ok('and stops looking kept', !cardFor(evicted)?.classList.contains('is-benched'));

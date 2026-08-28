@@ -18,7 +18,7 @@
  * checked is the predicate, not the drag.
  */
 import { load, state } from './assets/js/data.js';
-import { scoreOne, elementSplit, moveInto } from './assets/js/chips.js';
+import { scoreOne, elementSplit, moveInto, keptBy, toggleKept } from './assets/js/chips.js';
 
 const out = document.getElementById('log');
 let pass = 0, fail = 0;
@@ -190,42 +190,62 @@ ok('and no two chips share one',
 /*
  * Where a dragged chip lands, as arithmetic on two lists.
  *
- * The gesture is dnd.js, which the field and the plan already exercise; what is
- * new is the destination, and driving that through a synthetic pointer would be
- * testing the browser rather than this. So the reducer is pure and gets driven
- * with plain arrays.
+ * The three are slots now, not a queue: `main` is always three long and carries
+ * `null` for an empty slot. Dropping onto a filled slot swaps -- the one already
+ * there takes the spot the dragged chip came from -- so nothing is ever pushed
+ * off the edge, and letting go of a pick leaves its slot empty until you fill it.
+ * The reducer is pure and gets driven with plain arrays; the gesture underneath
+ * is dnd.js, which the field and the plan already exercise.
  */
 const L = (main, extra) => ({ main, extra });
-const shape = (r) => `${r.main.join(',')} | ${r.extra.join(',')}`;
+const shape = (r) => `${r.main.map((n) => n ?? '·').join(',')} | ${r.extra.join(',')}`;
 
-eq('dragging the third pick to the front reorders the three',
-   shape(moveInto(L(['a', 'b', 'c'], []), 'c', 'main', 0)), 'c,a,b | ');
-eq('dragging the first to the end reorders it too',
-   shape(moveInto(L(['a', 'b', 'c'], []), 'a', 'main', 2)), 'b,c,a | ');
-eq('a chip does not appear twice when it lands on itself',
+eq('dropping the third pick onto the first swaps them',
+   shape(moveInto(L(['a', 'b', 'c'], []), 'c', 'main', 0)), 'c,b,a | ');
+eq('dropping the first onto the third swaps them too',
+   shape(moveInto(L(['a', 'b', 'c'], []), 'a', 'main', 2)), 'c,b,a | ');
+eq('a chip dropped onto its own slot stays put',
    shape(moveInto(L(['a', 'b', 'c'], []), 'b', 'main', 1)), 'a,b,c | ');
 
-eq('the shortlist takes one out of the three',
-   shape(moveInto(L(['a', 'b', 'c'], ['d']), 'b', 'extra', 0)), 'a,c | b,d');
-eq('and gives one back to it',
-   shape(moveInto(L(['a', 'b'], ['d']), 'd', 'main', 0)), 'd,a,b | ');
+eq('a pick dragged to the shortlist leaves its slot empty',
+   shape(moveInto(L(['a', 'b', 'c'], []), 'b', 'extra', 0)), 'a,·,c | b');
+eq('dropping a shortlisted chip onto an empty slot fills just that slot',
+   shape(moveInto(L(['a', null, 'c'], ['d']), 'd', 'main', 1)), 'a,d,c | ');
+eq('and dropping it onto a filled slot swaps it with the shortlist',
+   shape(moveInto(L(['a', 'b', 'c'], ['d']), 'd', 'main', 1)), 'a,d,c | b');
 
-/*
- * The one case with a real decision in it. The three are full and a fourth is
- * dragged in: the drag already said where it wanted to go, so it goes there, and
- * the one it pushed out lands on the shortlist rather than being deleted.
- */
-const pushed = moveInto(L(['a', 'b', 'c'], ['d']), 'd', 'main', 0);
-eq('dragging into a full three pushes the last one out', shape(pushed), 'd,a,b | c');
-ok('and nothing is lost on the way',
-   [...pushed.main, ...pushed.extra].sort().join(',') === 'a,b,c,d');
+/* Nothing is ever lost: whatever is displaced goes somewhere, it is never
+   dropped off the end the way a capped list would have done. */
+const swapped = moveInto(L(['a', 'b', 'c'], ['d']), 'd', 'main', 1);
+ok('nothing is lost when a slot swaps with the shortlist',
+   [...swapped.main.filter(Boolean), ...swapped.extra].sort().join(',') === 'a,b,c,d');
 
-eq('an index past the end lands at the end',
-   shape(moveInto(L(['a', 'b'], []), 'a', 'main', 99)), 'b,a | ');
-eq('a negative index lands at the front',
-   shape(moveInto(L(['a', 'b'], []), 'b', 'main', -5)), 'b,a | ');
-ok('the three never grow past three',
+eq('an index past the end clamps to the last slot',
+   shape(moveInto(L(['a', null, null], []), 'a', 'main', 99)), '·,·,a | ');
+eq('a negative index clamps to the first slot',
+   shape(moveInto(L([null, null, 'b'], []), 'b', 'main', -5)), 'b,·,· | ');
+ok('the three are always three slots',
    moveInto(L(['a', 'b', 'c'], ['d', 'e']), 'e', 'main', 1).main.length === 3);
+
+// -------------------------------------------- keeping fills, letting go empties
+/*
+ * The gesture the dock and the chips page share: keep fills the first empty slot
+ * of the three, and letting go empties whatever slot it was in and leaves it
+ * empty -- nothing slides up, and nothing on the shortlist is promoted for you.
+ */
+localStorage.removeItem('coc.chips.taken');
+const P = 1;
+const mainOf = () => keptBy(P).main.map((n) => n ?? '·').join(',');
+toggleKept(P, 'a'); toggleKept(P, 'b'); toggleKept(P, 'c');
+eq('three kept fill the three slots in order', mainOf(), 'a,b,c');
+toggleKept(P, 'd');
+eq('a fourth goes to the shortlist', keptBy(P).extra.join(','), 'd');
+toggleKept(P, 'b');
+eq('letting go of the middle pick leaves its slot empty', mainOf(), 'a,·,c');
+ok('and does not promote the shortlisted chip', keptBy(P).extra.join(',') === 'd');
+toggleKept(P, 'e');
+eq('the next chip kept fills the empty slot, not the end', mainOf(), 'a,e,c');
+localStorage.removeItem('coc.chips.taken');
 
 out.innerHTML += `<div style="margin-top:12px">${pass} passed, ${fail} failed`
   + `. ${book.chips.length} chips, ${book.chips.filter((c) => scoreOne(c, mixed)).length} of them scored`

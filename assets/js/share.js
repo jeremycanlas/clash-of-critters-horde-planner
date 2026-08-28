@@ -204,7 +204,10 @@ async function redraw() {
    */
   const kept = keptBy(store.formation.activePlayer);
   const byName = new Map(chipList().map((c) => [c.name, c]));
+  // The three are slots now, so main carries nulls for the empty ones. The card
+  // shows what you kept, packed, not the holes between them.
   const named = (list) => list
+    .filter(Boolean)
     .map((name) => ({ name, tier: byName.get(name)?.tier ?? 1 }));
 
   cardBlob = await canvasBlob(

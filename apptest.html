@@ -883,6 +883,14 @@ await runGroup('the chips tab in the roster', async () => {
   const chips = () => $$('.card--chip');
   eq('every chip is in the list', chips().length, 49);
   eq('and the count agrees', $('#roster-count').textContent.trim(), '49');
+  /* The search box searches this list now, so it must say so rather than still
+     offering "nickname or skill" over a page of chips. */
+  ok('the search box asks about chips, not Tatari',
+     /chip/i.test($('#search').placeholder), $('#search').placeholder);
+  await click(tab('tatari'), 380);
+  ok('and goes back to the Tatari prompt on the way out',
+     /nickname/i.test($('#search').placeholder), $('#search').placeholder);
+  await click(tab('chips'), 380);
 
   const hidden = (sel) => D.defaultView.getComputedStyle($(sel)).display === 'none';
 
@@ -1280,6 +1288,43 @@ await runGroup('switching lists leaves nothing behind', async () => {
     eq('coming back remembers grid', roster.dataset.chipView, 'grid');
     await click(view.querySelector('[data-view="list"]'), 400);
     await go('tatari');
+  }
+});
+
+/*
+ * The roster cannot spill past its own grid.
+ *
+ * The bug this pins has been fixed and come back more than once: the rightmost
+ * column creeping past the panel, or the cards appearing to slide behind each
+ * other, under fractional display scaling or browser zoom. The layout maths is
+ * exact, so the fix is not a column count -- it is two CSS invariants the count
+ * cannot see, and this is the check that fails the moment either is dropped.
+ *
+ *   overflow-x is never a value that lets content escape sideways. It resolves
+ *   to hidden beside the vertical scroll on a wide screen and to clip on a
+ *   phone, but never visible or auto -- either of those lets a rounded-up pixel
+ *   past the edge, which is the whole symptom.
+ *
+ *   the vertical scrollbar does not change the column maths. On a wide screen it
+ *   comes and goes as filtering changes the card count, and a reserved gutter is
+ *   what stops that reflow shoving every card sideways on a series of clicks.
+ *   Asked only where the box actually scrolls -- the phone layout hands the
+ *   scroll to the page and has no gutter to reserve.
+ */
+await runGroup('the roster cannot spill past its grid', async () => {
+  await reset();
+  const roster = $('#roster');
+  const cs = () => D.defaultView.getComputedStyle(roster);
+
+  const x = cs().overflowX;
+  ok('the roster clips sideways rather than letting a card escape',
+     x === 'hidden' || x === 'clip', `overflow-x is ${x}`);
+
+  if (cs().overflowY === 'auto' || cs().overflowY === 'scroll') {
+    ok('and the vertical scrollbar reserves its gutter so it cannot reflow the columns',
+       cs().scrollbarGutter.includes('stable'), `scrollbar-gutter is ${cs().scrollbarGutter}`);
+  } else {
+    skip('the scrollbar gutter', 'this layout hands the vertical scroll to the page');
   }
 });
 
@@ -1697,17 +1742,16 @@ await runGroup('chips are dragged into the dock, and around inside it', async ()
   eq('and the outlines are used up', slots().length, 0);
 
   /*
-   * The check this whole group is for. Dropping onto a numbered chip takes that
-   * number; everything from there down moves along rather than being swapped
-   * with, because a plan is a sequence and swapping two of its steps is not the
-   * edit anybody meant to make.
+   * The three are slots, so dropping onto a filled one swaps: the chip you drop
+   * takes that slot, and the one that was there takes the spot yours came from.
+   * Nothing is pushed off the end and no slot is left empty by the move.
    */
   const third = $$('#chiptray .chipbench__chip')[2];
   const first = $$('#chiptray .chipbench__chip')[0];
   await dragTo(grip(third), first);
-  eq('dropping the third onto the first makes it the first',
-     numbered().join(), [c, a, b].join());
-  eq('and the numbers on the faces say so',
+  eq('dropping the third onto the first swaps the two',
+     numbered().join(), [c, b, a].join());
+  eq('and the numbers on the faces still run 1-2-3',
      $$('#chiptray .chipbench__chip .chipbench__n').map((e) => e.textContent).join(''), '123');
   /* The dock is a second view of one truth, not a second truth. If it can
      disagree with the tray, one of them is lying in the screenshot. */
@@ -1719,15 +1763,16 @@ await runGroup('chips are dragged into the dock, and around inside it', async ()
   eq('and it goes back the other way', numbered().join(), [a, b, c].join());
 
   /*
-   * A fourth pick when three are taken. The one pushed out lands in the
-   * shortlist rather than being dropped, because losing a choice you made to a
-   * gesture you were still learning is the worst thing this could do.
+   * A fourth pick dropped onto a slot that is taken. The chip it displaces is
+   * not thrown away -- it goes to the shortlist, because losing a choice you
+   * made to a gesture you were still learning is the worst thing this could do.
+   * Order here is a,b,c, so the first slot holds a.
    */
   await dragTo(grip(cardFor(d)), $$('#chiptray .chipbench__chip')[0]);
   eq('a fourth dropped onto the first takes first place', numbered()[0], d);
   eq('the three are still three', numbered().length, 3);
-  ok('and the one it pushed out is shortlisted, not thrown away',
-     kept().includes(c), kept().join(', '));
+  ok('and the one it displaced is shortlisted, not thrown away',
+     kept().includes(a) && !numbered().includes(a), kept().join(', '));
 
   /* The roster agrees with the dock: the badge on the card is the same number
      as the badge on the face, which is the only reason to have both. */
@@ -1791,14 +1836,14 @@ await runGroup('chips are dragged into the dock, and around inside it', async ()
   await dragTo(grip(chipAt(0)), shortlist());
   eq('dragging one of the three onto the shortlist moves it there',
      shortlisted().join(), a);
-  eq('and the other two close up behind it', numbered().join(), [b, c].join());
-  eq('so a slot opens back up', slots().length, 1);
+  eq('and the other two keep the slots they were in', numbered().join(), [b, c].join());
+  eq('so the slot it left is empty and waiting', slots().length, 1);
   ok('and it is not in both places at once', kept().filter((n) => n === a).length === 1,
      kept().join(', '));
 
   await dragTo(grip($(`#chiptray .chipbench__chip[data-chip="${CSS.escape(a)}"]`)), slots()[0]);
-  eq('and dragging it back makes it one of the three again',
-     numbered().join(), [b, c, a].join());
+  eq('and dragging it into the empty slot makes it one of the three again',
+     numbered().join(), [a, b, c].join());
   eq('the shortlist is empty again', shortlisted().length, 0);
 
   /* Out of the trays entirely. */
@@ -1806,7 +1851,7 @@ await runGroup('chips are dragged into the dock, and around inside it', async ()
   await dragTo(grip($(`#chiptray .chipbench__chip[data-chip="${CSS.escape(evicted)}"]`)), roster);
   ok('dragging a kept chip back onto the list unkeeps it',
      !kept().includes(evicted), kept().join(', '));
-  eq('and the ones left move up', numbered().length, 2);
+  eq('and the slot it held is left empty rather than closing up', numbered().length, 2);
   ok('the card in the list stops claiming a rank',
      !cardFor(evicted)?.querySelector('.card__rank'));
   ok('and stops looking kept', !cardFor(evicted)?.classList.contains('is-benched'));
@@ -1817,6 +1862,26 @@ await runGroup('chips are dragged into the dock, and around inside it', async ()
   await dragTo(grip(cardFor(spare)), roster);
   eq('dragging an unkept chip onto the list does nothing at all', kept().join(), untouched);
   ok('and it is still not kept', !kept().includes(spare), spare);
+
+  /*
+   * Double-tapping a kept chip is the way out a phone reaches for, and the one
+   * that proves the slots are slots: it sends the chip back to the list and
+   * leaves the slot it held empty rather than sliding the others up into it.
+   */
+  localStorage.removeItem('coc.chips.taken');
+  await click($('#roster-tabs [data-list="tatari"]'), 320);
+  await click($('#roster-tabs [data-list="chips"]'), 440);
+  for (const n of [a, b, c]) await dragTo(grip(cardFor(n)), slots()[0]);
+  eq('three kept once more, in order', numbered().join(), [a, b, c].join());
+
+  const middle = $$('#chiptray .chipbench__chip')[1];
+  middle.dispatchEvent(new V.MouseEvent('dblclick', { bubbles: true }));
+  await sleep(320);
+  ok('double-tapping the middle pick sends it back to the list', !kept().includes(b), kept().join(', '));
+  eq('and the two either side keep their own slots', numbered().join(), [a, c].join());
+  eq('the middle slot stays empty rather than closing up', slots().length, 1);
+  eq('and the hole is the middle one, still numbered 2', slots()[0].textContent.trim(), '2');
+  ok('the card in the list is no longer kept', !cardFor(b)?.classList.contains('is-benched'));
 
   /*
    * What it looks like while you are still holding the chip.

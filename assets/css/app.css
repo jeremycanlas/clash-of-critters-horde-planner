@@ -2180,8 +2180,38 @@ body[data-switching="true"] .cell[data-zobo] { box-shadow: none; cursor: default
   gap: var(--s2);
   max-height: min(62vh, 660px);
   overflow-y: auto;
-  padding: 2px;
+  /* A little room on the right so the cards are not jammed against the
+     scrollbar. The gutter reserves the scrollbar's width; this is the gap
+     between the cards and it, so a scrolling list has a margin to breathe. */
+  padding: 2px var(--s3) 2px 2px;
   scrollbar-width: thin;
+  /*
+   * Two rules that between them stop the cards ever leaving this box -- the bug
+   * that has been fixed and come back more than once, where the rightmost column
+   * spills past the panel or the squares appear to slide behind each other.
+   *
+   * The layout is provably exact at every width (auto-fill sizes the tracks so
+   * they sum to the content box), so this is not fixing a miscount. It is fixing
+   * two things the count cannot see:
+   *
+   *   scrollbar-gutter: stable -- the vertical scrollbar appears and vanishes as
+   *   filtering and navigation change how many cards show, and every time it does
+   *   the content width jumps by its ~10px and the whole grid reflows sideways.
+   *   Reserving the gutter for good means the column maths is computed against one
+   *   width forever, so a series of clicks never shoves the cards around. This is
+   *   the "after a series of clicks or navigation" half of the report.
+   *
+   *   overflow-x: clip -- a hard floor under all of it. Fractional display
+   *   scaling (125%/150%, the norm on a Windows laptop) and browser zoom round
+   *   each 1fr track to the device-pixel grid independently, and the rounding can
+   *   land the last edge a pixel past the padding box -- which reads as a card
+   *   over the margin or behind its neighbour. Clip removes that pixel at the
+   *   boundary rather than trusting every future change to the card size, gap or
+   *   padding to keep the sum honest. (It computes to overflow-x: hidden here,
+   *   because the other axis scrolls; on the phone below it stays clip.)
+   */
+  overflow-x: clip;
+  scrollbar-gutter: stable;
 }
 
 /*
@@ -2192,7 +2222,11 @@ body[data-switching="true"] .cell[data-zobo] { box-shadow: none; cursor: default
  * the section nav to get back out of it.
  */
 @media (max-width: 1000px) {
-  .roster { max-height: none; overflow-y: visible; }
+  /* The page does the scrolling here, so the box gives up its own scroll -- but
+     it keeps the horizontal clip, so the same spill guard holds on a phone.
+     clip + visible is a legal pair, so overflow-y stays genuinely visible rather
+     than being forced back into an inner scroll. */
+  .roster { max-height: none; overflow-y: visible; overflow-x: clip; }
 }
 .roster:empty::after {
   content: "Nothing matches those filters.";
@@ -4802,30 +4836,86 @@ body[data-roster-list="chips"] .filters__row--meta .sortby { display: none; }
  * whole sentence, which is the thing you are actually choosing between.
  */
 .card--chip {
+  position: relative;
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: auto 1fr;
   align-items: start;
-  gap: var(--s2);
-  padding: 5px var(--s2);
+  gap: 2px var(--s3);
+  padding: var(--s2) var(--s3) var(--s2) calc(var(--s3) + 3px);
   text-align: left;
   cursor: pointer;
+  isolation: isolate;
+}
+/*
+ * The tier rail. The fastest read on the card and the one that stays coherent:
+ * three tiers is three colours, where the seven categories would be a rainbow.
+ * Absolute so it is never a grid column, drawn inside the card's own rounded
+ * clip, and it is the one thing that thickens on hover so the row answers a
+ * pointer without lifting or recolouring.
+ */
+.card--chip[data-tier="1"] { --tier-color: var(--water); }
+.card--chip[data-tier="2"] { --tier-color: var(--fire); }
+.card--chip[data-tier="3"] { --tier-color: var(--accent); }
+.card--chip::before {
+  content: "";
+  position: absolute; inset: 0 auto 0 0; width: 3px;
+  background: var(--tier-color, var(--line));
+  z-index: 1;
+  transition: width 140ms var(--ease-out);
 }
 .chiprow__art {
-  width: 34px; height: 34px;
+  width: 42px; height: 42px;
   border-radius: var(--r-sm);
   object-fit: cover;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tier-color, var(--line)) 55%, transparent);
 }
-.chiprow__body { min-width: 0; }
+.chiprow__body { min-width: 0; grid-column: 2; }
+/*
+ * Name and category share the top line: the name is the hero, the category tag
+ * sits just after it, and the tier medallion is pushed to the far right by
+ * `order` so it reads as a fixed marker rather than trailing the name.
+ */
 .chiprow__head {
-  display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px var(--s2);
-  margin: 0;
-  font-size: 12.5px;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px var(--s2);
+  margin: 0 0 3px;
 }
-.chiprow__head b { font-weight: 650; color: var(--text); }
-/* The category, on the chip and filterable beside it. */
+.chiprow__head b {
+  order: 1;
+  font-size: 14px; font-weight: 650; color: var(--text); letter-spacing: -.01em;
+}
+.chiprow__head .chiptype { order: 2; }
+.chiprow__head .chiptier { order: 3; }
 .chiprow__text {
   margin: 0;
-  font-size: 11.5px; line-height: 1.4; color: var(--text-dim);
+  max-width: 60ch;
+  font-size: 12px; line-height: 1.45; color: var(--text-dim);
+}
+/* The pick number is a corner medallion in both views, out of the flow so it
+   can never change a row's height when you keep a chip. */
+.card--chip .card__rank {
+  position: absolute; top: 6px; right: 6px; z-index: 3;
+  box-shadow: 0 0 0 2px var(--surface-2);
+}
+/* States. The row answers a pointer by lifting its rail and warming its ground,
+   never by translating -- a list that jumps as the pointer runs down it reads as
+   broken. Keeping a chip is the accent ring; hover is the ground. */
+.card--chip:hover {
+  transform: none;
+  background: var(--surface-3);
+  border-color: var(--line);
+}
+.card--chip:hover::before { width: 5px; }
+.card--chip:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.card--chip.is-benched {
+  border-color: color-mix(in srgb, var(--accent) 60%, var(--line));
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface-2));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 45%, transparent);
+}
+@media (prefers-reduced-motion: reduce) {
+  .card--chip::before { transition: none; }
 }
 .chiprow__score {
   margin: 1px 0 0;
@@ -4964,49 +5054,58 @@ body.is-clean #chipbench { display: none !important; }
   padding: var(--s1);
   text-align: center;
 }
+/* The tile is one column, so the body must come back out of the list's second
+   column, and the left rail has no place on a centred tile -- the tier reads off
+   the icon's ring and the corner medallion here instead. */
+.roster[data-chip-view="grid"] .chiprow__body { min-width: 0; grid-column: 1; }
+.roster[data-chip-view="grid"] .card--chip::before { display: none; }
+.roster[data-chip-view="grid"] .card--chip:hover { transform: translateY(-2px); background: var(--surface-2); }
 .roster[data-chip-view="grid"] .chiprow__art {
   width: 100%; height: auto; aspect-ratio: 1;
   border-radius: var(--r-sm);
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--tier-color, var(--line)) 60%, transparent);
 }
 .roster[data-chip-view="grid"] .chiprow__text,
 .roster[data-chip-view="grid"] .chipwho,
 .roster[data-chip-view="grid"] .chiprow__none,
 .roster[data-chip-view="grid"] .chiptype { display: none; }
-/*
- * Name over tier, not beside it.
- *
- * On one row the tier pill took 23px of an 80px card and left the name 52px --
- * about nine characters, so "Photosynthesis III" read "Photosynt". Stacked, the
- * name gets the whole width and two lines, which fits every name in the file.
- * The fixed height on it keeps the tiles level: a grid row is as tall as its
- * tallest card, so one two-line name would otherwise pad out its whole row.
- */
 .roster[data-chip-view="grid"] .chiprow__head {
   flex-direction: column;
   align-items: center;
   gap: 2px;
+  margin: 0;
   font-size: 10.5px;
 }
-.roster[data-chip-view="grid"] .chiprow__body { min-width: 0; }
 /*
- * The pick number goes in the corner rather than in the flow.
- *
- * In the list it is a third grid column and costs nothing. Here the card is a
- * single column, so it became a third row -- and only on the chips you kept,
- * which made those rows 16px taller than their neighbours and the whole grid
- * step up and down as you picked things.
+ * Tier and pick both move to the corners, out of the flow: the tier as a
+ * medallion over the icon (top-left, with a fill solid enough to read on the
+ * art), the pick number top-right. Neither is a row any more, so keeping a chip
+ * or drawing a two-line name cannot make one tile taller than its neighbours.
  */
 .roster[data-chip-view="grid"] .card--chip { position: relative; }
-.roster[data-chip-view="grid"] .card__rank {
-  position: absolute; top: 3px; left: 3px;
-  box-shadow: 0 0 0 2px var(--surface-2);
+.roster[data-chip-view="grid"] .chiptier {
+  position: absolute; top: 5px; left: 5px; z-index: 2;
+  min-width: 0; padding: 1px 5px;
+  background: color-mix(in srgb, var(--tier-color, var(--surface-3)) 40%, var(--surface));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tier-color) 65%, transparent),
+              0 1px 3px color-mix(in srgb, #000 35%, transparent);
 }
+.roster[data-chip-view="grid"] .card__rank {
+  top: 5px; right: 5px;
+}
+/*
+ * The name gets the whole width and two lines. overflow-wrap keeps a long single
+ * word ("Photosynthesis") wrapping inside the tile rather than being clipped
+ * mid-word, which is what it did before; the clamp and the fixed height keep the
+ * tiles level whether a name runs one line or two.
+ */
 .roster[data-chip-view="grid"] .chiprow__head b {
   width: 100%;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  overflow-wrap: anywhere;
   max-width: 100%;
   min-height: 2.4em;
   line-height: 1.2;
@@ -5023,29 +5122,50 @@ body.is-clean #chipbench { display: none !important; }
  * numeral -- colour is the faster channel but never the only one.
  */
 .chiptier {
-  padding: 1px 5px;
-  border-radius: var(--r-sm);
-  font-size: 10px; font-weight: 800; letter-spacing: .08em;
-  background: var(--surface-3);
-  color: var(--text-dim);
-}
-.chiptier[data-tier="1"] { background: color-mix(in srgb, var(--water) 26%, var(--surface-3)); color: var(--text); }
-.chiptier[data-tier="2"] { background: color-mix(in srgb, var(--fire) 30%, var(--surface-3)); color: var(--text); }
-.chiptier[data-tier="3"] { background: color-mix(in srgb, var(--accent) 34%, var(--surface-3)); color: var(--text); }
-
-/* The type, likewise: a real label rather than grey small print. */
-.chiptype {
-  padding: 1px 6px;
+  flex: none;
+  min-width: 22px; padding: 2px 6px;
+  display: inline-grid; place-items: center;
   border-radius: 999px;
-  font-size: 10px; font-weight: 700; letter-spacing: .02em;
-  background: var(--surface-3);
-  color: var(--text-dim);
-  box-shadow: inset 0 0 0 1px var(--line);
+  font-size: 10px; font-weight: 800; letter-spacing: .1em;
+  background: color-mix(in srgb, var(--tier-color, var(--surface-3)) 22%, var(--surface-3));
+  color: var(--text);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tier-color, var(--line)) 55%, transparent);
 }
-/* Position and Element are the two that read your board, so they are the two
-   worth telling apart at a glance. The rest share the neutral. */
-.chiptype[data-shape="placement"] { color: var(--text); box-shadow: inset 0 0 0 1px var(--accent); }
-.chiptype[data-shape="element"] { color: var(--text); box-shadow: inset 0 0 0 1px var(--grass); }
+/* Self-sufficient, so the medallion is right even if it is ever drawn outside a
+   card that set --tier-color. */
+.chiptier[data-tier="1"] { --tier-color: var(--water); }
+.chiptier[data-tier="2"] { --tier-color: var(--fire); }
+.chiptier[data-tier="3"] { --tier-color: var(--accent); }
+
+/*
+ * The category, as a tag that carries its own colour.
+ *
+ * Seven categories is too many to tell apart by fill without becoming a rainbow,
+ * so the colour rides a single dot and the word does the naming. Each category
+ * maps to one of the app's own hues, so the tag is on-brand and follows the
+ * theme and the high-contrast switch without a second palette to maintain.
+ */
+.chiptype {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 2px 8px 2px 7px;
+  border-radius: 999px;
+  font-size: 9.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--text-dim);
+  background: color-mix(in srgb, var(--cat, var(--text-mute)) 12%, var(--surface-3));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--cat, var(--line)) 38%, var(--line));
+}
+.chiptype::before {
+  content: ""; flex: none;
+  width: 6px; height: 6px; border-radius: 999px;
+  background: var(--cat, var(--text-mute));
+}
+.chiptype[data-shape="placement"] { --cat: var(--water); }
+.chiptype[data-shape="element"]   { --cat: var(--grass); }
+.chiptype[data-shape="level"]     { --cat: var(--lightning); }
+.chiptype[data-shape="economy"]   { --cat: var(--accent); }
+.chiptype[data-shape="capacity"]  { --cat: var(--ok); }
+.chiptype[data-shape="stat"]      { --cat: var(--fire); }
+.chiptype[data-shape="map"]       { --cat: var(--rock); }
 
 .chipwho--row {
   display: flex; flex-wrap: wrap; align-items: center; gap: 3px;
@@ -5075,10 +5195,8 @@ body.is-clean #chipbench { display: none !important; }
 :root[data-contrast="more"] .chiptier[data-tier="3"] { background: color-mix(in srgb, var(--accent) 50%, var(--surface)); }
 :root[data-contrast="more"] .chiptype {
   color: var(--text);
-  box-shadow: inset 0 0 0 1px var(--text-dim);
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--cat, var(--text-dim)) 75%, var(--line));
 }
-:root[data-contrast="more"] .chiptype[data-shape="placement"] { box-shadow: inset 0 0 0 2px var(--accent); }
-:root[data-contrast="more"] .chiptype[data-shape="element"] { box-shadow: inset 0 0 0 2px var(--grass); }
 /* The kept ring is a border colour on a card that is otherwise unchanged, which
    is exactly the kind of single-channel state this switch is for. */
 :root[data-contrast="more"] .card--chip.is-benched { box-shadow: inset 0 0 0 2px var(--accent); }

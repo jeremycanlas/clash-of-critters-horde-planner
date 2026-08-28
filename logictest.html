@@ -1,0 +1,395 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>logic test</title>
+<body style="font:14px/1.5 ui-monospace,monospace;background:#111;color:#ddd;padding:16px">
+<div id="log">loading…</div>
+<script type="module">
+/*
+ * The pure logic under the app, driven directly.
+ *
+ * apptest and mobiletest drive the rendered page; chipstest and changestest check
+ * the data files. Nothing checked the state engine and the two codecs it hangs
+ * off -- the share-link grammar in hash.js and the JSON in store.js -- even
+ * though those are the most format-versioned, most silently-breakable code in the
+ * project: a decode that drops a field corrupts every link ever pasted, and no
+ * screenshot would catch it.
+ *
+ * So this drives store.js the way the app does -- place(), addToBench(),
+ * switchTier(), addStep() -- takes a snapshot, sends it through the codec and
+ * back, and asserts the formation that comes out is the one that went in. The
+ * store is a module singleton, so every group resets it first.
+ */
+import { load, state } from './assets/js/data.js';
+import * as store from './assets/js/store.js';
+import {
+  toFragment, fromFragment, withRoom, withoutRoom, roomInHash, HASH_VERSION,
+} from './assets/js/hash.js';
+import { coveredFrom, coverage, hasRange } from './assets/js/range.js';
+import { parseContribution } from './assets/js/range-import.js';
+
+const out = document.getElementById('log');
+let pass = 0, fail = 0, suite = '';
+
+const only = new URLSearchParams(location.search).get('only')?.toLowerCase() ?? '';
+let matchedOnly = false;
+
+const group = (name, body) => {
+  if (only && !name.toLowerCase().includes(only)) return Promise.resolve();
+  if (only) matchedOnly = true;
+  suite = name;
+  out.innerHTML += `<div style="margin:12px 0 2px;color:#ffc93c;font-weight:700">${name}</div>`;
+  try { return Promise.resolve(body()); } catch (err) {
+    fail++;
+    out.innerHTML += `<div style="color:#f77">  FAIL ${name} threw: ${err.message}</div>`;
+    return Promise.resolve();
+  }
+};
+
+const ok = (name, cond, detail) => {
+  if (cond) { pass++; out.innerHTML += `<div style="color:#7c7">  ok   ${name}</div>`; }
+  else {
+    fail++;
+    out.innerHTML += `<div style="color:#f77">  FAIL ${name}${detail ? `<div style="padding-left:5ch;color:#aaa">${detail}</div>` : ''}</div>`;
+  }
+};
+const eq = (name, got, want) =>
+  ok(name, JSON.stringify(got) === JSON.stringify(want),
+    `got ${JSON.stringify(got)}, wanted ${JSON.stringify(want)}`);
+
+await load();
+out.innerHTML = '';
+
+// ---------------------------------------------------------------- fixtures
+/* Real slugs off the loaded roster, so the codecs see what they see in the app.
+   Two distinct families for placement, one family with two tiers for the swap,
+   and one Zobo. Found rather than hard-coded, so a data change cannot rot them. */
+const byFamily = new Map();
+for (const t of state.all) {
+  if (!byFamily.has(t.familyId)) byFamily.set(t.familyId, []);
+  byFamily.get(t.familyId).push(t);
+}
+const families = [...byFamily.values()];
+const A = families[0][0];                                   // one Tatari
+const B = families.find((f) => f[0].slug !== A.slug)[0];    // a different family
+const C = families.find((f) => ![A, B].some((x) => x.familyId === f[0].familyId))[0];
+const line = families.find((f) => f.length >= 2)             // two tiers, one line
+  .slice().sort((a, b) => a.tier - b.tier);
+const zoboSlug = [...state.zoboBySlug.keys()][0];
+
+/* A full blank formation: clearAll leaves mode, name and lines alone, which would
+   leak between groups. applySnapshot with a complete blob resets everything. */
+const reset = () => store.applySnapshot({
+  mode: 'solo', sandbox: false, zoboGround: false, pullRows: 0,
+  cells: [], flex: [], bench: { 1: [], 2: [] }, plan: [],
+  name: '', lines: { lf: { wants: [], note: '' }, have: { wants: [], note: '' } },
+  lfMode: 'lf',
+});
+
+/*
+ * The formation as the codecs are actually responsible for it.
+ *
+ * Deliberately drops what a given codec is known NOT to carry, so the roundtrip
+ * asserts the contract rather than a coincidence. Bench is compared as a set --
+ * membership is the fact, order is not -- and cells positionally, because where a
+ * Tatari stands is the whole point.
+ */
+const shapeOf = (s, { flex = false } = {}) => ({
+  mode: s.mode,
+  sandbox: s.sandbox,
+  zoboGround: s.zoboGround,
+  cells: s.cells.map((o) => (o ? `${o.player}.${o.slug}${o.kind === 'zobo' ? ':z' : ''}` : '')),
+  bench: { 1: [...s.bench[1]].sort(), 2: [...s.bench[2]].sort() },
+  plan: s.plan.map((st) => `${st.members.map((m) => `${m.player}.${m.slug}`).join('+')}=${st.level}$${st.note}`),
+  name: s.name,
+  lf: `${[...s.lines.lf.wants].join('+')}|${s.lines.lf.note}`,
+  have: `${[...s.lines.have.wants].join('+')}|${s.lines.have.note}`,
+  ...(flex ? { flex: [...s.flex].sort((a, b) => a - b) } : {}),
+});
+
+// A note holding every separator the grammar uses, to prove the double-encode
+// survives all of them.
+const NASTY = 'a,b+c.d$e~f%g/h';
+
+// ============================================================ share link
+await group('share link: a solo formation survives the round trip', () => {
+  reset();
+  store.place(A.slug, 0);
+  store.place(B.slug, 8);
+  store.addToBench(C.slug);                 // brought, not placed
+  store.setName('My build ' + NASTY);
+  store.addStep([{ slug: A.slug, player: 1 }], 5, NASTY);
+  store.addStep([{ slug: B.slug, player: 1 }], null, '');
+  store.toggleWant(C.slug, 'lf');
+  store.setLF('need a healer ' + NASTY, 'lf');
+  store.setLF('have ' + NASTY, 'have');
+  store.toggleWant(A.slug, 'have');
+
+  const before = store.snapshot();
+  const frag = toFragment(before);
+  ok('the fragment names the current version', frag.startsWith(`${HASH_VERSION}=`), frag);
+
+  const decoded = fromFragment('#' + frag);
+  ok('it decodes to a formation', !!decoded && !!decoded.blob);
+  ok('with no unknown slugs', decoded.unknown.length === 0, decoded.unknown.join(', '));
+
+  store.applySnapshot(decoded.blob);
+  eq('the formation is identical after a round trip', shapeOf(store.snapshot()), shapeOf(before));
+});
+
+await group('share link: co-op keeps each token with its owner', () => {
+  reset();
+  store.setMode('coop');
+  store.place(A.slug, 0, 1);
+  store.place(A.slug, 1, 2);                 // both players may bring the same one
+  store.place(B.slug, 7, 2);
+  const before = store.snapshot();
+  store.applySnapshot(fromFragment('#' + toFragment(before)).blob);
+  eq('both players come back on the field', shapeOf(store.snapshot()), shapeOf(before));
+});
+
+await group('share link: sandbox, zobo ground and a placed Zobo all ride along', () => {
+  reset();
+  store.setSandbox(true);
+  store.setZoboGround(true);
+  store.place(A.slug, 0);
+  store.place(zoboSlug, 40);                 // an enemy cell, only reachable here
+  const before = store.snapshot();
+  ok('the fragment marks sandbox and zobo ground', /sb=1/.test(toFragment(before)) && /zg=1/.test(toFragment(before)));
+  const decoded = fromFragment('#' + toFragment(before));
+  store.applySnapshot(decoded.blob);
+  const after = store.snapshot();
+  eq('sandbox and zobo ground survive', [after.sandbox, after.zoboGround], [true, true]);
+  ok('the Zobo comes back as a Zobo', after.cells[40]?.kind === 'zobo' && after.cells[40].slug === zoboSlug,
+    JSON.stringify(after.cells[40]));
+});
+
+await group('share link: unknown and malformed input is handled, not thrown on', () => {
+  reset();
+  const decoded = fromFragment(`#${HASH_VERSION}=solo/1.not-a-real-slug@0,1.${A.slug}@1;;`);
+  ok('an unknown slug is reported', decoded.unknown.includes('not-a-real-slug'), decoded.unknown.join(', '));
+  ok('and the real one beside it still lands', decoded.blob.cells[1]?.slug === A.slug);
+
+  let threw = false;
+  try { fromFragment(`#${HASH_VERSION}=solo/1.${A.slug}@0;;n=oops%`); } catch { threw = true; }
+  ok('a stray percent in a hand-edited link does not throw', !threw);
+
+  ok('a hash with no fragment decodes to null', fromFragment('#nothing-here') === null);
+  ok('an empty formation writes an empty fragment', toFragment(store.snapshot()) === '');
+});
+
+await group('share link: an older v5/v4 link is still read', () => {
+  reset();
+  const v5 = fromFragment(`#v5=solo/1.${A.slug}@3`);
+  ok('a v5 link with no meta segment decodes', !!v5 && v5.blob.cells[3]?.slug === A.slug);
+  const v4 = fromFragment(`#v4=solo/1.${A.slug}@3`);
+  ok('a v4 link decodes too', !!v4 && v4.blob.cells[3]?.slug === A.slug);
+});
+
+await group('share link: a live room rides beside the formation', () => {
+  reset();
+  store.place(A.slug, 0);
+  const frag = toFragment(store.snapshot());
+  const room = 'abcdefgh23456789';                 // 16 chars, the room grammar
+  const withR = withRoom(`https://x/#${frag}`, room);
+  ok('the room reads back out', roomInHash(new URL(withR).hash) === room, withR);
+  ok('the formation is untouched by stamping a room on', /1\./.test(withR) && withR.includes(A.slug));
+  ok('and taking the room off leaves the formation', roomInHash(new URL(withoutRoom(withR)).hash) === null);
+});
+
+// ============================================================ JSON
+await group('JSON: export and re-import is faithful', () => {
+  reset();
+  store.setName('Named build');
+  store.place(A.slug, 0);
+  store.place(B.slug, 8);
+  store.addToBench(C.slug);
+  store.addStep([{ slug: A.slug, player: 1 }], 3, 'level early');
+  store.toggleWant(B.slug, 'lf');
+  store.setLF('a note', 'lf');
+  const before = store.snapshot();
+
+  const json = JSON.parse(JSON.stringify(store.toJSON()));   // as a file would be
+  const result = store.fromJSON(json);
+  ok('the import reports success', result.ok, result.reason);
+  ok('with nothing unknown', result.unknown.length === 0, result.unknown.join(', '));
+  // JSON carries no flex/sandbox/zoboGround, so compare only what it promises.
+  eq('the formation is identical after a JSON round trip', shapeOf(store.snapshot()), shapeOf(before));
+});
+
+await group('JSON: garbage is refused, unknown slugs are named', () => {
+  reset();
+  ok('a non-object is refused', store.fromJSON(null).ok === false);
+  ok('an object with no formation data is refused', store.fromJSON({}).ok === false);
+  const r = store.fromJSON({
+    mode: 'solo',
+    players: [{ player: 1, bench: [{ slug: 'ghost-tatari', cell: 0, onField: true }] }],
+  });
+  ok('an unknown slug is reported rather than swallowed', r.ok && r.unknown.includes('ghost-tatari'), JSON.stringify(r));
+});
+
+// ============================================================ tier swap
+await group('tier swap: changing tier keeps cell, bench slot and plan', () => {
+  reset();
+  const [t1, t2] = line;
+  store.place(A.slug, 0);                    // something ahead of it in the bench
+  store.place(t1.slug, 6);
+  store.addStep([{ slug: t1.slug, player: 1 }], 5, 'planned');
+  const cellBefore = store.cellOf(t1.slug, 1);
+  const benchIndexBefore = store.benchOf(1).indexOf(t1.slug);
+
+  const res = store.switchTier(t1.slug, t2.slug, 1);
+  ok('the swap succeeds within a line', res.ok, res.reason);
+  ok('the new tier stands in the old one\'s cell', store.cellOf(t2.slug, 1) === cellBefore);
+  ok('the old tier is gone from the field', store.cellOf(t1.slug, 1) === null);
+  ok('the bench slot is kept, not appended', store.benchOf(1).indexOf(t2.slug) === benchIndexBefore, `${store.benchOf(1)}`);
+  const step = store.snapshot().plan[0];
+  ok('the plan step follows the swap, keeping its level and note',
+    step.members[0].slug === t2.slug && step.level === 5 && step.note === 'planned', JSON.stringify(step));
+
+  const across = store.switchTier(t2.slug, B.slug, 1);
+  ok('a swap across lines is refused', across.ok === false, JSON.stringify(across));
+});
+
+// ============================================================ player switch
+await group('co-op: handing a Tatari to the other player takes its plan', () => {
+  reset();
+  store.setMode('coop');
+  store.place(A.slug, 0, 1);
+  store.addStep([{ slug: A.slug, player: 1 }], 4, 'note');
+  const res = store.switchPlayer(A.slug, 1);
+  ok('the switch succeeds', res.ok, res.reason);
+  ok('it is now the other player\'s on the field', store.cellOf(A.slug, 2) === 0 && store.cellOf(A.slug, 1) === null);
+  const step = store.snapshot().plan[0];
+  ok('and the plan step went with it', step.members[0].player === 2 && step.level === 4, JSON.stringify(step));
+});
+
+// ============================================================ family & caps
+await group('rules: one per line, and the bench and field caps, are enforced', () => {
+  reset();
+  const [t1, t2] = line;
+  store.addToBench(t1.slug);
+  ok('a second tier of the same line is blocked on the bench',
+    !!store.benchBlockedReason(t2, 1), store.benchBlockedReason(t2, 1));
+
+  reset();
+  store.setSandbox(true);
+  store.addToBench(t1.slug);
+  ok('sandbox lifts the one-per-line rule', store.benchBlockedReason(t2, 1) === null);
+
+  reset();
+  const cap = store.benchCap();
+  let benched = 0;
+  for (const t of state.all) { if (store.addToBench(t.slug).ok) benched++; if (benched >= cap) break; }
+  ok('the bench fills to its cap', store.benchOf(1).length === cap, `${store.benchOf(1).length}/${cap}`);
+  const extra = state.all.find((t) => !store.onBench(t.slug, 1));
+  ok('and refuses one past it', !!store.benchBlockedReason(extra, 1));
+});
+
+// ============================================================ sandbox copies
+await group('sandbox: a duplicate is a second copy, not a move', () => {
+  reset();
+  store.setSandbox(true);
+  store.place(A.slug, 0);
+  const copy = store.placeCopy(A.slug, 1);
+  ok('the copy is placed', copy.ok, JSON.stringify(copy));
+  ok('both the original and the copy stand', store.allPlaced().filter((o) => o.slug === A.slug).length === 2,
+    `${store.allPlaced().filter((o) => o.slug === A.slug).length}`);
+});
+
+// ============================================================ boss pull
+await group('boss pull: rows open, then close and bring everyone home', () => {
+  reset();
+  store.place(A.slug, 30);                   // front-ish; a lane to be pulled from
+  const pulled = store.movePositions(
+    [{ from: 30, to: store.cellAtRow(-1, 0), slug: A.slug, player: 1 }], 1);
+  ok('a pull opens a row past the line', store.pullRows() >= 1, `${store.pullRows()}`);
+  ok('the Tatari is standing past the line', store.allPlaced().some((o) => store.isEnemyCell(o.cell) && o.slug === A.slug));
+
+  const home = store.evacuatePullRows();
+  ok('closing the pull empties the enemy rows', store.pullRows() === 0);
+  ok('and brings the Tatari back onto the field, not the bench',
+    home.benched === 0 && store.allPlaced().some((o) => !store.isEnemyCell(o.cell) && o.slug === A.slug));
+});
+
+// ============================================================ range coverage
+await group('range: coverage lands on the right tiles and clips at the edge', () => {
+  reset();
+  /* A plus-shape reach, injected so the arithmetic is tested against a known
+     pattern rather than whichever slugs happen to carry a recorded range. Row 0
+     is the front; offsets are [dCol, dRow]. */
+  const cross = [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]];
+  state.ranges = state.ranges || {};
+  state.ranges.bySlug = state.ranges.bySlug || {};
+  const saved = state.ranges.bySlug[A.slug];
+  state.ranges.bySlug[A.slug] = { tiles: cross };
+  try {
+    ok('an unrecorded slug has no reach', !hasRange('not-a-slug'));
+    ok('and covers nothing rather than throwing', coveredFrom(14, 'not-a-slug').length === 0);
+    // Cell 14 is row 2, col 2 — all five tiles land on the 6x6 board.
+    eq('a centred reach covers all five tiles',
+      coveredFrom(14, A.slug).sort((a, b) => a - b), [8, 13, 14, 15, 20]);
+    // Cell 0 is the front-left corner — the up and left offsets fall off the board.
+    eq('a corner reach drops the tiles that fall off the board',
+      coveredFrom(0, A.slug).sort((a, b) => a - b), [0, 1, 6]);
+
+    const cov = coverage([{ cell: 14, slug: A.slug }, { cell: 0, slug: 'not-a-slug' }]);
+    ok('coverage counts the recorded reach and flags the unknown one',
+      cov.known === 1 && cov.unknown === 1, JSON.stringify(cov));
+    ok('and every tile the reach hits is counted once',
+      [8, 13, 14, 15, 20].every((i) => cov.counts[i] === 1) && cov.counts[35] === 0);
+  } finally {
+    if (saved === undefined) delete state.ranges.bySlug[A.slug];
+    else state.ranges.bySlug[A.slug] = saved;
+  }
+});
+
+// ============================================================ contribution parser
+await group('contribution parser: reads a range, and names what it cannot', () => {
+  const entry = (body) => `{ "${A.slug}": ${body} }`;
+
+  const bare = parseContribution(entry('{ "tiles": [[0,0],[1,0]], "from": "range diagram" }'));
+  ok('a bare recorder block yields one entry',
+    bare.entries.length === 1 && bare.entries[0].slug === A.slug, JSON.stringify(bare));
+
+  ok('empty input is reported, not silently empty',
+    parseContribution('').problems.some((p) => /Nothing pasted/.test(p)));
+
+  const fenced = parseContribution(
+    `here is my range\n\`\`\`json\n${entry('{ "scope": "all", "from": "in-game observation" }')}\n\`\`\`\nthanks`);
+  ok('a fenced block inside a pasted issue body is found',
+    fenced.entries.length === 1 && fenced.entries[0].scope === 'all', JSON.stringify(fenced));
+
+  const broken = parseContribution(entry('{ "tiles": [[0,0]  }'));   // unbalanced
+  ok('unbalanced JSON is called out rather than swallowed',
+    broken.problems.some((p) => /could not be read as JSON/.test(p)), JSON.stringify(broken));
+
+  const both = parseContribution(entry('{ "scope": "all", "tiles": [[0,0]], "from": "other" }'));
+  ok('scope "all" with tiles is refused as contradictory',
+    both.entries.length === 0 && both.problems.some((p) => /reaches everything/.test(p)));
+
+  const badTile = parseContribution(entry('{ "tiles": [[0,"x"]], "from": "other" }'));
+  ok('a tile that is not a pair of whole numbers is refused',
+    badTile.entries.length === 0 && badTile.problems.some((p) => /whole numbers/.test(p)));
+
+  const dupes = parseContribution(entry('{ "tiles": [[0,0],[0,0],[1,0]], "from": "other" }'));
+  ok('a repeated tile is dropped, and said so',
+    dupes.entries.length === 1 && dupes.entries[0].tiles.length === 2
+    && dupes.problems.some((p) => /same tile more than once/.test(p)), JSON.stringify(dupes));
+
+  const src = parseContribution(entry('{ "tiles": [[0,0]], "from": "my own eyes" }'));
+  ok('an unknown source falls back to "other" and says so',
+    src.entries[0]?.from === 'other' && src.problems.some((p) => /not one of the recorder/.test(p)));
+
+  const twice = parseContribution(
+    `// data/ranges.json\n${entry('{ "tiles": [[0,0]], "from": "other" }')}\n${entry('{ "tiles": [[1,0]], "from": "other" }')}`);
+  ok('the same slug listed twice collapses to the last one',
+    twice.entries.length === 1 && twice.entries[0].tiles[0] === '1,0', JSON.stringify(twice.entries));
+});
+
+// ---------------------------------------------------------------- verdict
+const nothingMatched = Boolean(only) && !matchedOnly;
+out.innerHTML += `<div style="margin-top:12px">${pass} passed, ${fail} failed</div>`;
+document.title = `${fail ? `FAIL (${fail})` : (nothingMatched ? 'ok, nothing matched' : 'ok')}: state and codecs`;
+window.__done = { pass, fail };
+</script>
+</body>
