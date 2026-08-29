@@ -2382,13 +2382,24 @@ body[data-switching="true"] .cell[data-zobo] { box-shadow: none; cursor: default
   pointer-events: none;
 }
 
-/* The other player is bringing this one too - allowed, worth knowing. */
+/*
+ * The other player is bringing this one too - allowed, worth knowing.
+ *
+ * In the badge band at the top of the art, top-right, mirroring the swap
+ * marker's top-left: the meta row under the sprite is 69px wide and full once
+ * a patch disc, the tier and the two icons are in it, so a fifth thing there
+ * was cut in half at the card's edge. The band has a spare corner; the effect
+ * badges keep out of it the same way they keep out of the marker's.
+ */
 .card__other {
-  padding: 0 3px;
-  border-radius: 3px;
+  position: absolute; right: 5px; top: 5px;
+  display: grid; place-items: center;
+  height: 15px; padding: 0 3px;
+  border-radius: var(--r-sm);
   background: var(--owner); color: var(--owner-ink);
-  font-size: 8.5px; font-weight: 800;
+  font-size: 8.5px; font-weight: 800; line-height: 1;
 }
+.card:has(.card__other) .card__fxrow { padding-right: 17px; }
 /*
  * "You already have one of these", not "you may not have this".
  *
