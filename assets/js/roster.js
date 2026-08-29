@@ -1008,6 +1008,29 @@ export const showing = { value: 'tatari' };
  * bench state, evolution clash and the effect marks. What it gains is the boss
  * star, which is the one thing that changes how you draft against one.
  */
+/*
+ * "Stage 15" on a boss card.
+ *
+ * The order the run sends them in is the one thing about a boss you cannot read
+ * off the card and cannot work out from the board: it is knowledge from playing,
+ * and it is what decides which boss you are actually drafting against next. So
+ * it goes on the card rather than behind a click.
+ *
+ * Every stage it appears at, not the first: Goonch arrives at 2, 7 and 16, and a
+ * card saying only "2" would quietly tell you the other two do not happen.
+ * Bosses that share a stage each say the same number, which is the truth -- that
+ * stage sends both of them at once.
+ */
+function stageBadge(z) {
+  const at = state.bossStages.get(z.slug);
+  if (!at?.length) return '';
+  const list = at.length === 1 ? `Stage ${at[0]}`
+    : `Stages ${at.slice(0, -1).join(', ')} and ${at[at.length - 1]}`;
+  const who = state.bossOrderBy ? `, boss order by ${state.bossOrderBy}` : '';
+  return `<span class="card__stage" title="${esc(`${list} of ${state.bossStageCount}${who}`)}">${
+    esc(at.join('·'))}</span>`;
+}
+
 function renderZobos() {
   const host = $('#roster');
   const q = filters.query;
@@ -1023,7 +1046,7 @@ function renderZobos() {
            title="${esc(z.name)}${z.type ? `, ${z.type}` : ''}${z.boss ? ', Boss' : ''}${
   z.skill?.name ? `
 ${esc(z.skill.name)}` : ''}">
-        <div class="card__art">${artHTML(z, { observe: true, priority: 'low' })}</div>
+        <div class="card__art">${artHTML(z, { observe: true, priority: 'low' })}${stageBadge(z)}</div>
         <div class="card__meta">
           ${z.boss ? '<span class="card__boss" title="Boss">★</span>' : ''}
           ${z.type ? typeIcon(z.type) : ''}
@@ -1044,6 +1067,17 @@ ${esc(z.skill.name)}` : ''}">
     );
   }
   revealLazyArt();
+
+  /* Said once, under the list, rather than on all 24 cards carrying a number. */
+  const credit = $('#boss-order-credit');
+  if (credit) {
+    const show = state.bossStageCount > 0 && !!state.bossOrderBy;
+    credit.hidden = !show;
+    credit.textContent = show
+      ? `Numbers on the boss cards are the stage they arrive at, 1 to ${
+        state.bossStageCount}. Worked out and shared by ${state.bossOrderBy}.`
+      : '';
+  }
 
   $('#roster-count').textContent = list.length === state.zobos.length
     ? `${state.zobos.length}`

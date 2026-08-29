@@ -44,6 +44,19 @@ export const state = {
   ranges: null,
   /** hand-recorded heal / buff / debuff reach, see data/effect-ranges.json */
   effectRanges: null,
+  /**
+   * @type {Map<string, number[]>} boss slug -> the stages it arrives at.
+   *
+   * A list rather than a number, because the run sends some bosses more than
+   * once -- Goonch turns up three times -- and a single "stage" field would have
+   * to pick one of them and be wrong about the rest. Read from data/boss-order.json
+   * and empty when that file is missing, which is how a copy without it behaves.
+   */
+  bossStages: new Map(),
+  /** @type {string|null} who worked the boss order out. Shown with it. */
+  bossOrderBy: null,
+  /** @type {number} how many stages the order covers, 0 when it is not loaded */
+  bossStageCount: 0,
 };
 
 /**
@@ -181,7 +194,7 @@ export function matches(t, query) {
 // ---------------------------------------------------------------- boot
 
 export async function load() {
-  const [meta, roster, zobos, aliases, ranges, effectRanges, changes] = await Promise.all([
+  const [meta, roster, zobos, aliases, ranges, effectRanges, changes, bossOrder] = await Promise.all([
     fetch('data/meta.json').then((r) => r.json()),
     fetch('data/tatari.json').then((r) => r.json()),
     // A copy without the Zobo file still drafts; it simply has no enemies to
@@ -193,6 +206,9 @@ export async function load() {
     // Hand-authored, so a copy that has not been updated for the current game
     // update simply marks nothing rather than failing to load the roster.
     fetch('data/changes.json').then((r) => r.json()).catch(() => ({})),
+    // Hand-authored from play, like the ranges. A copy without it shows the
+    // bosses exactly as it always did, with no stage numbers on them.
+    fetch('data/boss-order.json').then((r) => r.json()).catch(() => ({})),
   ]);
 
   delete aliases._readme;
@@ -224,6 +240,22 @@ export async function load() {
       .join(' ').toLowerCase();
   }
   state.zoboBySlug = new Map(state.zobos.map((z) => [z.slug, z]));
+  /*
+   * Inverted on the way in, for the same reason the patch changes are: the file
+   * is authored as "stage 15 sends Sandworm and Golf", because that is how it is
+   * observed and how it is checked, and every reader asks the opposite question
+   * -- "this card, which stages?" -- while drawing one card.
+   */
+  const stages = Array.isArray(bossOrder?.stages) ? bossOrder.stages : [];
+  state.bossStages = new Map();
+  state.bossStageCount = stages.length;
+  state.bossOrderBy = stages.length ? (bossOrder.by ?? null) : null;
+  stages.forEach((slugs, i) => {
+    for (const slug of slugs ?? []) {
+      if (!state.bossStages.has(slug)) state.bossStages.set(slug, []);
+      state.bossStages.get(slug).push(i + 1);
+    }
+  });
   reindex();
   return state;
 }

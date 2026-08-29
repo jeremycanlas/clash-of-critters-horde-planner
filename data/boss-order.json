@@ -1,0 +1,31 @@
+{
+  "_readme": "The order the bosses arrive in a Horde Invasion run, stage 1 to 25. Each entry is the boss or bosses that stage sends, by slug. A boss can appear at more than one stage, and a stage can send two.",
+  "by": "cotard_urn",
+  "stages": [
+    ["two-headed-zobo"],
+    ["goonch-zobo"],
+    ["captain-zobo"],
+    ["shaman-zobo"],
+    ["roadhog-zobo"],
+    ["popstar-zobo"],
+    ["goonch-zobo"],
+    ["tipsy-zobo"],
+    ["knight-zobo"],
+    ["climber-zobo"],
+    ["shocker-zobo"],
+    ["sailor-zobo"],
+    ["chef-zobo"],
+    ["botanical-zobo"],
+    ["sandworm-zobo", "golf-zobo"],
+    ["goonch-zobo"],
+    ["forge-zobo"],
+    ["pharaoh-zobo"],
+    ["clown-zobo"],
+    ["manager-zobo", "yeti-zobo"],
+    ["totem-zobo"],
+    ["garden-zobo"],
+    ["volcano-zobo"],
+    ["laser-zobo"],
+    ["tipsy-zobo", "sandworm-zobo"]
+  ]
+}

@@ -1363,6 +1363,34 @@ await runGroup('the roster cannot spill past its grid', async () => {
   } else {
     skip('the art box cannot outgrow its card', 'no Ashlarva in this roster');
   }
+
+  /*
+   * The same question on the Zobo tab, which now has a badge of its own.
+   *
+   * The stage number is deliberately in the art box rather than in .card__meta,
+   * because the meta row is the thing that grew the cards twice before. Checked
+   * with the widest one on screen -- a boss the run sends three times wears
+   * "2-7-16", which is the longest this badge ever gets -- so the check has
+   * something to fail on rather than passing on a roster of single digits.
+   */
+  await click($('#roster-tabs [data-list="zobos"]'), 400);
+  const zobos = $$('.panel--roster .card--zobo');
+  const widest = $$('.card__stage').map((s) => s.textContent.length);
+  if (!zobos.length) {
+    skip('a stage badge cannot grow a Zobo card', 'no Zobos in this copy');
+  } else {
+    ok('the longest stage badge is on screen, so this is checked against the worst case',
+       Math.max(0, ...widest) >= 6, `longest badge is ${Math.max(0, ...widest)} characters`);
+    const grew = zobos.filter((c) =>
+      c.querySelector('.card__art').getBoundingClientRect().width > c.getBoundingClientRect().width);
+    ok('no Zobo art box is wider than its card', grew.length === 0,
+       `${grew.length} grew: ${grew.slice(0, 3).map((c) => c.dataset.slug).join(', ')}`);
+    const zSizes = new Set(zobos.map((c) =>
+      `${Math.round(c.getBoundingClientRect().height)}x${Math.round(c.querySelector('.card__art').getBoundingClientRect().width)}`));
+    ok('every Zobo card is the same size, badge or no badge',
+       zSizes.size === 1, `sizes seen: ${[...zSizes].join(', ')}`);
+  }
+  await click($('#roster-tabs [data-list="tatari"]'), 380);
 });
 
 /*

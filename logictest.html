@@ -386,6 +386,51 @@ await group('contribution parser: reads a range, and names what it cannot', () =
     twice.entries.length === 1 && twice.entries[0].tiles[0] === '1,0', JSON.stringify(twice.entries));
 });
 
+/*
+ * The boss order, checked against the roster rather than against itself.
+ *
+ * It is hand-authored from play, so the failure it can actually have is a slug
+ * that does not exist or a boss quietly left out -- both of which would show up
+ * in the app as a card with no number and no explanation, which is worse than no
+ * numbers at all because it reads as that boss never being sent.
+ *
+ * The inversion gets its own checks because it is the only logic here: the file
+ * says "stage 15 sends Sandworm and Golf" and the app asks "Goonch, which
+ * stages", and a boss the run sends three times is exactly what a naive
+ * slug -> stage map would flatten to one.
+ */
+await group('boss order: every stage names a real boss, and every boss has a stage', async () => {
+  const file = await fetch('data/boss-order.json').then((r) => r.json());
+  const stages = file.stages ?? [];
+  eq('the run is 25 stages long', stages.length, 25);
+  eq('the loader agrees with the file', state.bossStageCount, stages.length);
+  ok('and it says who worked it out', !!state.bossOrderBy, String(state.bossOrderBy));
+
+  const named = new Set(stages.flat());
+  const unknown = [...named].filter((s) => !state.zoboBySlug.has(s));
+  eq('every slug in it is a Zobo the app knows', unknown, []);
+  const notBoss = [...named].filter((s) => state.zoboBySlug.get(s) && !state.zoboBySlug.get(s).boss);
+  eq('and every one of them is a boss', notBoss, []);
+
+  const missing = state.zobos.filter((z) => z.boss && !named.has(z.slug)).map((z) => z.slug);
+  eq('no boss is left without a stage', missing, []);
+
+  /* A boss the run sends more than once keeps all of them. */
+  eq('Goonch is sent three times, and all three survive the lookup',
+    state.bossStages.get('goonch-zobo'), [2, 7, 16]);
+  /* And a stage that sends two puts the same number on both cards. */
+  ok('a stage that sends two bosses numbers both of them',
+    state.bossStages.get('sandworm-zobo')?.includes(15)
+    && state.bossStages.get('golf-zobo')?.includes(15),
+    `sandworm ${state.bossStages.get('sandworm-zobo')}, golf ${state.bossStages.get('golf-zobo')}`);
+
+  /* Every stage number is reachable from some card, which is what makes the
+     "1 to 25" in the credit line under the roster true rather than decorative. */
+  const reachable = new Set([...state.bossStages.values()].flat());
+  eq('every stage from 1 to 25 is on at least one card',
+    [...Array(stages.length)].map((_, i) => i + 1).filter((n) => !reachable.has(n)), []);
+});
+
 // ---------------------------------------------------------------- verdict
 const nothingMatched = Boolean(only) && !matchedOnly;
 out.innerHTML += `<div style="margin-top:12px">${pass} passed, ${fail} failed</div>`;

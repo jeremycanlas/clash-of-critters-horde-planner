@@ -2219,6 +2219,40 @@ body[data-switching="true"] .cell[data-zobo] { box-shadow: none; cursor: default
   color: var(--warn, var(--accent));
   font-size: 11px; line-height: 1;
 }
+/*
+ * Which stage of the run sends this boss, in the art box's free corner.
+ *
+ * Not in .card__meta, which is where it obviously belongs and where it cannot
+ * go: that row is a grid item with the sprite square below it on an aspect-ratio,
+ * so anything in it that is wider than the card widens the box, and a square box
+ * that gets wider gets taller and drags the whole row of cards with it. That is
+ * exactly the bug 1.8.6 and 1.8.7 were, and the co-op P1/P2 tag was moved into
+ * this same art box in 1.8.8 for the same reason. Absolute, so it is out of the
+ * flow entirely and cannot push on anything.
+ *
+ * Top left, because the co-op tag has the top right and the two can appear on
+ * one card. Tabular numerals so "2·7·16" and "9" line up down a column, and a
+ * ceiling on the width so a boss that somehow gained a fourth stage clips
+ * instead of growing.
+ */
+.card__stage {
+  position: absolute; left: 4px; top: 4px; z-index: 1;
+  max-width: calc(100% - 8px);
+  padding: 0 3px;
+  border-radius: var(--r-sm);
+  background: color-mix(in srgb, var(--accent) 26%, var(--surface-3));
+  color: var(--text);
+  font-size: 8.5px; font-weight: 700; line-height: 15px;
+  font-variant-numeric: tabular-nums;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+/* Under the Zobo list, saying what the numbers are and who counted them. */
+.roster__note {
+  margin: 0;
+  padding: var(--s1) var(--s2) 0;
+  color: var(--text-mute);
+  font-size: 11px; line-height: 1.4;
+}
 .token__boss { position: absolute; top: 2px; right: 2px; }
 /* Marked as not-yours in the same language the Zobo ground uses: solid outline,
    borrowed background. It is the other side of the board standing on your tiles. */
