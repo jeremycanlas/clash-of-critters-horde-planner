@@ -2237,7 +2237,22 @@ body[data-switching="true"] .cell[data-zobo] { box-shadow: none; cursor: default
 
 .card {
   position: relative;
-  display: grid; grid-template-rows: 1fr auto auto;
+  /*
+   * Every row auto and the column minmax(0, 1fr), so the card is sized by its
+   * width and only its width.
+   *
+   * It was 1fr for the art row and an implicit auto column, and both leaked.
+   * The art box has aspect-ratio: 1, so a 1fr row handed it whatever height the
+   * roster row had, and its width followed: a taller neighbour anywhere in the
+   * row made every sprite in that row bigger. And an auto column sizes to the
+   * widest child's min-content, so the 135 cards wearing a patch disc in the
+   * meta row were 2px wider inside than the 95 without, and their art with
+   * them. Rows came out at three heights and arts at three sizes, depending on
+   * who happened to share a row. Now the box is exactly the card's inner width,
+   * square, on all 230.
+   */
+  display: grid; grid-template-rows: auto auto auto; grid-template-columns: minmax(0, 1fr);
+  align-content: start;
   padding: var(--s1);
   border: 1px solid var(--line-soft);
   border-radius: var(--r-md);
@@ -2330,9 +2345,10 @@ body[data-switching="true"] .cell[data-zobo] { box-shadow: none; cursor: default
    between a third and two thirds of the roster - there is no corner that is
    reliably empty, so the only uniform answer is to stay off the art. */
 .card__meta {
-  display: flex; align-items: center; justify-content: center; gap: var(--s1);
+  display: flex; align-items: center; justify-content: center; gap: 3px;
   padding-top: 4px;
   line-height: 1;
+  min-width: 0;
 }
 .card__tier { font-size: 9px; font-weight: 700; color: var(--text-mute); }
 .card__name {

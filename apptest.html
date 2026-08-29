@@ -1343,6 +1343,13 @@ await runGroup('the roster cannot spill past its grid', async () => {
       c.querySelector('.card__art').getBoundingClientRect().width > c.getBoundingClientRect().width);
     ok('no art box is wider than its card after benching a Tatari with swap siblings',
        wide.length === 0, `${wide.length} cards grew: ${wide.slice(0, 3).map((c) => c.dataset.slug).join(', ')}`);
+    // And every card is the same size as every other: the art is sized by the
+    // card's width alone, so no row is taller than its neighbours and no sprite
+    // bigger than the one beside it, whatever badges the cards happen to wear.
+    const sizes = new Set($$('.panel--roster .card').map((c) =>
+      `${Math.round(c.getBoundingClientRect().height)}x${Math.round(c.querySelector('.card__art').getBoundingClientRect().width)}`));
+    ok('every roster card is the same height with the same size of art',
+       sizes.size === 1, `sizes seen: ${[...sizes].join(', ')}`);
     await click($(`.panel--roster .card[data-slug="ashlarva"]`), 320);   // put it back
   } else {
     skip('the art box cannot outgrow its card', 'no Ashlarva in this roster');
