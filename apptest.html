@@ -1329,6 +1329,52 @@ await runGroup('the roster cannot spill past its grid', async () => {
 });
 
 /*
+ * The roster keeps its cards on a formation change, rather than rebuilding them.
+ *
+ * renderRoster runs on every edit, and it used to rebuild the whole innerHTML
+ * each time -- so all 230 <img> elements were thrown away and re-decoded, and the
+ * sprites blinked out and reloaded on every drag, worst on a clear-all-then-load.
+ * When the visible list is unchanged it now updates the cards in place, so the
+ * image nodes survive. This tags one, makes a formation change that keeps the
+ * list (benching a Tatari), and checks the very same node is still there.
+ */
+await runGroup('the roster updates in place instead of reloading its sprites', async () => {
+  await reset();
+  await click($('#roster-tabs [data-list="tatari"]'), 320);   // in case a prior group left another list up
+  if ($('#btn-clear')) await click($('#btn-clear'), 320);       // empty the formation a prior group left
+  // A card that is not already brought and is not a tier-swap, so a click brings
+  // it (rather than dropping it or switching a tier).
+  const first = $$('.panel--roster .card')
+    .find((c) => !c.classList.contains('is-benched') && !c.dataset.switchFrom);
+  ok('there is a bringable roster card to watch', !!first, 'no bringable roster card');
+  if (!first) return;
+  const slug = first.dataset.slug;
+  const img = first.querySelector('.card__art img');
+  img.dataset.probe = 'keep-me';                 // a mark only this exact node carries
+  first.dataset.probe = 'keep-me';
+
+  // Bench it: a formation change that leaves the visible list exactly as it was.
+  await click(first, 320);
+  const card2 = $(`.panel--roster .card[data-slug="${CSS.escape(slug)}"]`);
+  ok('the card took the formation state', card2?.classList.contains('is-benched'),
+     card2?.className);
+  ok('the card element is the same node, not a rebuild', card2?.dataset.probe === 'keep-me');
+  ok('and its sprite is the same <img>, so it never reloaded',
+     card2?.querySelector('.card__art img')?.dataset.probe === 'keep-me');
+
+  // A real change to the list still rebuilds: filtering to one type drops the
+  // rest, so the same node cannot survive that.
+  const water = chipFor('.chip--type', 'Water');
+  if (water) {
+    await click(water, 320);
+    const gone = $(`.panel--roster .card[data-slug="${CSS.escape(slug)}"]`);
+    ok('a filter that changes the list rebuilds (probe does not persist through it)',
+       !gone || gone.dataset.probe !== 'keep-me', 'probe survived a list change');
+    await click(water, 320);      // release the filter
+  }
+});
+
+/*
  * Dragging a chip into the dock, and dragging one around inside it.
  *
  * A tap already keeps a chip, and this could have stopped there. What a tap

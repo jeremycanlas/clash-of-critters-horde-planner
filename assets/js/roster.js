@@ -1463,6 +1463,137 @@ export function renderChipBench() {
   measureDock();
 }
 
+/*
+ * The formation-dependent facts about one Tatari card: is it brought, is it on
+ * the field, would it swap a tier it already brings, and is the other player
+ * bringing it too. Everything else on the card (art, name, tier, type, role,
+ * effect and patch marks) is fixed per Tatari and never changes here.
+ */
+function cardState(t, player) {
+  const benched = store.onBench(t.slug, player);
+  const placed = benched && store.isPlaced(t.slug, player);
+  // A full bench blocks everything at once; dimming all 200+ cards for that just
+  // makes the roster look broken, so only a per-Tatari reason is marked. Sandbox
+  // brings a whole line at once, so a sibling tier is a normal pick there, not a
+  // swap.
+  const clash = (benched || store.isSandbox()) ? null : store.familyConflict(t, player);
+  const other = store.isCoop()
+    ? store.players().find((p) => p !== player && store.onBench(t.slug, p)) ?? null
+    : null;
+  return { benched, placed, clash, other };
+}
+
+/** The full card markup, for a fresh render of the list. */
+function cardHTML(t, player) {
+  const { benched, placed, clash, other } = cardState(t, player);
+  const state_ = placed ? 'on the field' : benched ? 'on the bench' : null;
+  /*
+   * Another tier of a line you already bring is a switch, not a wall: the card
+   * is dimmed to say "you already have one of these" and tapping it swaps them,
+   * keeping the cell and the level-up plan the tier was never about.
+   */
+  return `
+      <div class="card${benched ? ' is-benched' : ''}${placed ? ' is-deployed' : ''}${
+    clash ? ' is-swap' : ''}"
+           role="listitem" tabindex="0" data-slug="${esc(t.slug)}" data-type="${t.type}"${
+    clash ? ` data-switch-from="${esc(clash.slug)}"` : ''}
+           title="${esc(t.name)}: ${t.type} ${t.role}, T${t.tier}${
+    state_ ? `\n${state_}` : ''}${clash ? `\nTap to switch from ${clash.name}, keeping its plan` : ''}">
+        <!-- Last in the queue: 230 thumbnails will otherwise crowd out the
+             dozen sprites the field and the benches are showing right now. -->
+        <div class="card__art">${effectMarks(t)}${artHTML(t, { priority: 'low' })}</div>
+        <div class="card__meta">
+          ${patchMark(t)}<span class="card__tier">T${t.tier}</span>
+          ${typeIcon(t.type)}${roleIcon(t.role)}
+          ${other
+    ? `<span class="card__other" data-player="${other}"
+                     title="P${other} is bringing this too">P${other}</span>` : ''}
+        </div>
+        <div class="card__name">${esc(t.name)}</div>
+        ${clash ? `<span class="card__lock" aria-hidden="true">&#8646;</span>` : ''}
+        ${clash ? `<span class="sr-only">Switch from ${esc(clash.name)}, keeping its plan</span>` : ''}
+        <!-- Focusable so the detail sheet, and "Place on the field" with it, is
+             reachable from the keyboard. -->
+        <button class="card__info" type="button"
+                aria-label="Details for ${esc(t.name)}">i</button>
+      </div>`;
+}
+
+/**
+ * Brings one existing card up to date without rebuilding it, so its <img> is
+ * never recreated. Only the four things cardState() can change are touched: the
+ * marks, the swap glyph and its sr-only line, and the co-op "brought by them"
+ * badge.
+ */
+function applyCardState(card, t, player) {
+  const { benched, placed, clash, other } = cardState(t, player);
+  const state_ = placed ? 'on the field' : benched ? 'on the bench' : null;
+
+  card.classList.toggle('is-benched', benched);
+  card.classList.toggle('is-deployed', placed);
+  card.classList.toggle('is-swap', !!clash);
+  if (clash) card.dataset.switchFrom = clash.slug; else delete card.dataset.switchFrom;
+  card.title = `${t.name}: ${t.type} ${t.role}, T${t.tier}${state_ ? `\n${state_}` : ''}${
+    clash ? `\nTap to switch from ${clash.name}, keeping its plan` : ''}`;
+
+  // The swap glyph and its screen-reader line live only on a clash.
+  const lock = card.querySelector('.card__lock');
+  if (clash && !lock) {
+    card.querySelector('.card__name').insertAdjacentHTML('afterend',
+      `<span class="card__lock" aria-hidden="true">&#8646;</span>`
+      + `<span class="sr-only">Switch from ${esc(clash.name)}, keeping its plan</span>`);
+  } else if (!clash && lock) {
+    lock.remove();
+    card.querySelector('.sr-only')?.remove();
+  } else if (clash && lock) {
+    const sr = card.querySelector('.sr-only');
+    if (sr) sr.textContent = `Switch from ${clash.name}, keeping its plan`;
+  }
+
+  // The co-op badge saying the other player brings this one too.
+  const meta = card.querySelector('.card__meta');
+  let badge = meta.querySelector('.card__other');
+  if (other) {
+    if (!badge) { badge = document.createElement('span'); badge.className = 'card__other'; meta.append(badge); }
+    badge.dataset.player = String(other);
+    badge.title = `P${other} is bringing this too`;
+    badge.textContent = `P${other}`;
+  } else if (badge) {
+    badge.remove();
+  }
+}
+
+/** The drag contract for a roster card. Bound once per card, on a fresh render. */
+function bindRosterDrag(card) {
+  const slug = card.dataset.slug;
+  draggable(
+    card,
+    () => {
+      const t = state.bySlug.get(slug);
+      if (!t) return null;
+      const p = store.formation.activePlayer;
+      // A card that would swap a tier is draggable: the drop resolves it. Every
+      // card can be picked up, including the ones that cannot be placed -- the
+      // field and the bench refuse the drop and say why, rather than the card
+      // dying in silence.
+      const swapFrom = store.isSandbox() ? null : (store.familyConflict(t, p)?.slug ?? null);
+      return { slug, player: p, from: 'roster', swapFrom };
+    },
+    () => {
+      const t = state.bySlug.get(slug);
+      return `<span class="token" data-type="${t.type}" data-player="${
+        store.formation.activePlayer}">${artHTML(t, { lazy: false })}</span>`;
+    },
+  );
+}
+
+/*
+ * The list the roster last drew, as a signature. When the next render matches it
+ * the cards are updated in place (see renderRoster); when it does not, or when a
+ * different list took the roster over, the whole thing is rebuilt.
+ */
+let lastRosterSig = null;
+
 export function renderRoster() {
   // Every path that changes what the roster shows comes through here, so this is
   // the one place the chips' counts have to be brought back into agreement with
@@ -1487,100 +1618,33 @@ export function renderRoster() {
      there will be, and it would be forgotten. renderChips sets it again. */
   $('#roster').removeAttribute('data-chip-view');
 
-  if (showing.value === 'zobos') { renderZobos(); return; }
-  if (showing.value === 'chips') { renderChips(); return; }
+  if (showing.value === 'zobos') { lastRosterSig = null; renderZobos(); return; }
+  if (showing.value === 'chips') { lastRosterSig = null; renderChips(); return; }
   const player = store.formation.activePlayer;
   const list = visible(player);
   const host = $('#roster');
   host.dataset.player = String(player);
 
-  host.innerHTML = list.map((t) => {
-    const benched = store.onBench(t.slug, player);
-    const placed = benched && store.isPlaced(t.slug, player);
-
-    // A full bench blocks everything at once; dimming all 200+ cards for that
-    // just makes the roster look broken. Only a per-Tatari reason is marked.
-    // Sandbox brings a whole line at once, so a sibling tier is a normal pick
-    // there, not a swap. Everywhere else it stays a switch — see card--swap.
-    const clash = (benched || store.isSandbox()) ? null : store.familyConflict(t, player);
-    const otherPlayer = store.isCoop()
-      ? store.players().filter((p) => p !== player && store.onBench(t.slug, p))
-      : [];
-
-    const state_ = placed ? 'on the field' : benched ? 'on the bench' : null;
-    /*
-     * Another tier of a line you already bring is a switch, not a wall.
-     *
-     * It used to be flatly blocked, which was true to the rule — one per line —
-     * and wrong about what people wanted: the only way to change your mind about
-     * a tier was to remove the one you had, which threw away its cell and its
-     * level-up plan, neither of which was ever about the tier. The card is
-     * dimmed to say "you already have one of these" and tapping it swaps them.
-     */
-    return `
-      <div class="card${benched ? ' is-benched' : ''}${placed ? ' is-deployed' : ''}${
-        clash ? ' is-swap' : ''}"
-           role="listitem" tabindex="0" data-slug="${esc(t.slug)}" data-type="${t.type}"${
-        clash ? ` data-switch-from="${esc(clash.slug)}"` : ''}
-           title="${esc(t.name)}: ${t.type} ${t.role}, T${t.tier}${
-             state_ ? `\n${state_}` : ''}${clash ? `\nTap to switch from ${clash.name}, keeping its plan` : ''}">
-        <!-- Last in the queue: 230 thumbnails will otherwise crowd out the
-             dozen sprites the field and the benches are showing right now. -->
-        <div class="card__art">${effectMarks(t)}${artHTML(t, { priority: 'low' })}</div>
-        <div class="card__meta">
-          ${patchMark(t)}<span class="card__tier">T${t.tier}</span>
-          ${typeIcon(t.type)}${roleIcon(t.role)}
-          ${otherPlayer.length
-            ? `<span class="card__other" data-player="${otherPlayer[0]}"
-                     title="P${otherPlayer[0]} is bringing this too">P${otherPlayer[0]}</span>` : ''}
-        </div>
-        ${/* The marker is not in this row at all. Sharing the row stopped it
-              overlapping the name but it still ate 18px of a 71px line, and
-              Scorchwing, Boltskipper, Pyrohound, Pyrodaemon, Frugantuan and
-              Cobbledon all need between 55 and 64. It lives in the badge band
-              at the top of the art instead, which is reserved space that is not
-              artwork and not text. */ ''}
-        <div class="card__name">${esc(t.name)}</div>
-        ${clash ? `<span class="card__lock" aria-hidden="true">&#8646;</span>` : ''}
-        ${clash ? `<span class="sr-only">Switch from ${esc(clash.name)}, keeping its plan</span>` : ''}
-        <!-- Focusable. It was tabindex="-1", which took the detail sheet — and
-             with it "Place on the field" — off the keyboard entirely. The
-             reveal already handles :focus-visible, so it appears when tabbed
-             to exactly as it does on hover. -->
-        <button class="card__info" type="button"
-                aria-label="Details for ${esc(t.name)}">i</button>
-      </div>`;
-  }).join('');
-
-  for (const card of host.children) {
-    const slug = card.dataset.slug;
-    draggable(
-      card,
-      () => {
-        const t = state.bySlug.get(slug);
-        if (!t) return null;
-        const p = store.formation.activePlayer;
-        // A card that would swap a tier is draggable: the drop resolves it.
-        const swapFrom = store.isSandbox() ? null : (store.familyConflict(t, p)?.slug ?? null);
-        /*
-         * Every card can be picked up, including the ones that cannot be
-         * placed.
-         *
-         * This used to refuse the drag outright when the bench or the field was
-         * full, which meant the card simply would not move and nothing said
-         * why -- while clicking that same card has always answered "P1's bench
-         * is full (15 max)". A gesture that dies in silence reads as a broken
-         * app, not as a rule. It lifts now, the field and the bench still
-         * refuse the drop, and the refusal is what does the explaining.
-         */
-        return { slug, player: p, from: 'roster', swapFrom };
-      },
-      () => {
-        const t = state.bySlug.get(slug);
-        return `<span class="token" data-type="${t.type}" data-player="${
-          store.formation.activePlayer}">${artHTML(t, { lazy: false })}</span>`;
-      }
-    );
+  /*
+   * The same list of Tatari, only their state changed: update the cards in place.
+   *
+   * renderRoster runs on every formation change, and rebuilding the innerHTML
+   * threw away all 230 cards and their <img> elements each time -- so the sprites
+   * blinked out and re-decoded on every drag, worst on a clear-all-then-load
+   * where it happened twice in a row. When the visible list is unchanged (the
+   * common case: you placed, benched, cleared or loaded something), only the
+   * bench/field/swap marks move, so those are toggled on the cards that already
+   * exist and the images are left alone. A real change to the list -- a search, a
+   * filter, a sort, a tab -- still rebuilds; the signature is what tells them
+   * apart, and it is reset above whenever another list took the roster over.
+   */
+  const sig = `${player}|${store.isCoop() ? 1 : 0}|${list.map((t) => t.slug).join(',')}`;
+  if (sig === lastRosterSig && host.children.length === list.length) {
+    list.forEach((t, i) => applyCardState(host.children[i], t, player));
+  } else {
+    host.innerHTML = list.map((t) => cardHTML(t, player)).join('');
+    for (const card of host.children) bindRosterDrag(card);
+    lastRosterSig = sig;
   }
 
   $('#roster-count').textContent = list.length === state.all.length
