@@ -973,7 +973,7 @@ ${esc(z.skill.name)}` : ''}">
       }
     );
   }
-  observeLazyArt();
+  revealLazyArt();
 
   $('#roster-count').textContent = list.length === state.zobos.length
     ? `${state.zobos.length}`
@@ -1153,7 +1153,7 @@ ${c.text}`)}">
   /* Drag a chip straight from the roster into the dock, at the position you
      want it in rather than onto the end of whatever is there. */
   for (const card of host.children) bindChipDrag(card, card.dataset.chip);
-  observeLazyArt();
+  revealLazyArt();
 
   $('#roster-count').textContent = list.length === chipList().length
     ? `${list.length}`
@@ -1594,29 +1594,40 @@ function bindRosterDrag(card) {
  *
  * Native loading="lazy" loads fine but, inside this scroll container, Chrome
  * routinely leaves the loaded image unpainted until a scroll forces a repaint --
- * so the roster opened full of blank squares and only filled in once you
- * scrolled. Instead the sprites ship with a blank pixel and the real src in
- * data-src (see artHTML's `observe`), and this swaps the real one in when the
- * card scrolls into view. Setting src on an already-visible image paints it the
- * ordinary way, and the deferral is kept: an off-screen card still costs no
- * download. The 300px margin loads a little ahead so a scroll finds art already
- * there.
+ * so the roster opened full of blank squares. The sprites ship with a blank
+ * pixel and the real src in data-src (see artHTML's `observe`), and this swaps
+ * the real one in for any card within a screen of the visible area. Setting src
+ * on a visible image paints it the ordinary way, and off-screen cards still cost
+ * no download.
+ *
+ * A plain geometry check, not IntersectionObserver, on purpose: an observer does
+ * not fire while the tab is in the background, so a roster loaded in a hidden tab
+ * stayed blank -- and getBoundingClientRect works whether the tab is shown or
+ * not, so setting src here loads the sprite regardless and it is ready to paint
+ * the moment the tab is looked at. Re-run on scroll (rAF-throttled) and when a
+ * hidden tab becomes visible, which together cover everything the observer did.
  */
-let artObserver = null;
-function observeLazyArt() {
+let lazyBound = false;
+function revealLazyArt() {
   const host = $('#roster');
   if (!host) return;
-  if (!artObserver) {
-    artObserver = new IntersectionObserver((entries, obs) => {
-      for (const e of entries) {
-        if (!e.isIntersecting) continue;
-        const img = e.target;
-        if (img.dataset.src) { img.src = img.dataset.src; delete img.dataset.src; }
-        obs.unobserve(img);
-      }
-    }, { root: host, rootMargin: '300px 0px' });
+  const hr = host.getBoundingClientRect();
+  // A screen of margin each way, so a flick finds the art already loaded.
+  const top = hr.top - hr.height;
+  const bottom = hr.bottom + hr.height;
+  for (const img of host.querySelectorAll('img.lazyart[data-src]')) {
+    const r = img.getBoundingClientRect();
+    if (r.bottom > top && r.top < bottom) { img.src = img.dataset.src; delete img.dataset.src; }
   }
-  for (const img of host.querySelectorAll('img.lazyart[data-src]')) artObserver.observe(img);
+  if (!lazyBound) {
+    lazyBound = true;
+    let raf = 0;
+    const nudge = () => { if (raf) return; raf = requestAnimationFrame(() => { raf = 0; revealLazyArt(); }); };
+    host.addEventListener('scroll', nudge, { passive: true });
+    // A tab loaded in the background never scrolled; reveal what is in view once
+    // it is actually shown.
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) revealLazyArt(); });
+  }
 }
 
 /*
@@ -1676,7 +1687,7 @@ export function renderRoster() {
   } else {
     host.innerHTML = list.map((t) => cardHTML(t, player)).join('');
     for (const card of host.children) bindRosterDrag(card);
-    observeLazyArt();
+    revealLazyArt();
     lastRosterSig = sig;
   }
 

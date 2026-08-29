@@ -1379,10 +1379,11 @@ await runGroup('the roster updates in place instead of reloading its sprites', a
  *
  * Native loading="lazy" in this scroll container loaded the images but, in
  * Chrome, often did not paint them until a scroll -- so the roster opened full of
- * blank squares. The sprites are custom lazy-loaded now: a blank pixel until an
- * IntersectionObserver swaps the real src in as the card comes into view, which
- * paints the ordinary way. This checks no sprite uses native lazy, and that every
- * sprite already in view has swapped to its real art.
+ * blank squares. The sprites are custom lazy-loaded now: a blank pixel until a
+ * geometry check swaps the real src in for cards within a screen of the visible
+ * area, which paints the ordinary way and works even in a background tab (where
+ * an IntersectionObserver would not fire). This checks no sprite uses native
+ * lazy, and that every sprite already in view has swapped to its real art.
  */
 await runGroup('the roster paints its sprites without a scroll', async () => {
   await reset();
