@@ -14,6 +14,8 @@ const TOUCH_SLOP = 12;
 /** @type {null | {payload: any, ghost: HTMLElement, source: HTMLElement, handlers: any}} */
 let active = null;
 let armed = null;
+/** See the click listener below: the element a just-finished drag started from. */
+let swallowFrom = null;
 
 /**
  * @param {HTMLElement} el
@@ -231,8 +233,48 @@ function finish() {
   active.source.classList.remove('is-dragging');
   try { active.source.releasePointerCapture(active.pointerId); } catch { /* already released */ }
   document.body.classList.remove('is-dragging-active');
+  swallowFrom = active.source;
+  /* Armed for exactly one turn of the event loop -- see the listener below. */
+  setTimeout(() => { swallowFrom = null; }, 0);
   active = null;
 }
+
+/*
+ * The click at the end of a drag, which is not a click.
+ *
+ * begin() captures the pointer to the element the drag started on, so every
+ * mouse event that follows is retargeted there -- including the mouseup. The
+ * browser then sees a mousedown and a mouseup on one element and does what it
+ * always does with a matched pair: it fires a click on it. On the card you were
+ * dragging, not on the field where you let go.
+ *
+ * The roster's click handler has no way to tell that apart from a tap, and a tap
+ * on a card toggles it off the bench -- and off the bench is off the field. So
+ * dragging a Tatari from the roster onto the board placed it and then took it
+ * straight back off, in the same frame. Nothing to see, which reads as a drag
+ * that does not work rather than as one that is being undone.
+ *
+ * Swallowed in the capture phase, before any handler sees it. Here rather than
+ * in the roster because every draggable surface in the app is captured the same
+ * way; the roster is only where the stray click happened to be destructive.
+ *
+ * Narrow on purpose, in both directions. Only a click on the element the drag
+ * started from, because that is the only place the capture can put one -- a
+ * click anywhere else is a real one. And only for one turn of the event loop,
+ * because the browser dispatches that click synchronously after the mouseup it
+ * pairs with, so anything arriving later is somebody's genuine click.
+ *
+ * A blanket "eat the next click" was tried first and was wrong: a drag that ends
+ * without producing one (touch, or Escape) left the flag armed, and the next
+ * real click anywhere on the page went missing. Two suites caught it.
+ */
+window.addEventListener('click', (e) => {
+  if (!swallowFrom) return;
+  if (e.target !== swallowFrom && !swallowFrom.contains(e.target)) return;
+  swallowFrom = null;
+  e.stopPropagation();
+  e.preventDefault();
+}, true);
 
 export function cancelDrag() { disarm(); finish(); }
 

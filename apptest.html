@@ -1715,6 +1715,93 @@ await runGroup('every drag route still lands', async () => {
   await reset();
 });
 
+/*
+ * The click a finished drag leaves behind, which used to undo the drop.
+ *
+ * Dragging a Tatari from the roster onto the field placed it and then took it
+ * straight back off, in the same frame. The drop was never the problem: dnd.js
+ * captures the pointer to the element the drag started on, so the mouseup is
+ * retargeted to that card, the browser sees a matched mousedown/mouseup pair on
+ * one element and fires a click on it -- and the roster reads a click on a card
+ * as a tap, which toggles it off the bench. Off the bench is off the field.
+ *
+ * Every existing drag check missed it, and could not have caught it: they drive
+ * the app with synthetic PointerEvents, and a synthetic pointer neither captures
+ * nor makes the browser generate a click. So the one event that does the damage
+ * is the one the suite never sent. It is sent here, explicitly, at the source
+ * element -- which is exactly where the browser puts it.
+ */
+await runGroup('a drag is not also a tap on the card it started from', async () => {
+  await until(() => !!$('#roster'), 'the drafter to be in the frame', 8000);
+  const V = D.defaultView;
+  await click($('#roster-tabs [data-list="tatari"]'), 420);
+  await reset();
+
+  if ($('#roster').getBoundingClientRect().width < 200) {
+    skip('a drag is not also a tap', 'the roster has no size in this window');
+    return;
+  }
+
+  const centre = (el) => {
+    const r = el.getBoundingClientRect();
+    return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+  };
+  const bring = (el) => {
+    el.scrollIntoView({ block: 'center' });
+    const r = el.getBoundingClientRect();
+    const off = (r.top + r.height / 2) - V.innerHeight / 2;
+    if (Math.abs(off) > 40) V.scrollBy(0, off);
+  };
+  const send = (type, x, y, to) => to.dispatchEvent(new V.PointerEvent(type, {
+    bubbles: true, cancelable: true, composed: true,
+    pointerId: 7, pointerType: 'mouse', isPrimary: true,
+    button: type === 'pointermove' ? -1 : 0, buttons: type === 'pointerup' ? 0 : 1,
+    clientX: x, clientY: y,
+  }));
+
+  const card = $$('.panel--roster .card')
+    .find((c) => !c.classList.contains('card--chip')
+      && !c.classList.contains('is-benched') && !c.dataset.switchFrom);
+  const cell = $$('.cell:not(.cell--enemy)').find((c) => !c.querySelector('.token'));
+  ok('there is a card to drag and a square to drop it on', !!card && !!cell);
+  if (!card || !cell) return;
+
+  const before = $$('.cell.is-filled').length;
+  bring(card);
+  const a = centre(card);
+  send('pointerdown', a.x, a.y, card);
+  send('pointermove', a.x + 9, a.y + 9, V);
+  await sleep(90);
+  bring(cell);
+  const b = centre(cell);
+  send('pointermove', b.x, b.y, V);
+  await sleep(80);
+  send('pointerup', b.x, b.y, V);
+  const landed = $$('.cell.is-filled').length;
+  ok('the drop lands', landed > before, `${before} to ${landed}`);
+
+  /*
+   * And now the event the browser sends and the suite never did -- in the same
+   * turn of the event loop, with nothing awaited in between, because that is
+   * where a real one arrives: the browser dispatches the click synchronously
+   * after the mouseup it pairs with. Sending it after a wait would be testing a
+   * click no browser produces, and the guard in dnd.js deliberately ignores it.
+   */
+  card.dispatchEvent(new V.MouseEvent('click', {
+    bubbles: true, cancelable: true, composed: true, button: 0,
+  }));
+  await sleep(420);
+
+  eq('and the click the capture leaves behind does not undo it',
+     $$('.cell.is-filled').length, landed);
+
+  $('#btn-clear-field')?.click();
+  await sleep(300);
+  const clearBench = $$('button').find((bt) => /clear bench/i.test(bt.textContent));
+  if (clearBench && !clearBench.disabled) { clearBench.click(); await sleep(320); }
+  await reset();
+});
+
 await runGroup('chips are dragged into the dock, and around inside it', async () => {
   /*
    * Waited for, not assumed.
