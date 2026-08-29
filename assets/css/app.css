@@ -2294,7 +2294,24 @@ body[data-switching="true"] .cell[data-zobo] { box-shadow: none; cursor: default
    past the aspect-ratio and re-growing the card. */
 .card__art img,
 .card__art .token__fallback { grid-row: 2; min-height: 0; }
-.card__art img { width: 100%; height: 100%; object-fit: contain; }
+/*
+ * The sprite gets a guaranteed inset of its own, on top of the box padding.
+ *
+ * The PNGs are not framed alike: some critters fill their 200x200 canvas
+ * edge-to-edge and some sit small inside it. With the sprite at 100% the tightly
+ * cropped ones reached the tint edge -- worst at the bottom, where the 15px badge
+ * band up top leaves only a few pixels -- and read as bursting out of the square.
+ * Padding the image (border-box, so it eats into the contained area) shrinks the
+ * letterbox a touch and hands every sprite the same breathing room, a little more
+ * at the bottom to answer the band pulling it down. Small ones only get smaller;
+ * the full ones stop touching the edge, which is the whole point.
+ */
+.card__art img {
+  width: 100%; height: 100%;
+  object-fit: contain;
+  box-sizing: border-box;
+  padding: 2px 6px 6px;
+}
 
 /* Tier, type and role sit under the sprite rather than on it. Measured across
    all 215 sprites, every in-art spot big enough for two badges is covered by
