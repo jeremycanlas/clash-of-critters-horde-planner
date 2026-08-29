@@ -800,6 +800,7 @@ img { -webkit-user-drag: none; }
   grid-row: 1;
   display: flex; align-items: center; justify-content: center; gap: 3px;
   width: 100%; height: 15px;
+  min-width: 0; max-width: 100%;   /* see .card__art: never wider than the box */
   pointer-events: none;
 }
 /*
@@ -2286,6 +2287,16 @@ body[data-switching="true"] .cell[data-zobo] { box-shadow: none; cursor: default
   position: relative;
   display: grid; grid-template-rows: 15px 1fr; place-items: center;
   aspect-ratio: 1;
+  /*
+   * min-width: 0, and the same on the badge band below. Grid items default to
+   * min-width: auto, so anything inside this box that is wider than the card
+   * (three effect badges plus the 17px the swap marker pushes them over by --
+   * 83px in a 71px box) widened the box past the card, aspect-ratio then made it
+   * as tall as it was wide, and the whole roster row stretched to fit: bench one
+   * Tatari and every card in its row grew by 17px. Now the band shrinks to fit
+   * and the box never sizes to its contents.
+   */
+  min-width: 0;
   padding: 0 4px 5px;
   border-radius: var(--r-sm);
   background: color-mix(in srgb, var(--type-color) 13%, transparent);

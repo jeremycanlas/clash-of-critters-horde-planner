@@ -1326,6 +1326,27 @@ await runGroup('the roster cannot spill past its grid', async () => {
   } else {
     skip('the scrollbar gutter', 'this layout hands the vertical scroll to the page');
   }
+
+  /*
+   * And a card cannot grow its row. Benching Ashlarva marked its three line-mates
+   * as swaps, whose badge band gets 17px of padding for the swap marker; three
+   * badges plus that was wider than the art box, the box (min-width: auto) grew
+   * to fit, aspect-ratio made it as tall as it was wide, and the whole row of
+   * ten cards stretched by 17px. The art box must never be wider than its card.
+   */
+  await click($('#roster-tabs [data-list="tatari"]'), 320);
+  if ($('#btn-clear')) await click($('#btn-clear'), 320);
+  const ash = $('.panel--roster .card[data-slug="ashlarva"]');
+  if (ash) {
+    await click(ash, 320);
+    const wide = $$('.panel--roster .card').filter((c) =>
+      c.querySelector('.card__art').getBoundingClientRect().width > c.getBoundingClientRect().width);
+    ok('no art box is wider than its card after benching a Tatari with swap siblings',
+       wide.length === 0, `${wide.length} cards grew: ${wide.slice(0, 3).map((c) => c.dataset.slug).join(', ')}`);
+    await click($(`.panel--roster .card[data-slug="ashlarva"]`), 320);   // put it back
+  } else {
+    skip('the art box cannot outgrow its card', 'no Ashlarva in this roster');
+  }
 });
 
 /*
