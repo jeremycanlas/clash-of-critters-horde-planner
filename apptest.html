@@ -1375,6 +1375,44 @@ await runGroup('the roster updates in place instead of reloading its sprites', a
 });
 
 /*
+ * The roster paints its sprites without needing a scroll.
+ *
+ * Native loading="lazy" in this scroll container loaded the images but, in
+ * Chrome, often did not paint them until a scroll -- so the roster opened full of
+ * blank squares. The sprites are custom lazy-loaded now: a blank pixel until an
+ * IntersectionObserver swaps the real src in as the card comes into view, which
+ * paints the ordinary way. This checks no sprite uses native lazy, and that every
+ * sprite already in view has swapped to its real art.
+ */
+await runGroup('the roster paints its sprites without a scroll', async () => {
+  await reset();
+  await click($('#roster-tabs [data-list="tatari"]'), 320);
+  await until(() => $$('.panel--roster .card img.lazyart').length > 0, 'the roster sprites', 5000);
+
+  ok('roster sprites are custom lazy, not native loading=lazy',
+     !$('.panel--roster .card img[loading="lazy"]')
+     && $$('.panel--roster .card img.lazyart').length > 0);
+
+  const host = $('#roster');
+  const inView = () => {
+    const hr = host.getBoundingClientRect();
+    return $$('.panel--roster .card').filter((c) => {
+      const r = c.getBoundingClientRect();
+      return r.bottom > hr.top && r.top < hr.bottom;
+    });
+  };
+  const start = inView();
+  if (!start.length) { skip('sprites load without a scroll', 'the roster is not on screen in this window'); return; }
+  const realLoaded = () => inView().every((c) => {
+    const img = c.querySelector('.card__art img');
+    return img && img.currentSrc && !img.currentSrc.startsWith('data:');
+  });
+  await until(realLoaded, 'the visible sprites to swap in their real art', 6000);
+  ok('every sprite already in view has swapped to its real art (so it paints, no blank squares)',
+     realLoaded());
+});
+
+/*
  * Dragging a chip into the dock, and dragging one around inside it.
  *
  * A tap already keeps a chip, and this could have stopped there. What a tap

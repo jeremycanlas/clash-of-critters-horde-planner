@@ -6,7 +6,7 @@ import {
 } from './chips.js';
 import * as store from './store.js';
 import { TYPES, ROLES } from './icons.js';
-import { $, artHTML, esc, typeIcon, roleIcon, toast } from './ui.js';
+import { $, artHTML, esc, typeIcon, roleIcon, toast, BLANK_PIXEL } from './ui.js';
 import { draggable, dropZone } from './dnd.js';
 import { openDetail } from './detail.js';
 import { measureDock } from './shell.js';
@@ -953,7 +953,7 @@ function renderZobos() {
            title="${esc(z.name)}${z.type ? `, ${z.type}` : ''}${z.boss ? ', Boss' : ''}${
   z.skill?.name ? `
 ${esc(z.skill.name)}` : ''}">
-        <div class="card__art">${artHTML(z, { priority: 'low' })}</div>
+        <div class="card__art">${artHTML(z, { observe: true, priority: 'low' })}</div>
         <div class="card__meta">
           ${z.boss ? '<span class="card__boss" title="Boss">★</span>' : ''}
           ${z.type ? typeIcon(z.type) : ''}
@@ -973,6 +973,7 @@ ${esc(z.skill.name)}` : ''}">
       }
     );
   }
+  observeLazyArt();
 
   $('#roster-count').textContent = list.length === state.zobos.length
     ? `${state.zobos.length}`
@@ -1139,7 +1140,7 @@ function renderChips() {
            data-chip="${esc(c.name)}" data-tier="${c.tier}"
            title="${esc(`${c.name}
 ${c.text}`)}">
-        <img class="chiprow__art" src="${esc(iconFor(c))}" alt="" loading="lazy" decoding="async">
+        <img class="chiprow__art lazyart" src="${BLANK_PIXEL}" data-src="${esc(iconFor(c))}" alt="" decoding="async">
         <div class="chiprow__body">
           <p class="chiprow__head"><b>${esc(c.name)}</b>${badges}</p>
           <p class="chiprow__text">${esc(c.text)}</p>
@@ -1152,6 +1153,7 @@ ${c.text}`)}">
   /* Drag a chip straight from the roster into the dock, at the position you
      want it in rather than onto the end of whatever is there. */
   for (const card of host.children) bindChipDrag(card, card.dataset.chip);
+  observeLazyArt();
 
   $('#roster-count').textContent = list.length === chipList().length
     ? `${list.length}`
@@ -1501,7 +1503,7 @@ function cardHTML(t, player) {
     state_ ? `\n${state_}` : ''}${clash ? `\nTap to switch from ${clash.name}, keeping its plan` : ''}">
         <!-- Last in the queue: 230 thumbnails will otherwise crowd out the
              dozen sprites the field and the benches are showing right now. -->
-        <div class="card__art">${effectMarks(t)}${artHTML(t, { priority: 'low' })}</div>
+        <div class="card__art">${effectMarks(t)}${artHTML(t, { observe: true, priority: 'low' })}</div>
         <div class="card__meta">
           ${patchMark(t)}<span class="card__tier">T${t.tier}</span>
           ${typeIcon(t.type)}${roleIcon(t.role)}
@@ -1588,6 +1590,36 @@ function bindRosterDrag(card) {
 }
 
 /*
+ * Custom lazy-loading for the roster's sprites.
+ *
+ * Native loading="lazy" loads fine but, inside this scroll container, Chrome
+ * routinely leaves the loaded image unpainted until a scroll forces a repaint --
+ * so the roster opened full of blank squares and only filled in once you
+ * scrolled. Instead the sprites ship with a blank pixel and the real src in
+ * data-src (see artHTML's `observe`), and this swaps the real one in when the
+ * card scrolls into view. Setting src on an already-visible image paints it the
+ * ordinary way, and the deferral is kept: an off-screen card still costs no
+ * download. The 300px margin loads a little ahead so a scroll finds art already
+ * there.
+ */
+let artObserver = null;
+function observeLazyArt() {
+  const host = $('#roster');
+  if (!host) return;
+  if (!artObserver) {
+    artObserver = new IntersectionObserver((entries, obs) => {
+      for (const e of entries) {
+        if (!e.isIntersecting) continue;
+        const img = e.target;
+        if (img.dataset.src) { img.src = img.dataset.src; delete img.dataset.src; }
+        obs.unobserve(img);
+      }
+    }, { root: host, rootMargin: '300px 0px' });
+  }
+  for (const img of host.querySelectorAll('img.lazyart[data-src]')) artObserver.observe(img);
+}
+
+/*
  * The list the roster last drew, as a signature. When the next render matches it
  * the cards are updated in place (see renderRoster); when it does not, or when a
  * different list took the roster over, the whole thing is rebuilt.
@@ -1644,6 +1676,7 @@ export function renderRoster() {
   } else {
     host.innerHTML = list.map((t) => cardHTML(t, player)).join('');
     for (const card of host.children) bindRosterDrag(card);
+    observeLazyArt();
     lastRosterSig = sig;
   }
 

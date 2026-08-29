@@ -22,20 +22,39 @@ export function artOf(t) {
  * (a handful of unreleased Tatari).
  */
 /**
+ * A 1x1 transparent GIF. It stands in for a sprite that has not loaded yet, so
+ * the card shows its tinted box rather than a broken-image icon while custom
+ * lazy-loading waits to swap the real art in.
+ */
+export const BLANK_PIXEL = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+
+/**
  * `priority` maps to fetchpriority.
  *
  * The roster is 218 thumbnails and the browser will happily have all of them in
  * flight at once, which leaves the dozen sprites actually on screen (the
  * field, the benches, the co-op lines) waiting behind art nobody has scrolled
  * to. Those load eagerly and high; the roster asks last.
+ *
+ * `observe` is custom lazy-loading for the scrolling roster: the image ships
+ * with the blank pixel above and the real src in data-src, for an
+ * IntersectionObserver to swap in once the card scrolls into view. It replaces
+ * `loading="lazy"`, which loads fine but -- inside a scroll container, in Chrome
+ * -- routinely fails to paint until a scroll forces a repaint, leaving the
+ * roster full of blank squares. Setting src on an already-visible image paints
+ * it the ordinary way, so that bug never arises.
  */
-export function artHTML(t, { lazy = true, priority = null } = {}) {
+export function artHTML(t, { lazy = true, priority = null, observe = false } = {}) {
   const src = artOf(t);
   if (!src) return `<span class="token__fallback">${esc(t.name)}</span>`;
   const attrs = [
-    lazy ? 'loading="lazy" decoding="async"' : '',
     priority ? `fetchpriority="${priority}"` : '',
+    observe ? 'decoding="async"' : (lazy ? 'loading="lazy" decoding="async"' : ''),
   ].filter(Boolean).join(' ');
+  if (observe) {
+    return `<img class="lazyart" src="${BLANK_PIXEL}" data-src="${esc(src)}" alt="${esc(t.name)}"${
+      attrs ? ` ${attrs}` : ''}>`;
+  }
   return `<img src="${esc(src)}" alt="${esc(t.name)}"${attrs ? ` ${attrs}` : ''}>`;
 }
 
@@ -44,7 +63,7 @@ export function artHTML(t, { lazy = true, priority = null } = {}) {
  * the share card — so a posted picture says which build drew it, which matters
  * while the attack-range data is still being filled in.
  */
-export const APP_VERSION = '1.8.3';
+export const APP_VERSION = '1.8.4';
 export const APP_AUTHOR = 'jacc6475';
 
 /*
