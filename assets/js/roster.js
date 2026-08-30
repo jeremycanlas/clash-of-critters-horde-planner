@@ -295,6 +295,10 @@ export function buildFilters(onChange, { onPick = bringToBench } = {}) {
       if (!btn || btn.dataset.view === zoboView.value) return;
       zoboView.value = btn.dataset.view;
       try { localStorage.setItem(ZOBO_VIEW_KEY, zoboView.value); } catch { /* private */ }
+      draw();
+      onChange();
+    });
+  }
 
   const tabs = $('#roster-tabs');
   if (tabs) {
@@ -1044,29 +1048,15 @@ try {
  * star, which is the one thing that changes how you draft against one.
  */
 /*
- * "Stage 15" on a boss card.
+ * One Zobo card. Both readings of the list are made of these.
  *
- * The order the run sends them in is the one thing about a boss you cannot read
- * off the card and cannot work out from the board: it is knowledge from playing,
- * and it is what decides which boss you are actually drafting against next. So
- * it goes on the card rather than behind a click.
- *
- * Every stage it appears at, not the first: Goonch arrives at 2, 7 and 16, and a
- * card saying only "2" would quietly tell you the other two do not happen.
- * Bosses that share a stage each say the same number, which is the truth -- that
- * stage sends both of them at once.
+ * No stage number on the card. It was there first, before the wave list existed
+ * and was the only place the order could live -- and once the order has a list of
+ * its own the badge is the same fact said twice, in the weaker of the two places:
+ * a number in a corner has to be decoded, where a numbered list is just read. It
+ * also sat on top of the art it was labelling. The stage belongs to the stage,
+ * which is the row, not to the boss.
  */
-function stageBadge(z) {
-  const at = state.bossStages.get(z.slug);
-  if (!at?.length) return '';
-  const list = at.length === 1 ? `Stage ${at[0]}`
-    : `Stages ${at.slice(0, -1).join(', ')} and ${at[at.length - 1]}`;
-  const who = state.bossOrderBy ? `, boss order by ${state.bossOrderBy}` : '';
-  return `<span class="card__stage" title="${esc(`${list} of ${state.bossStageCount}${who}`)}">${
-    esc(at.join('·'))}</span>`;
-}
-
-/** One Zobo card. Both readings of the list are made of these. */
 function zoboCard(z) {
   return `
       <div class="card card--zobo" role="listitem" tabindex="0"
@@ -1074,7 +1064,7 @@ function zoboCard(z) {
            title="${esc(z.name)}${z.type ? `, ${z.type}` : ''}${z.boss ? ', Boss' : ''}${
   z.skill?.name ? `
 ${esc(z.skill.name)}` : ''}">
-        <div class="card__art">${artHTML(z, { observe: true, priority: 'low' })}${stageBadge(z)}</div>
+        <div class="card__art">${artHTML(z, { observe: true, priority: 'low' })}</div>
         <div class="card__meta">
           ${z.boss ? '<span class="card__boss" title="Boss">★</span>' : ''}
           ${z.type ? typeIcon(z.type) : ''}
@@ -1115,7 +1105,19 @@ function renderWaves(keep) {
         <div class="waverow__cards">${here.map(zoboCard).join('')}</div>
       </div>`);
   }
-  return { html: rows.join(''), rows: rows.length, shown };
+  /*
+   * The columns get a box of their own inside the roster rather than being the
+   * roster.
+   *
+   * A multi-column box with a height on it is a fragmentainer: it fills each
+   * column to that height and then makes another column, sideways, for ever. The
+   * roster has `max-height` and scrolls, so putting the columns directly on it
+   * laid 25 stages out in seven columns, ran three of them off the right-hand
+   * edge and gave the page a horizontal scrollbar. With the columns on an inner
+   * box of no fixed height, the count comes from the width, the box grows as tall
+   * as the balanced columns need, and the roster scrolls it the ordinary way.
+   */
+  return { html: `<div class="wavecols">${rows.join('')}</div>`, rows: rows.length, shown };
 }
 
 function renderZobos() {
@@ -1159,17 +1161,15 @@ function renderZobos() {
   }
   revealLazyArt();
 
-  /* Said once, under the list, rather than on all 24 cards carrying a number. */
+  /* Credited where the work is shown, which is now only the wave list: the
+     roster reading carries nothing of the boss order any more. */
   const credit = $('#boss-order-credit');
   if (credit) {
-    const show = state.bossStageCount > 0 && !!state.bossOrderBy;
+    const show = waves && !!state.bossOrderBy;
     credit.hidden = !show;
     credit.textContent = show
-      ? (waves
-        ? `The order a Horde run sends its bosses in, worked out and shared by ${
-          state.bossOrderBy}.`
-        : `Numbers on the boss cards are the stage they arrive at, 1 to ${
-          state.bossStageCount}. Worked out and shared by ${state.bossOrderBy}.`)
+      ? `The order a Horde run sends its bosses in, worked out and shared by ${
+        state.bossOrderBy}.`
       : '';
   }
 

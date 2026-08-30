@@ -2220,50 +2220,29 @@ body[data-switching="true"] .cell[data-zobo] { box-shadow: none; cursor: default
   font-size: 11px; line-height: 1;
 }
 /*
- * Which stage of the run sends this boss, in the art box's free corner.
- *
- * Not in .card__meta, which is where it obviously belongs and where it cannot
- * go: that row is a grid item with the sprite square below it on an aspect-ratio,
- * so anything in it that is wider than the card widens the box, and a square box
- * that gets wider gets taller and drags the whole row of cards with it. That is
- * exactly the bug 1.8.6 and 1.8.7 were, and the co-op P1/P2 tag was moved into
- * this same art box in 1.8.8 for the same reason. Absolute, so it is out of the
- * flow entirely and cannot push on anything.
- *
- * Top left, because the co-op tag has the top right and the two can appear on
- * one card. Tabular numerals so "2·7·16" and "9" line up down a column, and a
- * ceiling on the width so a boss that somehow gained a fourth stage clips
- * instead of growing.
- */
-.card__stage {
-  position: absolute; left: 4px; top: 4px; z-index: 1;
-  max-width: calc(100% - 8px);
-  padding: 0 3px;
-  border-radius: var(--r-sm);
-  background: color-mix(in srgb, var(--accent) 26%, var(--surface-3));
-  color: var(--text);
-  font-size: 8.5px; font-weight: 700; line-height: 15px;
-  font-variant-numeric: tabular-nums;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
-/*
  * The wave list: "1 - Two-Headed", "2 - Goonch", down to 25.
  *
- * Numbered entries that wrap into as many columns as the panel has room for,
- * which is how the list was given to us and the only layout that shows 25 of
- * them at once. One stage per row down a single column was the first attempt and
- * was wrong twice over: it wasted nine tenths of the panel's width and turned a
- * list you can take in at a glance into a page and a half of scrolling, which is
- * the one thing a running order must not be.
+ * Read down a column and then over to the next, the way the list was drawn and
+ * the way anybody reads a running order. That is CSS columns rather than grid:
+ * grid fills across before it fills down, and making it go the other way means
+ * telling it how many rows to make, which no panel that has to fit a phone and a
+ * desktop can know. Multicol takes a column WIDTH and works the rest out, which
+ * is the same question stated the way it can actually be answered.
  *
- * Reading runs across and then down, the way the grid flows, rather than down
- * each column the way the original picture does. The numbers are on every row,
- * so the direction is never in doubt -- and a column-flow grid has to be told
- * how many rows to make, which no responsive panel can know.
+ * Two layouts came before this one. One stage per row down a single column
+ * wasted nine tenths of the panel and made a glanceable list into a page and a
+ * half of scrolling. Then a wrapping grid, which read across instead of down.
+ *
+ * 180px, not narrower: it is what a stage sending two bosses needs (a number,
+ * then two 78px cards), and every column in a multicol is the same width. The 22
+ * single-boss stages carry some empty space to the right for it, which is the
+ * cheaper of the two costs -- the alternative is a pair that stacks, and a
+ * stacked pair reads as two stages that have lost their numbers.
  */
-.roster[data-zobo-view="waves"] {
-  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-  align-items: start;
+.roster[data-zobo-view="waves"] { display: block; }
+.wavecols {
+  columns: 180px;
+  column-gap: var(--s3);
 }
 .waverow {
   display: grid;
@@ -2271,6 +2250,10 @@ body[data-switching="true"] .cell[data-zobo] { box-shadow: none; cursor: default
   align-items: center;
   gap: var(--s2);
   min-width: 0;
+  /* A stage split down the middle by a column break would put its number in one
+     column and its boss in the next. */
+  break-inside: avoid;
+  padding-bottom: var(--s2);
 }
 .waverow__n {
   justify-self: end;
@@ -2279,20 +2262,10 @@ body[data-switching="true"] .cell[data-zobo] { box-shadow: none; cursor: default
   /* So 1 and 25 sit on the same right edge and the numbers read as a column. */
   font-variant-numeric: tabular-nums;
 }
-/*
- * A stage that sends two puts both in the one entry, and takes two columns to
- * do it.
- *
- * Without the span they wrapped inside a single column, so stage 15 became twice
- * as tall as the stages either side of it and every row after it sat at a
- * different height. Worse than untidy: a stacked pair reads as two stages that
- * have lost their numbers, when it is one stage sending two bosses. Spanning
- * keeps them side by side, which is how the list was drawn, and keeps every row
- * of the grid one card tall.
- */
+/* A stage that sends two puts both in the one entry, side by side. The column is
+   sized so they fit without wrapping; see the note above. */
 .waverow__cards { display: flex; gap: var(--s1); min-width: 0; }
 .waverow__cards .card--zobo { width: 78px; flex: none; }
-.waverow:has(.card--zobo + .card--zobo) { grid-column: span 2; }
 /* Every boss filtered out of every stage. Says which of the two it is -- no
    match at all -- rather than leaving an empty panel that reads as broken. */
 .roster__empty {

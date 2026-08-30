@@ -1364,30 +1364,20 @@ await runGroup('the roster cannot spill past its grid', async () => {
     skip('the art box cannot outgrow its card', 'no Ashlarva in this roster');
   }
 
-  /*
-   * The same question on the Zobo tab, which now has a badge of its own.
-   *
-   * The stage number is deliberately in the art box rather than in .card__meta,
-   * because the meta row is the thing that grew the cards twice before. Checked
-   * with the widest one on screen -- a boss the run sends three times wears
-   * "2-7-16", which is the longest this badge ever gets -- so the check has
-   * something to fail on rather than passing on a roster of single digits.
-   */
+  /* The same question on the Zobo tab, which draws from the same card markup and
+     so inherits the same failure if that markup ever grows something. */
   await click($('#roster-tabs [data-list="zobos"]'), 400);
   const zobos = $$('.panel--roster .card--zobo');
-  const widest = $$('.card__stage').map((s) => s.textContent.length);
   if (!zobos.length) {
-    skip('a stage badge cannot grow a Zobo card', 'no Zobos in this copy');
+    skip('a Zobo card cannot outgrow itself either', 'no Zobos in this copy');
   } else {
-    ok('the longest stage badge is on screen, so this is checked against the worst case',
-       Math.max(0, ...widest) >= 6, `longest badge is ${Math.max(0, ...widest)} characters`);
     const grew = zobos.filter((c) =>
       c.querySelector('.card__art').getBoundingClientRect().width > c.getBoundingClientRect().width);
     ok('no Zobo art box is wider than its card', grew.length === 0,
        `${grew.length} grew: ${grew.slice(0, 3).map((c) => c.dataset.slug).join(', ')}`);
     const zSizes = new Set(zobos.map((c) =>
       `${Math.round(c.getBoundingClientRect().height)}x${Math.round(c.querySelector('.card__art').getBoundingClientRect().width)}`));
-    ok('every Zobo card is the same size, badge or no badge',
+    ok('every Zobo card is the same size as every other',
        zSizes.size === 1, `sizes seen: ${[...zSizes].join(', ')}`);
   }
   await click($('#roster-tabs [data-list="tatari"]'), 380);
@@ -1599,6 +1589,31 @@ await runGroup('the Zobo tab reads as a wave list as well as a roster', async ()
   ok('the stages are in order', numbers.every((n, i) => i === 0 || n > numbers[i - 1]),
      numbers.join(', '));
   eq('it starts at stage 1', numbers[0], 1);
+
+  /*
+   * And it reads DOWN each column before moving right, which is what the list
+   * was asked for and the only reason it is CSS columns rather than a grid.
+   *
+   * Checked by geometry, because that is the only place the difference lives:
+   * the markup is the same 25 entries in the same order either way, so a grid
+   * flowing across would pass every check above and still be the wrong list.
+   * Column 1 must hold 1..k and column 2 must start after column 1 ends.
+   */
+  const cols = new Map();
+  for (const r of rows) {
+    const left = Math.round(r.getBoundingClientRect().left);
+    if (!cols.has(left)) cols.set(left, []);
+    cols.get(left).push(Number(r.querySelector('.waverow__n').textContent));
+  }
+  const ordered = [...cols.entries()].sort((a, b) => a[0] - b[0]).map(([, ns]) => ns);
+  if (ordered.length < 2) {
+    skip('the list reads down each column', `only ${ordered.length} column at this width`);
+  } else {
+    const runsDown = ordered.every((ns, i) =>
+      i === 0 || Math.min(...ns) > Math.max(...ordered[i - 1]));
+    ok('every stage in a column comes after every stage in the column left of it',
+       runsDown, ordered.map((ns) => `[${ns[0]}-${ns[ns.length - 1]}]`).join(' '));
+  }
 
   /* A boss the run sends three times is in three entries, not one. */
   const goonch = rows.filter((r) => r.querySelector('.card--zobo[data-slug="goonch-zobo"]'))
