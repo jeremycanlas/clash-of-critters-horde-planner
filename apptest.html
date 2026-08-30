@@ -1357,6 +1357,53 @@ await runGroup('the roster cannot spill past its grid', async () => {
 });
 
 /*
+ * Glitter art, which had no check at all and quietly stopped working in 1.8.3.
+ *
+ * The group below is the one that broke it: the roster learned to update its
+ * cards in place, which is defined by not touching the <img> elements -- and
+ * Glitter is the one switch that changes every sprite without changing which
+ * Tatari are listed. So the toggle did nothing to the roster while the bench and
+ * the field changed underneath it, and then appeared to work minutes later when
+ * a search or a filter forced a rebuild. Reported as "glitter art toggle doesn't
+ * work anymore".
+ *
+ * Checked by reading the src off the cards, because that is the only place the
+ * answer was ever wrong: the checkbox was checked, the state was right, and
+ * every other surface already agreed. Only the picture was stale.
+ */
+await runGroup('the glitter switch changes the roster art, not just the bench', async () => {
+  await until(() => !!$('#roster'), 'the drafter to be in the frame', 8000);
+  await click($('#roster-tabs [data-list="tatari"]'), 380);
+  await reset();
+
+  const box = $('#opt-glitter');
+  if (!box) { skip('the glitter switch', 'no glitter control in this copy'); return; }
+
+  /* Counted across the roster rather than named on one Tatari: 207 of the 230
+     have a second sprite, so "how many are showing it" needs no fixture and
+     cannot rot when the art catalogue changes. */
+  const lit = () => $$('.panel--roster .card img').filter((i) => /\/glitter\//.test(i.src)).length;
+  const flip = async (on) => {
+    box.checked = on;
+    box.dispatchEvent(new Event('change', { bubbles: true }));
+    await sleep(650);
+  };
+
+  await flip(false);
+  eq('with it off, nothing in the roster is showing glitter art', lit(), 0);
+
+  await flip(true);
+  ok('turning it on swaps the roster sprites over', lit() > 0,
+     `${lit()} of ${$$('.panel--roster .card img').length} cards`);
+
+  /* And back, so the switch is a switch rather than a one-way door. */
+  await flip(false);
+  eq('turning it off puts the ordinary art back', lit(), 0);
+
+  await reset();
+});
+
+/*
  * The roster keeps its cards on a formation change, rather than rebuilding them.
  *
  * renderRoster runs on every edit, and it used to rebuild the whole innerHTML

@@ -6,7 +6,7 @@ import {
 } from './chips.js';
 import * as store from './store.js';
 import { TYPES, ROLES } from './icons.js';
-import { $, artHTML, esc, typeIcon, roleIcon, toast, BLANK_PIXEL } from './ui.js';
+import { $, artHTML, esc, typeIcon, roleIcon, toast, glitterOn, BLANK_PIXEL } from './ui.js';
 import { draggable, dropZone } from './dnd.js';
 import { openDetail } from './detail.js';
 import { measureDock } from './shell.js';
@@ -1680,8 +1680,21 @@ export function renderRoster() {
    * exist and the images are left alone. A real change to the list -- a search, a
    * filter, a sort, a tab -- still rebuilds; the signature is what tells them
    * apart, and it is reset above whenever another list took the roster over.
+   *
+   * Glitter is in the signature because it is the one switch that changes every
+   * sprite without changing the list. Left out, it took the in-place path --
+   * which is defined by not touching the images -- so turning Glitter on did
+   * nothing to the roster at all, while the bench and the field (which rebuild)
+   * changed underneath it. It then appeared to work later, when a search or a
+   * filter forced a rebuild, which is worse than plainly not working.
+   *
+   * In the signature rather than taught to applyCardState: swapping 230 srcs is
+   * a rebuild in everything but name, and the sprites really do all have to
+   * change. This path exists to skip rebuilds that would change nothing, not to
+   * skip this one.
    */
-  const sig = `${player}|${store.isCoop() ? 1 : 0}|${list.map((t) => t.slug).join(',')}`;
+  const sig = `${player}|${store.isCoop() ? 1 : 0}|${glitterOn.value ? 'g' : ''}|${
+    list.map((t) => t.slug).join(',')}`;
   if (sig === lastRosterSig && host.children.length === list.length) {
     list.forEach((t, i) => applyCardState(host.children[i], t, player));
   } else {
