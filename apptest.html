@@ -1572,6 +1572,76 @@ await runGroup('the glitter switch changes the roster art, not just the bench', 
 });
 
 /*
+ * The wave list: the same Zobos read as a running order.
+ *
+ * The order is the whole content, so the checks are about order and about the
+ * two things a flat "one card per stage" list would silently get wrong: a boss
+ * the run sends more than once has to appear at every one of its stages, and a
+ * stage that sends two has to be one entry with two cards rather than two
+ * entries. Both are true of the real data, so both are checked against it.
+ */
+await runGroup('the Zobo tab reads as a wave list as well as a roster', async () => {
+  await until(() => !!$('#roster'), 'the drafter to be in the frame', 8000);
+  await click($('#roster-tabs [data-list="zobos"]'), 420);
+
+  const toggle = $('#zobo-view [data-view="waves"]');
+  if (!toggle) { skip('the wave list', 'no wave view in this copy'); return; }
+  await click(toggle, 460);
+
+  const rows = $$('.waverow');
+  if (!rows.length) {
+    skip('the wave list', 'no boss order loaded');
+    await click($('#roster-tabs [data-list="tatari"]'), 380);
+    return;
+  }
+
+  const numbers = rows.map((r) => Number(r.querySelector('.waverow__n').textContent));
+  ok('the stages are in order', numbers.every((n, i) => i === 0 || n > numbers[i - 1]),
+     numbers.join(', '));
+  eq('it starts at stage 1', numbers[0], 1);
+
+  /* A boss the run sends three times is in three entries, not one. */
+  const goonch = rows.filter((r) => r.querySelector('.card--zobo[data-slug="goonch-zobo"]'))
+    .map((r) => Number(r.querySelector('.waverow__n').textContent));
+  /* Joined, not eq: this suite's eq is Object.is, which no two arrays satisfy. */
+  eq('a boss sent more than once appears at every stage that sends it',
+     goonch.join(','), '2,7,16');
+
+  /* And a stage that sends two is one entry holding both. */
+  const fifteen = rows.find((r) => r.querySelector('.waverow__n').textContent === '15');
+  const at15 = [...(fifteen?.querySelectorAll('.card--zobo') ?? [])].map((c) => c.dataset.slug).sort();
+  eq('a stage that sends two is one entry with both in it',
+     at15.join(','), 'golf-zobo,sandworm-zobo');
+
+  /*
+   * Filtering the wave list answers a question the roster cannot: not "which
+   * bosses are Fire" but "when do the Fire ones turn up". A stage left with no
+   * boss drops out rather than showing as an empty row.
+   */
+  const fire = $$('#filter-types .chip').find((c) => c.dataset.type === 'Fire');
+  if (fire) {
+    await click(fire, 520);
+    const left = $$('.waverow');
+    ok('filtering leaves only the stages that still send something',
+       left.length > 0 && left.length < rows.length, `${rows.length} -> ${left.length}`);
+    ok('and every stage still shown has a card in it',
+       left.every((r) => r.querySelector('.card--zobo')));
+    await click(fire, 460);
+  }
+
+  /* Back to the roster reading, and the wave layout must not follow it. */
+  await click($('#zobo-view [data-view="roster"]'), 460);
+  eq('switching back to the roster clears the wave layout',
+     $('#roster').getAttribute('data-zobo-view'), null);
+  ok('and the roster reading is cards again, with no stage rows',
+     $$('.card--zobo').length > 0 && $$('.waverow').length === 0);
+
+  await click($('#roster-tabs [data-list="tatari"]'), 400);
+  eq('and it does not follow the Tatari tab either',
+     $('#roster').getAttribute('data-zobo-view'), null);
+});
+
+/*
  * The roster keeps its cards on a formation change, rather than rebuilding them.
  *
  * renderRoster runs on every edit, and it used to rebuild the whole innerHTML

@@ -1557,6 +1557,47 @@ await runGroup('the update page on a phone', async () => {
   frame.remove();
 });
 
+await runGroup('the wave list fits the phone', async () => {
+  /*
+   * A grid of numbered entries, on the narrowest screen it has.
+   *
+   * At 390px the roster sheet has room for about two columns, and the entries
+   * that send two bosses are told to span two -- so the phone is exactly where a
+   * span can ask for more columns than exist. It cannot spill, and a stage that
+   * sends two must still keep both cards on one line, because a stacked pair
+   * reads as two stages that have lost their numbers.
+   */
+  if (!D.body.dataset.sheet) await click(barBtn('roster'), 340);
+  await click($('#roster-tabs [data-list="zobos"]'), 420);
+  const view = $('#zobo-view [data-view="waves"]');
+  if (!view) { skip('the wave list on a phone', 'no wave view in this copy'); return; }
+  await click(view, 460);
+
+  const rows = $$('.waverow');
+  if (!rows.length) { skip('the wave list on a phone', 'no boss order loaded'); return; }
+  ok('the wave list is showing', rows.length > 1, `${rows.length} stages`);
+  ok('and it does not push the page off the side',
+     D.documentElement.scrollWidth <= 390 + 1, `${D.documentElement.scrollWidth}px`);
+
+  const spill = rows.filter((r) => r.getBoundingClientRect().right > 390 + 1);
+  ok('no stage runs off the edge', spill.length === 0,
+     `${spill.length} did, first at stage ${spill[0]?.querySelector('.waverow__n')?.textContent}`);
+
+  /* The pair check: both cards of a two-boss stage share a top edge. */
+  const pair = rows.find((r) => r.querySelectorAll('.card--zobo').length > 1);
+  if (!pair) {
+    skip('a two-boss stage keeps both on one line', 'no stage sends two in this data');
+  } else {
+    const tops = new Set([...pair.querySelectorAll('.card--zobo')]
+      .map((c) => Math.round(c.getBoundingClientRect().top)));
+    ok('a stage that sends two keeps both on one line', tops.size === 1,
+       `tops seen: ${[...tops].join(', ')}`);
+  }
+
+  await click($('#zobo-view [data-view="roster"]'), 420);
+  await click($('#roster-tabs [data-list="tatari"]'), 420);
+});
+
 localStorage.clear();
 for (const [k, v] of Object.entries(saved)) localStorage.setItem(k, v);
 

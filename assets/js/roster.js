@@ -276,6 +276,26 @@ export function buildFilters(onChange, { onPick = bringToBench } = {}) {
     });
   }
 
+  /* The Zobo tab's two readings. Same control as the chips' above, on purpose:
+     one list, two ways of asking about it. */
+  const zoboHost = $('#zobo-view');
+  if (zoboHost) {
+    const draw = () => {
+      zoboHost.innerHTML = [
+        ['roster', 'Roster', 'Every Zobo, to look one up'],
+        ['waves', 'Waves', 'The order a run sends its bosses in'],
+      ].map(([key, label, why]) => `
+        <button class="segmented__btn" type="button" role="tab" data-view="${key}"
+          aria-selected="${zoboView.value === key}" title="${esc(why)}"
+          aria-label="${esc(`${label} view: ${why.toLowerCase()}`)}">${label}</button>`).join('');
+    };
+    draw();
+    zoboHost.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-view]');
+      if (!btn || btn.dataset.view === zoboView.value) return;
+      zoboView.value = btn.dataset.view;
+      try { localStorage.setItem(ZOBO_VIEW_KEY, zoboView.value); } catch { /* private */ }
+
   const tabs = $('#roster-tabs');
   if (tabs) {
     tabs.addEventListener('click', (e) => {
@@ -999,6 +1019,21 @@ function visible(player) {
 export const showing = { value: 'tatari' };
 
 /**
+ * Which reading of the Zobo list you are on: the roster, or the wave order.
+ *
+ * Remembered, like the chips' grid/list, because it is a preference about how
+ * you read rather than anything about the formation -- and somebody who came for
+ * the wave order came for the wave order, every time. Not in the share link for
+ * the same reason `showing` is not: it is a view of the panel, and reopening a
+ * stranger on a tab they did not ask for is answering a question nobody asked.
+ */
+const ZOBO_VIEW_KEY = 'coc.zobos.view';
+export const zoboView = { value: 'roster' };
+try {
+  if (localStorage.getItem(ZOBO_VIEW_KEY) === 'waves') zoboView.value = 'waves';
+} catch { /* private mode */ }
+
+/**
  * The Zobo list.
  *
  * Drawn from the same card markup deliberately — same size, same drag, same
@@ -1031,16 +1066,9 @@ function stageBadge(z) {
     esc(at.join('·'))}</span>`;
 }
 
-function renderZobos() {
-  const host = $('#roster');
-  const q = filters.query;
-  const list = state.zobos.filter((z) => {
-    if (filters.boss && !z.boss) return false;
-    if (filters.types.size && !filters.types.has(z.type)) return false;
-    return !q || z._search.includes(q.toLowerCase());
-  });
-
-  host.innerHTML = list.map((z) => `
+/** One Zobo card. Both readings of the list are made of these. */
+function zoboCard(z) {
+  return `
       <div class="card card--zobo" role="listitem" tabindex="0"
            data-slug="${esc(z.slug)}"${z.type ? ` data-type="${z.type}"` : ''}
            title="${esc(z.name)}${z.type ? `, ${z.type}` : ''}${z.boss ? ', Boss' : ''}${
@@ -1052,9 +1080,72 @@ ${esc(z.skill.name)}` : ''}">
           ${z.type ? typeIcon(z.type) : ''}
         </div>
         <div class="card__name">${esc(z.name)}</div>
-      </div>`).join('');
+      </div>`;
+}
 
-  for (const card of host.children) {
+/*
+ * The wave list: stage 1 to 25, in order, with what each one sends.
+ *
+ * The roster answers "what is this one". This answers "what is coming", which is
+ * the question you have while drafting and the one a list sorted by element can
+ * never answer -- the order is the whole content, so the order has to be the
+ * layout. A number down the left and the boss beside it, which is how it was
+ * given to us and how anybody reads a schedule.
+ *
+ * The same cards as the roster, deliberately: same size, same drag onto the
+ * field, same badge. A stage that sends two puts both in the row, because the
+ * row is the stage and not the boss.
+ *
+ * Filters still apply -- a stage keeps only the bosses that pass, and a stage
+ * left with none drops out. Filtering to Fire and reading off "8, 17, 23, 25" is
+ * a better answer than the roster gives, so the filters are worth honouring here
+ * rather than ignoring as "this view is the whole list".
+ */
+function renderWaves(keep) {
+  const rows = [];
+  let shown = 0;
+  for (let n = 1; n <= state.bossStageCount; n += 1) {
+    const here = state.zobos.filter((z) => state.bossStages.get(z.slug)?.includes(n) && keep(z));
+    if (!here.length) continue;
+    shown += here.length;
+    rows.push(`
+      <div class="waverow" role="listitem">
+        <span class="waverow__n" aria-hidden="true">${n}</span>
+        <span class="sr-only">Stage ${n} of ${state.bossStageCount}</span>
+        <div class="waverow__cards">${here.map(zoboCard).join('')}</div>
+      </div>`);
+  }
+  return { html: rows.join(''), rows: rows.length, shown };
+}
+
+function renderZobos() {
+  const host = $('#roster');
+  const q = filters.query;
+  const keep = (z) => {
+    if (filters.boss && !z.boss) return false;
+    if (filters.types.size && !filters.types.has(z.type)) return false;
+    return !q || z._search.includes(q.toLowerCase());
+  };
+  const waves = zoboView.value === 'waves' && state.bossStageCount > 0;
+
+  let count;
+  if (waves) {
+    const built = renderWaves(keep);
+    host.dataset.zoboView = 'waves';
+    host.innerHTML = built.html
+      || '<p class="roster__empty">No boss matches that, so no stage does either.</p>';
+    count = `${built.rows} of ${state.bossStageCount} stages`;
+  } else {
+    const list = state.zobos.filter(keep);
+    host.innerHTML = list.map(zoboCard).join('');
+    count = list.length === state.zobos.length
+      ? `${state.zobos.length}`
+      : `${list.length} of ${state.zobos.length}`;
+  }
+
+  /* querySelectorAll, not host.children: in the wave view the children are rows
+     and the cards are inside them. */
+  for (const card of host.querySelectorAll('.card--zobo')) {
     const slug = card.dataset.slug;
     draggable(
       card,
@@ -1074,14 +1165,15 @@ ${esc(z.skill.name)}` : ''}">
     const show = state.bossStageCount > 0 && !!state.bossOrderBy;
     credit.hidden = !show;
     credit.textContent = show
-      ? `Numbers on the boss cards are the stage they arrive at, 1 to ${
-        state.bossStageCount}. Worked out and shared by ${state.bossOrderBy}.`
+      ? (waves
+        ? `The order a Horde run sends its bosses in, worked out and shared by ${
+          state.bossOrderBy}.`
+        : `Numbers on the boss cards are the stage they arrive at, 1 to ${
+          state.bossStageCount}. Worked out and shared by ${state.bossOrderBy}.`)
       : '';
   }
 
-  $('#roster-count').textContent = list.length === state.zobos.length
-    ? `${state.zobos.length}`
-    : `${list.length} of ${state.zobos.length}`;
+  $('#roster-count').textContent = count;
 }
 
 /*
@@ -1806,6 +1898,10 @@ export function renderRoster() {
      out one card per row, which is not what the Zobo or chip lists want. Set
      again below, on the path that owns it. */
   $('#roster').removeAttribute('data-tatari-view');
+  /* And for the wave list, which puts the roster in one column -- left behind it
+     would do that to 230 Tatari. renderZobos sets it again when it is actually
+     showing waves. */
+  $('#roster').removeAttribute('data-zobo-view');
 
   if (showing.value === 'zobos') { lastRosterSig = null; renderZobos(); return; }
   if (showing.value === 'chips') { lastRosterSig = null; renderChips(); return; }

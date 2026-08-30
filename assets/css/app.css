@@ -2246,6 +2246,60 @@ body[data-switching="true"] .cell[data-zobo] { box-shadow: none; cursor: default
   font-variant-numeric: tabular-nums;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
+/*
+ * The wave list: "1 - Two-Headed", "2 - Goonch", down to 25.
+ *
+ * Numbered entries that wrap into as many columns as the panel has room for,
+ * which is how the list was given to us and the only layout that shows 25 of
+ * them at once. One stage per row down a single column was the first attempt and
+ * was wrong twice over: it wasted nine tenths of the panel's width and turned a
+ * list you can take in at a glance into a page and a half of scrolling, which is
+ * the one thing a running order must not be.
+ *
+ * Reading runs across and then down, the way the grid flows, rather than down
+ * each column the way the original picture does. The numbers are on every row,
+ * so the direction is never in doubt -- and a column-flow grid has to be told
+ * how many rows to make, which no responsive panel can know.
+ */
+.roster[data-zobo-view="waves"] {
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  align-items: start;
+}
+.waverow {
+  display: grid;
+  grid-template-columns: 2.5ch auto;
+  align-items: center;
+  gap: var(--s2);
+  min-width: 0;
+}
+.waverow__n {
+  justify-self: end;
+  color: var(--text-mute);
+  font-size: 13px; font-weight: 700;
+  /* So 1 and 25 sit on the same right edge and the numbers read as a column. */
+  font-variant-numeric: tabular-nums;
+}
+/*
+ * A stage that sends two puts both in the one entry, and takes two columns to
+ * do it.
+ *
+ * Without the span they wrapped inside a single column, so stage 15 became twice
+ * as tall as the stages either side of it and every row after it sat at a
+ * different height. Worse than untidy: a stacked pair reads as two stages that
+ * have lost their numbers, when it is one stage sending two bosses. Spanning
+ * keeps them side by side, which is how the list was drawn, and keeps every row
+ * of the grid one card tall.
+ */
+.waverow__cards { display: flex; gap: var(--s1); min-width: 0; }
+.waverow__cards .card--zobo { width: 78px; flex: none; }
+.waverow:has(.card--zobo + .card--zobo) { grid-column: span 2; }
+/* Every boss filtered out of every stage. Says which of the two it is -- no
+   match at all -- rather than leaving an empty panel that reads as broken. */
+.roster__empty {
+  grid-column: 1 / -1;
+  margin: 0; padding: var(--s3) var(--s2);
+  color: var(--text-mute); font-size: 12px;
+}
 /* Under the Zobo list, saying what the numbers are and who counted them. */
 .roster__note {
   margin: 0;
