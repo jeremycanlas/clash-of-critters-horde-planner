@@ -374,11 +374,32 @@ export function buildFilters(onChange, { onPick = bringToBench } = {}) {
    */
   const foldToggle = $('#filters-toggle');
   if (foldToggle) {
-    foldToggle.addEventListener('click', () => {
-      const open = document.body.dataset.filters !== 'open';
+    const setFilters = (open) => {
       if (open) document.body.dataset.filters = 'open';
       else delete document.body.dataset.filters;
       foldToggle.setAttribute('aria-expanded', String(open));
+    };
+    foldToggle.addEventListener('click', () => {
+      setFilters(document.body.dataset.filters !== 'open');
+    });
+    /*
+     * It hangs over the roster on a wide screen, so it closes the way an overlay
+     * closes: click elsewhere, or Escape. On click and not pointerdown, because
+     * a press that lands on a chip has to toggle that chip and leave the drawer
+     * up -- nobody sets one filter and stops.
+     *
+     * Only while it is actually a popover. Below 760px it opens in the flow and
+     * closing on an outside click would shut it every time you touched the
+     * search box beside it.
+     */
+    const isPopover = () => window.matchMedia('(min-width: 761px)').matches;
+    document.addEventListener('click', (e) => {
+      if (document.body.dataset.filters !== 'open' || !isPopover()) return;
+      if (e.target.closest('#filters-body, #filters-toggle')) return;
+      setFilters(false);
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && document.body.dataset.filters === 'open') setFilters(false);
     });
   }
 

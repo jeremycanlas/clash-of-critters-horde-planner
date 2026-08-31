@@ -224,7 +224,7 @@ await runGroup('the phone shell', async () => {
   ok('it is pinned to the bottom rather than scrolling away',
      W.getComputedStyle(bar).position === 'fixed');
   const labels = [...bar.querySelectorAll('.appbar__label')].map((l) => l.textContent.trim());
-  ok('every panel has a way in', ['Add', 'Summary', 'Plan', 'Saved'].every((l) => labels.includes(l)), labels.join(', '));
+  ok('every panel has a way in', ['Roster', 'Summary', 'Plan', 'Saved'].every((l) => labels.includes(l)), labels.join(', '));
   ok('sharing is on the bar, not buried in the header', labels.includes('Share'));
 
   /* The reason the shell exists: the field is the page here, and a screenshot of

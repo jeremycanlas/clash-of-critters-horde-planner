@@ -1207,7 +1207,7 @@ export function renderBench() {
        * nothing at all. PRODUCT.md names that player as an intended user the
        * interface has to carry.
        */
-      ? `<p class="bench__empty">Nothing brought yet. Press <b>Add</b> to pick from the
+      ? `<p class="bench__empty">Nothing brought yet. Press <b>Roster</b> to pick from the
            ${state.all.length} Tatari${coop ? `, for P${player}` : ''}.</p>`
       : waiting.length
         ? `<div class="bench__strip">${chips}</div>`

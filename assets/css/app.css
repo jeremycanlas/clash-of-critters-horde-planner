@@ -2031,6 +2031,41 @@ body:not([data-filters="open"]) .filters__body { display: none; }
 .filters__body { display: grid; gap: var(--s2); }
 
 /*
+ * The chips hang under the Filter pill rather than pushing the roster.
+ * ====================================================================
+ *
+ * Same problem the field's Advanced drawer had, and the same answer. Opened in
+ * the flow, the nine chip groups took five lines and shoved 230 cards down the
+ * page -- so the card you were about to press moved, and you pressed whatever
+ * slid into its place. Worse here than on the field, because the whole reason
+ * you opened the filters is to change what those cards are.
+ *
+ * Anchored on .filterbar, which is already a real box on this screen and whose
+ * first item is the pill, so left: 0 puts it under the button. No wrapper
+ * element, and #filters-body stays exactly where it is in the markup.
+ *
+ * Wide screens only. Below 760px .filterbar is display: contents -- it is
+ * dissolved so `order` can lay its children out around the search box -- so
+ * there is no box to anchor to, and the drawer opens in the flow the way it
+ * always has. That is the right behaviour there anyway: on a phone the roster
+ * is a sheet you have already committed to, and a popover would cover the very
+ * cards it filters.
+ */
+@media (min-width: 761px) {
+  .filterbar { position: relative; }
+  .filters__body {
+    position: absolute; z-index: 5;
+    top: calc(100% + 6px); left: 0;
+    width: max-content; max-width: min(560px, 80vw);
+    padding: var(--s3);
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    background: var(--surface-2);
+    box-shadow: 0 12px 32px rgb(0 0 0 / .38);
+  }
+}
+
+/*
  * The field's Advanced drawer.
  *
  * The same pill and the same bargain as the filters: seven switches folded
