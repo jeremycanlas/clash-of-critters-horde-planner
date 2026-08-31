@@ -63,7 +63,7 @@ export function artHTML(t, { lazy = true, priority = null, observe = false } = {
  * the share card — so a posted picture says which build drew it, which matters
  * while the attack-range data is still being filled in.
  */
-export const APP_VERSION = '1.8.9';
+export const APP_VERSION = '1.9.0';
 export const APP_AUTHOR = 'jacc6475';
 
 /*
