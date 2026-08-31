@@ -623,6 +623,39 @@ img { -webkit-user-drag: none; }
   padding: var(--s4) var(--s5) var(--s6);
   max-width: 1500px; margin: 0 auto;
 }
+/*
+ * The summary beside the board, paid for out of the margin.
+ * =========================================================
+ *
+ * Below 1700px this does nothing: .fieldrow is one column, so the board and the
+ * summary stack exactly as they always have, and the layout is untouched.
+ *
+ * Above it, the page stops capping itself at 1500px -- which on a 1920 screen
+ * was leaving 210px of empty margin on each side -- and spends that width on a
+ * second column inside the field panel. The roster's own column is 1fr and keeps
+ * what it had: 996px and eleven card columns at 1500, a little more at 1820.
+ *
+ * That is the whole difference from the version of this that was reverted. The
+ * summary needs about 340px and it has to come from somewhere; taking it from
+ * the roster left 230 cards in a four-column rail, so it comes out of the page's
+ * unused edge instead. Nothing else moves.
+ */
+@media (min-width: 1700px) {
+  .layout {
+    /* 1860, not 1820: at 1820 the roster came out 956px and dropped from eleven
+       card columns to ten, which is exactly the thing this is not allowed to
+       cost. The extra 40px puts it back on 996 and eleven. */
+    max-width: 1860px;
+    grid-template-columns: minmax(320px, 800px) minmax(340px, 1fr);
+  }
+  .fieldrow {
+    display: grid;
+    grid-template-columns: minmax(300px, 440px) minmax(0, 1fr);
+    align-items: start;
+    gap: var(--s4);
+  }
+}
+
 .panel--field    { grid-area: field; }
 .panel--priority { grid-area: priority; }
 .panel--roster   { grid-area: roster; position: sticky; top: 74px; }

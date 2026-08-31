@@ -407,6 +407,27 @@
           placeholder="…or anything else, e.g. a healer" aria-label="Anything else to put on the line">
       </div>
 
+      <!--
+      The board, and beside it on a big screen, what it brings.
+      =========================================================
+
+      This wrapper does nothing at all below 1700px: one column, board then
+      summary, exactly as it has always stacked. Above it the two sit side by
+      side and the page uses width it was already leaving empty. See .fieldrow.
+
+      The first attempt at this took the summary's column out of the roster and
+      was reverted -- 400px gives a grid of 230 cards four columns, and a roster
+      you scroll four-at-a-time is not worth an answer you could have scrolled to.
+      This one takes it out of the margin instead.
+
+      #summary stays inside .panel--field on purpose. shell.js maps the phone's
+      Summary sheet to it and depends on it living here; moving it out to be a
+      grid item of .layout would have been the tidier CSS and would have broken
+      that.
+      -->
+      <div class="fieldrow">
+      <div class="fieldrow__board">
+
       <div class="field-frame">
         <!--
           The frame's own header, from the redesign: a mono FORMATION label on
@@ -465,7 +486,10 @@
         <div id="bench" class="bench"></div>
         <div id="chipbench" class="chipbench"></div>
       </div>
+
+      </div><!-- /.fieldrow__board -->
       <div id="summary" class="summary"></div>
+      </div><!-- /.fieldrow -->
       <!-- Clean view's own way out. In the flow after the frame rather than a
          floating toast, so it can never sit on top of the grid it is telling
          you to photograph. -->
