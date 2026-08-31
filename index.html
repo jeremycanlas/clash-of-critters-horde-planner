@@ -12,6 +12,22 @@
     content="Plan your 15-Tatari Horde Invasion formation for Clash of Critters: drag-and-drop grid, type and role filters, and a level-up priority plan.">
   <link rel="icon"
     href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='19' font-size='20'>🐾</text></svg>">
+  <!--
+    The redesign's three faces: Bricolage Grotesque for headings, Instrument
+    Sans for everything you read, JetBrains Mono for the small uppercase labels
+    and every number that has to line up in a column.
+
+    display=swap and preconnect, in that order, because this is a tool people
+    open to answer one question: it must draw in the system font immediately and
+    swap when the webfont lands, never hold the page blank waiting for it. Every
+    rule that uses these names falls back to the old system stack, so a copy with
+    no network -- or a phone that gives up on the download -- is the app exactly
+    as it was, in the fonts it always had.
+  -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
   <link rel="stylesheet" href="assets/css/app.css">
 </head>
 
@@ -370,6 +386,20 @@
       </div>
 
       <div class="field-frame">
+        <!--
+          The frame's own header, from the redesign: a mono FORMATION label on
+          the left and who made the tool on the right.
+
+          It goes inside .field-frame deliberately, because the frame is what
+          "Just the grid" leaves on screen and what people screenshot -- so this
+          is the one line of chrome that travels with the picture. The byline has
+          been in the page header all along and got cropped out of every share;
+          here it rides the artefact instead.
+        -->
+        <div class="field-frame__head">
+          <span class="eyebrow">Formation</span>
+          <span class="field-frame__by">jacc6475 · fan-made</span>
+        </div>
         <!-- The ground beyond the line, which only Sandbox can reach. Empty and
            hidden otherwise, so a normal formation is drawn exactly as before —
            buildGrid() fills it once and the toggle only shows and hides it.
