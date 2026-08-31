@@ -407,6 +407,23 @@
           placeholder="…or anything else, e.g. a healer" aria-label="Anything else to put on the line">
       </div>
 
+      <!--
+      The board and what it brings, side by side.
+      ==========================================
+
+      The summary was stacked under the bench, which put the answer to "what does
+      this formation actually do" a scroll below the formation. The canvas sets
+      them beside each other, and that is the difference between a panel you
+      consult and one that changes what you place next.
+
+      One wrapper, two children: everything that is the board (the frame, the
+      range note, the bench and chip dock) and then the summary. See .fieldrow --
+      it collapses back to a stack below 1000px, where there is no second column
+      to have.
+      -->
+      <div class="fieldrow">
+      <div class="fieldrow__board">
+
       <div class="field-frame">
         <!--
           The frame's own header, from the redesign: a mono FORMATION label on
@@ -465,7 +482,10 @@
         <div id="bench" class="bench"></div>
         <div id="chipbench" class="chipbench"></div>
       </div>
+
+      </div><!-- /.fieldrow__board -->
       <div id="summary" class="summary"></div>
+      </div><!-- /.fieldrow -->
       <!-- Clean view's own way out. In the flow after the frame rather than a
          floating toast, so it can never sit on top of the grid it is telling
          you to photograph. -->
