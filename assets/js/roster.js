@@ -252,6 +252,30 @@ export function buildFilters(onChange, { onPick = bringToBench } = {}) {
     });
   }
 
+  /* Cards or list, for the Tatari tab. Same control as the chips' own, because
+     it is the same question asked of a different list. */
+  const tatariHost = $('#tatari-view');
+  if (tatariHost) {
+    const draw = () => {
+      tatariHost.innerHTML = [
+        ['cards', 'Cards', 'The grid of faces, to find one you know'],
+        ['list', 'List', 'Full names with tier, element and role'],
+      ].map(([key, label, why]) => `
+        <button class="segmented__btn" type="button" role="tab" data-view="${key}"
+          aria-selected="${tatariView.value === key}" title="${esc(why)}"
+          aria-label="${esc(`${label} view: ${why.toLowerCase()}`)}">${label}</button>`).join('');
+    };
+    draw();
+    tatariHost.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-view]');
+      if (!btn || btn.dataset.view === tatariView.value) return;
+      tatariView.value = btn.dataset.view;
+      try { localStorage.setItem(TATARI_VIEW_KEY, tatariView.value); } catch { /* private */ }
+      draw();
+      onChange();
+    });
+  }
+
   const tabs = $('#roster-tabs');
   if (tabs) {
     tabs.addEventListener('click', (e) => {
@@ -1045,6 +1069,25 @@ const VIEW_KEY = 'coc.chips.view';
 let chipView = 'list';
 try { chipView = localStorage.getItem(VIEW_KEY) === 'grid' ? 'grid' : 'list'; } catch { /* private */ }
 
+/**
+ * Cards or list, for the Tatari roster.
+ *
+ * Cards by default, and that is not a formality: the grid is how anybody who
+ * knows the roster finds something in it, and 230 faces scan far faster than 230
+ * names. The list answers the other question -- picking by what a Tatari is
+ * rather than by what it looks like -- where a 78px card can only give you a
+ * clipped name and three glyphs.
+ *
+ * Remembered like the chips' own view, because it is a preference about reading
+ * rather than anything about the formation, and for the same reason it is not in
+ * the share link.
+ */
+const TATARI_VIEW_KEY = 'coc.tatari.view';
+export const tatariView = { value: 'cards' };
+try {
+  if (localStorage.getItem(TATARI_VIEW_KEY) === 'list') tatariView.value = 'list';
+} catch { /* private mode */ }
+
 const CHIP_GROUPS = {
   placement: 'Position',
   element: 'Element',
@@ -1704,6 +1747,10 @@ export function renderRoster() {
      of the other two render paths, because there is no fourth list yet and
      there will be, and it would be forgotten. renderChips sets it again. */
   $('#roster').removeAttribute('data-chip-view');
+  /* Same for the Tatari list view, and for the same reason: it lays the roster
+     out one card per row, which is not what the Zobo or chip lists want. Set
+     again below, on the path that owns it. */
+  $('#roster').removeAttribute('data-tatari-view');
 
   if (showing.value === 'zobos') { lastRosterSig = null; renderZobos(); return; }
   if (showing.value === 'chips') { lastRosterSig = null; renderChips(); return; }
@@ -1711,6 +1758,17 @@ export function renderRoster() {
   const list = visible(player);
   const host = $('#roster');
   host.dataset.player = String(player);
+  /*
+   * Set before the signature check, not inside the rebuild.
+   *
+   * Switching Cards/List changes the layout and not the list, so the signature
+   * is unchanged and renderRoster takes the in-place path -- which is right,
+   * because nothing about the cards themselves has to change. But it means the
+   * attribute has to be written on every pass, including the one that rebuilds
+   * nothing, or the switch would only take effect the next time something else
+   * happened to invalidate the roster. That is the shape of the Glitter bug.
+   */
+  host.dataset.tatariView = tatariView.value;
 
   /*
    * The same list of Tatari, only their state changed: update the cards in place.

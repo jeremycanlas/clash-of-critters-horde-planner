@@ -1366,6 +1366,65 @@ await runGroup('the roster cannot spill past its grid', async () => {
 });
 
 /*
+ * Cards or list, for the Tatari roster.
+ *
+ * The redesign drew the roster as a list; it is a second view instead, so the
+ * card grid the last three releases were spent on survives. Both are the same
+ * .card markup laid out differently, which is the point of the checks below: a
+ * list row still has to be a real card, because the drag binding, the bench and
+ * field marks and the in-place update all read it as one.
+ */
+await runGroup('the Tatari roster reads as cards or as a list', async () => {
+  await until(() => !!$('#roster'), 'the drafter to be in the frame', 8000);
+  await click($('#roster-tabs [data-list="tatari"]'), 400);
+
+  const sw = $('#tatari-view');
+  if (!sw) { skip('the Tatari view switcher', 'not in this copy'); return; }
+  const host = $('#roster');
+  const oneRow = () => $$('#roster .card')[0]?.getBoundingClientRect().height ?? 0;
+
+  await click($('#tatari-view [data-view="cards"]'), 420);
+  const cardH = oneRow();
+  eq('cards is the default reading', host.getAttribute('data-tatari-view'), 'cards');
+  ok('and a card is taller than it is a row', cardH > 90, `${Math.round(cardH)}px`);
+
+  await click($('#tatari-view [data-view="list"]'), 460);
+  eq('switching puts the roster in list', host.getAttribute('data-tatari-view'), 'list');
+  const rowH = oneRow();
+  ok('a list row is shorter than a card', rowH > 0 && rowH < cardH,
+     `${Math.round(rowH)}px vs ${Math.round(cardH)}px`);
+  ok('and every row is the same height',
+     new Set($$('#roster .card').slice(0, 20)
+       .map((c) => Math.round(c.getBoundingClientRect().height))).size === 1);
+  eq('the list is one column',
+     D.defaultView.getComputedStyle(host).gridTemplateColumns.split(/\s+/).filter(Boolean).length, 1);
+
+  /* Still cards underneath: the row has to keep everything a card carries, or
+     dragging, benching and the in-place update quietly stop working on it. */
+  const row = $$('#roster .card')[0];
+  ok('a row is still a card, with its slug and its sprite',
+     !!row.dataset.slug && !!row.querySelector('.card__art img'), row.className);
+  ok('and it still has its name and its badges',
+     !!row.querySelector('.card__name') && !!row.querySelector('.card__meta'));
+
+  /* Clicking one benches it, exactly as in the grid. */
+  const before = $$('.benchchip').length;
+  await click(row, 420);
+  ok('clicking a row brings that Tatari, the same as clicking a card',
+     $$('.benchchip').length === before + 1, `${before} -> ${$$('.benchchip').length}`);
+
+  /* The layout belongs to this tab and must not follow you off it. */
+  await click($('#roster-tabs [data-list="zobos"]'), 440);
+  eq('the list layout does not follow the Zobo tab',
+     host.getAttribute('data-tatari-view'), null);
+  await click($('#roster-tabs [data-list="tatari"]'), 440);
+  eq('and coming back remembers the list', host.getAttribute('data-tatari-view'), 'list');
+
+  await click($('#tatari-view [data-view="cards"]'), 420);
+  await reset();
+});
+
+/*
  * Glitter art, which had no check at all and quietly stopped working in 1.8.3.
  *
  * The group below is the one that broke it: the roster learned to update its

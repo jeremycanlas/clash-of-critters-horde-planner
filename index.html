@@ -447,6 +447,17 @@
             aria-selected="false">Chips</button>
         </div>
 
+        <!-- Cards or list, for the Tatari tab only.
+           The grid is the roster's own language and stays the default: 230
+           faces you scan for the one you recognise. The list is for reading
+           rather than recognising -- the name spelled out in full instead of
+           clipped to 78px, with its tier, element and role beside it, which is
+           what you want when you are picking by what a Tatari does rather than
+           by what it looks like. Same cards either way, laid out differently;
+           see .roster[data-tatari-view] in app.css. -->
+        <div id="tatari-view" class="segmented segmented--tabs tatari-only" role="tablist"
+          aria-label="How to show the Tatari"></div>
+
         <!-- Grid or list, for the chips tab only. Two questions, two answers:
            the grid is for finding a chip you already know by its face, the list
            is for deciding, which needs the rule spelled out. -->

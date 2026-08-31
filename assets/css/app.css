@@ -4899,6 +4899,89 @@ body.is-clean .clean-hint {
  * Summary.
  */
 body:not([data-roster-list="chips"]) .chips-only { display: none; }
+/* The Tatari tab's own controls, hidden on the other two. `body` carries the
+   list the same way it does for the Zobo- and chip-only controls above; the
+   default list is Tatari, so this also has to hold before anything is set. */
+body[data-roster-list="zobos"] .tatari-only,
+body[data-roster-list="chips"] .tatari-only { display: none; }
+
+/*
+ * The roster as a list.
+ * =====================
+ *
+ * From the redesign canvas, direction 1a: a row per Tatari, sprite on the left,
+ * the name spelled out with its tier, element and role beneath it. The design
+ * drew this as the roster; it is a second view instead, because the grid is what
+ * anybody who knows the roster actually uses -- 230 faces scan faster than 230
+ * names, and the card work of 1.8.6 through 1.8.8 is what makes that grid read.
+ *
+ * Not a second markup. The same .card the grid draws, re-laid: art in the first
+ * column at a fixed size, name and badges stacked in the second. So the drag
+ * binding, the bench and field marks, the swap glyph, the co-op tag, the patch
+ * disc and the in-place card update all keep working here for free, and nothing
+ * has to be taught that a Tatari can be drawn two ways.
+ */
+.roster[data-tatari-view="list"] {
+  grid-template-columns: 1fr;
+  gap: var(--s1);
+}
+.roster[data-tatari-view="list"] .card {
+  display: grid;
+  grid-template-columns: 44px 1fr auto;
+  /*
+   * One row, and no row gap.
+   *
+   * The card's own grid keeps three rows -- art, name, badges -- and putting
+   * everything on row 1 leaves the other two at 0px. They still pay the gap
+   * either side of them, though, which is 16px of nothing in a row that is only
+   * 44px of something: the rows came out 74px tall with a band of empty space
+   * under every name. A track with no height should not cost anything.
+   */
+  grid-template-rows: auto;
+  row-gap: 0;
+  column-gap: var(--s2);
+  align-items: center;
+  padding: 6px 10px;
+  text-align: left;
+}
+/* The art box drops its square and its badge band: at 44px the effect marks are
+   unreadable anyway, and they have room of their own in the second column. */
+.roster[data-tatari-view="list"] .card__art {
+  grid-row: 1; aspect-ratio: auto;
+  width: 44px; height: 44px;
+  grid-template-rows: 1fr;
+  padding: 2px;
+}
+.roster[data-tatari-view="list"] .card__art img { grid-row: 1; padding: 0; }
+/* Full name, on one line, at a size meant to be read rather than recognised. */
+.roster[data-tatari-view="list"] .card__name {
+  grid-column: 2; grid-row: 1;
+  padding: 0;
+  font-size: 14px; font-weight: 600;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+/* Tier, element and role move to the right-hand end, out of the name's way. */
+.roster[data-tatari-view="list"] .card__meta {
+  grid-column: 3; grid-row: 1;
+  padding: 0;
+  justify-content: flex-end;
+}
+/*
+ * The effect marks stay behind on this view.
+ *
+ * They are a child of .card__art, not of .card -- the wrapper is the art box's
+ * own first grid row, and it ships even when empty so the 34 Tatari with no
+ * effects do not get a larger sprite than everyone else. So it cannot be moved
+ * into a column of the row without either reparenting it or dissolving the art
+ * box, and dissolving the box takes the tinted square with it, which is the one
+ * thing making the sprite read at 44px.
+ *
+ * Left out rather than shrunk, and the grid stays the view that shows
+ * everything. This one is for reading names, which is what it was asked for;
+ * 1a's own list draws no effect marks either.
+ */
+.roster[data-tatari-view="list"] .card__fxrow { display: none; }
+.roster[data-tatari-view="list"] .card__info { top: 50%; transform: translateY(-50%); }
 
 /* Nothing in the Tatari filter block means anything to a chip: no element, no
    role, no evolution tier, no bench. Same approach as the Zobo tab -- the body
