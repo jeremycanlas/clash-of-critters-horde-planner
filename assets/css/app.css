@@ -614,49 +614,14 @@ img { -webkit-user-drag: none; }
 
 /* ============================================================ layout */
 
-/*
- * The board takes the room, the roster takes a rail.
- * ==================================================
- *
- * This was the other way round: the field was pinned to 320-440px and the roster
- * got everything left over, which on a 1500px page is about a thousand pixels of
- * Tatari you are not currently placing, next to a 440px board that is the entire
- * point of the tool. The canvas puts the field in a 1fr column and the roster in
- * a fixed 400px rail, and it is right -- the roster is a drawer you reach into,
- * and it needs to be wide enough to pick from, not wider than the thing you are
- * picking for.
- *
- * 400px is what the design specifies and it happens to be exactly right for this
- * roster: five 78px card columns and their gaps, so the grid keeps its shape
- * rather than collapsing to four with a gutter.
- */
 .layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 400px;
+  grid-template-columns: minmax(320px, 440px) minmax(340px, 1fr);
   grid-template-areas: "field roster" "priority roster";
   align-items: start;
   gap: var(--s4);
   padding: var(--s4) var(--s5) var(--s6);
   max-width: 1500px; margin: 0 auto;
-}
-
-/*
- * And inside that column, the board and what it brings sit side by side.
- *
- * The summary used to be stacked under the bench, which put the answer to "what
- * does this formation actually do" a scroll away from the formation. The canvas
- * sets them beside each other: the grid at a readable size, the sentence, the
- * tallies and the effect rows in the space next to it. Both are readable at once,
- * which is the only arrangement in which the summary changes what you do next.
- *
- * The board keeps a ceiling of 460px because past that the cells grow faster
- * than the sprites do and the grid turns into a sparse chessboard.
- */
-.fieldrow {
-  display: grid;
-  grid-template-columns: minmax(320px, 460px) minmax(0, 1fr);
-  align-items: start;
-  gap: var(--s4);
 }
 .panel--field    { grid-area: field; }
 .panel--priority { grid-area: priority; }
@@ -692,8 +657,6 @@ img { -webkit-user-drag: none; }
   .panel { padding: var(--s3); }
   /* Clear of the sticky section nav when jumped to. */
   .panel { scroll-margin-top: 52px; }
-  /* One column here, so the board and the summary stack again. */
-  .fieldrow { grid-template-columns: minmax(0, 1fr); }
 }
 
 .panel {
