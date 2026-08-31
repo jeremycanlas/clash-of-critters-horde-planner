@@ -1366,6 +1366,74 @@ await runGroup('the roster cannot spill past its grid', async () => {
 });
 
 /*
+ * The Advanced drawer, the status line, and saying what a formation lacks.
+ *
+ * The three of these are one change: the header and the field panel used to
+ * lead with settings and end with state, and 1a turns that round. What the
+ * checks are actually protecting is the honesty of each fold -- a count on the
+ * pill, a line that says what is placed, and a summary that admits to the thing
+ * that is missing. Any of those going quiet is the regression.
+ */
+await runGroup('the field panel folds its settings without going quiet', async () => {
+  await until(() => !!$('#roster'), 'the drafter to be in the frame', 8000);
+  await reset();
+
+  const adv = $('#advanced-toggle');
+  if (!adv) { skip('the Advanced drawer', 'not in this copy'); return; }
+
+  const boxes = () => $$('#field-advanced input[type="checkbox"]');
+  ok('the settings are in the drawer', boxes().length >= 5, `${boxes().length} switches`);
+  eq('closed to begin with', adv.getAttribute('aria-expanded'), 'false');
+  ok('and closed means closed', boxes().every((b) => b.offsetHeight === 0));
+
+  /* Flex slots is promoted out of it: you reach for that one mid-formation. */
+  ok('Flex slots stays out where you can reach it', $('#opt-flex')?.offsetHeight > 0);
+
+  /* The count is what makes folding legal: two of these repaint the board. */
+  $('#opt-pull').click();
+  await sleep(320);
+  ok('a switch turned on inside the drawer is counted on the pill',
+     /\b1\b/.test(adv.textContent), `pill reads "${adv.textContent.trim()}"`);
+  ok('and the pill says so about itself', adv.classList.contains('is-on'));
+
+  await click(adv, 340);
+  eq('it opens', adv.getAttribute('aria-expanded'), 'true');
+  ok('and the switches are reachable', boxes().some((b) => b.offsetHeight > 0));
+
+  $('#opt-pull').click();
+  await sleep(320);
+  ok('turning it back off clears the count', !/\d/.test(adv.textContent),
+     `pill reads "${adv.textContent.trim()}"`);
+  await click(adv, 300);
+
+  /* The status line: what is placed, said where the name is. */
+  const status = $('#formation-status');
+  ok('there is a status line', !!status);
+  ok('and it says nothing about a formation nobody has started', status.hidden);
+
+  await placeOne();
+  await sleep(360);
+  ok('placing one makes it speak', !status.hidden && /1 of \d+ placed/.test(status.textContent),
+     status.textContent || '(empty)');
+
+  /*
+   * And the summary owns up to absence, either way it can.
+   *
+   * With nothing on the field carrying a heal, buff or debuff it says so in one
+   * sentence, which is better than three rows each saying none; once one group
+   * has something, the other two get a row apiece. The property being checked is
+   * that a formation missing something is told, not which of the two shapes the
+   * telling takes -- and placeOne() cannot promise an effect-carrying Tatari.
+   */
+  const owned = $$('.summary__none').length > 0
+    || /heal, buff or debuff/i.test($('.summary__note')?.textContent ?? '');
+  ok('the summary says what this formation is missing, not only what it has',
+     owned, $('#summary')?.textContent.trim().slice(0, 120) || '(empty summary)');
+
+  await reset();
+});
+
+/*
  * Cards or list, for the Tatari roster.
  *
  * The redesign drew the roster as a list; it is a second view instead, so the
@@ -1400,8 +1468,12 @@ await runGroup('the Tatari roster reads as cards or as a list', async () => {
      D.defaultView.getComputedStyle(host).gridTemplateColumns.split(/\s+/).filter(Boolean).length, 1);
 
   /* Still cards underneath: the row has to keep everything a card carries, or
-     dragging, benching and the in-place update quietly stop working on it. */
-  const row = $$('#roster .card')[0];
+     dragging, benching and the in-place update quietly stop working on it.
+     Picked the way every other group here picks one -- a card already benched
+     un-benches when clicked, and one marked as a tier swap switches its line
+     instead, so either would read as "clicking a row does nothing". */
+  const row = $$('#roster .card').find((c) => !c.classList.contains('is-benched')
+    && !c.dataset.switchFrom) ?? $$('#roster .card')[0];
   ok('a row is still a card, with its slug and its sprite',
      !!row.dataset.slug && !!row.querySelector('.card__art img'), row.className);
   ok('and it still has its name and its badges',

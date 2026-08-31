@@ -1376,13 +1376,32 @@ export function renderSummary() {
  */
 function effectRows(list, player) {
   const found = effectsOf(list);
-  const rows = ['heal', 'buff', 'debuff'].filter((g) => found[g].length).map((g) => `
+  /*
+   * All three groups, including the empty ones.
+   *
+   * This listed only what the field had, so a formation with no debuff simply
+   * had no debuff row -- and absence is the more useful half of this panel. "Do
+   * we have a heal and a slow" is answered by the missing one, and a row that is
+   * not drawn cannot answer anything: it reads as a panel that has finished
+   * talking, not as a gap. The redesign says it out loud ("Debuffs — none
+   * recorded in this formation"), quietly, in the muted colour, which is the
+   * right weight for it: worth knowing, not worth alarm.
+   *
+   * Only once there is something on the field at all -- renderSummary handles
+   * the empty board above, and three "none" rows over an empty grid would be
+   * three ways of saying you have not started.
+   */
+  const rows = ['heal', 'buff', 'debuff'].map((g) => (found[g].length ? `
     <div class="summary__group">
       <span class="summary__label">${GROUP_LABELS[g]}</span>
       ${found[g].map((e) => effectTally(g, e, player)).join('')}
-    </div>`).join('');
+    </div>` : `
+    <div class="summary__group summary__group--none">
+      <span class="summary__label">${GROUP_LABELS[g]}</span>
+      <span class="summary__none">none in this formation</span>
+    </div>`)).join('');
 
-  if (!rows) {
+  if (!['heal', 'buff', 'debuff'].some((g) => found[g].length)) {
     return `<p class="summary__note">Nothing on the field has a heal, buff or debuff${
       found.untagged ? `, and ${found.untagged} of them are untagged on the wiki` : ''}.</p>`;
   }

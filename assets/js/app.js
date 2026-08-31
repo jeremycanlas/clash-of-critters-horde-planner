@@ -425,6 +425,39 @@ function wireToolbar() {
    * other follows — a checkbox showing the opposite of what the art is doing is
    * worse than not offering the second one at all.
    */
+  /*
+   * The Advanced drawer, and the count that keeps it honest.
+   *
+   * Seven switches that used to stand above the field on every visit. Two of
+   * them -- Ranges and Boss pull -- silently repaint the board, and Sandbox
+   * quietly lifts the caps, so "is anything on in there" has to be answerable
+   * with the drawer shut. Same bargain as the Filter pill: fold, but never
+   * silently. The count is read off the checkboxes rather than kept alongside
+   * them, so it cannot drift out of step with what is actually set.
+   */
+  const advToggle = $('#advanced-toggle');
+  const advBoxes = () => $$('#field-advanced input[type="checkbox"]');
+  const drawAdvCount = () => {
+    if (!advToggle) return;
+    const n = advBoxes().filter((b) => b.checked).length;
+    advToggle.innerHTML = `Advanced${n ? ` <b class="pill__n">${n}</b>` : ''}`;
+    advToggle.classList.toggle('is-on', n > 0);
+  };
+  if (advToggle) {
+    advToggle.addEventListener('click', () => {
+      const open = document.body.dataset.advanced !== 'open';
+      if (open) document.body.dataset.advanced = 'open';
+      else delete document.body.dataset.advanced;
+      advToggle.setAttribute('aria-expanded', String(open));
+    });
+    /* Every switch in there, plus the ones changed from elsewhere: the roster's
+       Glitter copy and anything app code sets directly both land here. */
+    document.addEventListener('change', (e) => {
+      if (e.target.closest?.('#field-advanced') || e.target.id === 'opt-glitter-roster') drawAdvCount();
+    });
+    drawAdvCount();
+  }
+
   const glitterBoxes = $$('#opt-glitter, #opt-glitter-roster');
   for (const box of glitterBoxes) {
     box.addEventListener('change', (e) => {

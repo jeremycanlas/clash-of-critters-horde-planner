@@ -55,6 +55,22 @@
     <input id="formation-name" class="field field--name" type="text" placeholder="Name this formation"
       aria-label="Formation name" maxlength="60">
 
+    <!--
+    Where the formation is up to, under its name.
+    ============================================
+
+    Redesign canvas, 1a: the phone header leads with the formation's name and
+    "15 of 15 placed · 2 flex" beneath it. The count existed only on the app bar
+    at the bottom, as a bare number on a button labelled Summary -- which says
+    how many without saying of what, and sits at the opposite end of the screen
+    from the name it belongs to.
+
+    Written by renderShell, which already computes every number in it. Empty and
+    out of the layout on a formation nobody has started, because "0 of 15
+    placed" over an empty board is a scolding, not a status.
+    -->
+    <p id="formation-status" class="formation-status" role="status" aria-live="polite" hidden></p>
+
     <div id="mode-switch" class="segmented" role="group" aria-label="Number of players">
       <button class="segmented__btn" type="button" data-mode="solo" aria-pressed="true">Solo</button>
       <button class="segmented__btn" type="button" data-mode="coop" aria-pressed="false">Co-op</button>
@@ -216,6 +232,34 @@
           worth having once, and not worth a paragraph of standing chrome above
           the field on every visit.
         -->
+          <!--
+          Flex slots stays out. Everything else folds.
+          ===========================================
+
+          Redesign canvas, direction 1a: one Advanced drawer. The panel opened
+          with eight checkboxes, a theme switch and two buttons standing above
+          the field on every visit -- a wall of settings in front of the thing
+          they configure, most of which are answered once and never touched
+          again. Ranges, Boss pull, Second pull, Glitter, High contrast, Zobo
+          ground and Sandbox are now behind #advanced-toggle.
+
+          Flex slots is promoted rather than folded, because it is not a setting
+          you answer once: it is a thing you turn on to mark a square and off
+          again, in the middle of building, several times a formation. 1a draws
+          it as its own button beside the drawer for the same reason.
+
+          The drawer carries a count, like the Filter pill, and for the same
+          reason: Ranges and Boss pull both silently repaint the field, and a
+          switch that is on out of sight is worse than one that is off in view.
+          -->
+          <label class="check"
+            title="Mark empty squares as somebody else's choice, so a posted formation reads as a template rather than as unfinished.">
+            <input id="opt-flex" type="checkbox"> <span class="check__text">Flex slots</span></label>
+
+          <button id="advanced-toggle" class="pill pill--advanced" type="button"
+            aria-expanded="false" aria-controls="field-advanced">Advanced</button>
+
+          <div id="field-advanced" class="tools__adv">
           <label class="check"
             title="Light the tiles a Tatari can hit, and shade the field by how many cover each tile. The range data is still being filled in, so the picture is incomplete.">
             <input id="opt-ranges" type="checkbox"> Ranges <span class="wip">WIP</span></label>
@@ -267,16 +311,6 @@
           <label class="check"
             title="Open the seven rows beyond the spawn line so Tatari can stand on them. Closing it puts whatever is out there back on the bench.">
             <input id="opt-zobo" type="checkbox"> <span class="check__text">Zobo ground</span></label>
-          <!--
-            Marking mode, not a property of the formation: while it is on, an
-            empty square is a thing to press rather than a thing to drop into.
-            A mode rather than a gesture because there is no spare gesture on a
-            phone that does not already mean place, drag or scroll, and a stray
-            tap while drafting must not silently mark the board.
-          -->
-          <label class="check"
-            title="Mark empty squares as somebody else's choice, so a posted formation reads as a template rather than as unfinished.">
-            <input id="opt-flex" type="checkbox"> <span class="check__text">Flex slots</span></label>
           <!-- Sandbox takes the caps off: bring as many as you like and place as
              many as there are cells. A checkbox rather than a third entry in the
              Solo/Co-op switch because it is not a mode — you can be in Sandbox
@@ -286,6 +320,7 @@
           <label class="check"
             title="Take the caps off: bring any number of Tatari and place as many as there are cells. Turning it back off puts the caps back, benches whatever no longer fits, and offers Undo.">
             <input id="opt-sandbox" type="checkbox"> <span class="check__text">Sandbox</span></label>
+          </div><!-- /#field-advanced -->
 
           <!-- Desktop's copy. Phones get the one in the app bar instead, where it
              is always on screen rather than above a field they have scrolled. -->

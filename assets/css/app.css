@@ -1918,6 +1918,43 @@ body:not([data-filters="open"]) .filters__body { display: none; }
 .filters__body { display: grid; gap: var(--s2); }
 
 /*
+ * The field's Advanced drawer.
+ *
+ * The same pill and the same bargain as the filters: seven switches folded
+ * away, a count on the pill so none of them can be on without saying so. It
+ * takes the panel's own flex row when open rather than becoming a box, so the
+ * switches sit exactly where they always did and only their visibility changed.
+ */
+/*
+ * "12 of 15 placed · 2 flex", under the formation's name.
+ *
+ * Sits with the name in the header rather than with the board, because it is a
+ * property of the formation and not of the grid, and because on a phone the
+ * name is the first thing on the screen and this is the second thing you want
+ * to know about it.
+ */
+.formation-status {
+  margin: 0;
+  color: var(--text-mute);
+  font-size: 12px; line-height: 1.3;
+  font-variant-numeric: tabular-nums;
+}
+.formation-status[hidden] { display: none; }
+
+/* A group the field has none of. Said, rather than left out -- see effectRows.
+   Muted, because it is worth knowing and not worth alarm. */
+.summary__none { color: var(--text-mute); font-size: 12px; font-style: italic; }
+.summary__group--none .summary__label { opacity: .8; }
+
+.pill--advanced { border-style: dashed; color: var(--text-mute); }
+.pill--advanced.is-on { border-style: solid; border-color: var(--accent); color: var(--text); }
+.pill--advanced[aria-expanded="true"] { background: var(--surface-3); color: var(--text); }
+.tools__adv {
+  display: contents;
+}
+body:not([data-advanced="open"]) .tools__adv { display: none; }
+
+/*
  * Zobos answer none of the drafting questions — they have no role, no tier, no
  * bench and bring no heals — so those controls go while their tab is up rather
  * than sitting there doing nothing. The element chips and the search stay,

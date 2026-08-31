@@ -253,6 +253,31 @@ export function renderShell() {
   count('#appbar-field', store.allPlaced().length);
   count('#appbar-steps', steps);
 
+  /*
+   * The same numbers said in words, under the formation's name.
+   *
+   * The app bar has carried them as bare digits on a button labelled Summary,
+   * which tells you how many without telling you of what, from the far end of
+   * the screen from the name they describe. This is the header line the
+   * redesign leads with.
+   *
+   * The cap is what makes "12" mean something, so it is said: 12 of 15. Flex
+   * squares only when there are some -- a formation with none should not have to
+   * read the word.
+   */
+  const status = document.getElementById('formation-status');
+  if (status) {
+    const placed = store.allPlaced().length;
+    /* Through fieldCap(), not a constant: the cap is 10 solo, 20 in co-op, and
+       Sandbox lifts it entirely. A hard-coded 15 would be wrong in every mode. */
+    const cap = store.fieldCap() * store.players().length;
+    const flex = store.formation.flex?.length ?? 0;
+    const bits = placed ? [`${placed} of ${cap} placed`] : [];
+    if (flex) bits.push(`${flex} flex`);
+    status.textContent = bits.join(' · ');
+    status.hidden = bits.length === 0;
+  }
+
   for (const btn of bar.querySelectorAll('[data-sheet]')) {
     btn.setAttribute('aria-expanded', String(btn.dataset.sheet === open));
   }
