@@ -2022,6 +2022,15 @@ body:not([data-filters="open"]) .filters__body { display: none; }
 }
 .formation-status[hidden] { display: none; }
 
+/* The formation in one sentence, above the tallies. The only line in this panel
+   that reads at a glance rather than having to be decoded. */
+.summary__sentence {
+  margin: 0 0 var(--s2);
+  color: var(--text-dim, var(--text-mute));
+  font-size: 13px; line-height: 1.5;
+}
+.summary__sentence b { color: var(--text); font-weight: 600; }
+
 /* A group the field has none of. Said, rather than left out -- see effectRows.
    Muted, because it is worth knowing and not worth alarm. */
 .summary__none { color: var(--text-mute); font-size: 12px; font-style: italic; }

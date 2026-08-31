@@ -1388,7 +1388,53 @@ export function renderSummary() {
       key === 'type' ? typeIcon(v) : roleIcon(v)}${n}</span>`;
   }).join('');
 
-  $('#summary').innerHTML = groups.map(({ player, list }) => `
+  /*
+   * The formation in one sentence.
+   *
+   * 1a puts a line of prose under the field -- "Brings heals — Solaflora,
+   * Luminastra" -- above the tallies rather than instead of them. It is the
+   * same facts said the way you would say them to somebody, and it is the only
+   * part of this panel that reads at a glance: a row of discs and numbers has
+   * to be decoded, a sentence does not.
+   *
+   * Built from what is there rather than from a template, so it never claims
+   * something the field does not have. Two names at most, then "and 3 more" --
+   * a sentence listing eight Tatari is a list wearing a full stop.
+   */
+  const sentence = (list) => {
+    const found = effectsOf(list);
+    const namesFor = (g) => {
+      /* sources are {name, level, skillName}, and one Tatari can bring several
+         effects in a group -- so the names are de-duped, not the entries. */
+      const who = [...new Set(found[g].flatMap((e) => (e.sources ?? []).map((s) => s.name)))];
+      if (!who.length) return null;
+      const shown = who.slice(0, 2).join(', ');
+      return who.length > 2 ? `${shown} and ${who.length - 2} more` : shown;
+    };
+    /*
+     * Groups that share a cast are said once.
+     *
+     * One Tatari can carry a heal, a buff and a debuff, and listed per group
+     * that came out as "Brings heals — Buddi; buffs — Buddi; debuffs — Buddi",
+     * which is three sentences arguing about one critter. Keyed on the cast, so
+     * identical lists collapse into "heals, buffs and debuffs — Buddi" and
+     * genuinely different ones still get their own clause.
+     */
+    const byCast = new Map();
+    for (const g of ['heal', 'buff', 'debuff']) {
+      if (!found[g].length) continue;
+      const who = namesFor(g) ?? '';
+      if (!byCast.has(who)) byCast.set(who, []);
+      byCast.get(who).push(GROUP_LABELS[g].toLowerCase());
+    }
+    if (!byCast.size) return '';
+
+    const join = (a) => (a.length > 1 ? `${a.slice(0, -1).join(', ')} and ${a[a.length - 1]}` : a[0]);
+    const bits = [...byCast].map(([who, gs]) => `${join(gs)}${who ? ` — <b>${esc(who)}</b>` : ''}`);
+    return `<p class="summary__sentence">Brings ${bits.join('; ')}.</p>`;
+  };
+
+  $('#summary').innerHTML = groups.map(({ player, list }) => sentence(list) + `
     <div class="summary__player">
       ${player ? `<span class="summary__label" data-player="${player}">P${player}</span>` : ''}
       <div class="summary__group"><span class="summary__label">Types</span>${
