@@ -458,6 +458,24 @@ function wireToolbar() {
     drawAdvCount();
   }
 
+  /*
+   * The phone's More button. Same bargain as the two drawers: it says how many
+   * links are behind it, so folding the row never makes them unfindable -- which
+   * is the objection 1.8.0 raised when they came out of a menu, and it was right.
+   */
+  const more = $('#topbar-more');
+  if (more) {
+    const n = $$('#topbar-actions > a, #topbar-actions > button')
+      .filter((el) => !el.hidden).length;
+    more.innerHTML = `More${n ? ` <b class="pill__n">${n}</b>` : ''}`;
+    more.addEventListener('click', () => {
+      const open = document.body.dataset.topmore !== 'open';
+      if (open) document.body.dataset.topmore = 'open';
+      else delete document.body.dataset.topmore;
+      more.setAttribute('aria-expanded', String(open));
+    });
+  }
+
   const glitterBoxes = $$('#opt-glitter, #opt-glitter-roster');
   for (const box of glitterBoxes) {
     box.addEventListener('change', (e) => {

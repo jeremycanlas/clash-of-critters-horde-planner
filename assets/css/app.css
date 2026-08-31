@@ -3622,7 +3622,29 @@ body.is-dragging-active {
    * the mode switch beside it, then the actions.
    */
   .topbar { padding: var(--s2) var(--s3); gap: var(--s1) var(--s2); }
-  .topbar__title h1 { font-size: 17px; }
+
+  /*
+   * The formation's name is the heading here, not the product's.
+   *
+   * 1a leads the phone with what you are building and how far along it is. The
+   * app's own name is the least useful thing on a screen you already opened on
+   * purpose, so it drops to a quiet label and the name field takes the weight:
+   * the display face, 19px, sitting on the page rather than in a box.
+   */
+  .topbar__title h1 { font-size: 14px; font-weight: 600; color: var(--text-mute); letter-spacing: 0; }
+  .field--name {
+    font-family: var(--font-display);
+    font-size: 19px; font-weight: 700; letter-spacing: -.02em;
+    background: transparent; border-color: transparent;
+    padding-left: 0; padding-right: 0;
+  }
+  .field--name:focus { background: var(--surface-2); border-color: var(--line); padding-left: var(--s2); }
+  #formation-status { order: 1; flex: 1 1 100%; margin-top: -2px; }
+
+  /* The seven links, folded behind More. See the note in index.html. */
+  #topbar-more { order: 3; }
+  .topbar__actions { order: 4; }
+  body:not([data-topmore="open"]) .topbar__actions { display: none; }
 
   /*
    * The mode switch joins the name field rather than taking a line of its own.
@@ -3663,7 +3685,9 @@ body.is-dragging-active {
    * Not `flex-basis: 0`: at zero the field is small enough to join the title's
    * line instead, which puts a text input next to the byline.
    */
-  .field--name { flex: 1 1 160px; padding: 6px var(--s2); font-size: 13px; }
+  /* The flex maths above still holds; the size is set with the rest of the
+     name's treatment further up, where 1a promotes it to the phone's heading. */
+  .field--name { flex: 1 1 160px; padding: 6px 0; }
 
   /* Three checkboxes and a button were wrapping to two rows of their own. */
   .panel--field .panel__tools { gap: 2px var(--s2); font-size: 12px; }

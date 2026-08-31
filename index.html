@@ -104,7 +104,29 @@
     Order: the two links that leave the page, then the four that act on the
     formation in front of you.
   -->
-    <div class="topbar__actions">
+    <!--
+      The seven links, behind one button on a phone.
+      ==============================================
+
+      1a's phone header is the formation's name, what is placed, and Share --
+      three things, one row. Ours carried nine buttons over two wrapped rows
+      above a field that wanted the space, on the surface three quarters of the
+      traffic is on.
+
+      Folded rather than dropped, because the canvas is explicit that nothing is
+      removed from the product, and because 1.8.0 moved these out of a ⋮ menu for
+      a reason worth respecting: Community formations and Record a range live or
+      die on being noticed. What that argues for is not "never fold" but "fold on
+      the screen that cannot afford them, and say what is behind it". Hence the
+      count, the same as the Filter and Advanced pills carry.
+
+      Phone only. On a wide screen the row has always fitted and still does, so
+      nothing there changes and the button is not rendered at all.
+    -->
+    <button id="topbar-more" class="pill pill--more touch-only" type="button"
+      aria-expanded="false" aria-controls="topbar-actions">More</button>
+
+    <div id="topbar-actions" class="topbar__actions">
       <!--
       "Community formations", not "Community". On its own the word is a
       category, not a description: in a fan tool it reads just as easily as a
