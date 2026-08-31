@@ -1221,11 +1221,24 @@ export function renderBench() {
                      data-switch-player="${player}" aria-pressed="${active}"
                      title="Plan for P${player}">P${player} bench</button>`
     : '<span class="summary__label">Bench</span>'}
+          <!--
+            "4 left", not "3/15 brought, 2/15 placed".
+            ==========================================
+
+            The redesign heads this strip with how many are still waiting, which
+            is the only one of the three numbers you act on: it is the answer to
+            "have I finished placing". The other two are derivable, they were
+            printed as fractions of caps that change with the mode, and they were
+            competing with each other for the same glance.
+
+            The full breakdown stays in the tooltip, and the placed count is now
+            said in words under the formation's name where it belongs. Nothing is
+            lost; one number is promoted and two stop shouting.
+          -->
           <span class="bench__count"
                 title="${bench.length}${capOf(store.benchCap(), ' of ')} on the bench, ${
-  bench.length - waiting.length} of ${store.fieldCap()} on the field"><b>${
-  bench.length}</b>${capOf(store.benchCap())} brought,
-            <b>${bench.length - waiting.length}</b>/${store.fieldCap()} placed</span>
+  bench.length - waiting.length} of ${store.fieldCap()} on the field">${
+  waiting.length ? `<b>${waiting.length}</b> left to place` : 'all placed'}</span>
           ${active
     ? `<button class="btn btn--tiny bench__clean" type="button" data-clean
                      title="Hide everything else so the field is all that is on screen">⛶ Just the grid</button>`
@@ -1344,6 +1357,27 @@ export function renderSummary() {
     return;
   }
 
+  /*
+   * The element tally, named rather than iconned.
+   *
+   * The canvas draws these as a coloured dot, the element's name and its count
+   * -- "Grass 6" -- instead of an icon and a number. Two reasons it is the
+   * better shape, and neither is fashion: the name is the thing you would say
+   * out loud when reading a formation back to somebody, and a dot plus a word
+   * survives the colour-blind case that the icons needed High Contrast mode to
+   * answer. Roles keep their icons; there are six of them and their names are
+   * long enough to wrap the row.
+   *
+   * Zeroes still print, greyed. "Grass 0" is an answer -- it is how you notice
+   * the element you meant to bring and did not.
+   */
+  const namedTally = (list, values) => values.map((v) => {
+    const n = list.filter((t) => t.type === v).length;
+    return `<span class="tally tally--named" role="img" aria-label="${esc(v)}: ${n}"
+      data-empty="${n === 0}" data-type="${esc(v)}" title="${esc(v)}: ${n}"
+      ><span class="tally__dot" aria-hidden="true"></span>${esc(v)} <b>${n}</b></span>`;
+  }).join('');
+
   const tally = (list, key, values) => values.map((v) => {
     const n = list.filter((t) => t[key] === v).length;
     // title on a bare <span> is not exposed by most screen readers, so the
@@ -1358,7 +1392,7 @@ export function renderSummary() {
     <div class="summary__player">
       ${player ? `<span class="summary__label" data-player="${player}">P${player}</span>` : ''}
       <div class="summary__group"><span class="summary__label">Types</span>${
-        tally(list, 'type', state.meta.types)}</div>
+        namedTally(list, state.meta.types)}</div>
       <div class="summary__group"><span class="summary__label">Roles</span>${
         tally(list, 'role', state.meta.roles)}</div>
     </div>

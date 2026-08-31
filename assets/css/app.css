@@ -1538,6 +1538,28 @@ body[data-mode="coop"] .bench__player[data-active="false"] { cursor: pointer; }
 }
 .tally[data-empty="true"] { opacity: .35; }
 
+/*
+ * The element tally as the canvas draws it: a coloured dot, the name, the count.
+ *
+ * The dot carries --type-color off the data-type attribute, the same variable
+ * the tokens and cards use, so an element is one colour everywhere and High
+ * Contrast repaints this along with everything else. The name is what makes it
+ * work without the colour at all, which is the point -- the icon version needed
+ * High Contrast turned on before Fire and Rock could be told apart.
+ */
+.tally--named {
+  gap: 6px;
+  padding: 2px var(--s2);
+  font-weight: 500;
+  color: var(--text-dim, var(--text));
+}
+.tally--named b { font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+.tally__dot {
+  width: 8px; height: 8px; flex: none;
+  border-radius: 50%;
+  background: var(--type-color, var(--text-mute));
+}
+
 /* Heals, buffs and debuffs, coloured by what they do to you rather than by type. */
 .tally--effect { gap: 4px; padding: 2px var(--s2); font-size: 11px; font-weight: 600; }
 .tally--effect b { font-weight: 800; }
