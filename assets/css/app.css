@@ -2072,8 +2072,35 @@ body:not([data-filters="open"]) .filters__body { display: none; }
 .pill--advanced { border-style: dashed; color: var(--text-mute); }
 .pill--advanced.is-on { border-style: solid; border-color: var(--accent); color: var(--text); }
 .pill--advanced[aria-expanded="true"] { background: var(--surface-3); color: var(--text); }
+/*
+ * The Advanced drawer hangs under its button. It does not push the board.
+ * =======================================================================
+ *
+ * Opened in the flow, the seven switches wrapped onto two more lines of the
+ * tools row and moved the field down 57px -- so the board jumped out from under
+ * the cursor at the exact moment you reached for a setting that changes it, and
+ * you had to find it again to see what the setting did. A control whose whole
+ * purpose is "look at the board differently" must not move the board.
+ *
+ * So it is a popover: absolutely positioned inside .tools__advwrap, which exists
+ * only to be its anchor, and it takes no space in the row at all. Right-aligned
+ * because the button sits at the right-hand end of the tools row on a wide
+ * screen, and clamped to the viewport on a narrow one.
+ *
+ * z-index sits above the field. .panel carries isolation: isolate, so this
+ * cannot escape its own panel and land on top of the roster.
+ */
+.tools__advwrap { position: relative; display: inline-flex; }
 .tools__adv {
-  display: contents;
+  position: absolute; z-index: 5;
+  top: calc(100% + 6px); right: 0;
+  display: grid; gap: var(--s2);
+  min-width: 210px; max-width: min(320px, 86vw);
+  padding: var(--s3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  box-shadow: 0 12px 32px rgb(0 0 0 / .38);
 }
 body:not([data-advanced="open"]) .tools__adv { display: none; }
 

@@ -294,6 +294,10 @@
             title="Mark empty squares as somebody else's choice, so a posted formation reads as a template rather than as unfinished.">
             <input id="opt-flex" type="checkbox"> <span class="check__text">Flex slots</span></label>
 
+          <!-- The button and its drawer share a positioning context so the
+             drawer can hang under the button rather than pushing the board
+             down. See .tools__advwrap in app.css. -->
+          <div class="tools__advwrap">
           <button id="advanced-toggle" class="pill pill--advanced" type="button"
             aria-expanded="false" aria-controls="field-advanced">Advanced</button>
 
@@ -359,6 +363,7 @@
             title="Take the caps off: bring any number of Tatari and place as many as there are cells. Turning it back off puts the caps back, benches whatever no longer fits, and offers Undo.">
             <input id="opt-sandbox" type="checkbox"> <span class="check__text">Sandbox</span></label>
           </div><!-- /#field-advanced -->
+          </div><!-- /.tools__advwrap -->
 
           <!-- Desktop's copy. Phones get the one in the app bar instead, where it
              is always on screen rather than above a field they have scrolled. -->

@@ -444,11 +444,30 @@ function wireToolbar() {
     advToggle.classList.toggle('is-on', n > 0);
   };
   if (advToggle) {
-    advToggle.addEventListener('click', () => {
-      const open = document.body.dataset.advanced !== 'open';
+    const setAdv = (open) => {
       if (open) document.body.dataset.advanced = 'open';
       else delete document.body.dataset.advanced;
       advToggle.setAttribute('aria-expanded', String(open));
+    };
+    advToggle.addEventListener('click', () => {
+      setAdv(document.body.dataset.advanced !== 'open');
+    });
+    /*
+     * It hangs over the board now rather than moving it, which makes it a
+     * popover -- and a popover that only closes by pressing the thing that
+     * opened it is a panel you have to put away. Clicking anywhere else and
+     * Escape both close it, which is what every other overlay in this app does.
+     *
+     * Not on pointerdown: a click that lands on a switch inside the drawer must
+     * toggle the switch, and the drawer must stay open while you set two of them.
+     */
+    document.addEventListener('click', (e) => {
+      if (document.body.dataset.advanced !== 'open') return;
+      if (e.target.closest('.tools__advwrap')) return;
+      setAdv(false);
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && document.body.dataset.advanced === 'open') setAdv(false);
     });
     /* Every switch in there, plus the ones changed from elsewhere: the roster's
        Glitter copy and anything app code sets directly both land here. */
