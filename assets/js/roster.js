@@ -839,6 +839,31 @@ export function activeFilterCount() {
   return n;
 }
 
+/**
+ * The active filters as words, for the line beside the Filter pill.
+ *
+ * Values where the roster has them ("Grass", "Healer", "T3"), and the group's
+ * own name where listing the values would be longer than the list it describes
+ * -- 23 effect chips is a paragraph, not a summary. Sort is left out: it changes
+ * the order, not what is in it, and it has its own pill saying so.
+ */
+export function activeFilterWords() {
+  const out = [
+    ...filters.types,
+    ...filters.roles,
+    ...[...filters.tiers].sort((a, b) => a - b).map((t) => `T${t}`),
+  ];
+  const effects = filters.effects.size + filters.effectTypes.size
+    + Object.values(filters.effectBy).filter((v) => v !== null).length;
+  if (effects) out.push(effects === 1 ? '1 effect' : `${effects} effects`);
+  if (filters.boss) out.push('Bosses');
+  if (filters.changed) out.push('Changed');
+  if (filters.hideBlocked) out.push('Available only');
+  if (chipTier !== null) out.push(`Chip T${chipTier}`);
+  if (chipShape !== null) out.push(String(chipShape));
+  return out;
+}
+
 export function resetFilters() {
   filters.query = '';
   filters.types.clear();
@@ -1651,8 +1676,27 @@ export function renderRoster() {
   const fold = $('#filters-toggle');
   if (fold) {
     const n = activeFilterCount();
-    fold.innerHTML = `Filters${n ? ` <b>${n}</b>` : ''}`;
+    fold.innerHTML = `Filter${n ? ` <b class="pill__n">${n}</b>` : ''}`;
     fold.classList.toggle('is-on', n > 0);
+  }
+  /*
+   * What is on, in words, for when the drawer is shut.
+   *
+   * The count says how many, which is enough to know something is filtering and
+   * not enough to know what -- and "why is Frostique missing" is answered by the
+   * words, not the number. Folding the chips away on the desktop is only
+   * defensible while this line is here: it is the whole difference between a
+   * drawer and a thing that hides state from you.
+   *
+   * Named filters only, and only the ones a person set. A sort is not a filter,
+   * and 23 individual effects would be a paragraph, so those fall back to their
+   * group's name.
+   */
+  const active = $('#filters-active');
+  if (active) {
+    const words = activeFilterWords();
+    active.textContent = words.join(' · ');
+    active.hidden = words.length === 0;
   }
   /* data-chip-view belongs to the chips list and only to it: it decides the
      roster's grid columns, and left behind on the way back to Tatari it laid

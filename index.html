@@ -459,15 +459,47 @@
           placeholder="Search name, animal, nickname or skill…" aria-label="Search Tatari">
 
         <!--
-        Phone only, via .touch-only. The filters below come to 225px of a 700px
-        sheet, which left three card rows of the thing the sheet is for. They
-        fold behind this instead, with a count so a filter can never be on
-        without saying so. The search stays out, because it is the fastest
-        filter there is and the one people reach for first.
-      -->
-        <button id="filters-toggle" class="btn btn--tiny touch-only" type="button"
-          aria-expanded="false" aria-controls="filters-body">Filters</button>
+        One Filter pill, at every width.
+        =================================
 
+        The filters were nine chip groups standing open: 225px of a 700px sheet
+        on a phone, which left three card rows of the thing the sheet is for. A
+        phone-only fold already answered that; this is the same answer given to
+        the desktop, which was carrying the whole wall permanently for the sake
+        of the two chips anybody presses.
+
+        The count and the summary beside it are what make folding honest. 1.8.0
+        deliberately un-hid controls, on the grounds that a thing you cannot see
+        is a thing most players never find out exists -- and that reasoning does
+        not stop being true here. What it argues for is not "never fold" but
+        "never fold silently": the pill carries the number of filters that are
+        on, and #filters-active names them ("Grass · Healer"), so the state is
+        readable with the drawer shut. A filter can never be on without saying
+        so, and nobody has to open the drawer to find out.
+
+        Sort and Reset come up beside it. Both were at the bottom of the block
+        that now folds, and both are things you reach for while looking at the
+        list rather than while setting it up.
+      -->
+        <div class="filterbar">
+          <button id="filters-toggle" class="pill pill--filter" type="button"
+            aria-expanded="false" aria-controls="filters-body">Filter</button>
+          <!-- Which ones, in words, for when the drawer is shut. Written by
+               renderRoster; empty and out of the layout when nothing is on. -->
+          <span id="filters-active" class="filterbar__active"></span>
+          <label class="pill pill--sort"><span class="pill__label">Sort</span>
+            <select id="sort" class="pill__select" aria-label="Sort the roster">
+              <option value="default">Default</option>
+              <option value="name">Name</option>
+              <option value="type">Type</option>
+              <option value="role">Role</option>
+              <option value="tier">Tier</option>
+            </select>
+          </label>
+          <button id="btn-reset-filters" class="btn btn--tiny btn--quiet" type="button">Reset</button>
+        </div>
+
+        <div id="filters-body" class="filters__body">
         <div class="filters__row">
           <div id="filter-types" class="chips" role="group" aria-label="Filter by type"></div>
           <div id="filter-roles" class="chips" role="group" aria-label="Filter by role"></div>
@@ -520,17 +552,8 @@
              you reach for, the other agrees. -->
           <label class="check touch-only" title="Show the glitter version of each Tatari's art where the wiki has one">
             <input id="opt-glitter-roster" type="checkbox"> Glitter</label>
-          <label class="sortby"><span class="sortby__label">Sort</span>
-            <select id="sort" class="field field--select" aria-label="Sort the roster">
-              <option value="default">Default</option>
-              <option value="name">Name</option>
-              <option value="type">Type</option>
-              <option value="role">Role</option>
-              <option value="tier">Tier</option>
-            </select>
-          </label>
-          <button id="btn-reset-filters" class="btn btn--tiny btn--quiet" type="button">Reset</button>
         </div>
+        </div><!-- /#filters-body -->
       </div>
 
       <!--

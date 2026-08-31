@@ -1857,6 +1857,67 @@ button.tally--effect { font: inherit; font-size: 11px; font-weight: 600; cursor:
 .filters__row--meta { gap: var(--s4); }
 
 /*
+ * The Filter pill and what sits beside it.
+ * ========================================
+ *
+ * One row under the search: the pill that opens the chips, the words saying
+ * which are on, the sort, and Reset. The nine chip groups fold behind the pill
+ * at every width now, not only on a phone -- the desktop was carrying the whole
+ * wall permanently for the sake of the two chips anybody presses.
+ *
+ * The summary is load-bearing, not decoration. Folding controls away is the
+ * thing 1.8.0 argued against, and rightly: a control you cannot see is one most
+ * players never learn exists. What makes this fold honest rather than a
+ * regression is that the closed state still says what is on -- the count on the
+ * pill, the names beside it. Take the summary out and this becomes the bad
+ * version of itself.
+ */
+.filterbar {
+  display: flex; flex-wrap: wrap; align-items: center;
+  gap: var(--s2);
+  min-width: 0;
+}
+.pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 32px; padding: 0 12px;
+  border: 1px solid var(--line); border-radius: 999px;
+  background: var(--surface-2, var(--surface-3));
+  color: var(--text);
+  font: inherit; font-size: 13px;
+  cursor: pointer;
+}
+.pill:hover { border-color: var(--text-mute); }
+.pill--filter[aria-expanded="true"] { background: var(--surface-3); border-color: var(--text-mute); }
+.pill--filter.is-on { border-color: var(--accent); }
+/* The count is the whole point of the closed state: a filter that is on and out
+   of sight is worse than no filter at all. */
+.pill__n {
+  display: inline-grid; place-items: center;
+  min-width: 16px; height: 16px; padding: 0 4px;
+  border-radius: 999px;
+  background: var(--accent); color: var(--accent-ink);
+  font-size: 10px; font-weight: 800;
+}
+.pill--sort { padding-right: 6px; color: var(--text-mute); }
+.pill__label { flex: none; }
+.pill__select {
+  border: 0; background: transparent; color: var(--text);
+  font: inherit; font-size: 13px;
+  padding: 0 2px; cursor: pointer;
+}
+/* Which filters are on, in words. Truncates rather than wrapping the row: the
+   count on the pill is the part that must never be lost. */
+.filterbar__active {
+  flex: 1 1 auto; min-width: 0;
+  color: var(--text-mute); font-size: 12px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.filterbar__active[hidden] { display: none; }
+
+body:not([data-filters="open"]) .filters__body { display: none; }
+.filters__body { display: grid; gap: var(--s2); }
+
+/*
  * Zobos answer none of the drafting questions — they have no role, no tier, no
  * bench and bring no heals — so those controls go while their tab is up rather
  * than sitting there doing nothing. The element chips and the search stay,
@@ -5340,26 +5401,37 @@ body[data-roster-list="chips"] #filter-chip-groups { order: 4; flex: 1 1 100%; }
     align-items: center;
     gap: var(--s2);
   }
-  .filters > #search { flex: 1 1 auto; width: auto; min-width: 0; }
-  .filters > #filters-toggle { flex: none; }
-  /* Everything else takes a line of its own when it is shown at all. */
-  .filters > *:not(#search):not(#filters-toggle) { flex: 1 1 100%; }
+  .filters > #search { flex: 1 1 auto; width: auto; min-width: 0; order: 1; }
 
-  body:not([data-filters="open"]) .filters > *:not(#search):not(#filters-toggle) {
-    display: none;
-  }
+  /*
+   * On a phone the bar is not a row of its own.
+   *
+   * Given one, the closed filters went from 44px to 77px -- the pill row cannot
+   * share the search's line, so it takes a whole second one, and that is a third
+   * of a card row gone from the surface three quarters of the traffic is on. The
+   * mobile-first point of this redesign is to give the roster that space, not to
+   * spend it on the controls for narrowing it.
+   *
+   * display: contents dissolves the bar here, so its children lay out as if they
+   * were in .filters directly and `order` can put each one where it belongs: the
+   * Filter pill up beside the search, Sort and Reset down past the drawer. Same
+   * markup, same single #sort, no phone-only duplicate to keep in step.
+   *
+   * Sort and Reset are hidden with the drawer, which is where they belong on a
+   * phone anyway -- you are already in the drawer when you are choosing how the
+   * list reads. The pill and its count never hide, so the closed state still
+   * says what is on.
+   */
+  .filters { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); }
+  .filterbar { display: contents; }
+  .filters > .filters__body { flex: 1 1 100%; order: 4; }
 
-  /* The count is the whole point of the closed state: a filter that is on and
-     out of sight is worse than no filter at all. */
-  #filters-toggle b {
-    display: inline-grid; place-items: center;
-    min-width: 16px; height: 16px; margin-left: 3px; padding: 0 3px;
-    border-radius: 999px;
-    background: var(--accent); color: var(--accent-ink);
-    font-size: 10px; font-weight: 800;
-  }
-  #filters-toggle.is-on { border-color: var(--accent); color: var(--text); }
-  #filters-toggle[aria-expanded="true"] { background: var(--surface-3); color: var(--text); }
+  #filters-toggle { flex: none; order: 2; }
+  #filters-active { flex: 1 1 100%; order: 3; }
+  .filterbar .pill--sort { order: 5; }
+  .filterbar #btn-reset-filters { order: 6; }
+  body:not([data-filters="open"]) .filterbar .pill--sort,
+  body:not([data-filters="open"]) .filterbar #btn-reset-filters { display: none; }
 }
 
 /* ------------------------------------------------- flex slots

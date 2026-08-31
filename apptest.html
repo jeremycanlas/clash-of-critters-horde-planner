@@ -300,6 +300,15 @@ await runGroup('search', async () => {
   // ------------------------------------------------------ effect filters
 });
 await runGroup('effect groups, level ceilings and named effects', async () => {
+  /*
+   * The chips live behind the Filter pill now, at every width rather than only
+   * on a phone, so this opens the drawer before reaching for them. Focus cannot
+   * land on something inside a display:none subtree, which is what this group
+   * started failing on -- the app was right and the check was reaching past a
+   * disclosure that did not use to be there on a desktop.
+   */
+  if (D.body.dataset.filters !== 'open') await click($('#filters-toggle'), 340);
+
   caret = (g) => $(`.fxcaret[data-group="${g}"]`);
   ok('each effect group has a caret', ['heal', 'buff', 'debuff'].every((g) => caret(g)));
 
