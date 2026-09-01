@@ -410,21 +410,17 @@ export function buildFilters(onChange, { onPick = bringToBench } = {}) {
       setFilters(document.body.dataset.filters !== 'open');
     });
     /*
-     * It hangs over the roster on a wide screen, so it closes the way an overlay
-     * closes: click elsewhere, or Escape. On click and not pointerdown, because
-     * a press that lands on a chip has to toggle that chip and leave the drawer
-     * up -- nobody sets one filter and stops.
+     * No outside-click close.
      *
-     * Only while it is actually a popover. Below 760px it opens in the flow and
-     * closing on an outside click would shut it every time you touched the
-     * search box beside it.
+     * That belonged to the version of this that hung over the roster: an overlay
+     * owes you a way out that is not the button you opened it with. This one
+     * takes its own space above the cards and covers nothing, so closing on any
+     * stray click would only shut the drawer every time you touched the search
+     * box beside it or scrolled the list you were filtering.
+     *
+     * Escape stays, because it costs nothing and is what a keyboard expects of
+     * anything that opened.
      */
-    const isPopover = () => window.matchMedia('(min-width: 761px)').matches;
-    document.addEventListener('click', (e) => {
-      if (document.body.dataset.filters !== 'open' || !isPopover()) return;
-      if (e.target.closest('#filters-body, #filters-toggle')) return;
-      setFilters(false);
-    });
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && document.body.dataset.filters === 'open') setFilters(false);
     });

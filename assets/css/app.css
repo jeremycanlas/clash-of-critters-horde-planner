@@ -2122,48 +2122,42 @@ body:not([data-filters="open"]) .filters__body { display: none; }
 .filters__body { display: grid; gap: var(--s2); }
 
 /*
- * The chips hang under the Filter pill rather than pushing the roster.
- * ====================================================================
+ * The filters open above the roster, in the flow, and stay out of its way.
+ * ========================================================================
  *
- * Same problem the field's Advanced drawer had, and the same answer. Opened in
- * the flow, the nine chip groups took five lines and shoved 230 cards down the
- * page -- so the card you were about to press moved, and you pressed whatever
- * slid into its place. Worse here than on the field, because the whole reason
- * you opened the filters is to change what those cards are.
+ * This was a popover, hanging over the cards. It was the wrong shape for a
+ * filter and it was reported as such: you set a chip, and then you had to close
+ * the drawer to find out what it did. A control whose entire purpose is to
+ * change what is below it must never be the thing covering what is below it --
+ * the loop is toggle, look, toggle again, and an overlay breaks it every time
+ * round.
  *
- * Anchored on .filterbar, which is already a real box on this screen and whose
- * first item is the pill, so left: 0 puts it under the button. No wrapper
- * element, and #filters-body stays exactly where it is in the markup.
+ * So the chips take their own space above the roster instead. Yes, the roster
+ * moves down when the drawer opens; that is a single deliberate shift at the
+ * moment you asked for it, and afterwards you can see the cards changing as you
+ * press the chips, which is the whole job. The earlier reasoning here -- that
+ * opening the drawer moved a card you were reaching for -- was about a moment
+ * nobody is in: you are aiming at the drawer you just opened, not at a card.
  *
- * Wide screens only. Below 760px .filterbar is display: contents -- it is
- * dissolved so `order` can lay its children out around the search box -- so
- * there is no box to anchor to, and the drawer opens in the flow the way it
- * always has. That is the right behaviour there anyway: on a phone the roster
- * is a sheet you have already committed to, and a popover would cover the very
- * cards it filters.
+ * Still a bordered panel rather than loose chips, because it is a disclosure and
+ * should read as one, and still no taller than it has to be.
  */
-@media (min-width: 761px) {
-  /*
-   * The anchor is the pill's own wrapper, not the bar.
-   *
-   * This was `.filterbar { position: relative }`, which looked right and was
-   * not: #filters-body is a SIBLING of the bar, not a child, so the absolute
-   * positioning resolved against the nearest positioned ancestor it actually
-   * had -- the roster panel -- and `top: 100%` put the chips 703px down, below
-   * all 230 cards. The drawer now lives inside .drawer-anchor with the pill,
-   * which is the only arrangement in which "under the pill" is expressible.
-   */
-  .drawer-anchor { position: relative; display: inline-flex; }
-  .filters__body {
-    position: absolute; z-index: 5;
-    top: calc(100% + 6px); left: 0;
-    width: max-content; max-width: min(560px, 80vw);
-    padding: var(--s3);
-    border: 1px solid var(--line);
-    border-radius: var(--r-md);
-    background: var(--surface-2);
-    box-shadow: 0 12px 32px rgb(0 0 0 / .38);
-  }
+/* The wrapper only exists to keep the drawer next to its pill in the markup;
+   dissolved, both become items of .filterbar and the drawer takes a row of its
+   own under the pill row. */
+.drawer-anchor { display: contents; }
+.filters__body {
+  /* Last in the row whatever its position in the markup, so the pill keeps its
+     line with the summary, Sort and Reset and the chips open underneath the
+     lot -- the wrapper puts it next to its pill in the DOM, which is a
+     different question from where it belongs on screen. */
+  order: 9;
+  flex: 1 1 100%;
+  padding: var(--s3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+}
 }
 
 /*

@@ -1452,46 +1452,64 @@ await runGroup('the field panel folds its settings without going quiet', async (
 });
 
 /*
- * The Filter drawer opens under the Filter pill.
+ * You can see the roster while you are filtering it.
  *
- * It shipped opening 703px lower, below all 230 cards, on every list. The drawer
- * is absolutely positioned, and it was anchored on .filterbar -- which is not
- * its parent but its sibling's, so the position resolved against the roster
- * panel instead and `top: 100%` meant the bottom of the roster.
+ * This is the property that matters, and it has now been got wrong twice in
+ * opposite directions. As a popover it hung over the cards, so setting a chip
+ * meant closing the drawer to find out what it did -- reported as needing an
+ * extra click to see the roster. Before that, a bad anchor put it below all 230
+ * cards entirely.
  *
- * My own check missed it: it asserted the roster did not move (true -- the thing
- * is out of the flow either way) and that the drawer sat inside the viewport
- * horizontally. Neither says WHERE it landed, which was the entire bug. So this
- * one measures the gap from the pill, on each list, because the anchor is what
- * broke and each list draws a differently sized drawer.
+ * Both are the same failure: a control whose whole job is changing what is below
+ * it must not hide what is below it. So the check is not where the drawer sits
+ * but what you can still see and do with it open -- cards on screen underneath
+ * it, the count moving as you press a chip, and the drawer staying put while you
+ * press the next one.
  */
-await runGroup('the Filter drawer opens under the Filter pill', async () => {
+await runGroup('the filters never hide the roster they are filtering', async () => {
   await until(() => !!$('#roster'), 'the drafter to be in the frame', 8000);
+  await reset();
   const pill = $('#filters-toggle');
   if (!pill || pill.getBoundingClientRect().width < 20) {
-    skip('the Filter drawer position', 'no pill on screen at this width');
+    skip('the filters not hiding the roster', 'no pill on screen at this width');
     return;
   }
-  const isPopover = D.defaultView.matchMedia('(min-width: 761px)').matches;
-  if (!isPopover) { skip('the Filter drawer position', 'it opens in the flow at this width'); return; }
 
-  for (const list of ['tatari', 'zobos', 'chips']) {
-    await click($(`#roster-tabs [data-list="${list}"]`), 460);
-    if (D.body.dataset.filters !== 'open') await click($('#filters-toggle'), 420);
+  await click($('#roster-tabs [data-list="tatari"]'), 420);
+  if (D.body.dataset.filters !== 'open') await click($('#filters-toggle'), 460);
 
-    const p = $('#filters-toggle').getBoundingClientRect();
-    const drawer = $('#filters-body').getBoundingClientRect();
-    const gap = Math.round(drawer.top - p.bottom);
-    ok(`${list}: the drawer hangs just under the pill`, gap >= 0 && gap <= 20, `${gap}px below it`);
-    ok(`${list}: and starts at the pill's left edge`,
-       Math.abs(drawer.left - p.left) <= 2, `${Math.round(drawer.left - p.left)}px off`);
-    ok(`${list}: and is on the screen`,
-       drawer.top > 0 && drawer.left >= 0 && drawer.right <= D.defaultView.innerWidth + 1,
-       `top ${Math.round(drawer.top)}, right ${Math.round(drawer.right)}`);
+  const drawer = () => $('#filters-body').getBoundingClientRect();
+  /*
+   * Below the drawer, not "inside the viewport". Whether a given card is on
+   * screen depends on the window the suite happens to run in -- the headless one
+   * is shorter than a real browser -- and that is not the property. The property
+   * is that the cards are laid out past the drawer rather than beneath it, which
+   * is true at any height.
+   */
+  const onScreenBelow = () => $$('#roster .card').filter((c) => {
+    const r = c.getBoundingClientRect();
+    return r.height > 0 && r.top >= drawer().bottom - 1;
+  }).length;
 
-    await click($('#filters-toggle'), 380);
-  }
-  await click($('#roster-tabs [data-list="tatari"]'), 400);
+  ok('the cards start below the open drawer, not behind it',
+     onScreenBelow() > 0, `${onScreenBelow()} cards past it`);
+
+  /* Nothing of the roster is underneath it: the drawer takes its own space. */
+  const d = drawer();
+  const under = D.elementsFromPoint(d.left + 20, d.bottom + 30).some((e) => e.id === 'filters-body');
+  ok('and the drawer is not sitting on top of them', !under);
+
+  /* The loop: press a chip, see the count change, drawer still open for the next. */
+  const before = $('#roster-count').textContent;
+  await click($('#filter-types .chip'), 560);
+  ok('pressing a chip filters while the drawer is open',
+     $('#roster-count').textContent !== before,
+     `${before} -> ${$('#roster-count').textContent}`);
+  eq('and the drawer stays open for the next one', D.body.dataset.filters, 'open');
+  ok('with the roster still laid out below it', onScreenBelow() > 0);
+
+  await click($('#btn-reset-filters'), 420);
+  await click($('#filters-toggle'), 380);
   await reset();
 });
 
