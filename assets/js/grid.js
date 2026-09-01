@@ -1238,7 +1238,16 @@ export function renderBench() {
           <span class="bench__count"
                 title="${bench.length}${capOf(store.benchCap(), ' of ')} on the bench, ${
   bench.length - waiting.length} of ${store.fieldCap()} on the field">${
-  waiting.length ? `<b>${waiting.length}</b> left to place` : 'all placed'}</span>
+  /*
+   * "all placed" only once something has been brought.
+   *
+   * The count is derived from what is still waiting, and an empty bench has
+   * nothing waiting -- so a formation nobody has started read "BENCH all
+   * placed" directly above "Nothing brought yet", which is the panel
+   * contradicting itself on the one screen a first-time player sees.
+   */
+  bench.length === 0 ? '' : waiting.length
+    ? `<b>${waiting.length}</b> left to place` : 'all placed'}</span>
           ${active
     ? `<button class="btn btn--tiny bench__clean" type="button" data-clean
                      title="Hide everything else so the field is all that is on screen">⛶ Just the grid</button>`
