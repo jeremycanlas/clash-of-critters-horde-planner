@@ -1557,6 +1557,42 @@ await runGroup('the update page on a phone', async () => {
   frame.remove();
 });
 
+/*
+ * The header is two rows, and both of them are full.
+ *
+ * It was four, three of them nearly empty: the title alone with 230px of
+ * nothing beside it, the credit alone with 180px, More alone with 300px. Every
+ * item's natural width was a shade too wide to share a line, so each took one
+ * and then shrank to fit it -- the worst of both.
+ *
+ * Counted as rows rather than measured as a height, because height is what the
+ * fix produced and rows are what was wrong. A future item that wraps to a line
+ * of its own would fail this while barely moving the pixel count.
+ */
+await runGroup('the phone header is two rows, neither of them mostly empty', async () => {
+  const bar = $('.topbar');
+  const shown = [...bar.children].filter((k) => k.offsetWidth > 0);
+  const rows = [...new Set(shown.map((k) => Math.round(k.getBoundingClientRect().top / 8)))];
+  ok('the header is two rows', rows.length <= 2,
+     `${rows.length} rows: ${shown.map((k) => k.id || k.className.split(' ')[0]).join(', ')}`);
+
+  /* Both rows reach most of the way across: an item alone on a line with 300px
+     spare beside it is the thing being checked for. */
+  const usable = 390 - 24;
+  for (const top of rows) {
+    const onRow = shown.filter((k) => Math.round(k.getBoundingClientRect().top / 8) === top);
+    const right = Math.max(...onRow.map((k) => k.getBoundingClientRect().right));
+    const left = Math.min(...onRow.map((k) => k.getBoundingClientRect().left));
+    ok(`a header row fills its width (${onRow.length} item(s))`, right - left > usable * 0.7,
+       `${Math.round(right - left)}px of ${usable}`);
+  }
+
+  ok('and the credit still says "Say thanks" in full',
+     !!$('.byline__tip-text') && W.getComputedStyle($('.byline__tip-text')).display !== 'none');
+  ok('with the name not truncated away',
+     $('.byline__text').scrollWidth <= $('.byline__text').clientWidth + 1);
+});
+
 await runGroup('the wave list fits the phone', async () => {
   /*
    * A grid of numbered entries, on the narrowest screen it has.

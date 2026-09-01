@@ -342,6 +342,20 @@ a:hover { text-decoration-color: currentColor; }
 
 .muted { color: var(--text-mute); font-weight: 450; }
 .hint  { margin: 0 0 var(--s3); color: var(--text-dim); font-size: 12.5px; max-width: 68ch; }
+/*
+ * The field's hint fills its column.
+ *
+ * 68ch is a reading measure, and it earns its keep on the pages made of prose --
+ * contribute, community, the changelog. Above the board it stopped earning it
+ * once that column went wide: the text broke at 566px inside a 768px panel and
+ * left 201px of nothing beside three ragged lines, which reads as a layout
+ * fault rather than as a considered measure.
+ *
+ * It is four sentences of instructions above a grid, not something anybody
+ * settles in to read, so filling the column costs it nothing and takes it to two
+ * lines. Scoped here, so the prose pages keep their measure.
+ */
+.panel--field .hint { max-width: none; }
 /* The touch wording is swapped in under @media (hover: none), further down. */
 .hint--touch { display: none; }
 
@@ -3903,7 +3917,43 @@ body.is-dragging-active {
    * purpose, so it drops to a quiet label and the name field takes the weight:
    * the display face, 19px, sitting on the page rather than in a box.
    */
+  /*
+   * Four rows, three of them nearly empty.
+   * ======================================
+   *
+   * The header came to 153px over four lines: the title alone with 230px of
+   * nothing beside it, the byline alone with 180px, then the name and the mode
+   * switch, then More alone with 300px. Each item's natural width was a shade
+   * too wide to share, so every one of them took a line and then shrank to fit
+   * it -- the worst of both.
+   *
+   * Two rows now. The credit line up top, with More at the right-hand end where
+   * a menu belongs, and the formation's name across the second with the mode
+   * switch beside it. Nothing hidden and nothing moved out of the header.
+   */
   .topbar__title h1 { font-size: 14px; font-weight: 600; color: var(--text-mute); letter-spacing: 0; }
+  .topbar__title { flex: 0 0 auto; min-width: 0; }
+  /*
+   * The version pill goes, so the credit can share the title's row.
+   *
+   * "Horde Drafter" is 93px and the pill another 47. The byline wants about
+   * 230, and 148 + 8 + 230 overruns a 366px row by 20 -- so the credit took a
+   * line of its own and then rendered at 197 on it, a wrap caused by a width it
+   * did not end up using. Without the pill the title is 93 and both fit with
+   * room to spare.
+   *
+   * The pill is the right thing to drop. It answers "which build am I on",
+   * which is a question for a bug report and not for drafting, and the About
+   * dialog still carries it. "Say thanks" stays: the note below measured it at
+   * 59px and worth keeping, and this row is not the one it was costing.
+   *
+   * flex-basis 0 was tried here first and was worse -- an item that asks for
+   * nothing does not block the line, so the name field joined the row too and
+   * squeezed the credit to 13px.
+   */
+  #app-version { display: none; }
+  .byline { flex: 0 1 auto; min-width: 0; }
+  .byline__text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .field--name {
     font-family: var(--font-display);
     font-size: 19px; font-weight: 700; letter-spacing: -.02em;
@@ -3913,9 +3963,18 @@ body.is-dragging-active {
   .field--name:focus { background: var(--surface-2); border-color: var(--line); padding-left: var(--s2); }
   #formation-status { order: 1; flex: 1 1 100%; margin-top: -2px; }
 
-  /* The seven links, folded behind More. See the note in index.html. */
-  #topbar-more { order: 3; }
+  /*
+   * The seven links, folded behind More. See the note in index.html.
+   *
+   * order: 0 puts it on the credit row rather than a line of its own, and the
+   * auto margin pushes it to the right-hand end of that row -- which is where a
+   * menu button belongs and, usefully, is the one place on the row with space
+   * going spare.
+   */
+  #topbar-more { order: 1; margin-left: auto; flex: 0 0 auto; }
   .topbar__actions { order: 4; }
+  /* Room to shrink so the name, the mode switch and nothing else share row two. */
+  .field--name { flex: 1 1 120px; }
   body:not([data-topmore="open"]) .topbar__actions { display: none; }
 
   /*
@@ -3959,7 +4018,11 @@ body.is-dragging-active {
    */
   /* The flex maths above still holds; the size is set with the rest of the
      name's treatment further up, where 1a promotes it to the phone's heading. */
-  .field--name { flex: 1 1 160px; padding: 6px 0; }
+  /* 120, not 160. With the mode switch (118) and More (79) beside it, a 160
+     basis put the row 7px over 366 and More took a line of its own. The field
+     still ends up the widest thing on the row -- grow gives it every pixel the
+     other two do not use. */
+  .field--name { flex: 1 1 120px; padding: 6px 0; }
 
   /* Three checkboxes and a button were wrapping to two rows of their own. */
   .panel--field .panel__tools { gap: 2px var(--s2); font-size: 12px; }
