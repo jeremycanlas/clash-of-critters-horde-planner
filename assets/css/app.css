@@ -447,6 +447,34 @@ img { -webkit-user-drag: none; }
 
 /* Narrow screens: two tight rows that scroll away instead of a sticky slab. */
 @media (max-width: 760px) {
+  /*
+   * The roster head, on one line instead of three.
+   * ==============================================
+   *
+   * "Roster 230", the Tatari/Zobos/Chips tabs and the Cards/List switch each
+   * took a line of their own: 79px of head, and 162px of chrome before the
+   * first card, in a sheet whose entire job is showing cards.
+   *
+   * The word "Roster" goes (the tab you pressed to get here says it, and the
+   * heading keeps it for screen readers) and the count stays -- that one is
+   * load-bearing, since "6 of 230" is how you see a filter is on. Then the two
+   * segmented controls shrink enough to sit beside it.
+   */
+  .panel--roster .panel__head {
+    margin-bottom: var(--s2);
+    flex-wrap: nowrap; align-items: center; gap: var(--s2);
+  }
+  .panel--roster .panel__head .panel__headword {
+    position: absolute; width: 1px; height: 1px;
+    margin: -1px; padding: 0; overflow: hidden;
+    clip-path: inset(50%); white-space: nowrap;
+  }
+  .panel--roster .panel__head h2 { margin-right: 0; flex: 0 0 auto; font-size: 13px; }
+  .panel--roster .panel__head .segmented--tabs { margin-left: 0; flex: 0 1 auto; min-width: 0; }
+  .panel--roster .panel__head .segmented--tabs:first-of-type { margin-left: auto; }
+  .panel--roster .panel__head .segmented--tabs .segmented__btn {
+    padding: 5px var(--s2); font-size: 12px;
+  }
   .topbar {
     position: static;
     flex-wrap: wrap;
@@ -3669,7 +3697,6 @@ body.is-dragging-active {
   .filters__row { gap: var(--s2); }
   .filters__row--meta { gap: var(--s2); }
   .filters { gap: 6px; margin-bottom: var(--s2); }
-  .panel--roster .panel__head { margin-bottom: var(--s2); }
 
   /*
    * The word "Sort" goes, the select stays. Hide unavailable, Glitter, the
@@ -5787,12 +5814,17 @@ body[data-roster-list="chips"] #filter-chip-groups { order: 4; flex: 1 1 100%; }
 
 @media (max-width: 760px) {
   /*
-   * The head gives the tabs their own line. The panel name, three tabs and the
-   * view switch came to more than the width, so everything got squeezed towards
-   * illegible rather than one thing giving way.
+   * The same crowding, answered where it starts.
+   *
+   * This gave the heading its own line on the chips tab, because the panel
+   * name, three tabs and the view switch came to more than the width. The head
+   * now drops the word "Roster" and keeps only the count, on every tab, which
+   * buys the room without spending a line -- and this rule would now hand a
+   * whole line to the number 49. The margin reset stays: `margin-left: auto` on
+   * the first segmented control is what pushes the pair right, and the chips
+   * tab wants them tight against the count like the others.
    */
-  body[data-roster-list="chips"] .panel--roster .panel__head h2 { flex: 1 1 100%; }
-  body[data-roster-list="chips"] .panel--roster .panel__head #roster-tabs { margin-left: 0; }
+  body[data-roster-list="chips"] .panel--roster .panel__head #roster-tabs { margin-left: auto; }
 }
 
 /* ------------------------------------ the filters, folded away on a phone

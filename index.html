@@ -559,7 +559,10 @@
              Stun takes 230 to 55 on screen and, without this, silently for anyone
              not looking at it. Polite, not assertive: it should arrive after the
              chip's own state change, not interrupt it. -->
-        <h2 id="h-roster">Roster <span id="roster-count" class="muted"
+        <!-- The word is wrapped so a phone can drop it and keep the count. It
+           stays in the accessible name either way: the sheet is announced from
+           this heading, and "230" alone would announce nothing. -->
+        <h2 id="h-roster"><span class="panel__headword">Roster</span> <span id="roster-count" class="muted"
           role="status" aria-live="polite" aria-atomic="true"></span></h2>
         <!-- Two lists, one panel. Zobos are what you draft against, so they
              belong beside the roster rather than in a sheet of their own — and
