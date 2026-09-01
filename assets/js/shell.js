@@ -265,6 +265,24 @@ export function renderShell() {
    * squares only when there are some -- a formation with none should not have to
    * read the word.
    */
+  /*
+   * Both name boxes, from the one value, on every render.
+   *
+   * Loading a save, opening a share link, importing a file, starting a live
+   * session and Clear all each set the name -- six places, all of which wrote
+   * the header's box directly because it was the only one. Rather than teach
+   * every one of them about the second box, they keep writing the store and
+   * this copies the store into both. One writer, and no site can be forgotten.
+   *
+   * Never over a box being typed in: that would fight the cursor, and the input
+   * handler has already mirrored the keystroke anyway.
+   */
+  for (const box of document.querySelectorAll('.js-name')) {
+    if (box !== document.activeElement && box.value !== store.formation.name) {
+      box.value = store.formation.name;
+    }
+  }
+
   const status = document.getElementById('formation-status');
   if (status) {
     const placed = store.allPlaced().length;

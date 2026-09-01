@@ -349,7 +349,25 @@ function wireLfSearch() {
 }
 
 function wireToolbar() {
-  $('#formation-name').addEventListener('input', (e) => store.setName(e.target.value));
+  /*
+   * The name has two boxes and one value.
+   *
+   * One in the header, one on the frame. The frame's is the useful one -- it is
+   * inside the thing people screenshot, so a named formation carries its name
+   * into the picture -- and the header's is where anyone who has used this
+   * before will look for it. Neither is a copy of the other: both write
+   * store.formation.name and both are written from it.
+   *
+   * Typing in either updates the other immediately rather than on the next
+   * render, because a name that lags a keystroke behind reads as a bug in the
+   * box you are not typing in.
+   */
+  for (const box of $$('.js-name')) {
+    box.addEventListener('input', (e) => {
+      store.setName(e.target.value);
+      for (const other of $$('.js-name')) if (other !== e.target) other.value = e.target.value;
+    });
+  }
 
   $('#lf').addEventListener('input', (e) => store.setLF(e.target.value));
 

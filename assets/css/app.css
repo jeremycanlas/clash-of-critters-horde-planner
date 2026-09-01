@@ -729,13 +729,36 @@ img { -webkit-user-drag: none; }
  * those; here it travels with the picture.
  */
 .field-frame__head {
-  display: flex; align-items: baseline; justify-content: space-between; gap: var(--s2);
+  display: flex; align-items: baseline; gap: var(--s2);
   padding: var(--s2) var(--s3) 6px;
 }
-.field-frame__by {
-  color: var(--text-mute); font-size: 12px;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+/*
+ * The name, on the frame, editable in place.
+ *
+ * Borderless and transparent so it reads as the board's title rather than as a
+ * form field -- this is inside the thing people screenshot, and a text input
+ * with a box around it would ride along in every posted picture. It grows a
+ * surface only on focus, which is the moment it is a control rather than a
+ * label.
+ */
+.field-frame__name {
+  flex: 1 1 auto; min-width: 0;
+  padding: 2px 4px; margin: -2px -4px;
+  border: 1px solid transparent; border-radius: var(--r-sm);
+  background: transparent; color: var(--text);
+  font-family: var(--font-display);
+  font-size: 15px; font-weight: 700; letter-spacing: -.01em;
+  text-overflow: ellipsis;
 }
+.field-frame__name::placeholder { color: var(--text-mute); font-weight: 500; }
+.field-frame__name:hover { border-color: var(--line); }
+.field-frame__name:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: var(--surface-3);
+}
+/* Clean view is for the screenshot, so the name is a title and nothing else. */
+body.is-clean .field-frame__name { pointer-events: none; border-color: transparent; }
 
 .field-frame__enemy, .field-frame__base {
   padding: 5px var(--s3);

@@ -68,7 +68,7 @@
       </a>
     </span>
 
-    <input id="formation-name" class="field field--name" type="text" placeholder="Name this formation"
+    <input id="formation-name" class="field field--name js-name" type="text" placeholder="Name this formation"
       aria-label="Formation name" maxlength="60">
 
     <!--
@@ -444,9 +444,25 @@
           been in the page header all along and got cropped out of every share;
           here it rides the artefact instead.
         -->
+        <!--
+          The formation's name, on the formation.
+          ======================================
+
+          This was a static "FORMATION" label and a credit. The label named the
+          category, which nobody needed telling while looking at a 6x6 grid of
+          their own critters, and the credit is already on the page twice.
+
+          Now it is the name itself, and editable where it is read. The frame is
+          what "Just the grid" leaves standing and what people screenshot into
+          Discord, so a named formation now carries its name into the picture --
+          which is the one thing a posted board could never say for itself.
+
+          Two boxes, one value: this and the one in the header are both bound to
+          store.formation.name and mirror each other as you type. See app.js.
+        -->
         <div class="field-frame__head">
-          <span class="eyebrow">Formation</span>
-          <span class="field-frame__by">jacc6475 · fan-made</span>
+          <input id="frame-name" class="field-frame__name js-name" type="text"
+            placeholder="Name this formation" aria-label="Formation name" maxlength="60">
         </div>
         <!-- The ground beyond the line, which only Sandbox can reach. Empty and
            hidden otherwise, so a normal formation is drawn exactly as before —
