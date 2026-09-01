@@ -4452,7 +4452,31 @@ body.is-clean .panel--field {
   background: var(--bg);
   overflow: auto;
 }
-body.is-clean .field-frame { width: 100%; }
+/*
+ * Clean view undoes the two-column field.
+ *
+ * .fieldrow puts the board in a 440px track with the summary beside it, and
+ * clean view hides the summary without touching the grid -- so the board stayed
+ * pinned at 440px with 1448px of empty column to its right, on the one screen
+ * whose entire purpose is showing the board as large as possible. Dissolved
+ * here, the frame is free to take the width again.
+ */
+body.is-clean .fieldrow { display: block; }
+/*
+ * As big as fits, and centred.
+ *
+ * Six square cells across means the grid is as wide as it is tall, so on any
+ * ordinary screen it is HEIGHT that runs out first: at 100% of a 1920px
+ * viewport the board would be 1920 tall and the thing you came here to
+ * photograph would need scrolling. The cap is the viewport height less the
+ * frame's own furniture -- its name line, the spawn caption, the base caption --
+ * so the whole board is on screen at once, and the auto margins put it in the
+ * middle of what is left.
+ */
+body.is-clean .field-frame {
+  width: min(100%, calc(100vh - 150px));
+  margin-inline: auto;
+}
 
 /* Only in clean view, and always below the frame rather than over it. */
 .clean-hint { display: none; }

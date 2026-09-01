@@ -1452,6 +1452,64 @@ await runGroup('the field panel folds its settings without going quiet', async (
 });
 
 /*
+ * Clean view puts the board in the middle, as big as fits.
+ *
+ * It is the one screen whose entire purpose is the board, and it was drawing it
+ * 438px wide against the left edge of a 1920px viewport, with 1448px of empty
+ * column beside it. The two-column .fieldrow reserves a track for the summary,
+ * and clean view hides the summary without telling the grid -- so the board kept
+ * its 440px cap and the space went nowhere.
+ *
+ * Checked as proportions of the viewport rather than as pixels, since the suite
+ * runs at whatever size the window is: most of the width, centred, and wholly
+ * on screen without scrolling, which is what "photograph this" requires.
+ */
+await runGroup('clean view shows the board big and centred', async () => {
+  await until(() => !!$('#grid'), 'the drafter to be in the frame', 8000);
+  await reset();
+  /* Something on the board first: shell.js disables every [data-clean] while
+     the field is empty, so on a cleared board the click does nothing and the
+     group would pass by never entering clean view at all. */
+  await placeOne();
+  await sleep(360);
+
+  const toggle = $$('[data-clean]').find((b) => !b.disabled);
+  if (!toggle) { skip('clean view', 'no enabled Just the grid button'); return; }
+  const V = D.defaultView;
+  /*
+   * No width guard. There was one -- "skip below 900px" -- and it made the whole
+   * group skip, because this suite's frame is narrower than that: it reported
+   * green with the bug still in place, which is worse than not checking at all.
+   * Nothing below needs a desktop anyway. Centred and as-large-as-fits is true
+   * of clean view at every width, and the broken version failed it at all of
+   * them, being pinned to 440px against the left edge whatever the frame.
+   */
+  await click(toggle, 620);
+  ok('clean view is on', D.body.classList.contains('is-clean'));
+
+  const frame = $('.field-frame').getBoundingClientRect();
+  const grid = $('#grid').getBoundingClientRect();
+
+  /* Centred: the board's middle is the viewport's middle. */
+  const offCentre = Math.abs((grid.left + grid.right) / 2 - V.innerWidth / 2);
+  ok('the board is centred', offCentre < 20, `${Math.round(offCentre)}px off centre`);
+
+  /* Big: it takes most of whichever dimension runs out first. Six square cells
+     across means height is usually the binding one. */
+  const budget = Math.min(V.innerWidth, V.innerHeight);
+  ok('and takes most of the space it can', grid.width > budget * 0.7,
+     `${Math.round(grid.width)}px against a ${Math.round(budget)}px budget`);
+
+  /* And all of it is on screen -- a board you have to scroll is not a picture. */
+  ok('with the whole frame on screen', frame.top >= -1 && frame.bottom <= V.innerHeight + 1,
+     `top ${Math.round(frame.top)}, bottom ${Math.round(frame.bottom)} of ${V.innerHeight}`);
+
+  await click($('.panel--field'), 520);
+  ok('and it comes back out again', !D.body.classList.contains('is-clean'));
+  await reset();
+});
+
+/*
  * You can see the roster while you are filtering it.
  *
  * This is the property that matters, and it has now been got wrong twice in
