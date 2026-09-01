@@ -1549,10 +1549,18 @@ body[data-mode="coop"] .bench__player[data-active="true"] {
 
 /* ============================================================ summary */
 
+/*
+ * No rule above TYPES.
+ *
+ * The line was separating the summary from the bench above it, back when both
+ * were stacked in the same column. On a wide screen the summary is beside the
+ * board now, so the rule was drawing a division across the top of its own
+ * column with nothing above it to divide from -- and where it does still stack,
+ * the gap does the separating on its own.
+ */
 .summary {
   display: flex; flex-direction: column; gap: var(--s2);
-  margin-top: var(--s4); padding-top: var(--s3);
-  border-top: 1px solid var(--line-soft);
+  margin-top: var(--s4);
 }
 .summary__player { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s3) var(--s4); }
 /* Six role tallies do not fit a narrow panel on one line, and a flex item that
