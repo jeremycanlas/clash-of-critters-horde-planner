@@ -1452,6 +1452,50 @@ await runGroup('the field panel folds its settings without going quiet', async (
 });
 
 /*
+ * The Filter drawer opens under the Filter pill.
+ *
+ * It shipped opening 703px lower, below all 230 cards, on every list. The drawer
+ * is absolutely positioned, and it was anchored on .filterbar -- which is not
+ * its parent but its sibling's, so the position resolved against the roster
+ * panel instead and `top: 100%` meant the bottom of the roster.
+ *
+ * My own check missed it: it asserted the roster did not move (true -- the thing
+ * is out of the flow either way) and that the drawer sat inside the viewport
+ * horizontally. Neither says WHERE it landed, which was the entire bug. So this
+ * one measures the gap from the pill, on each list, because the anchor is what
+ * broke and each list draws a differently sized drawer.
+ */
+await runGroup('the Filter drawer opens under the Filter pill', async () => {
+  await until(() => !!$('#roster'), 'the drafter to be in the frame', 8000);
+  const pill = $('#filters-toggle');
+  if (!pill || pill.getBoundingClientRect().width < 20) {
+    skip('the Filter drawer position', 'no pill on screen at this width');
+    return;
+  }
+  const isPopover = D.defaultView.matchMedia('(min-width: 761px)').matches;
+  if (!isPopover) { skip('the Filter drawer position', 'it opens in the flow at this width'); return; }
+
+  for (const list of ['tatari', 'zobos', 'chips']) {
+    await click($(`#roster-tabs [data-list="${list}"]`), 460);
+    if (D.body.dataset.filters !== 'open') await click($('#filters-toggle'), 420);
+
+    const p = $('#filters-toggle').getBoundingClientRect();
+    const drawer = $('#filters-body').getBoundingClientRect();
+    const gap = Math.round(drawer.top - p.bottom);
+    ok(`${list}: the drawer hangs just under the pill`, gap >= 0 && gap <= 20, `${gap}px below it`);
+    ok(`${list}: and starts at the pill's left edge`,
+       Math.abs(drawer.left - p.left) <= 2, `${Math.round(drawer.left - p.left)}px off`);
+    ok(`${list}: and is on the screen`,
+       drawer.top > 0 && drawer.left >= 0 && drawer.right <= D.defaultView.innerWidth + 1,
+       `top ${Math.round(drawer.top)}, right ${Math.round(drawer.right)}`);
+
+    await click($('#filters-toggle'), 380);
+  }
+  await click($('#roster-tabs [data-list="tatari"]'), 400);
+  await reset();
+});
+
+/*
  * The tabs hold still while you use them.
  *
  * Each of the three lists brings its own view switch -- Cards/List, Roster/

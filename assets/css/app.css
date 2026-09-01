@@ -2143,7 +2143,17 @@ body:not([data-filters="open"]) .filters__body { display: none; }
  * cards it filters.
  */
 @media (min-width: 761px) {
-  .filterbar { position: relative; }
+  /*
+   * The anchor is the pill's own wrapper, not the bar.
+   *
+   * This was `.filterbar { position: relative }`, which looked right and was
+   * not: #filters-body is a SIBLING of the bar, not a child, so the absolute
+   * positioning resolved against the nearest positioned ancestor it actually
+   * had -- the roster panel -- and `top: 100%` put the chips 703px down, below
+   * all 230 cards. The drawer now lives inside .drawer-anchor with the pill,
+   * which is the only arrangement in which "under the pill" is expressible.
+   */
+  .drawer-anchor { position: relative; display: inline-flex; }
   .filters__body {
     position: absolute; z-index: 5;
     top: calc(100% + 6px); left: 0;
@@ -5921,8 +5931,11 @@ body[data-roster-list="chips"] #filter-chip-groups { order: 4; flex: 1 1 100%; }
    * says what is on.
    */
   .filters { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); }
-  .filterbar { display: contents; }
-  .filters > .filters__body { flex: 1 1 100%; order: 4; }
+  /* Both wrappers dissolve here, so the pill and the drawer become items of
+     .filters directly and `order` can still place each of them. The drawer
+     opens in the flow on a phone -- see the note in the min-width block. */
+  .filterbar, .drawer-anchor { display: contents; }
+  .filters__body { position: static; flex: 1 1 100%; order: 4; }
 
   #filters-toggle { flex: none; order: 2; }
   #filters-active { flex: 1 1 100%; order: 3; }

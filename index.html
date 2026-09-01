@@ -641,22 +641,12 @@
         list rather than while setting it up.
       -->
         <div class="filterbar">
+          <!-- The pill and its drawer share a positioning context, so the chips
+             hang under the pill. Without it the drawer is absolutely positioned
+             against the roster panel and opens below all 230 cards. -->
+          <div class="drawer-anchor">
           <button id="filters-toggle" class="pill pill--filter" type="button"
             aria-expanded="false" aria-controls="filters-body">Filter</button>
-          <!-- Which ones, in words, for when the drawer is shut. Written by
-               renderRoster; empty and out of the layout when nothing is on. -->
-          <span id="filters-active" class="filterbar__active"></span>
-          <label class="pill pill--sort"><span class="pill__label">Sort</span>
-            <select id="sort" class="pill__select" aria-label="Sort the roster">
-              <option value="default">Default</option>
-              <option value="name">Name</option>
-              <option value="type">Type</option>
-              <option value="role">Role</option>
-              <option value="tier">Tier</option>
-            </select>
-          </label>
-          <button id="btn-reset-filters" class="btn btn--tiny btn--quiet" type="button">Reset</button>
-        </div>
 
         <div id="filters-body" class="filters__body">
         <div class="filters__row">
@@ -713,6 +703,22 @@
             <input id="opt-glitter-roster" type="checkbox"> Glitter</label>
         </div>
         </div><!-- /#filters-body -->
+          </div><!-- /.drawer-anchor -->
+          <!-- Which ones, in words, for when the drawer is shut. Written by
+               renderRoster; empty and out of the layout when nothing is on. -->
+          <span id="filters-active" class="filterbar__active"></span>
+          <label class="pill pill--sort"><span class="pill__label">Sort</span>
+            <select id="sort" class="pill__select" aria-label="Sort the roster">
+              <option value="default">Default</option>
+              <option value="name">Name</option>
+              <option value="type">Type</option>
+              <option value="role">Role</option>
+              <option value="tier">Tier</option>
+            </select>
+          </label>
+          <button id="btn-reset-filters" class="btn btn--tiny btn--quiet" type="button">Reset</button>
+        </div>
+
       </div>
 
       <!--
