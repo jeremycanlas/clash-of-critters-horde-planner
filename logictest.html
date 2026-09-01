@@ -296,6 +296,49 @@ await group('sandbox: a duplicate is a second copy, not a move', () => {
     `${store.allPlaced().filter((o) => o.slug === A.slug).length}`);
 });
 
+/*
+ * Sandbox duplicates move and leave by the tile you took hold of.
+ *
+ * Reported as "I have 3 of the same Tatari, I move one and the one I didn't
+ * move moved instead". The cause is one function used two ways: place() and
+ * unplace() locate the piece with cellOf(), a findIndex over the board -- the
+ * FIRST tile holding that slug. Outside Sandbox a Tatari is on the field at
+ * most once, so first-match and the-one-you-dragged are the same tile and
+ * nothing looks wrong. Sandbox lets three copies stand, and then they are not.
+ *
+ * Checked at the store rather than through a drag, because this is the store's
+ * bug: moveFrom and unplaceAt take a cell and are the only honest way to say
+ * which copy you meant. The grid and the roster now call them for anything
+ * coming off the field; the check that they do is in apptest.
+ */
+await group('sandbox: three copies move and leave one at a time', () => {
+  reset();
+  store.setSandbox(true);
+  store.place(A.slug, 0);
+  store.placeCopy(A.slug, 1);
+  store.placeCopy(A.slug, 2);
+  const at = () => store.allPlaced().filter((o) => o.slug === A.slug).map((o) => o.cell).sort((x, y) => x - y);
+  eq('three copies are out', at(), [0, 1, 2]);
+
+  /* The bug, stated as the store sees it: place() moves the first one. */
+  store.moveFrom(2, 10);
+  eq('moving the third moves the third, not the first', at(), [0, 1, 10]);
+
+  store.moveFrom(0, 20);
+  eq('and moving the first still moves the first', at(), [1, 10, 20]);
+
+  /* Same for taking one off. */
+  store.unplaceAt(10);
+  eq('taking one off takes the one named, not the first', at(), [1, 20]);
+
+  /* And the one function that cannot know which copy you meant still behaves:
+     from the detail sheet there is no cell, so first-match is the only answer
+     available and it must remain a legal one. */
+  store.unplace(A.slug);
+  eq('unplace by slug alone still removes exactly one', at(), [20]);
+  store.setSandbox(false);
+});
+
 // ============================================================ boss pull
 await group('boss pull: rows open, then close and bring everyone home', () => {
   reset();

@@ -134,15 +134,18 @@ function buildRosterDropZone() {
     onDrop: (target, payload) => {
       const who = store.isCoop() ? ` (P${payload.player})` : '';
       if (payload.from === 'field') {
-        // By cell for a Zobo: unplace() finds the first cell holding that slug,
-        // which for an enemy standing in several places is rarely the one you
-        // dragged. Nothing is kept either — a Zobo has no bench to return to.
+        // By cell, always. unplace() finds the first tile holding that slug,
+        // which for anything standing in several places is rarely the one you
+        // dragged -- true of an enemy, and true of a Tatari in Sandbox, which
+        // is where this was reported. The Zobo branch stays for what it says
+        // rather than what it does: nothing is kept, because a Zobo has no
+        // bench to return to.
         if (payload.kind === 'zobo') {
           store.unplaceAt(payload.cell);
           toast(`${state.zoboBySlug.get(payload.slug)?.name ?? 'Zobo'} off the field`);
           return;
         }
-        store.unplace(payload.slug, payload.player);
+        store.unplaceAt(payload.cell);
         toast(`${nameOf(payload.slug)}${who} off the field, still on the bench`);
       } else {
         store.removeFromBench(payload.slug, payload.player);

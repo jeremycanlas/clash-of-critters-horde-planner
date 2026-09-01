@@ -106,7 +106,10 @@ function buildBenchDropZone() {
       const who = store.isCoop() ? ` (P${player})` : '';
 
       if (payload.from === 'field') {
-        store.unplace(payload.slug, payload.player);
+        /* By cell, not by slug: unplace() takes the first tile holding that
+           slug, and Sandbox can have three of the same Tatari out. Same bug as
+           the move above -- you drag one copy off and a different one goes. */
+        store.unplaceAt(payload.cell);
         toast(`${nameOf(payload.slug)}${who} off the field, still on the bench`);
         return;
       }
@@ -249,13 +252,25 @@ export function buildGrid() {
       const to = Number(target.dataset.cell);
 
       /*
-       * A Zobo already on the board moves; one from the roster is a new one.
-       * Without this the drop wrote the destination and left the original where
-       * it was, so dragging a Zobo across the field bred a second one — place()
-       * cannot tell a move from a copy when the same Zobo may legitimately be
-       * standing in six cells at once.
+       * Anything already on the board moves the tile it was dragged from.
+       *
+       * This was `payload.kind === 'zobo'`, and the reason given was that
+       * place() cannot tell a move from a copy when the same Zobo may
+       * legitimately stand in six cells at once. That reason was never about
+       * Zobos. place() locates the piece with cellOf(), which is a findIndex --
+       * the FIRST tile holding that slug -- and Sandbox lets a Tatari stand in
+       * as many tiles as you like too. So with three copies out, dragging the
+       * third moved the first: the one you took hold of stayed put and one
+       * across the board jumped instead. Reported exactly that way.
+       *
+       * Outside Sandbox a Tatari is on the field at most once, so first-match
+       * and the-one-you-dragged were the same tile and nothing looked wrong.
+       *
+       * The payload has carried its source cell all along; using it is both the
+       * fix and the simpler code. moveFrom() also displaces whatever was on the
+       * target, which is what place() did for this case.
        */
-      if (payload.kind === 'zobo' && payload.from === 'field') {
+      if (payload.from === 'field') {
         const result = store.moveFrom(payload.cell, to);
         if (!result.ok) toast(result.reason, 'error');
         return;

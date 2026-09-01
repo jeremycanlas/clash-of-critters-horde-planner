@@ -1452,6 +1452,81 @@ await runGroup('the field panel folds its settings without going quiet', async (
 });
 
 /*
+ * Dragging one of three identical copies moves that one.
+ *
+ * Reported from Sandbox: "I have 3 of the same Tatari, I move one and the one I
+ * didn't move moved instead." The store had the bug -- place() and unplace()
+ * find a piece with findIndex, the first tile holding that slug -- but the store
+ * check cannot catch the half that matters here, which is whether the grid
+ * hands over the tile you grabbed or just the slug. That is a drag, so it is
+ * checked as one.
+ */
+await runGroup('in Sandbox, the copy you drag is the copy that moves', async () => {
+  await until(() => !!$('#roster'), 'the drafter to be in the frame', 8000);
+  await reset();
+  if ($('#btn-clear-field')) await click($('#btn-clear-field'), 320);
+
+  const sandbox = $('#opt-sandbox');
+  if (!sandbox) { skip('the Sandbox duplicate drag', 'no Sandbox switch in this copy'); return; }
+  if (!sandbox.checked) { sandbox.click(); await sleep(520); }
+
+  const V = D.defaultView;
+  const centre = (el) => { const r = el.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; };
+  const bring = (el) => {
+    el.scrollIntoView({ block: 'center' });
+    const r = el.getBoundingClientRect();
+    const off = (r.top + r.height / 2) - V.innerHeight / 2;
+    if (Math.abs(off) > 40) V.scrollBy(0, off);
+  };
+  const send = (type, x, y, to) => to.dispatchEvent(new V.PointerEvent(type, {
+    bubbles: true, cancelable: true, composed: true,
+    pointerId: 11, pointerType: 'mouse', isPrimary: true,
+    button: type === 'pointermove' ? -1 : 0, buttons: type === 'pointerup' ? 0 : 1,
+    clientX: x, clientY: y,
+  }));
+  const drag = async (handle, target) => {
+    bring(handle);
+    const a = centre(handle);
+    send('pointerdown', a.x, a.y, handle);
+    send('pointermove', a.x + 9, a.y + 9, V);
+    await sleep(90);
+    bring(target);
+    const b = centre(target);
+    send('pointermove', b.x, b.y, V);
+    await sleep(70);
+    send('pointerup', b.x, b.y, V);
+    await sleep(420);
+  };
+
+  const cells = () => $$('.cell:not(.cell--enemy)');
+  const card = $$('.panel--roster .card').find((c) => !c.classList.contains('card--chip')
+    && !c.classList.contains('is-benched') && !c.dataset.switchFrom);
+  if (!card) { skip('the Sandbox duplicate drag', 'no free card to copy'); return; }
+  /* slug is not needed below -- see the note on held() */
+
+  /* Three copies of one Tatari, which only Sandbox allows. */
+  for (const i of [0, 1, 2]) await drag(card, cells()[i]);
+  /* Any occupied tile is one of these copies: the field was cleared above and
+     only this one Tatari has been dragged onto it. The token itself carries no
+     slug -- data-type and data-player are all it has -- so the cell is the
+     identity here, which is rather the point of the bug. */
+  const held = () => cells().map((c, i) => (c.querySelector('.token') ? i : null))
+    .filter((v) => v !== null);
+  eq('three copies are on the board', held().join(','), '0,1,2');
+
+  /* The third one, to an empty tile well away from the others. */
+  await drag(cells()[2].querySelector('.token'), cells()[10]);
+  eq('the one dragged is the one that moved', held().join(','), '0,1,10');
+
+  /* And taking one off takes that one. */
+  await drag(cells()[10].querySelector('.token'), $('.bench__player'));
+  eq('and dropping a copy on the bench removes that copy', held().join(','), '0,1');
+
+  if (sandbox.checked) { sandbox.click(); await sleep(520); }
+  await reset();
+});
+
+/*
  * Cards or list, for the Tatari roster.
  *
  * The redesign drew the roster as a list; it is a second view instead, so the
