@@ -1591,6 +1591,32 @@ await runGroup('the phone header is two rows, neither of them mostly empty', asy
      !!$('.byline__tip-text') && W.getComputedStyle($('.byline__tip-text')).display !== 'none');
   ok('with the name not truncated away',
      $('.byline__text').scrollWidth <= $('.byline__text').clientWidth + 1);
+
+  /*
+   * And again with a formation on the go, which is the state that was actually
+   * broken. The count only exists once something is placed, and at the wrong
+   * order it broke the line it sat in: the name got a row, the count got a row,
+   * and the mode switch and More were pushed to a fourth. Checking an empty
+   * header could never have seen it -- reported from a real phone instead.
+   */
+  $('#formation-name').value = 'Grass wall';
+  $('#formation-name').dispatchEvent(new W.Event('input', { bubbles: true }));
+  $$('#roster .card').slice(0, 3).forEach((c) => c.click());
+  await sleep(700);
+  const cells = $$('.cell:not(.cell--enemy)');
+  for (let i = 0; i < 2; i++) {
+    $$('.benchchip')[0]?.click();
+    cells[i]?.click();
+    await sleep(360);
+  }
+  await sleep(500);
+
+  ok('the count appears once something is placed', !$('#formation-status').hidden,
+     $('#formation-status').textContent || '(empty)');
+  const busy = [...bar.children].filter((k) => k.offsetWidth > 0);
+  const busyRows = [...new Set(busy.map((k) => Math.round(k.getBoundingClientRect().top / 8)))];
+  ok('and the header is still at most three rows with it', busyRows.length <= 3,
+     `${busyRows.length} rows: ${busy.map((k) => k.id || k.className.split(' ')[0]).join(', ')}`);
 });
 
 await runGroup('the wave list fits the phone', async () => {

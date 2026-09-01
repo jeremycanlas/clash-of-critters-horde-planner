@@ -3961,7 +3961,20 @@ body.is-dragging-active {
     padding-left: 0; padding-right: 0;
   }
   .field--name:focus { background: var(--surface-2); border-color: var(--line); padding-left: var(--s2); }
-  #formation-status { order: 1; flex: 1 1 100%; margin-top: -2px; }
+  /*
+   * The count comes after the controls, not between them.
+   *
+   * At order 1 it sat in the middle of the second row's group -- name, status,
+   * mode switch, More -- and its 100% basis broke the line right there. So the
+   * name got a row to itself, the count got a row to itself, and the switch and
+   * More were pushed to a fourth: four rows, three of them with one thing on
+   * them. Only visible once something is placed, which is why the empty-header
+   * check did not see it.
+   *
+   * At order 2 the name, the switch and More pack the row first and the count
+   * takes the line below, where it reads as a caption to the name above it.
+   */
+  #formation-status { order: 2; flex: 1 1 100%; margin-top: -2px; }
 
   /*
    * The seven links, folded behind More. See the note in index.html.
@@ -5753,6 +5766,30 @@ body.is-clean #chipbench { display: none !important; }
   font-size: 10.5px;
 }
 /*
+ * The name is a label here, not a heading.
+ *
+ * In the list it sits at 14px and 650 because it heads a row and has the rule
+ * text underneath to be heading OF. On a 76px tile it is the only text there
+ * is, and at that weight it shouted over the art it is captioning -- the art
+ * being the whole reason the grid exists. The head's own 10.5px never reached
+ * it, because this `b` carries its own size from the list.
+ *
+ * 11px and 550, which is exactly what a Tatari card's name uses two tabs over.
+ * The two grids are the same object at the same size and should not caption
+ * themselves differently.
+ */
+.roster[data-chip-view="grid"] .chiprow__head b {
+  font-size: 11px; font-weight: 550; letter-spacing: 0;
+  /*
+   * And hyphenated where it has to break. "Photosynthesis" is wider than a 66px
+   * tile at any weight, so it breaks whatever we do -- it was coming out as
+   * "Photosynthe / sis III", which reads as two words rather than one wrapped.
+   * A hyphen says the word continues. <html lang="en"> is already set, which is
+   * what makes the browser's dictionary apply.
+   */
+  hyphens: auto;
+}
+/*
  * Tier and pick both move to the corners, out of the flow: the tier as a
  * medallion over the icon (top-left, with a fill solid enough to read on the
  * art), the pick number top-right. Neither is a row any more, so keeping a chip
@@ -5774,6 +5811,13 @@ body.is-clean #chipbench { display: none !important; }
  * word ("Photosynthesis") wrapping inside the tile rather than being clipped
  * mid-word, which is what it did before; the clamp and the fixed height keep the
  * tiles level whether a name runs one line or two.
+ *
+ * It still breaks mid-word without a hyphen -- "Photosynthe / sis" -- which is
+ * ugly and stays for now. `hyphens: auto` with `overflow-wrap: break-word` is
+ * the textbook answer and Chrome ignored it here across three attempts; the
+ * line-clamp box appears to be what stops it. Not worth trading the clamp,
+ * which is what keeps every tile the same height, for a hyphen.
+ * ponytail: mid-word break on long chip names, revisit if the clamp ever goes.
  */
 .roster[data-chip-view="grid"] .chiprow__head b {
   width: 100%;
