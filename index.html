@@ -578,6 +578,21 @@
            what you want when you are picking by what a Tatari does rather than
            by what it looks like. Same cards either way, laid out differently;
            see .roster[data-tatari-view] in app.css. -->
+        <!--
+          One slot for all three view switches.
+          ====================================
+
+          Only ever one of them is on screen, and they are three different
+          widths -- Cards/List is 126px, Roster/Waves 148, List/Grid 151. Sitting
+          loose in the head, each one pushed the Tatari/Zobos/Chips tabs to a
+          different place: 1321px, 1333px, 1302px. So the tabs you are clicking
+          slid 31px sideways underneath the pointer as you clicked them, which is
+          how you end up on a tab you did not choose.
+
+          The wrapper holds the width of the widest, so whichever switch is
+          showing occupies the same space and the tabs never move.
+        -->
+        <div class="panel__views">
         <div id="tatari-view" class="segmented segmented--tabs tatari-only" role="tablist"
           aria-label="How to show the Tatari"></div>
 
@@ -595,6 +610,7 @@
            one list, not two lists. -->
         <div id="zobo-view" class="segmented segmented--tabs zobo-only" role="tablist"
           aria-label="How to show the Zobos"></div>
+        </div><!-- /.panel__views -->
       </div>
 
       <div class="filters">

@@ -1452,6 +1452,49 @@ await runGroup('the field panel folds its settings without going quiet', async (
 });
 
 /*
+ * The tabs hold still while you use them.
+ *
+ * Each of the three lists brings its own view switch -- Cards/List, Roster/
+ * Waves, List/Grid -- and they are three different widths. Loose in the head,
+ * each pushed the Tatari/Zobos/Chips tabs somewhere different, so the tabs slid
+ * sideways under the pointer that was clicking them: press Zobos, and Chips
+ * moves to where your finger already is.
+ *
+ * Geometry, because that is the whole of the bug. The markup, the labels and
+ * the switching all worked perfectly while this was broken.
+ */
+await runGroup('the roster tabs do not move when you change tab', async () => {
+  await until(() => !!$('#roster'), 'the drafter to be in the frame', 8000);
+  const tabs = $('#roster-tabs');
+  const slot = $('.panel__views');
+  if (!slot) { skip('the view-switch slot', 'not in this copy'); return; }
+  if (tabs.getBoundingClientRect().width < 40) {
+    skip('the roster tabs holding still', 'this window is not on screen');
+    return;
+  }
+
+  const seen = [];
+  for (const list of ['tatari', 'zobos', 'chips']) {
+    await click($(`#roster-tabs [data-list="${list}"]`), 480);
+    const shown = $$('.panel__views > div').find((d) => d.offsetWidth > 0);
+    seen.push({
+      list,
+      tabsLeft: Math.round(tabs.getBoundingClientRect().left),
+      switchRight: shown ? Math.round(shown.getBoundingClientRect().right) : null,
+    });
+  }
+  await click($('#roster-tabs [data-list="tatari"]'), 420);
+
+  eq('the tabs are in the same place on every list',
+     new Set(seen.map((s) => s.tabsLeft)).size, 1);
+  ok('and each list does bring its own view switch',
+     seen.every((s) => s.switchRight !== null), JSON.stringify(seen));
+  eq('which all end at the same edge', new Set(seen.map((s) => s.switchRight)).size, 1);
+
+  await reset();
+});
+
+/*
  * Dragging one of three identical copies moves that one.
  *
  * Reported from Sandbox: "I have 3 of the same Tatari, I move one and the one I

@@ -2259,6 +2259,28 @@ body[data-roster-list="zobos"] .filters__row--meta .sortby { display: none; }
  * gets a little more room to be seen.
  */
 .segmented--tabs { margin-left: auto; }
+
+/*
+ * The slot the three view switches share.
+ *
+ * One is visible at a time and they are three different widths, so loose in the
+ * head each pushed the Tatari/Zobos/Chips tabs somewhere different -- the tabs
+ * slid 31px sideways as you moved between them, under the pointer that was
+ * clicking them. Reserving the width of the widest holds the tabs still.
+ *
+ * Right-aligned inside the slot, so the switch itself stays against the panel
+ * edge where it has always been rather than floating in the middle of its own
+ * reservation. min-width rather than width: a language with longer words should
+ * push the slot wider, not clip it.
+ */
+.panel__views {
+  display: flex; justify-content: flex-end;
+  flex: none;
+  min-width: 152px;
+}
+/* Inside the slot the auto margin has nothing to push against and would only
+   fight the justification above. */
+.panel__views .segmented--tabs { margin-left: 0; }
 .segmented--tabs .segmented__btn { padding: 5px var(--s4); }
 .segmented--tabs .segmented__btn[aria-selected="true"] {
   background: var(--accent);
