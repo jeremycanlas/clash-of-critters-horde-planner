@@ -6143,6 +6143,25 @@ body.is-flexing .cell.is-filled { opacity: .55; }
 .card--chip:active { cursor: grabbing; }
 .card--chip .chiprow__art,
 .chipbench__chip img { touch-action: none; cursor: grab; }
+/*
+ * Except in the grid, where the sprite is the whole tile.
+ *
+ * The rule above is right about the list and wrong here, by its own reasoning:
+ * "must not go on a card in a list people scroll with a thumb". In the list the
+ * sprite is a 40px square on a full-width row, so there is plenty of card left
+ * to scroll from. In the grid .chiprow__art is width:100% on a square tile --
+ * the instant grip covers almost the entire thing, so a thumb flicking down the
+ * list picks up a chip instead of scrolling. Reported exactly that way.
+ *
+ * Handing the gesture back to the browser puts the tile on the same footing as
+ * a Tatari card: flick to scroll, press and hold to drag. Nothing is lost --
+ * dnd.js only skips its 180ms hold for surfaces that claim the gesture, and the
+ * whole card has always been draggable by holding it.
+ *
+ * Touch only in effect: a mouse drag starts on 5px of movement and never
+ * consults touch-action at all.
+ */
+.roster[data-chip-view="grid"] .card--chip .chiprow__art { touch-action: auto; }
 .card--chip.is-dragging,
 .chipbench__chip.is-dragging { opacity: .4; }
 

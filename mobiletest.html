@@ -1619,6 +1619,44 @@ await runGroup('the phone header is two rows, neither of them mostly empty', asy
      `${busyRows.length} rows: ${busy.map((k) => k.id || k.className.split(' ')[0]).join(', ')}`);
 });
 
+/*
+ * A thumb can scroll the chip grid without picking a chip up.
+ *
+ * touch-action: none means "this gesture is mine", and dnd.js skips its 180ms
+ * hold for any surface that says it. On a list row the chip's sprite is 42px of
+ * a 938px card -- 3% of it -- so an instant grip costs nothing and the other 97%
+ * still scrolls. In the grid the same element is 68px of a 78px tile, so the
+ * grip covered most of what a thumb lands on and flicking down the list picked
+ * up a chip instead. Reported exactly that way.
+ *
+ * The rule, not the geometry. A desktop browser cannot be made to emit a real
+ * touch -- this file says so at the top -- and inside the sheet every rect comes
+ * back zero, because the panel is revealed by a transform a hidden tab never
+ * applies. Those proportions were measured by hand on the desktop layout and are
+ * recorded above; what a phone check can honestly assert is the declaration that
+ * decides the behaviour.
+ */
+await runGroup('the chip grid can be scrolled with a thumb', async () => {
+  if (!D.body.dataset.sheet) await click(barBtn('roster'), 340);
+  await click($('#roster-tabs [data-list="chips"]'), 460);
+  const view = (v) => $(`#chip-view [data-view="${v}"]`);
+  if (!view('grid')) { skip('the chip grid grip', 'no chip view switch in this copy'); return; }
+
+  await click(view('grid'), 520);
+  const gridArt = $('#roster .card--chip .chiprow__art');
+  if (!gridArt) { skip('the chip grid grip', 'no chips rendered'); return; }
+  ok('in the grid the sprite hands the gesture back to the browser, so a flick scrolls',
+     W.getComputedStyle(gridArt).touchAction !== 'none',
+     `touch-action is ${W.getComputedStyle(gridArt).touchAction}`);
+
+  await click(view('list'), 520);
+  const listArt = $('#roster .card--chip .chiprow__art');
+  eq('and in the list it keeps the instant grip, where it costs no scrolling',
+     W.getComputedStyle(listArt).touchAction, 'none');
+
+  await click($('#roster-tabs [data-list="tatari"]'), 420);
+});
+
 await runGroup('the wave list fits the phone', async () => {
   /*
    * A grid of numbered entries, on the narrowest screen it has.
