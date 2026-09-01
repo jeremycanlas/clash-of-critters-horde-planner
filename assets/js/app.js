@@ -285,6 +285,8 @@ function nothingBrought(message) {
 function wireLfSearch() {
   const input = $('#lf-pick');
   const list = $('#lf-suggest');
+  /* The editor was removed from the page; nothing to wire. */
+  if (!input || !list) return;
   let highlight = -1;
   let count = 0;
 
@@ -369,14 +371,21 @@ function wireToolbar() {
     });
   }
 
-  $('#lf').addEventListener('input', (e) => store.setLF(e.target.value));
+  /*
+   * The LF / HAVE editor is gone from the page (see index.html where it was).
+   * Optional chaining rather than deletion: the store still holds the lines, the
+   * field and the share card still draw them, so a formation shared before the
+   * editor went still reads correctly -- and if the editor ever comes back it
+   * needs its markup returned and nothing else.
+   */
+  $('#lf')?.addEventListener('input', (e) => store.setLF(e.target.value));
 
-  $('#lf-mode').addEventListener('click', (e) => {
+  $('#lf-mode')?.addEventListener('click', (e) => {
     const btn = e.target.closest('[data-side]');
     if (btn) store.setLfMode(btn.dataset.side);
   });
 
-  $('#lf-wants').addEventListener('click', (e) => {
+  $('#lf-wants')?.addEventListener('click', (e) => {
     const drop = e.target.closest('[data-drop-want]');
     if (drop) store.toggleWant(drop.dataset.dropWant);
   });

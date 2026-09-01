@@ -386,31 +386,19 @@
       <p class="hint hint--touch">Zobos advance from the top. Tap one on the bench to see where it lands,
         then tap again to place it. Double-tap to take it off.</p>
 
-      <!-- Co-op only. Sits inside the frame so a screenshot of the grid carries
-         the ask with it, which is how these actually get shared. -->
-      <div id="lf-field" class="lf-input" hidden>
-        <!-- Two lines, one editor. The pair picks which you are adding to; both
-           are drawn on the field, so you can say what you have AND what you
-           still want without two sets of controls competing for the row. -->
-        <div id="lf-mode" class="lf-mode" role="group" aria-label="Which line to edit">
-          <button class="lf-mode__btn" type="button" data-side="lf" aria-pressed="true">LF</button>
-          <button class="lf-mode__btn" type="button" data-side="have" aria-pressed="false">HAVE</button>
-        </div>
-        <div id="lf-wants" class="lf-wants"></div>
+      <!--
+      The LF / HAVE editor was here, and is gone.
 
-        <!-- A listbox rather than a <datalist>: the native one cannot draw the
-           sprite, and the sprite is what makes a Tatari recognisable at a
-           glance. Same search as the roster, so aliases like "toucan" work. -->
-        <div class="lf-search">
-          <input id="lf-pick" class="field field--tiny" type="text" autocomplete="off" role="combobox"
-            aria-expanded="false" aria-controls="lf-suggest" aria-autocomplete="list" placeholder="Add a Tatari…"
-            aria-label="Search the roster by name, animal or nickname">
-          <ul id="lf-suggest" class="lf-suggest" role="listbox" hidden aria-label="Matching Tatari"></ul>
-        </div>
+      It was a co-op-only row: a LF/HAVE pair, a Tatari search with its own
+      suggestion list, and a free-text note, sitting between the hints and the
+      board on the one mode that already has the most on screen. Removed on
+      request while making co-op fit without scrolling.
 
-        <input id="lf" class="field field--tiny lf-input__note" type="text" maxlength="60" autocomplete="off"
-          placeholder="…or anything else, e.g. a healer" aria-label="Anything else to put on the line">
-      </div>
+      What remains on purpose: store.setLF and friends, the line the field draws
+      (#field-lf) and the one the share card draws. A formation shared before
+      this still shows its LF and HAVE lines to whoever opens the link -- what
+      has gone is the way to write new ones, not the way to read old ones.
+      -->
 
       <!--
       The board, and beside it on a big screen, what it brings.

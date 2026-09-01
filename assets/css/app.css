@@ -1590,10 +1590,24 @@ body[data-mode="coop"] .bench__player[data-active="true"] {
   display: flex; flex-direction: column; gap: var(--s2);
   margin-top: var(--s4);
 }
-.summary__player { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s3) var(--s4); }
+/*
+ * Denser, because co-op has two of everything.
+ * ============================================
+ *
+ * The summary column is 310px, so each group wraps: Types over two lines, a
+ * nine-chip Buffs row over four. Solo that is fine. Co-op draws the whole thing
+ * twice, and it came to 924px -- you scrolled past all of P1 to reach P2, which
+ * is exactly the comparison co-op exists to let you make.
+ *
+ * Nothing is removed. The chips lose padding and a point of type, the rows lose
+ * the gaps they did not need, and more fits per line -- every line saved is
+ * saved twice. Together with the empty effect panel collapsing, that is the
+ * scroll gone rather than merely shortened.
+ */
+.summary__player { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s1) var(--s3); }
 /* Six role tallies do not fit a narrow panel on one line, and a flex item that
    cannot wrap runs straight out through the panel border instead. */
-.summary__group { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s1) var(--s2); min-width: 0; }
+.summary__group { display: flex; flex-wrap: wrap; align-items: center; gap: 3px 5px; min-width: 0; }
 .summary__label {
   font-size: 10.5px; font-weight: 650; letter-spacing: .08em;
   text-transform: uppercase; color: var(--text-mute);
@@ -1622,11 +1636,11 @@ button.summary__label[aria-pressed="true"] { cursor: default; }
 body[data-mode="coop"] .bench__player[data-active="false"] { cursor: pointer; }
 .tally {
   display: inline-flex; align-items: center; gap: 5px;
-  padding: 2px var(--s2) 2px 5px;
+  padding: 1px 6px 1px 4px;
   border: 1px solid var(--line);
   border-radius: 999px;
   background: var(--surface-2);
-  font-size: 12px; font-weight: 600;
+  font-size: 11px; font-weight: 600;
 }
 .tally[data-empty="true"] { opacity: .35; }
 
@@ -1640,8 +1654,8 @@ body[data-mode="coop"] .bench__player[data-active="false"] { cursor: pointer; }
  * High Contrast turned on before Fire and Rock could be told apart.
  */
 .tally--named {
-  gap: 6px;
-  padding: 2px var(--s2);
+  gap: 5px;
+  padding: 1px 6px;
   font-weight: 500;
   color: var(--text-dim, var(--text));
 }
@@ -1653,7 +1667,7 @@ body[data-mode="coop"] .bench__player[data-active="false"] { cursor: pointer; }
 }
 
 /* Heals, buffs and debuffs, coloured by what they do to you rather than by type. */
-.tally--effect { gap: 4px; padding: 2px var(--s2); font-size: 11px; font-weight: 600; }
+.tally--effect { gap: 3px; padding: 1px 6px; font-size: 10.5px; font-weight: 600; }
 .tally--effect b { font-weight: 800; }
 .tally--effect[data-effect="heal"] {
   color: color-mix(in srgb, var(--ok) 85%, var(--text));
@@ -1712,7 +1726,25 @@ button.tally--effect { font: inherit; font-size: 11px; font-weight: 600; cursor:
   color: var(--text-dim); font-size: 11.5px;
   scrollbar-width: thin;
 }
-.effect__panel[data-empty="true"] { color: var(--text-mute); font-style: italic; }
+/*
+ * Empty, it is a prompt and not a panel.
+ *
+ * The fixed 96px exists so that opening an effect does not re-wrap the row of
+ * tallies above it -- that is worth keeping, and it still holds, because the
+ * height is fixed the moment there is something in it. What it was also doing
+ * was reserving 96px of empty box per player: in co-op, two of them, 192px of
+ * the 924px you had to scroll through to reach P2's half.
+ *
+ * So the empty state collapses to its one line of text. Tapping an effect grows
+ * it to the fixed height and everything below moves down once; the tallies,
+ * which are above it, never move at all.
+ */
+.effect__panel[data-empty="true"] {
+  height: auto;
+  padding: 4px var(--s3);
+  border-color: transparent;
+  color: var(--text-mute); font-style: italic; font-size: 12px;
+}
 .effect__panelhead {
   display: flex; align-items: center; gap: var(--s2);
   margin-bottom: 3px; color: var(--text); font-size: 11px;

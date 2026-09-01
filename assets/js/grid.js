@@ -1045,7 +1045,18 @@ export function renderLF() {
   const side = store.formation.lfMode;
   const line = store.lfLine(side);
 
-  $('#lf-field').hidden = !coop;
+  /*
+   * The editor is gone from the page; the line drawn inside the frame is not.
+   *
+   * Everything above this point is what the frame's copy needs, so it stays and
+   * the tail of this function still runs. What is skipped is the half that
+   * drives the controls -- a formation carrying LF or HAVE from a share link
+   * still shows both lines on the board and in the picture.
+   */
+  const editor = $('#lf-field');
+  if (!editor) return renderFieldLF(coop, side, line);
+
+  editor.hidden = !coop;
 
   // The pair carries a count, so the line you are not editing still shows that
   // it has something on it — otherwise the other half is invisible.
@@ -1072,6 +1083,15 @@ export function renderLF() {
         aria-label="Take ${esc(t.name)} off this line">×</button>
     </span>`).join('');
 
+  renderFieldLF(coop);
+}
+
+/**
+ * The two lines as the frame draws them, which outlives the editor that used to
+ * write them: a formation arriving from a share link still shows its LF and
+ * HAVE on the board and in the picture.
+ */
+function renderFieldLF(coop) {
   // On the field, both lines are drawn, which is the whole point of splitting
   // them, with HAVE first, because it reads as the offer before the ask.
   const filled = store.filledLines();
