@@ -944,6 +944,27 @@
       <p id="share-drawing" class="hint">Drawing the card…</p>
     </div>
 
+    <!--
+      The formation's own name, at the moment it is being shared.
+      ==========================================================
+
+      The card titles itself with this, falling back to "Untitled formation" --
+      and until now the only places to set it were the page header and the board
+      itself, both of which are behind this dialog. So the one moment a name
+      actually matters, when you are about to hand the picture to somebody, was
+      the one moment you could not give it one without closing the dialog first.
+
+      Same .js-name binding as the other two boxes, so it arrives carrying
+      whatever the formation is already called and writes straight back to the
+      store. Above "Your name" because it is the card's title; the other names
+      the author.
+    -->
+    <label class="share__name">
+      <span class="summary__label">Formation name (shown as the card's title)</span>
+      <input id="share-formation-name" class="field js-name" type="text" maxlength="60"
+        autocomplete="off" placeholder="Untitled formation">
+    </label>
+
     <label class="share__name">
       <span class="summary__label">Your name (optional, shown on the card)</span>
       <input id="share-name" class="field" type="text" maxlength="32" autocomplete="off"

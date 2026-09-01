@@ -80,6 +80,20 @@ export function buildShare(opts = {}) {
   });
 
   /*
+   * Naming the formation redraws the card, because the name IS the card's title.
+   *
+   * The store and the other two name boxes are already handled by app.js's
+   * .js-name wiring -- this only has to add the thing that is specific to being
+   * inside the share sheet: the preview has to show what you are about to hand
+   * over. Same debounce as the author field, for the same reason: a redraw per
+   * keystroke re-decodes a dozen sprites.
+   */
+  $('#share-formation-name')?.addEventListener('input', () => {
+    clearTimeout(redrawTimer);
+    redrawTimer = setTimeout(redraw, 180);
+  });
+
+  /*
    * The native share sheet, when the browser has one.
    *
    * This is the answer to the number in PRODUCT.md: 286 opens produced four
