@@ -175,7 +175,8 @@
       "members": [
         "lollama",
         "slobberlama",
-        "ptooielama"
+        "ptooielama",
+        "blechlama"
       ],
       "changes": [
         "Sticky Spit: Damage 220% → 240%",
@@ -401,7 +402,8 @@
       "members": [
         "dewgrub",
         "ripplewing",
-        "waveflutter"
+        "waveflutter",
+        "morphanessa"
       ],
       "changes": [
         "Aqua Flutter: Damage 100% → 45%, butterfly 20% → 12%",

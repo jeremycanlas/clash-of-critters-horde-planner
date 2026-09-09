@@ -2277,7 +2277,7 @@
   ],
   "battleRow": "front",
   "previousRole": "Same",
-  "etymology": null,
+  "etymology": "portmanteau of \"turtle\" + \"tuff\"",
   "skill": "Shield Spin: Launches a piercing spinning shell and grants a Shell Shield.",
   "description": "Rarely speaks up and has a habit of fading into the background. But you can always count on Turtuff to step up when help is needed.",
   "hordeSkills": {
@@ -2321,7 +2321,7 @@
   ],
   "battleRow": "front",
   "previousRole": "Same",
-  "etymology": null,
+  "etymology": "portmanteau of \"rock\" + \"shell\"",
   "skill": "Guardian Gyro: Launches a piercing spinning shell that grants all allies it passes a Shell Shield.",
   "description": "That thick rocky shell of Rockshell is a reliable source of comfort. When Zobos come attacking, there's no need to panic. Just standing there is enough to tank whatever comes.",
   "hordeSkills": {
@@ -2365,7 +2365,7 @@
   ],
   "battleRow": null,
   "previousRole": "Same",
-  "etymology": null,
+  "etymology": "portmanteau of \"terra\" + \"ton\"",
   "skill": "Rock Swirl: Launches a piercing spinning shell that grants all allies it passes a Shell Shield. Terraton carries Aura: Rock whenever on the field.",
   "description": "The rock on Terraton's back resembles a small hill, offering a resting place for small Tatari. Ask for a quick ride,and you won't be turned down.",
   "hordeSkills": {
@@ -2409,7 +2409,7 @@
   ],
   "battleRow": null,
   "previousRole": "Same",
-  "etymology": null,
+  "etymology": "portmanteau of \"volt\" + \"fawn\"",
   "skill": "Stun Spear: Fires a lightning lance that pierces enemies and inflicts Paralysis.",
   "description": "No matter how powerful the foes may be, Voltfawn never yields, serving diligently under the revered Zapantler.",
   "hordeSkills": {
@@ -2453,7 +2453,7 @@
   ],
   "battleRow": null,
   "previousRole": "Same",
-  "etymology": null,
+  "etymology": "portmanteau of \"spark\" + \"doe\"",
   "skill": "Bolt Spire: Fires a powerful lightning lance that pierces enemies and inflicts Paralysis.",
   "description": "Assigned to sentry duty, Sparkdoe's magnetized antlers can sense distant disturbances. This hardworking Tatari's biggest hope is to finish work and clock out on time.",
   "hordeSkills": {
@@ -2497,7 +2497,7 @@
   ],
   "battleRow": null,
   "previousRole": "Same",
-  "etymology": null,
+  "etymology": "portmanteau of \"zap\" + \"antler\"",
   "skill": "Volt Storm: Fires a special lightning lance that pierces enemies and inflicts Paralysis. Sometimes the piercing never stops.",
   "description": "Rose through the ranks at the cost of sleep-deprivation. Instead of magnetically summoning thunder, Zapantler longs to summon a vacation instead.",
   "hordeSkills": {
@@ -2541,7 +2541,7 @@
   ],
   "battleRow": null,
   "previousRole": "Same",
-  "etymology": null,
+  "etymology": "portmanteau of \"magnet\" + \"dart\"",
   "skill": "Super Bolt: Launches a super lightning lance pierces enemies and inflicts Paralysis. Sometimes the piercing never stops. Magnedart carries Aura: Lightning whenever on the field.",
   "description": "Commanding entire electromagnetic fields in the area, Magnedart is the mightiest of the clan, though leadership leaves little rest.",
   "hordeSkills": {
@@ -2765,7 +2765,7 @@
   ],
   "battleRow": "back",
   "previousRole": "Same",
-  "etymology": null,
+  "etymology": "portmanteau of \"spark\" + \"kit\"",
   "skill": "Fire Orb: Shoots a small ball of fire.",
   "description": "Sparkit never misses a chance to get food. Nobody knows just how many snacks are already stashed away in that fluffy tail.",
   "hordeSkills": {
@@ -2806,7 +2806,7 @@
   ],
   "battleRow": "back",
   "previousRole": "Same",
-  "etymology": null,
+  "etymology": "portmanteau of \"flame\" + \"tail\"",
   "skill": "Fizzle Flare: Shoots a ball of fireworks that explodes upon impact.",
   "description": "\"Always looks like Flametail is smiling, right? That's just a front. Watch the tail closely. If it's swaying ever so gently... something's afoot.\" ---Tatari Observation Diary",
   "hordeSkills": {
@@ -2847,7 +2847,7 @@
   ],
   "battleRow": "back",
   "previousRole": "Same",
-  "etymology": null,
+  "etymology": "portmanteau of \"flare\" + \"vixen\"",
   "skill": "Flame Bloom: Shoots a ball of intense fire that blooms upon impact.",
   "description": "You'd think more tails means more room to hide snacks, but now that everyone's watching, Flarevix just has to share the stash.",
   "hordeSkills": {
@@ -2890,7 +2890,7 @@
   ],
   "battleRow": null,
   "previousRole": "Same",
-  "etymology": null,
+  "etymology": "portmanteau of \"phantom\" + \"fox\"",
   "skill": "Flower Flame: Shoots a ball of scorching fire that blooms upon impact. Phantifox carries Aura: Fire, boosting ATK for all allies whenever on the field.",
   "description": "Don't get too impressed by the blooming fireworks. Phantifox is simply clearing away clutter with an elegant yawn.",
   "hordeSkills": {
@@ -2934,7 +2934,7 @@
   ],
   "battleRow": "back",
   "previousRole": "Same",
-  "etymology": null,
+  "etymology": "portmanteau of \"goon\" + \"bug\"",
   "skill": "Bugrush: Gains Invincibility and dashes forward, dealing AoE damage.",
   "description": "Goonbug trains by doing five hundred sprints every day, and knows how to pretend to be a leaf to avoid danger. The perfect embodiment of brains and brawn combined. Well. The brain part is coming along nicely, at least.",
   "hordeSkills": {
@@ -2978,7 +2978,7 @@
   ],
   "battleRow": "back",
   "previousRole": "Same",
-  "etymology": null,
+  "etymology": "portmanteau of \"capo\" + \"beetle\"",
   "skill": "Mugrush: Gains Invincibility and dashes forward, dealing AoE damage and inflicting Fragile.",
   "description": "Shades on, world gone. Capobeetle is convinced the sunglasses bumped the rizz straight off the charts. Obviously, that calls for 100 selfies at the gym.",
   "hordeSkills": {
@@ -3023,7 +3023,7 @@
   ],
   "battleRow": "back",
   "previousRole": "Same",
-  "etymology": null,
+  "etymology": "portmanteau of \"don\" + \"scarab\"",
   "skill": "Crime Crash: Gains Invincibility and dashes forward, dealing AoE damage while inflicting Fragile and Knockback.",
   "description": "Donscarab's signature move is flicking opponents away with those reinforced front shells. Can't have Zobos blocking the light for the perfect pec flex.",
   "hordeSkills": {
@@ -3069,7 +3069,7 @@
   ],
   "battleRow": null,
   "previousRole": "Same",
-  "etymology": null,
+  "etymology": "portmanteau of \"beetle\" + \"knight\"",
   "skill": "Luminous Dash: Gains Invincibility and dashes forward, dealing AoE damage while inflicting Fragile and Knockback. Grants Aura: Grass, increasing Max HP for all allies.",
   "description": "Beetleknight, the diamond-armored hero, descends from the sky to take out evil with one punch. Saving lives? Absolutely. Showing off cool moves? That's a priority too.",
   "hordeSkills": {
@@ -3160,7 +3160,7 @@
   ],
   "battleRow": "back",
   "previousRole": "DPS",
-  "etymology": null,
+  "etymology": "portmanteau of \"rock\" + \"kung fu\"",
   "skill": "Bop Brigade: Swings a club, dealing small AoE damage. May summon a clone to assist.",
   "description": "Rockfu snapped a branch off some tree and learned to bring a decoy clone along when poking hornets nests. If the hornets give chase, that clone is not coming home.",
   "hordeSkills": {
@@ -3291,7 +3291,7 @@
   ],
   "battleRow": null,
   "previousRole": "Same",
-  "etymology": null,
+  "etymology": "portmanteau of \"volt\" + \"kit\"",
   "skill": "Duskrush: Unleashes a shadow attack that deals AoE damage.",
   "description": "Voltkit once followed the footsteps of a personal hero to save a Tatari, and that's how the scar came to be. It was also the moment Voltkit realized justice trumps fear.",
   "hordeSkills": {
@@ -3378,7 +3378,7 @@
   ],
   "battleRow": null,
   "previousRole": "Same",
-  "etymology": null,
+  "etymology": "portmanteau of \"volt\" + \"wolverine\"",
   "skill": "Phantom Storm: Unleashes a shadow attack that deals AoE damage and inflicts Paralysis. Gains brief Invincibility when attacking.",
   "description": "Thanks to countless \"just passing by\" rescues, Voltverine has become incredibly fast. After all, nothing beats pure speed in combat. A flash of lightning, and those Zobos are gone.",
   "hordeSkills": {
@@ -3556,7 +3556,7 @@
   ],
   "battleRow": "front",
   "previousRole": "Same",
-  "etymology": null,
+  "etymology": "portmanteau of \"stood\" + \"beak\"",
   "skill": "Frostbust: Gains an Ice Shield ad fires ice crystals when the shield disappears, dealing fully-charged AoE damage. When knocked down, transforms into an Ice Sculpture.",
   "description": "Stoodbeak has an intimidating \"don't mess with me\" attitude. With a temper that terrible, almost no Tatari dares to come close. Rumor has it that Capywata's orange is the only thing that can make Stoodbeak calm down.",
   "hordeSkills": {
@@ -3600,7 +3600,7 @@
   ],
   "battleRow": null,
   "previousRole": "Same",
-  "etymology": null,
+  "etymology": "portmanteau of \"glide\" + \"flip\"",
   "skill": "Iceshield Counter: Gains an Ice Shield and fires ice crystals when the shield disappears, dealing fully-charged AoE damage. When knocked down, transforms into an Ice Sculpture. Glideflip carries Aura: Water, recovering HP for all allies whenever on the field.",
   "description": "Having tried so many jobs and hobbies, Glideflip is now a job-hunting expert who occasionally offers guidance to rookie Tatari. That temper, however, hasn't mellowed one bit. Even in the sweltering summer, Glideflip's rage can still whip up a mini-blizzard.",
   "hordeSkills": {
@@ -3688,7 +3688,7 @@
   ],
   "battleRow": null,
   "previousRole": "Same",
-  "etymology": null,
+  "etymology": "portmanteau of \"surge\" + \"hoof\"",
   "skill": "Surge Swell: Fires a shock wave that splashes on hit. Splashes increase when a Water enemy is hit.",
   "description": "Raised with a clan deep in the mountains to stay safe from the outside world, Surgehoof has no social experience to speak of. Attempts at kindness from Tatari are often misread, and bursts of electricity send them running. The result? Growing loneliness.",
   "hordeSkills": {
@@ -3731,7 +3731,7 @@
   ],
   "battleRow": null,
   "previousRole": "Same",
-  "etymology": null,
+  "etymology": "portmanteau of \"volt\" + \"mare\"",
   "skill": "Volt Beam: Fires a shock wave that deals follow-up damage and splashes on hit. Splashes increase when a Water enemy is hit. The fewer targets hit by splashes, the higher the follow-up damage.",
   "description": "Voltmare has slowly adjusted to the rules of this new world and developed a unique logic to understand those within it. The child poses no threat, but the old man and the rest are far less certain.",
   "hordeSkills": {
@@ -3994,7 +3994,7 @@
   ],
   "battleRow": "front",
   "previousRole": "Tank",
-  "etymology": null,
+  "etymology": "portmanteau of \"ash\" + \"larva\"",
   "skill": "Puffy Blaze: Creates a ring of flames, dealing AoE damage and healing allies within range.",
   "description": "Ashlarva seems more interested in warming up wet companions than in fighting. As for any Zobos that happen to get singed... Well, they should have stayed back.",
   "hordeSkills": {
@@ -4038,7 +4038,7 @@
   ],
   "battleRow": "front",
   "previousRole": "Tank",
-  "etymology": null,
+  "etymology": "portmanteau of \"fire\" + \"coil\"",
   "skill": "Sizzling Flame: Creates a ring of flames, dealing AoE damage and healing allies within range and granting them Flutter: ATK Boost.",
   "description": "After all that effort, Firecoil is finally a butterfly! But did the wings take on a leaf-like shape simply because Firecoil always hid under them?",
   "hordeSkills": {
@@ -4083,7 +4083,7 @@
   ],
   "battleRow": "front",
   "previousRole": "Tank",
-  "etymology": null,
+  "etymology": "portmanteau of \"char\" + \"flutter\"",
   "skill": "Gusty Flare: Creates a ring of flames, dealing large AoE damage while healing allies within range and granting them Flutter: ATK Boost.",
   "description": "Beauty can be deceiving, but Charflutter's 'hotness' is undeniable. Especially when blasting off Zobos to protect fellow Tatari.",
   "hordeSkills": {
@@ -4217,7 +4217,7 @@
   ],
   "battleRow": "back",
   "previousRole": "Same",
-  "etymology": null,
+  "etymology": "portmanteau of \"panda\" + \"root\"",
   "skill": "Bamboo Burst: Plants bamboo shoots that continuously deal damage and inflict Slow. Bamboo shoots grow and deal increased damage after.",
   "description": "Life is simple: eat honey-filled bamboo, sleep, and sunbathe. When the mood strikes, Pandaroot acts cute and basks in the screams of front-row fans.",
   "hordeSkills": {
@@ -4261,7 +4261,7 @@
   ],
   "battleRow": "back",
   "previousRole": "Same",
-  "etymology": null,
+  "etymology": "portmanteau of \"panda\" + \"warrior\"",
   "skill": "Grove Gush: Quickly plants bamboo shoots that continuously deal damage and inflict Slow. Bamboo shoots grow and deal increased damage after.",
   "description": "Once it believed that cuteness alone could earn enough food, but for just a little more honey, Pandarrior chose to get a job. Life is a grind when you've got honey on the mind.",
   "hordeSkills": {
@@ -4305,7 +4305,7 @@
   ],
   "battleRow": null,
   "previousRole": "Same",
-  "etymology": null,
+  "etymology": "portmanteau of \"panda\" + \"grand\"",
   "skill": "Sprout Splash: Quickly plants bamboo shoots that continuously deal damage and inflict Slow. Bamboo shoots grow and deal increased damage afterward. Pandagrand carries Aura: Grass, whenever on the field.",
   "description": "Those bamboo honey jars used in the juggling act are not just props. To ensure maximum enjoyment at the end of the show, Pandagrand never spills a single drop, and any Zobos coming near are absolutely not tolerated.",
   "hordeSkills": {
@@ -4436,7 +4436,7 @@
   ],
   "battleRow": "front",
   "previousRole": "Same",
-  "etymology": null,
+  "etymology": "portmanteau of \"dread\" + \"claw\"",
   "skill": "Clawstorm: Swings claw to deal AoE damage and inflict Shredded. Gains ATK boost when healed.",
   "description": "Once a plain gray crab, Dreadclaw's vivid colors actually came from consumed pollutants. Every so often, those bright claws make an appearance, along with a grip strong enough to prove a point. After all, in the wild, beauty needs strength to back it up.",
   "hordeSkills": {
@@ -4524,7 +4524,7 @@
   ],
   "battleRow": "back",
   "previousRole": "Same",
-  "etymology": null,
+  "etymology": "portmanteau of \"shrimp\" + \"pyro\"",
   "skill": "Quick Jabs: Quickly throws punches.",
   "description": "Has a strong sense of justice but is easily misguided. An innocent gopher was once accused as the bad guy, and Shrimpyro charged in without a second thought. Punch first, think later. Plenty of heroic deeds, plenty of enemies to show for it.",
   "hordeSkills": {
@@ -4565,7 +4565,7 @@
   ],
   "battleRow": "back",
   "previousRole": "Same",
-  "etymology": null,
+  "etymology": "portmanteau of \"pyro\" + \"prawn\"",
   "skill": "Fire Fists: Quickly throws punches, sometimes inflicting Burn.",
   "description": "Obsessed with training and often trains with Capobeetle. Kind of clumsy when not training, but Pyroprawn brings a saving-the-world energy everywhere that makes it hard to stay mad.",
   "hordeSkills": {
@@ -4694,7 +4694,7 @@
   ],
   "battleRow": "back",
   "previousRole": "Same",
-  "etymology": null,
+  "etymology": "portmanteau of \"bud\" + \"buddy\"",
   "skill": "Bright Hug: Shines down sunlight, healing allies and granting Sunshine: ATK Boost.",
   "description": "Buddi loves the sun and is a ray of sunshine among Tatari. Endlessly optimistic, always cheerful, and smiling at absolutely everyone.",
   "hordeSkills": {
@@ -4738,7 +4738,7 @@
   ],
   "battleRow": "back",
   "previousRole": "Same",
-  "etymology": null,
+  "etymology": "portmanteau of \"sun\" + \"fleur\" + \"sunflower\"",
   "skill": "Sun Kiss: Shines down sunlight, healing allies and granting Sunshine: ATK & DEF Boost.",
   "description": "Sunfleur doesn't grow two heads after evolving --- that'd be weird! Just climb out the pot and dance. Sun's up, and your Tatari friends need you!",
   "hordeSkills": {
@@ -4783,7 +4783,7 @@
   ],
   "battleRow": "back",
   "previousRole": "Same",
-  "etymology": null,
+  "etymology": "portmanteau of \"solar\" + \"flora\"",
   "skill": "Solar Seeds: Shines down sunlight, healing allies and granting Sunshine: ATK & DEF Boost. Also attacks with seeds, providing extra sunlight on hit.",
   "description": "As a plant, living in the ocean was never an option. But with those leaves transformed into a surfboard, Solaflora can make waves anywhere.",
   "hordeSkills": {
@@ -4916,7 +4916,7 @@
   ],
   "battleRow": "front",
   "previousRole": "Same",
-  "etymology": null,
+  "etymology": "portmanteau of \"punch\" + \"kangaroo\"",
   "skill": "Knockabout: Swings fists to deal AoE damage. Charging increases both damage and range. Inflicts Fragile when fully charged.",
   "description": "Gifted with incredible talent yet painfully shy, Puncharoo was eventually spotted by Pyroprawn and taken in for training. Unfortunately, Coach Capobeetle's sessions tend to end early, as regular punch bags don't stand a chance against that killer strength.",
   "hordeSkills": {
@@ -4960,7 +4960,7 @@
   ],
   "battleRow": "front",
   "previousRole": "Same",
-  "etymology": null,
+  "etymology": "portmanteau of \"kangaroo\" + \"champ\"",
   "skill": "Thumpquake: Swings fists to deal AoE damage. Charging increases both damage and range. Inflicts Fragile when fully charged. Sometimes reaches full charge instantly.",
   "description": "Old insecurities are now hidden behind the sunglasses. But when danger nears, instincts kick in and the punches naturally follow. As for the intruders on the ground, all Kangachamp wanted was a little distance.",
   "hordeSkills": {
@@ -5048,7 +5048,7 @@
   ],
   "battleRow": null,
   "previousRole": "Same",
-  "etymology": null,
+  "etymology": "portmanteau of \"spark\" + \"parakeet\"",
   "skill": "Twin Charge: Gains Charged: DMG Reduction and links allies, granting them Charged: ATK Boost. If no allies are nearby, attacks with weak electric currents.",
   "description": "Typically sings alone, but quickly harmonizes with other Tatari for a synchronized melody.",
   "hordeSkills": {
@@ -5093,7 +5093,7 @@
   ],
   "battleRow": null,
   "previousRole": "Same",
-  "etymology": null,
+  "etymology": "portmanteau of \"buzz\" + \"beak\"",
   "skill": "Triple Charge: Gains Charged: DMG Reduction and links allies, granting them Charged: ATK Boost. If no allies are nearby, attacks with weak electric currents.",
   "description": "Often taken for a foodie because of the size of that mouth, Buzzbeak's appetite is actually quite small. That said, it is a convenient hiding place for odd things... like the Doctor's glasses that have gone missing.",
   "hordeSkills": {
@@ -5138,7 +5138,7 @@
   ],
   "battleRow": null,
   "previousRole": "Same",
-  "etymology": null,
+  "etymology": "portmanteau of \"toucan\" + \"zam\"",
   "skill": "Bolt Bond: Gains Charged: DMG Reduction and links allies, granting them Charged: ATK Boost. Linked Lightning allies gain Supercharged: ATK Boost instead. If no allies are nearby, attacks with weak electric currents.",
   "description": "Toucanzam's song is said to be more than just a song, but a means of communicating with others of the same kind. Which means it is a language only Toucanzam can understand. Would love to know what it is all about!",
   "hordeSkills": {
@@ -5272,7 +5272,7 @@
   ],
   "battleRow": "front",
   "previousRole": "Same",
-  "etymology": null,
+  "etymology": "portmanteau of \"jar\" + \"arachnid\"",
   "skill": "Verdant Shield: Shoots green bubbles to deal AoE damage. If a Liquid Shield is not active, stop attacking and generates one. When the shield breaks, inflicts Stun on nearby enemies.",
   "description": "Jarachnid despises filthy, smelly Zobos, yet still steps up whenever they come near. The earth's precious environment is all we have, and Jarachnid protects it with every bit of power available.",
   "hordeSkills": {
@@ -5317,7 +5317,7 @@
   ],
   "battleRow": "front",
   "previousRole": "Same",
-  "etymology": null,
+  "etymology": "portmanteau of \"terra(rium)\" + \"crawler\"",
   "skill": "Sylvan Shield: Shoots green bubbles to deal AoE damage. If a Liquid Shield is not active, stop attacking and quickly generates one. When the shield breaks, inflicts Stun on nearby enemies.",
   "description": "Tiny butterflies have moved into the thriving miniature forest on Terracrawler's back, and even flowers have appeared as a result. The world must be getting better. With so many trainers out there giving their all, how could it not?",
   "hordeSkills": {
@@ -5362,7 +5362,7 @@
   ],
   "battleRow": null,
   "previousRole": "Same",
-  "etymology": null,
+  "etymology": "portmanteau of \"weaver\" + \"fang\"",
   "skill": "Vernal Embrace: Shoots green bubbles to deal AoE damage. If a Liquid Shield is not active, stops attacking and quickly generates one. When the shield breaks, inflicts Stun on nearby enemies. Weaverfang carries Aura: Grass whenever on the field.",
   "description": "Weaverfang now carries a fully-developed ecosystem that makes up an entire world. As for the real world outside, all that's left is to patiently wait for it to become whole again.",
   "hordeSkills": {
@@ -5495,7 +5495,7 @@
   ],
   "battleRow": "front",
   "previousRole": "Guardian",
-  "etymology": null,
+  "etymology": "portmanteau of \"ninja\" + \"iguana\"",
   "skill": "Torrent: Creates a Torrent to deal AoE damage. Becomes Invisible after taking certain amount of damage. While Invisible, gains ATK Range and reduced cooldowns.",
   "description": "Stealth. Silence. Patience. Not everyone can master these arts. It takes years of extraordinary discipline and years of dedicated training. Hold on, are those two talking behind Ninjaguana's back -- er, Ninjaguana's right here. Wait...",
   "hordeSkills": {
@@ -5583,7 +5583,7 @@
   ],
   "battleRow": "back",
   "previousRole": "Support",
-  "etymology": null,
+  "etymology": "portmanteau of \"soup\" + \"hog\"",
   "skill": "Spicy Soup: Spends HP to hurl peppers and deals AoE damage based on the amount consumed. Grants allies a Culinary Shield. Heals nearby allies when knocked down.",
   "description": "Listen. The food is part of the outfit, alright? There are tons of unique styles out there, no need to make a fuss.",
   "hordeSkills": {
@@ -5628,7 +5628,7 @@
   ],
   "battleRow": "back",
   "previousRole": "Support",
-  "etymology": null,
+  "etymology": "portmanteau of \"grill\" + \"hog\"",
   "skill": "Burger Meal: Spends HP to hurl patties and deals AoE damage based on the amount consumed. Grants allies a BBQ Shield that deals damage over time. Heals nearby allies when knocked down.",
   "description": "What's wrong with carrying all your favorite snacks around? You'll hardly get hungry, and they're extra handy when Zobos come around. Perfect, don't you think?",
   "hordeSkills": {
@@ -5673,7 +5673,7 @@
   ],
   "battleRow": "back",
   "previousRole": "Support",
-  "etymology": null,
+  "etymology": "portmanteau of \"hot\" + \"hog\" + \"hotdog\"",
   "skill": "Hot Pot Feast: Spends HP to hurl skewers and deals AoE damage based on the amount consumed. Grants allies ATK Boost and a BBQ Shield that deals damage over time. Heals nearby allies when knocked down.",
   "description": "The biggest problem with carrying around so much delicious food is the Zobos who always come sniffing around. Figured they had lost their sense of smell. I guess this proves a love for hot pot is simply universal.",
   "hordeSkills": {
@@ -5938,7 +5938,7 @@
   ],
   "battleRow": null,
   "previousRole": "Same",
-  "etymology": null,
+  "etymology": "portmanteau of \"cheer\" + \"ling\"",
   "skill": "Bunny Dance: Dances continuously, dealing AoE damage while healing nearby allies and granting them Support: ATK & DEF Boost.",
   "description": "Even before hatching, Cheerling had a knack for dancing. Whenever there's music, those long ears would sway to the beat like trailing stars. Eggcellent start, Cheerling!",
   "hordeSkills": {
@@ -5984,7 +5984,7 @@
   ],
   "battleRow": null,
   "previousRole": "Same",
-  "etymology": null,
+  "etymology": "portmanteau of \"cheer\" and \"starlet\"",
   "skill": "Cheerleader: Dances continuously, dealing AoE damage while healing nearby allies and granting them Support: ATK & DEF Boost. The first time a nearby ally is in Danger, grants Invincibility within the area.",
   "description": "To become a true idol, hard work is a must. Cheerlet practices dancing every day to reach perfection!",
   "hordeSkills": {
@@ -6123,7 +6123,7 @@
   ],
   "battleRow": null,
   "previousRole": "Same",
-  "etymology": null,
+  "etymology": "portmanteau of \"cactus\" + \"bud\"",
   "skill": "Needle Rain: Launches spines to apply stacks of Sting.",
   "description": "Cactobud loves hugs, but hardly gets any from other Tatari. Why does everyone run away so fast?",
   "hordeSkills": {
@@ -6165,7 +6165,7 @@
   ],
   "battleRow": null,
   "previousRole": "Same",
-  "etymology": null,
+  "etymology": "portmanteau of \"cactus\" + \"bloom\"",
   "skill": "Spine Storm: Launches spines to apply stacks of Sting. Sting stacks implode when affected enemies are killed, dealing AoE damage.",
   "description": "Cactobloom loves putting on little tricks for Tatari, like rolling through berry bushes and coming out covered in fruit. It's a talent that's earned plenty of berry-loving friends.",
   "hordeSkills": {
@@ -6252,7 +6252,7 @@
   ],
   "battleRow": null,
   "previousRole": "Same",
-  "etymology": null,
+  "etymology": "portmanteau of \"lull\" + \"jelly(fish)\"",
   "skill": "Sapping Orb: Launches a water orb to deal AoE damage. Drains HP from nearby healthy allies to boost orb damage and heal allies with low HP.",
   "description": "Always looks half-asleep. Not from fatigue, but because the colors of the real world are so dull compared to the vibrant coral reefs in Lullely's dreams.",
   "hordeSkills": {
@@ -6293,7 +6293,7 @@
   ],
   "battleRow": null,
   "previousRole": "Same",
-  "etymology": null,
+  "etymology": "portmanteau of \"yawn\" + \"jelly(fish)\"",
   "skill": "Siphon Sphere: Launches a water orb to deal AoE damage. Within a large area, drains HP from nearby healthy allies to boost orb damage and heal allies with low HP.",
   "description": "Yawnelly's \"How to Nap\" tutorial was just falling asleep mid-explanation. Sparkdoe took notes but learned nothing.",
   "hordeSkills": {
@@ -6427,7 +6427,7 @@
   ],
   "battleRow": null,
   "previousRole": "Guardian",
-  "etymology": null,
+  "etymology": "portmanteau of \"tinder\" + \"cub\"",
   "skill": "Glow Getter: Uses a chi attack to deal AoE damage. Can dash forward, or retreat and meditate to heal over time when in Danger.",
   "description": "It's impossible for Tindercub to sit still during meditation. Why do something so boring, when there are roses and butterflies out there?",
   "hordeSkills": {
@@ -6471,7 +6471,7 @@
   ],
   "battleRow": null,
   "previousRole": "Guardian",
-  "etymology": null,
+  "etymology": "portmanteau of \"kit\" + \"jitsu\"",
   "skill": "Flicker Fleece: Uses a chi attack to deal AoE damage. Can dash forward and recover HP when hitting Burning enemies, or retreat and meditate to heal over time when in Danger.",
   "description": "Following those who came before, Kitjitsu steadily hones those inner flames in meditation. It's time to grow up to protect everything held dear.",
   "hordeSkills": {
@@ -6692,7 +6692,7 @@
   ],
   "battleRow": null,
   "previousRole": "Same",
-  "etymology": null,
+  "etymology": "portmanteau of \"zen\" + \"scarab\"",
   "skill": "Dung Blitz: Launches dung balls that linger on hit, continuously dealing small AoE damage and inflicting Slow.",
   "description": "The halo atop Zenscarab's head beguiles approaching Tatari into becoming followers. To Zenscarab, there are only two kinds of Tatari: those who love the signature dish, and those who have not tasted it yet.",
   "hordeSkills": {
@@ -6867,7 +6867,7 @@
   ],
   "battleRow": null,
   "previousRole": "Same",
-  "etymology": null,
+  "etymology": "portmanteau of \"gale\" + \"ewe\" + \"weather\"",
   "skill": "Gale Storm: Summons white clouds that continuously deal small AoE damage with lightning. White clouds will upgrade to dark clouds that inflict Paralysis. Fires lightning arcs to move clouds.",
   "description": "Now when Galewether gets all heated up, it's a much bigger problem. Well, at least the scorched surroundings mean no one would come close to make small chat anymore.",
   "hordeSkills": {
@@ -7127,16 +7127,17 @@
   "tier": 1,
   "family": "Dewgrub",
   "familyId": 46,
-  "stages": 3,
+  "stages": 4,
   "rarity": "Rare",
   "evolutionLine": [
    "Dewgrub",
    "Ripplewing",
-   "Waveflutter"
+   "Waveflutter",
+   "Morphanessa"
   ],
   "battleRow": null,
   "previousRole": "DPS",
-  "etymology": null,
+  "etymology": "portmanteau of \"dew\" + \"grub\"",
   "skill": "Drowsy Shot: Launches water bombs that inflict Slow and sometimes inflict Sleep.",
   "description": "Gathers fresh morning dew every day and is considered the most eager of the \"morning Tatari\" bunch.",
   "hordeSkills": {
@@ -7169,16 +7170,17 @@
   "tier": 2,
   "family": "Dewgrub",
   "familyId": 46,
-  "stages": 3,
+  "stages": 4,
   "rarity": "Rare",
   "evolutionLine": [
    "Dewgrub",
    "Ripplewing",
-   "Waveflutter"
+   "Waveflutter",
+   "Morphanessa"
   ],
   "battleRow": null,
   "previousRole": "DPS",
-  "etymology": null,
+  "etymology": "portmanteau of \"ripple\" + \"wing\"",
   "skill": "Sleepy Shot: Launches water bombs that inflict Slow and sometimes inflict Sleep. Deals damage to enemies that wake from Sleep.",
   "description": "Each wingbeat is part of a delicate dance. But be careful around the shiny dust from Ripplewing's scales. Word is Cobbledon once breathed some in and fell into a deep sleep.",
   "hordeSkills": {
@@ -7211,16 +7213,17 @@
   "tier": 3,
   "family": "Dewgrub",
   "familyId": 46,
-  "stages": 3,
+  "stages": 4,
   "rarity": "Rare",
   "evolutionLine": [
    "Dewgrub",
    "Ripplewing",
-   "Waveflutter"
+   "Waveflutter",
+   "Morphanessa"
   ],
   "battleRow": null,
   "previousRole": "DPS",
-  "etymology": null,
+  "etymology": "portmanteau of \"wave\" + \"flutter\"",
   "skill": "Somno-Shot: Launches water bombs that inflict Slow and sometimes inflict Sleep. Attacks from adjacent allies can also inflict Slow and Sleep. Deals damage to enemies that wake from Sleep.",
   "description": "Waveflutter is devoted to elegance and always maintains perfect posture. Flies high to seek clean water vapor, and also to stay as far as possible from the dirty bunch on the ground.",
   "hordeSkills": {
@@ -7246,6 +7249,47 @@
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Waveflutter"
  },
  {
+  "name": "Morphanessa",
+  "slug": "morphanessa",
+  "type": "Water",
+  "role": "Support",
+  "tier": 4,
+  "family": "Dewgrub",
+  "familyId": 46,
+  "stages": 4,
+  "rarity": "Rare",
+  "evolutionLine": [
+   "Dewgrub",
+   "Ripplewing",
+   "Waveflutter",
+   "Morphanessa"
+  ],
+  "battleRow": null,
+  "previousRole": "None",
+  "etymology": null,
+  "skill": "Rippling Shot: Launches water bombs that inflict Slow and sometimes inflict Sleep. Attacks from adjacent allies can also inflict Slow and Sleep. Deals damage to enemies that wake from Sleep. Morphanessa carries Aura: Water whenever on the battlefield.",
+  "description": "Morphanessa's wings call forth the soothing rain that cleanses all things, washing away the unpleasant dirt and grit so the world is as clear as a mirror. All that remains shall be a perfect reflection of that lovely shade of red.",
+  "hordeSkills": {
+   "level3": {
+    "name": "Aqua Flutter",
+    "text": "Attacks have a chance to launch 1 piercing butterfly from the target's location."
+   },
+   "level5": {
+    "name": "Resonant Flutter",
+    "text": "Periodically grants multiple allies the following effect: Attacks have a chance to launch an extra butterfly."
+   },
+   "level7": {
+    "name": "Torrential Flutter",
+    "text": "Summons several butterfly allies. Releases a piercing mist that deals damage, with a chance to inflict Sleep."
+   }
+  },
+  "rangeImage": null,
+  "skillTypes": [],
+  "image": "data/images/tatari/morphanessa.png",
+  "glitterImage": null,
+  "wikiUrl": null
+ },
+ {
   "name": "Fumekit",
   "slug": "fumekit",
   "type": "Fire",
@@ -7263,7 +7307,7 @@
   ],
   "battleRow": null,
   "previousRole": "Same",
-  "etymology": null,
+  "etymology": "portmanteau of \"fume\" + \"kit\"",
   "skill": "Stinky Fumes: Emits noxious fumes that continuously deal AoE damage. Fumes sometimes ignite to deal AoE damage.",
   "description": "Thanks to a short digestive track, Fumekit tends to let out gas soon after eating. Joins in when everyone turns to look for the culprit, never once expecting the obvious.",
   "hordeSkills": {
@@ -7349,7 +7393,7 @@
   ],
   "battleRow": null,
   "previousRole": "Same",
-  "etymology": null,
+  "etymology": "portmanteau of \"magma\" + \"skunk\" + \"musk\"",
   "skill": "Explosive Fumes: Emits noxious fumes that continuously deal AoE damage. Fumes often spread sometimes ignite to deal AoE damage.",
   "description": "Magmusk has developed an aesthetic liking to the explosive. The smell might be a little much, but blasting away Zobos is an important step of the post-meal detox routine.",
   "hordeSkills": {
@@ -7435,7 +7479,7 @@
   ],
   "battleRow": null,
   "previousRole": "Same",
-  "etymology": null,
+  "etymology": "portmanteau of \"tap\" + \"tail\"",
   "skill": "Karmic Pistol: Slowly fires a few sound waves, then rapidly fires several.",
   "description": "Tapping the head with a tail mallet is a sure way to accumulate karma and earn forgiveness. Or so Taptail firmly believes, after stealing another Tatari's lunch at least.",
   "hordeSkills": {
@@ -7585,10 +7629,14 @@
    }
   },
   "rangeImage": null,
-  "skillTypes": [],
+  "skillTypes": [
+   "AoE",
+   "Pierce",
+   "Stun"
+  ],
   "image": "data/images/tatari/dharmadder.png",
   "glitterImage": "data/images/glitter/dharmadder.png",
-  "wikiUrl": null
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Dharmadder"
  },
  {
   "name": "Kittazap",
@@ -7607,7 +7655,7 @@
   ],
   "battleRow": null,
   "previousRole": "Same",
-  "etymology": null,
+  "etymology": "portmanteau of \"kit\" + \"zap\"",
   "skill": "Buzz Punch: Unleashes electrified punches that deal AoE damage. The closer the enemy, the higher the damage. Cooldowns decrease with each strike. Kittazap shares the Paw Pals bond whenever on the field.",
   "description": "Tatari don't seem to realize just how popular Kittazap is among humans. Just wave that paw and here comes food!",
   "hordeSkills": {
@@ -7725,12 +7773,13 @@
   "tier": 1,
   "family": "Lollama",
   "familyId": 50,
-  "stages": 3,
+  "stages": 4,
   "rarity": "Rare",
   "evolutionLine": [
    "Lollama",
    "Slobberlama",
-   "Ptooielama"
+   "Ptooielama",
+   "Blechlama"
   ],
   "battleRow": null,
   "previousRole": "Same",
@@ -7768,16 +7817,17 @@
   "tier": 2,
   "family": "Lollama",
   "familyId": 50,
-  "stages": 3,
+  "stages": 4,
   "rarity": "Rare",
   "evolutionLine": [
    "Lollama",
    "Slobberlama",
-   "Ptooielama"
+   "Ptooielama",
+   "Blechlama"
   ],
   "battleRow": null,
   "previousRole": "Same",
-  "etymology": null,
+  "etymology": "portmanteau of \"slobber\" + \"llama\"",
   "skill": "Raspberry Party: Shoots small globs of spit at single enemies to deal multiple instances of damage, or a large glob at enemy crowds to deal small AoE damage and inflict Blind.",
   "description": "Slobberlama tries hard to contribute to the Tatari community. When serving fruit, for example, each piece is carefully licked to make sure they're sweet enough.",
   "hordeSkills": {
@@ -7811,16 +7861,17 @@
   "tier": 3,
   "family": "Lollama",
   "familyId": 50,
-  "stages": 3,
+  "stages": 4,
   "rarity": "Rare",
   "evolutionLine": [
    "Lollama",
    "Slobberlama",
-   "Ptooielama"
+   "Ptooielama",
+   "Blechlama"
   ],
   "battleRow": null,
   "previousRole": "Same",
-  "etymology": null,
+  "etymology": "portmanteau of \"ptooie\" + \"llama\"",
   "skill": "Toungue Out: Shoots small globs of spit at single enemies to deal multiple instances of damage, or a large glob at enemy crowds to deal small AoE damage and inflict Blind. Also creates a Slow Zone.",
   "description": "Ptooielama's messy fur might be hiding moldy cookies and long-lost socks. But when in trouble, you can bet that you're getting the stickiest, yet gentlest nuzzle.",
   "hordeSkills": {
@@ -7848,6 +7899,47 @@
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Ptooielama"
  },
  {
+  "name": "Blechlama",
+  "slug": "blechlama",
+  "type": "Grass",
+  "role": "DPS",
+  "tier": 4,
+  "family": "Lollama",
+  "familyId": 50,
+  "stages": 4,
+  "rarity": "Rare",
+  "evolutionLine": [
+   "Lollama",
+   "Slobberlama",
+   "Ptooielama",
+   "Blechlama"
+  ],
+  "battleRow": null,
+  "previousRole": "Same",
+  "etymology": null,
+  "skill": "Drool Doozy: Shoots small globs of spit at single enemies to deal multiple instances of damage, or a large glob at enemy crowds to deal small AoE damage and inflict Blind. Also creates a Slow Zone. Blechlama carries Aura: Grass whenever on the field.",
+  "description": "All that overgrown fur is home to a thriving micro ecosystem. Don't shy away when Blechlama charges at you carrying the raw, powerful scent of nature-embrace the call of the untamed wild!",
+  "hordeSkills": {
+   "level3": {
+    "name": "Bushy Boost",
+    "text": "Periodically grants DMG Boost to nearby allies."
+   },
+   "level5": {
+    "name": "Sticky Spit",
+    "text": "Shoots sticky spit to deal AoE damage and leaves behind a Strong Slow Zone."
+   },
+   "level7": {
+    "name": "Precision Guidance",
+    "text": "Spits continuously in the direction of recent movement. Priotritizes locking onto bosses."
+   }
+  },
+  "rangeImage": null,
+  "skillTypes": [],
+  "image": "data/images/tatari/blechlama.png",
+  "glitterImage": "data/images/glitter/blechlama.png",
+  "wikiUrl": null
+ },
+ {
   "name": "Dumbopus",
   "slug": "dumbopus",
   "type": "Water",
@@ -7865,7 +7957,7 @@
   ],
   "battleRow": null,
   "previousRole": "Same",
-  "etymology": null,
+  "etymology": "portmanteau of \"dumb\" + \"octopus\"",
   "skill": "Fishy Form: Launches a water orb and occasionally a large water orb that deals small AoE damage. Can summon an Octobuddy that deals AoE damage when knocked down.",
   "description": "Dumbopus's head feels itchy. Wonder why...",
   "hordeSkills": {
@@ -7909,7 +8001,7 @@
   ],
   "battleRow": null,
   "previousRole": "Same",
-  "etymology": null,
+  "etymology": "portmanteau of \"daze\" + \"octopus\"",
   "skill": "Reel Catch: Launches a water orb and sometimes a large water orb that deals small AoE damage. Can summon an Octobuddy that deals AoE damage when knocked down.",
   "description": "Sometimes, even Dazopus can't explain the strange thoughts that come to mind. I guess that's what you call a walking contradiction.",
   "hordeSkills": {
@@ -7953,7 +8045,7 @@
   ],
   "battleRow": null,
   "previousRole": "Same",
-  "etymology": null,
+  "etymology": "portmanteau of \"fish\" + \"octopus\"",
   "skill": "Fish Fin-atic: Launches a water orb and sometimes a large water orb that deals small AoE damage. Can summon an Octobuddy that deals large AoE damage when knocked down.",
   "description": "Although Fishopus's thoughts and actions seem to have different origins, they align flawlessly in a way no one can explain.",
   "hordeSkills": {
@@ -8015,10 +8107,13 @@
    }
   },
   "rangeImage": null,
-  "skillTypes": [],
+  "skillTypes": [
+   "AoE",
+   "Summon"
+  ],
   "image": "data/images/tatari/lordopus.png",
-  "glitterImage": null,
-  "wikiUrl": null
+  "glitterImage": "data/images/glitter/lordopus.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Lordopus"
  },
  {
   "name": "Flameow",
@@ -8037,7 +8132,7 @@
   ],
   "battleRow": null,
   "previousRole": "Same",
-  "etymology": null,
+  "etymology": "portmanteau of \"flame\" + \"meow\"",
   "skill": "Meow Pop: Throws jewels. Occasionally, the jewels can bounce an increasing number of times between enemies. Flameow shares the Paw Pals bond whenever on the field.",
   "description": "Flameow regards everyone with cool indifference and a touch of disdain. Everyone except Kittazap, who's earned a modicum of respect.",
   "hordeSkills": {
@@ -8079,7 +8174,7 @@
   ],
   "battleRow": null,
   "previousRole": "Same",
-  "etymology": null,
+  "etymology": "portmanteau of \"neko\" + \"flare\"",
   "skill": "Meow Crackle: Throws jewels. Sometimes, the jewels can bounce an increasing number of times between enemies. Flameow shares the Paw Pals bond whenever on the field.",
   "description": "Rarely approaches Tatari other than Nekowatt, though there are records of Nekoflare using flames to warm a fallen Tatari in the snow. Nekoflare would never admit it, though.",
   "hordeSkills": {
@@ -8121,7 +8216,7 @@
   ],
   "battleRow": null,
   "previousRole": "Same",
-  "etymology": null,
+  "etymology": "portmanteau of \"silver\" + \"sear\"",
   "skill": "Meow Bomb: Throws jewels. Sometimes, the jewels can bounce an increasing number of times between enemies. When the max number of bounces is reached, grants all allies Searpaw: ATK Boost. Silversear shares the Paw Pals bond whenever on the field.",
   "description": "In Silversear's eyes, the Tatari at camp are little more than noisy troublemakers. Without Silversear standing guard, these fools who can't even tell jewels from pinballs might not live to see the next sunrise.",
   "hordeSkills": {
@@ -8383,7 +8478,7 @@
   ],
   "battleRow": null,
   "previousRole": "Same",
-  "etymology": null,
+  "etymology": "portmanteau of \"sonar\" + \"bat\"",
   "skill": "Sonar Power: Inflicts Perfectly Scouted and Bat: Fragile on enemies over a wide area. When Perfectly Scouted expires, affected enemies take damage.",
   "description": "At night, when the Tatari are fast asleep, Sonarbat unleashes those powerful sound waves to knock out any Zobos and ensure absolute peace. Now if only Snoozebo didn't make so much noise...",
   "hordeSkills": {
@@ -8469,7 +8564,7 @@
   ],
   "battleRow": null,
   "previousRole": "Tank",
-  "etymology": null,
+  "etymology": "portmanteau of \"mask\" + \"small fry\"",
   "skill": "Dagon's Wave: Summons waves that inflict Pull and a whirlpool that deals small AoE damage.",
   "description": "Those bulging, unblinking eyes give off an eerie sense of knowing, as if resigned to fateful gloom from the shadows. But don't be deceived, for Maskfry is always checking if your scent is worthy of the Dagon.",
   "hordeSkills": {
@@ -8557,7 +8652,7 @@
   ],
   "battleRow": null,
   "previousRole": "Tank",
-  "etymology": null,
+  "etymology": "portmanteau of \"armor\" + \"jaw\"",
   "skill": "Dagon's Surge: Summons waves that inflict Pull and a whirlpool that deals small AoE damage. If multiple enemies are Pulled, the whirlpool inflicts Stun and stackable Tidesurge: Weak.",
   "description": "There's no turning back now. Armorjaw has outgrown the basin, quietly charting a course toward Devil's Reef. When an attempt to reach out is given, only a cold, distant stare is returned, as if quietly questioning your allegiance to humanity.",
   "hordeSkills": {
@@ -8690,7 +8785,7 @@
   ],
   "battleRow": null,
   "previousRole": "Same",
-  "etymology": null,
+  "etymology": "portmanteau of \"tick\" + \"owl\"",
   "skill": "Evertide Echo: Creates an AoE terrain in front. Enemies in the terrain take damage and are inflicted with stackable Slowdown. Slowdown can be upgraded to Stun.",
   "description": "Tikowl loves answering all kinds of questions, including \"Why do humans hunt and return empty-handed?\" and \"Who should settle Tatari disputes, trainers or Tatari?\" Er, beats me anyhow.",
   "hordeSkills": {
@@ -8780,7 +8875,7 @@
   ],
   "battleRow": null,
   "previousRole": "Same",
-  "etymology": null,
+  "etymology": "portmanteau of \"hypno\" + \"strix\"",
   "skill": "Dies Naturalis: Creates a large AoE terrain in front. Enemies in the terrain take damage and are inflicted with stackable Slowdown. Slowdown can be upgraded to Stun. Hypnostrix carries Aura: Grass whenever on the field.",
   "description": "Time is a cycle that nudges the hands of fate. When the pendulum swings back, we'll be reunited with those we've lost.",
   "hordeSkills": {
@@ -9713,7 +9808,20 @@
   "etymology": null,
   "skill": "Electro Cage: Shoots an Electricage orb that deals small AoE damage and creates an Electricage. Fires piercing signals towards the Electricage after, creating an electric surge that deals small AoE damage after impact.",
   "description": "Cavyzap has always been extremely insecure and is never seen outside the cage. But don't be mistaken-the cage isn't a prison but a safehouse. As long as the house is there, Cavyzap isn't afraid to give passing Zobos the stink eye.",
-  "hordeSkills": null,
+  "hordeSkills": {
+   "level3": {
+    "name": "Cavy Cage",
+    "text": "Attacks have a chance to create an additional smaller Electricage that continuously deals small AoE damage and inflicts Bind or Slow on some affected enemies."
+   },
+   "level5": {
+    "name": "Full Tilt!",
+    "text": "Creates 2 bounce devices. Orbs will ricochet between devices and deal damage to enemies in their path."
+   },
+   "level7": {
+    "name": "Electric Circuit",
+    "text": "Periodically Summons Cavyzap allies that form an electric connection to deal damage to enemies in their path."
+   }
+  },
   "rangeImage": null,
   "skillTypes": [
    "AoE",
@@ -9744,7 +9852,20 @@
   "etymology": null,
   "skill": "Kinesis Cage: Shoots an Electricage orb that deals small AoE damage and creates an Electricage. Fires piercing signals towards the Electricage after, creating an electric surge that deals small AoE damage after impact.",
   "description": "The cage has been upgraded to a cozy home. Although usually only brave enough to peek through the door, Hippiehog will angrily (but quietly) let potential intruders know that they are not welcome.",
-  "hordeSkills": null,
+  "hordeSkills": {
+   "level3": {
+    "name": "Cavy Cage",
+    "text": "Attacks have a chance to create an additional smaller Electricage that continuously deals small AoE damage and inflicts Bind or Slow on some affected enemies."
+   },
+   "level5": {
+    "name": "Full Tilt!",
+    "text": "Creates 2 bounce devices. Orbs will ricochet between devices and deal damage to enemies in their path."
+   },
+   "level7": {
+    "name": "Electric Circuit",
+    "text": "Periodically Summons Cavyzap allies that form an electric connection to deal damage to enemies in their path."
+   }
+  },
   "rangeImage": null,
   "skillTypes": [
    "AoE",
@@ -9775,7 +9896,20 @@
   "etymology": null,
   "skill": "Magnetic Cage: Shoots an Electricage orb that deals small AoE damage and creates an Electricage. Fires piercing signals towards the Electricage after, creating an electric surge that deals AoE damage after impact.",
   "description": "Wheekroller is no longer a homebody and has fallen in love with running. The windmill keeps on spinning ahead and it feels like flying! For some reason the scenery hasn't changed, but as far as Wheekroller is concerned it's the top of the world.",
-  "hordeSkills": null,
+  "hordeSkills": {
+   "level3": {
+    "name": "Cavy Cage",
+    "text": "Attacks have a chance to create an additional smaller Electricage that continuously deals small AoE damage and inflicts Bind or Slow on some affected enemies."
+   },
+   "level5": {
+    "name": "Full Tilt!",
+    "text": "Creates 2 bounce devices. Orbs will ricochet between devices and deal damage to enemies in their path."
+   },
+   "level7": {
+    "name": "Electric Circuit",
+    "text": "Periodically Summons Cavyzap allies that form an electric connection to deal damage to enemies in their path."
+   }
+  },
   "rangeImage": null,
   "skillTypes": [
    "AoE",
@@ -9806,7 +9940,20 @@
   "etymology": null,
   "skill": "Tataraday Cage: Shoots an Electricage orb that deals small AoE damage and creates an Electricage. Fires piercing signals towards the Electricage after, creating an electric surge that deals small AoE damage after impact. Giganash carries Aura: Lightning whenever on the field.",
   "description": "The ultimate solution to feeling insecure is to become the strongest being in existence. Giganash has done exactly so, piloting a nice sturdy mech to bravely crush Zobos in the way. The world isn't so scary after all.",
-  "hordeSkills": null,
+  "hordeSkills": {
+   "level3": {
+    "name": "Cavy Cage",
+    "text": "Attacks have a chance to create an additional smaller Electricage that continuously deals small AoE damage and inflicts Bind or Slow on some affected enemies."
+   },
+   "level5": {
+    "name": "Full Tilt!",
+    "text": "Creates 2 bounce devices. Orbs will ricochet between devices and deal damage to enemies in their path."
+   },
+   "level7": {
+    "name": "Electric Circuit",
+    "text": "Periodically Summons Cavyzap allies that form an electric connection to deal damage to enemies in their path."
+   }
+  },
   "rangeImage": null,
   "skillTypes": [
    "AoE",
@@ -9837,12 +9984,29 @@
   "etymology": null,
   "skill": "Fish Ahoy: Throws 3 fish in turn to deal AoE damage. Carries Foodie: Fragile. When in Danger, eats 1 fish to recover HP and dispell all other debuffs.",
   "description": "Snowcub has a great appetite but not so great hunting skills. After finally catching one fish, Snowcub now brings it everywhere as a bluff to cover the fact that there's no catching another one any time soon.",
-  "hordeSkills": null,
+  "hordeSkills": {
+   "level3": {
+    "name": "Always Cola",
+    "text": "Attacks have a chance to create 1 cola. The cola is either thrown to deal small AoE damage, or drunk to recover HP and obtain Cola: DMG Boost."
+   },
+   "level5": {
+    "name": "Make it Swarm",
+    "text": "Throws 1 small fish that attracts bigger fish and marlins to deal damage to enemies in their path."
+   },
+   "level7": {
+    "name": "Together is Better",
+    "text": "Places 7 cola baits that attract fish to deal small AoE damage. After, Large Marlin shares cola with all allies on the field, granting Cola: ATK & DEF Boost."
+   }
+  },
   "rangeImage": null,
-  "skillTypes": [],
+  "skillTypes": [
+   "AoE",
+   "Fragile",
+   "Heal"
+  ],
   "image": "data/images/tatari/snowcub.png",
   "glitterImage": "data/images/glitter/snowcub.png",
-  "wikiUrl": null
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Snowcub"
  },
  {
   "name": "Polarpaw",
@@ -9865,12 +10029,29 @@
   "etymology": null,
   "skill": "Fish Delish: Throws 4 fish in turn to deal AoE damage. Carries Foodie: Fragile. When in Danger, eats 1 fish to recover HP and dispell all other debuffs.",
   "description": "Polarpaw is gradually learning to discern the distinct smell of fish, the flow of currents, and movement patterns beneath the ice. Although sometimes the prey turns out to be seaweed, random sticks of wood, and even Polarpaw's own shadow, this is all part of the master plan. At least, that's what Polarpaw would tell you.",
-  "hordeSkills": null,
+  "hordeSkills": {
+   "level3": {
+    "name": "Always Cola",
+    "text": "Attacks have a chance to create 1 cola. The cola is either thrown to deal small AoE damage, or drunk to recover HP and obtain Cola: DMG Boost."
+   },
+   "level5": {
+    "name": "Make it Swarm",
+    "text": "Throws 1 small fish that attracts bigger fish and marlins to deal damage to enemies in their path."
+   },
+   "level7": {
+    "name": "Together is Better",
+    "text": "Places 7 cola baits that attract fish to deal small AoE damage. After, Large Marlin shares cola with all allies on the field, granting Cola: ATK & DEF Boost."
+   }
+  },
   "rangeImage": null,
-  "skillTypes": [],
+  "skillTypes": [
+   "AoE",
+   "Fragile",
+   "Heal"
+  ],
   "image": "data/images/tatari/polarpaw.png",
   "glitterImage": "data/images/glitter/polarpaw.png",
-  "wikiUrl": null
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Polarpaw"
  },
  {
   "name": "Blizzgrizz",
@@ -9893,12 +10074,29 @@
   "etymology": null,
   "skill": "Fish Feast: Throws 4 fish in turn to deal AoE damage. Carries Foodie: Fragile. When in Danger, shares 1 fish with an ally to recover HP and dispell all other debuffs.",
   "description": "Having adapted to the harsh environments, Blizzgrizz's hunting abilities are steadily improving. The catch of the day is carefully collected into the creel, then brought to the kitchen at camp. While acting like it's nothing special, Blizzgrizz will always secretly look out for a nod of approval.",
-  "hordeSkills": null,
+  "hordeSkills": {
+   "level3": {
+    "name": "Always Cola",
+    "text": "Attacks have a chance to create 1 cola. The cola is either thrown to deal small AoE damage, or drunk to recover HP and obtain Cola: DMG Boost."
+   },
+   "level5": {
+    "name": "Make it Swarm",
+    "text": "Throws 1 small fish that attracts bigger fish and marlins to deal damage to enemies in their path."
+   },
+   "level7": {
+    "name": "Together is Better",
+    "text": "Places 7 cola baits that attract fish to deal small AoE damage. After, Large Marlin shares cola with all allies on the field, granting Cola: ATK & DEF Boost."
+   }
+  },
   "rangeImage": null,
-  "skillTypes": [],
+  "skillTypes": [
+   "AoE",
+   "Fragile",
+   "Heal"
+  ],
   "image": "data/images/tatari/blizzgrizz.png",
-  "glitterImage": null,
-  "wikiUrl": null
+  "glitterImage": "data/images/glitter/blizzgrizz.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Blizzgrizz"
  },
  {
   "name": "Anglerbear",
@@ -9921,11 +10119,140 @@
   "etymology": null,
   "skill": "Fish Bonanza: Throws 4 fish in turn to deal AoE damage. Carries Foodie: Fragile. When in Danger, shares 1 fish with an ally to recover HP and dispell all other debuffs. Anglerbear carries Aura: Water whenever on field.",
   "description": "The searing snow is Anglerbear's playground, and hunting is as easy as a game. An entertaining one, too, especially if the prey are cunning enough to attempt escape.",
+  "hordeSkills": {
+   "level3": {
+    "name": "Always Cola",
+    "text": "Attacks have a chance to create 1 cola. The cola is either thrown to deal small AoE damage, or drunk to recover HP and obtain Cola: DMG Boost."
+   },
+   "level5": {
+    "name": "Make it Swarm",
+    "text": "Throws 1 small fish that attracts bigger fish and marlins to deal damage to enemies in their path."
+   },
+   "level7": {
+    "name": "Together is Better",
+    "text": "Places 7 cola baits that attract fish to deal small AoE damage. After, Large Marlin shares cola with all allies on the field, granting Cola: ATK & DEF Boost."
+   }
+  },
+  "rangeImage": null,
+  "skillTypes": [
+   "AoE",
+   "Fragile",
+   "Heal"
+  ],
+  "image": "data/images/tatari/anglerbear.png",
+  "glitterImage": "data/images/glitter/anglerbear.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Anglerbear"
+ },
+ {
+  "name": "Ringtail",
+  "slug": "ringtail",
+  "type": "Rock",
+  "role": "Support",
+  "tier": 1,
+  "family": "Ringtail",
+  "familyId": 64,
+  "stages": 4,
+  "rarity": "Rare",
+  "evolutionLine": [
+   "Ringtail",
+   "Rizzler",
+   "Zorrock",
+   "Phantothief"
+  ],
+  "battleRow": null,
+  "previousRole": "None",
+  "etymology": null,
+  "skill": "Bushy Debut: Orders Lackeys to continuously deal AoE damage. After Lackeys return, they provide healing and Vigilante: ATK Boost to allies within a small area.",
+  "description": "Ringtail is an expert at finding things without owners somehow. Cookies left on the bakery counter, fresh fruit from the market... and since everything's shared among four, Ringtail always makes a point to grab a couple extra.",
   "hordeSkills": null,
   "rangeImage": null,
   "skillTypes": [],
-  "image": "data/images/tatari/anglerbear.png",
-  "glitterImage": null,
+  "image": "data/images/tatari/ringtail.png",
+  "glitterImage": "data/images/glitter/ringtail.png",
+  "wikiUrl": null
+ },
+ {
+  "name": "Rizzler",
+  "slug": "rizzler",
+  "type": "Rock",
+  "role": "Support",
+  "tier": 2,
+  "family": "Ringtail",
+  "familyId": 64,
+  "stages": 4,
+  "rarity": "Rare",
+  "evolutionLine": [
+   "Ringtail",
+   "Rizzler",
+   "Zorrock",
+   "Phantothief"
+  ],
+  "battleRow": null,
+  "previousRole": "None",
+  "etymology": null,
+  "skill": "Sleight of Hand: Orders Lackeys to continuously deal AoE damage. After Lackeys return, they provide healing and Vigilante: ATK Boost to allies within the area.",
+  "description": "Rizzler figured wearing a mask keeps you safe from being recognized, but that charming smirk and familiar figure already left their mark on the hearts of many.",
+  "hordeSkills": null,
+  "rangeImage": null,
+  "skillTypes": [],
+  "image": "data/images/tatari/rizzler.png",
+  "glitterImage": "data/images/glitter/rizzler.png",
+  "wikiUrl": null
+ },
+ {
+  "name": "Zorrock",
+  "slug": "zorrock",
+  "type": "Rock",
+  "role": "Support",
+  "tier": 3,
+  "family": "Ringtail",
+  "familyId": 64,
+  "stages": 4,
+  "rarity": "Rare",
+  "evolutionLine": [
+   "Ringtail",
+   "Rizzler",
+   "Zorrock",
+   "Phantothief"
+  ],
+  "battleRow": null,
+  "previousRole": "None",
+  "etymology": null,
+  "skill": "Myriad Masks: Orders Lackeys to continuously deal large AoE damage. After Lackeys return, they provide healing and Vigilante: ATK Boost to allies within the area.",
+  "description": "Zorrock is no lowly thief, but a con artist who plans out the perfect style, timing, and escape route. The moment people notice something's gone missing-that's when Zorrock makes a dramatic entrance up high, leaving onlookers stunned before disappearing without a trace.",
+  "hordeSkills": null,
+  "rangeImage": null,
+  "skillTypes": [],
+  "image": "data/images/tatari/zorrock.png",
+  "glitterImage": "data/images/glitter/zorrock.png",
+  "wikiUrl": null
+ },
+ {
+  "name": "Phantothief",
+  "slug": "phantothief",
+  "type": "Rock",
+  "role": "Support",
+  "tier": 4,
+  "family": "Ringtail",
+  "familyId": 64,
+  "stages": 4,
+  "rarity": "Rare",
+  "evolutionLine": [
+   "Ringtail",
+   "Rizzler",
+   "Zorrock",
+   "Phantothief"
+  ],
+  "battleRow": null,
+  "previousRole": "None",
+  "etymology": null,
+  "skill": "The Final Act: Orders Lackeys to continuously deal large AoE damage. After Lackeys return, they provide healing and Vigilante: ATK Boost to allies within the area. Phantothief carries Aura: Rock whenever on the field.",
+  "description": "If you want to take on Phantothief, keep a tight watch on the cookies, keys, and other pretty trinkets in your pocket. Between the seductive smiles and gestures, however, this handsome thief just might snatch something even more precious. Someone's heart, perhaps?",
+  "hordeSkills": null,
+  "rangeImage": null,
+  "skillTypes": [],
+  "image": "data/images/tatari/phantothief.png",
+  "glitterImage": "data/images/glitter/phantothief.png",
   "wikiUrl": null
  }
 ]

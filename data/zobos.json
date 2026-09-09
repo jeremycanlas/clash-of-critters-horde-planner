@@ -152,6 +152,25 @@
   "image": "data/images/zobo/slingshot-zobo.png"
  },
  {
+  "name": "Thorn Zobo",
+  "slug": "thorn-zobo",
+  "kind": "zobo",
+  "type": "Grass",
+  "description": "",
+  "flavour": "Thorn Zobo slept in mud for too long and got tangled up in thorns. It's too hard to sort through the mess, so they're just natural armor now. As long as the thorns aren't poking through, there's no need to change shirts. Like, ever.",
+  "skill": {
+   "name": "Thorn Shot",
+   "text": "Strikes a stance to deal counterattacks upon receiving damage from enemies."
+  },
+  "attackRange": "2/4",
+  "moveSpeed": "2/4",
+  "boss": false,
+  "notes": null,
+  "sourceFile": "Thorn Zobo.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos",
+  "image": "data/images/zobo/thorn-zobo.png"
+ },
+ {
   "name": "Manager Zobo",
   "slug": "manager-zobo",
   "kind": "zobo",
@@ -233,7 +252,7 @@
   "kind": "zobo",
   "type": "Grass",
   "description": "",
-  "flavour": "",
+  "flavour": "The right head prefers chomping enemies, and the left head insists on photosynthesis-only. The actual head in the middle just thinks they're both useless and distracting.",
   "skill": {
    "name": null,
    "text": "Growth Spurt: Shoots strange seeds that deal AoE damage. Both arms and the body can be attacked."
@@ -242,8 +261,9 @@
   "moveSpeed": "1/4",
   "boss": true,
   "notes": "Boss",
-  "sourceFile": null,
-  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos"
+  "sourceFile": "Botanical Zobo.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos",
+  "image": "data/images/zobo/botanical-zobo.png"
  },
  {
   "name": "Fisherman Zobo",
@@ -345,18 +365,19 @@
   "slug": "spritz-zobo",
   "kind": "zobo",
   "type": "Water",
-  "description": "",
-  "flavour": "",
+  "description": "A Water Zobo that uses a water cannon for sustained attacks.",
+  "flavour": "Spritz Zobo is a role-model environmentalist among Zobos. Whenever outdoors, it happily waters roadside flowers and grass, ensuring a world of thriving plant life.",
   "skill": {
-   "name": null,
-   "text": "Hydro Jet: Launches water bombs to deal damage. Sprays water continuously to deal damage while moving slowly, then stops after a certain duration."
+   "name": "Hydro Jet",
+   "text": "Launches water bombs to deal damage. Sprays water continuously to deal damage while moving slowly, then stops after a certain duration."
   },
   "attackRange": "3/1",
   "moveSpeed": "1/1",
   "boss": false,
   "notes": null,
-  "sourceFile": null,
-  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos"
+  "sourceFile": "Spritz Zobo.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos",
+  "image": "data/images/zobo/spritz-zobo.png"
  },
  {
   "name": "Yeti Zobo",
@@ -414,6 +435,44 @@
   "sourceFile": "Frankenfish.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos",
   "image": "data/images/zobo/goonch-zobo.png"
+ },
+ {
+  "name": "Hydro Zobo",
+  "slug": "hydro-zobo",
+  "kind": "zobo",
+  "type": "Water",
+  "description": "",
+  "flavour": "Hydro Zobo used to be handsome. Some weight gain was unfortunate, but all the exes are still gorgeous Zobo models.",
+  "skill": {
+   "name": "Hydro Barrage",
+   "text": "Launches water bombs that deal damage. Upon losing a certain amount of HP, launches water bombs at multiple random targets. Subsequent water bombs are weaker."
+  },
+  "attackRange": "4/4",
+  "moveSpeed": "1/4",
+  "boss": false,
+  "notes": null,
+  "sourceFile": "Hydro Zobo.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos",
+  "image": "data/images/zobo/hydro-zobo.png"
+ },
+ {
+  "name": "Harpoon Zobo",
+  "slug": "harpoon-zobo",
+  "kind": "zobo",
+  "type": "Water",
+  "description": "",
+  "flavour": "Harpoon Zobo harvests fish in the depths during the day and waiters at the sushi place at night. Complains non-stop about back pain and might quit any day now, but those shiny new diving gear aren't cheap, so it's either the sea or the tables.",
+  "skill": {
+   "name": "Harpoon Shot",
+   "text": "Fires a harpoon to deal damage. Sometimes fires a marking shot that deals AoE damage and attracts fish to continuously attack."
+  },
+  "attackRange": "3/4",
+  "moveSpeed": "1/4",
+  "boss": false,
+  "notes": null,
+  "sourceFile": "Harpoon Zobo.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos",
+  "image": "data/images/zobo/harpoon-zobo.png"
  },
  {
   "name": "Rocker Zobo",
@@ -535,7 +594,7 @@
   "kind": "zobo",
   "type": "Lightning",
   "description": "",
-  "flavour": "",
+  "flavour": "Picks up gold balls dutifully but secretly steals all the fancy shiny ones from the boss. They sell at a decent enough price for extra snacks.",
   "skill": {
    "name": null,
    "text": "Flyer: Throws golf balls back and forth in turn to either deal damage or teleport to the ball's location."
@@ -544,8 +603,9 @@
   "moveSpeed": "3/4",
   "boss": false,
   "notes": null,
-  "sourceFile": null,
-  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos"
+  "sourceFile": "Retriever Zobo.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos",
+  "image": "data/images/zobo/retriever-zobo.png"
  },
  {
   "name": "Clown Zobo",
@@ -629,7 +689,7 @@
   "kind": "zobo",
   "type": "Lightning",
   "description": "",
-  "flavour": "",
+  "flavour": "This jacked Zobo just won a gold championship. Loves giving brain electrotherapy with a shirt-circuiting golf club and claims its the best way to clear up the negative thoughts.",
   "skill": {
    "name": null,
    "text": "Hook and Slice: Swings a golf club to deal damage. Sometimes launches a specialized piercing ball that deals damage in it's path and ricochets across edges of the map."
@@ -638,8 +698,9 @@
   "moveSpeed": "1/4",
   "boss": true,
   "notes": "Boss",
-  "sourceFile": null,
-  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos"
+  "sourceFile": "Golf Zobo.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos",
+  "image": "data/images/zobo/golf-zobo.png"
  },
  {
   "name": "Cowboy Zobo",
@@ -756,6 +817,25 @@
   "image": "data/images/zobo/ripper-zobo.png"
  },
  {
+  "name": "Laborer Zobo",
+  "slug": "laborer-zobo",
+  "kind": "zobo",
+  "type": "Rock",
+  "description": "A Zobo that uses rocks for ranged attacks.",
+  "flavour": "Works in deplorable conditions under the sun every day. Secretly swapped out stone for rotten wood when laying the foundations in hopes that the tower might fall one day.",
+  "skill": {
+   "name": "On Strike",
+   "text": "Uses rocks to deal AoE damage that diminishes with distance. Only attacks after entering a certain range toward the bottom of the battlefield."
+  },
+  "attackRange": "4/4",
+  "moveSpeed": "1/4",
+  "boss": false,
+  "notes": null,
+  "sourceFile": "Laborer Zobo.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos",
+  "image": "data/images/zobo/laborer-zobo.png"
+ },
+ {
   "name": "Sandworm Zobo",
   "slug": "sandworm-zobo",
   "kind": "zobo",
@@ -837,17 +917,18 @@
   "kind": "zobo",
   "type": "Rock",
   "description": "",
-  "flavour": "",
+  "flavour": "Welcome to the sacred temple ruins! Please refrain from making loud noises, littering, or picking flowers. from the wreaths on Totem Zobo. Unless you want a totem-shaped lesson on responsible tourism.",
   "skill": {
-   "name": null,
-   "text": "Path of Devotion: Generates and deals damage to neardy enemies, while grating neardy Zobos Haste and DEF Boost. Won't stop before reaching the edge of the map."
+   "name": "Path of Devotion",
+   "text": "Generates and deals damage to neardy enemies, while granting nearby Zobos Haste and DEF Boost. Won't stop before reaching the edge of the map."
   },
   "attackRange": "2/4",
   "moveSpeed": "1/4",
   "boss": true,
   "notes": "Boss",
-  "sourceFile": null,
-  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos"
+  "sourceFile": "Totem Zobo.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos",
+  "image": "data/images/zobo/totem-zobo.png"
  },
  {
   "name": "Firehead Zobo",
@@ -964,6 +1045,25 @@
   "image": "data/images/zobo/barrel-zobo.png"
  },
  {
+  "name": "Waitress Zobo",
+  "slug": "waitress-zobo",
+  "kind": "zobo",
+  "type": "Fire",
+  "description": "",
+  "flavour": "Waitress Zobo works near a volcano so it's got a bit of a hot temper. Fantasizes a lot about turning customers into ingredients instead, so you'll have to forgive the occasional stolen bite.",
+  "skill": {
+   "name": "Table Manners",
+   "text": "Wields a knife and fork to deal AoE Damage in Arcs"
+  },
+  "attackRange": "4/4",
+  "moveSpeed": "1/4",
+  "boss": false,
+  "notes": null,
+  "sourceFile": "Waiter Zobo.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos",
+  "image": "data/images/zobo/waitress-zobo.png"
+ },
+ {
   "name": "Volcano Zobo",
   "slug": "volcano-zobo",
   "kind": "zobo",
@@ -1045,7 +1145,7 @@
   "kind": "zobo",
   "type": "Fire",
   "description": "",
-  "flavour": "",
+  "flavour": "\"Leaving a negative review. The volcanic smoke-free grill sounds cool but the owner is incredibly rude. I asked to speed up my order and got chased around by gigantic skewers. Do they even have hygiene standards?\" -Apocalypse Foodie Blog",
   "skill": {
    "name": null,
    "text": "Bon Appétit: Wields skewers to deal small AoE damage. Sprinkles salt to season skewers for greater range and additional Burn."
@@ -1054,7 +1154,8 @@
   "moveSpeed": "1/4",
   "boss": true,
   "notes": "Boss",
-  "sourceFile": null,
-  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos"
+  "sourceFile": "Chef Zobo.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zobos",
+  "image": "data/images/zobo/chef-zobo.png"
  }
 ]
