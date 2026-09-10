@@ -562,6 +562,13 @@ type and role icons). The normalizer then trims and re-frames every image so the
 all sit in the same box at the same apparent size; it needs Pillow
 (`python -m pip install Pillow`) and re-running it is a no-op.
 
+Horde skills come from one page, `Zobo Horde Invasion`, and a new evolution line
+reaches the roster page before it reaches that one — so for a while its horde
+skills are knowable from the game but not from the wiki. `data/horde-overrides.json`
+is where those go, keyed by family name. The wiki always wins: an override only
+fills a family the page has nothing for, and when the page catches up the scraper
+says so by name, which is the cue to delete the entry.
+
 ### Checking it still works
 
 Four self-checking pages, opened in a browser against the served folder. None

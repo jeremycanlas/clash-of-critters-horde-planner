@@ -19,7 +19,7 @@
  */
 
 import { mkdir, writeFile, readdir, stat } from 'node:fs/promises';
-import { createWriteStream } from 'node:fs';
+import { createWriteStream, readFileSync } from 'node:fs';
 import { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import path from 'node:path';
@@ -297,6 +297,30 @@ async function fetchZoboSprites(list, thumbs) {
  *
  * Keyed by family name, therefore, and applied to every member of the line.
  */
+/**
+ * Families the wiki page does not carry yet, read off the game by hand.
+ *
+ * A new evolution line reaches the roster page before it reaches the mode's
+ * page, so for a while its horde skills are knowable but unscrapeable. Without
+ * this they would have to be typed straight into `data/tatari.json`, where the
+ * next run of this script would silently delete them again.
+ *
+ * The wiki always wins: an override only fills a family the page has nothing
+ * for, so nothing here can quietly contradict the source. Once the page catches
+ * up the entry is dead weight, which is what the "already on the wiki" warning
+ * below is for — that is the signal to delete it.
+ */
+function readHordeOverrides() {
+  const file = path.join(ROOT, 'data/horde-overrides.json');
+  try {
+    const book = JSON.parse(readFileSync(file, 'utf8'));
+    return new Map(Object.entries(book).filter(([k]) => !k.startsWith('_')));
+  } catch (err) {
+    if (err.code === 'ENOENT') return new Map();
+    throw new Error(`data/horde-overrides.json: ${err.message}`);
+  }
+}
+
 async function parseHordeSkills() {
   const text = await wikitext('Zobo Horde Invasion');
   const byFamily = new Map();
@@ -313,6 +337,17 @@ async function parseHordeSkills() {
       level7: skillOf(c[6]),
     });
   }
+
+  const redundant = [];
+  for (const [family, skills] of readHordeOverrides()) {
+    if (byFamily.has(family)) redundant.push(family);
+    else byFamily.set(family, skills);
+  }
+  if (redundant.length) {
+    console.warn(`  the wiki now carries ${redundant.join(', ')} — ` +
+                 'drop them from data/horde-overrides.json');
+  }
+
   return byFamily;
 }
 

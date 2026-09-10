@@ -7284,10 +7284,12 @@
    }
   },
   "rangeImage": null,
-  "skillTypes": [],
+  "skillTypes": [
+   "Slow"
+  ],
   "image": "data/images/tatari/morphanessa.png",
   "glitterImage": null,
-  "wikiUrl": null
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Morphanessa"
  },
  {
   "name": "Fumekit",
@@ -7784,7 +7786,7 @@
   "battleRow": null,
   "previousRole": "Same",
   "etymology": "portmanteau of \"loll\" + \"llama\"",
-  "skill": "Toungue Out: Shoots small globs of spit at single enemies to deal multiple instances of damage, or a large glob at enemy crowds to deal small AoE damage and inflict Slow.",
+  "skill": "Tongue Out: Shoots small globs of spit at single enemies to deal multiple instances of damage, or a large glob at enemy crowds to deal small AoE damage and inflict Slow.",
   "description": "The drool that's always hanging from Lollama's mouth drives clear-minded Tatari away. In theory, Lollama should be very popular among Zobos.",
   "hordeSkills": {
    "level3": {
@@ -7872,7 +7874,7 @@
   "battleRow": null,
   "previousRole": "Same",
   "etymology": "portmanteau of \"ptooie\" + \"llama\"",
-  "skill": "Toungue Out: Shoots small globs of spit at single enemies to deal multiple instances of damage, or a large glob at enemy crowds to deal small AoE damage and inflict Blind. Also creates a Slow Zone.",
+  "skill": "Spit Storm: Shoots small globs of spit at single enemies to deal multiple instances of damage, or a large glob at enemy crowds to deal small AoE damage and inflict Blind. Also creates a Slow Zone.",
   "description": "Ptooielama's messy fur might be hiding moldy cookies and long-lost socks. But when in trouble, you can bet that you're getting the stickiest, yet gentlest nuzzle.",
   "hordeSkills": {
    "level3": {
@@ -7934,10 +7936,14 @@
    }
   },
   "rangeImage": null,
-  "skillTypes": [],
+  "skillTypes": [
+   "AoE",
+   "Blind",
+   "Slow"
+  ],
   "image": "data/images/tatari/blechlama.png",
   "glitterImage": "data/images/glitter/blechlama.png",
-  "wikiUrl": null
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Blechlama"
  },
  {
   "name": "Dumbopus",
@@ -10164,12 +10170,25 @@
   "etymology": null,
   "skill": "Bushy Debut: Orders Lackeys to continuously deal AoE damage. After Lackeys return, they provide healing and Vigilante: ATK Boost to allies within a small area.",
   "description": "Ringtail is an expert at finding things without owners somehow. Cookies left on the bakery counter, fresh fruit from the market... and since everything's shared among four, Ringtail always makes a point to grab a couple extra.",
-  "hordeSkills": null,
+  "hordeSkills": {
+   "level3": {
+    "name": "Con Man's Code",
+    "text": "Periodically steals ATK and HP from 3 allies. Gives them back later while additionally granting healing and Returns: ATK Boost."
+   },
+   "level5": {
+    "name": "Make It Rain",
+    "text": "Periodically throws gold coins to one tile. When allies pick up coins, they gain Ka-Ching: DMG Boost."
+   },
+   "level7": {
+    "name": "Cannon Ace",
+    "text": "Periodically locks onto targets and charges a cannon. Upon impact, deals single-target damage and inflicts Hugs: Stun. Deals follow-up damage when stun ends, and prioritizes attacking bosses."
+   }
+  },
   "rangeImage": null,
   "skillTypes": [],
   "image": "data/images/tatari/ringtail.png",
   "glitterImage": "data/images/glitter/ringtail.png",
-  "wikiUrl": null
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Ringtail"
  },
  {
   "name": "Rizzler",
@@ -10192,12 +10211,25 @@
   "etymology": null,
   "skill": "Sleight of Hand: Orders Lackeys to continuously deal AoE damage. After Lackeys return, they provide healing and Vigilante: ATK Boost to allies within the area.",
   "description": "Rizzler figured wearing a mask keeps you safe from being recognized, but that charming smirk and familiar figure already left their mark on the hearts of many.",
-  "hordeSkills": null,
+  "hordeSkills": {
+   "level3": {
+    "name": "Con Man's Code",
+    "text": "Periodically steals ATK and HP from 3 allies. Gives them back later while additionally granting healing and Returns: ATK Boost."
+   },
+   "level5": {
+    "name": "Make It Rain",
+    "text": "Periodically throws gold coins to one tile. When allies pick up coins, they gain Ka-Ching: DMG Boost."
+   },
+   "level7": {
+    "name": "Cannon Ace",
+    "text": "Periodically locks onto targets and charges a cannon. Upon impact, deals single-target damage and inflicts Hugs: Stun. Deals follow-up damage when stun ends, and prioritizes attacking bosses."
+   }
+  },
   "rangeImage": null,
   "skillTypes": [],
   "image": "data/images/tatari/rizzler.png",
   "glitterImage": "data/images/glitter/rizzler.png",
-  "wikiUrl": null
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Rizzler"
  },
  {
   "name": "Zorrock",
@@ -10220,12 +10252,25 @@
   "etymology": null,
   "skill": "Myriad Masks: Orders Lackeys to continuously deal large AoE damage. After Lackeys return, they provide healing and Vigilante: ATK Boost to allies within the area.",
   "description": "Zorrock is no lowly thief, but a con artist who plans out the perfect style, timing, and escape route. The moment people notice something's gone missing-that's when Zorrock makes a dramatic entrance up high, leaving onlookers stunned before disappearing without a trace.",
-  "hordeSkills": null,
+  "hordeSkills": {
+   "level3": {
+    "name": "Con Man's Code",
+    "text": "Periodically steals ATK and HP from 3 allies. Gives them back later while additionally granting healing and Returns: ATK Boost."
+   },
+   "level5": {
+    "name": "Make It Rain",
+    "text": "Periodically throws gold coins to one tile. When allies pick up coins, they gain Ka-Ching: DMG Boost."
+   },
+   "level7": {
+    "name": "Cannon Ace",
+    "text": "Periodically locks onto targets and charges a cannon. Upon impact, deals single-target damage and inflicts Hugs: Stun. Deals follow-up damage when stun ends, and prioritizes attacking bosses."
+   }
+  },
   "rangeImage": null,
   "skillTypes": [],
   "image": "data/images/tatari/zorrock.png",
   "glitterImage": "data/images/glitter/zorrock.png",
-  "wikiUrl": null
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zorrock"
  },
  {
   "name": "Phantothief",
@@ -10248,11 +10293,24 @@
   "etymology": null,
   "skill": "The Final Act: Orders Lackeys to continuously deal large AoE damage. After Lackeys return, they provide healing and Vigilante: ATK Boost to allies within the area. Phantothief carries Aura: Rock whenever on the field.",
   "description": "If you want to take on Phantothief, keep a tight watch on the cookies, keys, and other pretty trinkets in your pocket. Between the seductive smiles and gestures, however, this handsome thief just might snatch something even more precious. Someone's heart, perhaps?",
-  "hordeSkills": null,
+  "hordeSkills": {
+   "level3": {
+    "name": "Con Man's Code",
+    "text": "Periodically steals ATK and HP from 3 allies. Gives them back later while additionally granting healing and Returns: ATK Boost."
+   },
+   "level5": {
+    "name": "Make It Rain",
+    "text": "Periodically throws gold coins to one tile. When allies pick up coins, they gain Ka-Ching: DMG Boost."
+   },
+   "level7": {
+    "name": "Cannon Ace",
+    "text": "Periodically locks onto targets and charges a cannon. Upon impact, deals single-target damage and inflicts Hugs: Stun. Deals follow-up damage when stun ends, and prioritizes attacking bosses."
+   }
+  },
   "rangeImage": null,
   "skillTypes": [],
   "image": "data/images/tatari/phantothief.png",
   "glitterImage": "data/images/glitter/phantothief.png",
-  "wikiUrl": null
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Phantothief"
  }
 ]

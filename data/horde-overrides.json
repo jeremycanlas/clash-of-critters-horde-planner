@@ -1,0 +1,17 @@
+{
+  "_comment": "Horde skills read off the game for families the Zobo Horde Invasion wiki page does not list yet. Keyed by family name, same shape as the page's own rows, and merged only where the wiki has nothing. Delete an entry once the wiki carries it -- the scraper says which ones are redundant.",
+  "Ringtail": {
+    "level3": {
+      "name": "Con Man's Code",
+      "text": "Periodically steals ATK and HP from 3 allies. Gives them back later while additionally granting healing and Returns: ATK Boost."
+    },
+    "level5": {
+      "name": "Make It Rain",
+      "text": "Periodically throws gold coins to one tile. When allies pick up coins, they gain Ka-Ching: DMG Boost."
+    },
+    "level7": {
+      "name": "Cannon Ace",
+      "text": "Periodically locks onto targets and charges a cannon. Upon impact, deals single-target damage and inflicts Hugs: Stun. Deals follow-up damage when stun ends, and prioritizes attacking bosses."
+    }
+  }
+}
