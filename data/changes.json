@@ -546,5 +546,290 @@
         ]
       }
     ]
+  },
+  "preview": {
+    "_note": [
+      "Season 2, read off a Pioneer Server recording rather than published notes.",
+      "The Pioneer Server is the test build and its numbers may not be what ships.",
+      "That is why this sits on its own tab and never marks a card in the drafter.",
+      "",
+      "Season 2 renames Skinklet's level 5: the game calls it Tidal Gap, the wiki",
+      "still calls it Great Vortex. The wiki name is kept here so the level badge",
+      "resolves; the rename is the only one spotted."
+    ],
+    "patch": "2026-09-16",
+    "label": "Season 2",
+    "source": "Pioneer Server, in-game Season Update screen",
+    "by": ".kippy. (Discord)",
+    "provisional": true,
+    "lines": [
+      {
+        "line": "Gibber",
+        "direction": "buff",
+        "members": [
+          "gibber",
+          "turtuff",
+          "rockshell",
+          "terraton"
+        ],
+        "changes": [
+          "Shell Burst: Damage Factor 280% → 420%"
+        ]
+      },
+      {
+        "line": "Goonbug",
+        "direction": "buff",
+        "members": [
+          "goonbug",
+          "capobeetle",
+          "donscarab",
+          "beetleknight"
+        ],
+        "changes": [
+          "Airborne Ops: Damage Factor 300% → 450%"
+        ]
+      },
+      {
+        "line": "Waddledo",
+        "direction": "buff",
+        "members": [
+          "waddledo",
+          "swaystroll",
+          "stoodbeak",
+          "glideflip"
+        ],
+        "changes": [
+          "Shield Gift: Shield Factor 6% → 10%",
+          "Ice Show: Damage Factor 150% → 240%"
+        ]
+      },
+      {
+        "line": "Gopher",
+        "direction": "buff",
+        "members": [
+          "gopher",
+          "watchroo",
+          "bastogard",
+          "cratzar"
+        ],
+        "changes": [
+          "Escape Route: Damage Interval 3s → 2s"
+        ]
+      },
+      {
+        "line": "Skinklet",
+        "direction": "buff",
+        "members": [
+          "skinklet",
+          "skinkoon",
+          "ninjaguana",
+          "hychroma"
+        ],
+        "changes": [
+          "Great Vortex: Damage Factor 50% → 100%"
+        ]
+      },
+      {
+        "line": "Lullelly",
+        "direction": "buff",
+        "members": [
+          "lullelly",
+          "yawnelly",
+          "souverelle",
+          "somnrayna"
+        ],
+        "changes": [
+          "Splash Shot: Water Orb Quantity 2 → 3",
+          "Bubble Pop: Damage Factor 100% → 140%"
+        ]
+      },
+      {
+        "line": "Tindercub",
+        "direction": "buff",
+        "members": [
+          "tindercub",
+          "kitjitsu",
+          "taiglow",
+          "saberheart"
+        ],
+        "changes": [
+          "Blaze Burst: Trigger Chance 30% → 60%",
+          "Flame Fists: Minimum Cooldown 9s → 6s, Maximum Cooldown 13s → 9s"
+        ]
+      },
+      {
+        "line": "Fumekit",
+        "direction": "buff",
+        "members": [
+          "fumekit",
+          "sulfunk",
+          "magmusk",
+          "blastniff"
+        ],
+        "changes": [
+          "Fervent Fumes: ATK Boost 15% → 25%, DEF Boost 15% → 25%"
+        ]
+      },
+      {
+        "line": "Taptail",
+        "direction": "buff",
+        "members": [
+          "taptail",
+          "rattlecoil",
+          "clangnaga",
+          "dharmadder"
+        ],
+        "changes": [
+          "Karmic Sharing: Trigger Chance 20% → 40%"
+        ]
+      },
+      {
+        "line": "Blowfin",
+        "direction": "buff",
+        "members": [
+          "blowfin",
+          "puffbelly",
+          "chefugu",
+          "pyromaki"
+        ],
+        "changes": [
+          "Warship Roll: Damage Factor 300% → 450%"
+        ]
+      },
+      {
+        "line": "Momopo",
+        "direction": "buff",
+        "members": [
+          "momopo",
+          "lulupo",
+          "lilypo",
+          "gemmapo"
+        ],
+        "changes": [
+          "Pounding Hearts: Damage Factor 250% → 400%",
+          "Pink Protection: Min Trigger Interval 12s → 9s, Max Trigger Interval 20s → 15s"
+        ]
+      },
+      {
+        "line": "Blueflick",
+        "direction": "nerf",
+        "members": [
+          "blueflick",
+          "ignisnap",
+          "azurion",
+          "newflamander"
+        ],
+        "changes": [
+          "Blazing Path: Damage Factor 300% → 270%"
+        ]
+      },
+      {
+        "line": "Droppit",
+        "direction": "nerf",
+        "members": [
+          "droppit",
+          "bubbit",
+          "tideon",
+          "haplysia"
+        ],
+        "changes": [
+          "Sleep Mist: Sleep Chance 30% → 20%"
+        ]
+      },
+      {
+        "line": "Ashlarva",
+        "direction": "nerf",
+        "members": [
+          "ashlarva",
+          "firecoil",
+          "charflutter",
+          "chrysolaria"
+        ],
+        "changes": [
+          "Fluff Flame: Trigger Chance 40% → 30%"
+        ]
+      },
+      {
+        "line": "Buddi",
+        "direction": "nerf",
+        "members": [
+          "buddi",
+          "sunfleur",
+          "solaflora",
+          "heliabloom"
+        ],
+        "changes": [
+          "Warm Aura: Min Trigger Interval 8s → 12s, Max Trigger Interval 12s → 18s"
+        ]
+      },
+      {
+        "line": "Humbug",
+        "direction": "nerf",
+        "members": [
+          "humbug",
+          "humbleetle",
+          "zenscarab",
+          "hierotyrus"
+        ],
+        "changes": [
+          "Bounce Ball: Damage Factor 70% → 60%",
+          "Spin Ball: Damage Factor 60% → 50%"
+        ]
+      },
+      {
+        "line": "Hootlet",
+        "direction": "nerf",
+        "members": [
+          "hootlet",
+          "tikowl",
+          "chronerva",
+          "hypnostrix"
+        ],
+        "changes": [
+          "Winged Rewind: Min Trigger Interval 10s → 14s, Max Trigger Interval 14s → 18s"
+        ]
+      },
+      {
+        "line": "Poakie",
+        "direction": "nerf",
+        "members": [
+          "poakie",
+          "sizzribb",
+          "lickflicker",
+          "ignitoad"
+        ],
+        "changes": [
+          "Croaker Chant: Minimum Cooldown 10s → 14s, Maximum Cooldown 16s → 20s",
+          "Oil Onsen: Extra Damage Factor 550% → 450%"
+        ]
+      },
+      {
+        "line": "Budboo",
+        "direction": "nerf",
+        "members": [
+          "budboo",
+          "snapshade",
+          "thornwisp",
+          "chomperwraith"
+        ],
+        "changes": [
+          "Shadow Bloom: Damage Factor 420% → 300%"
+        ]
+      },
+      {
+        "line": "Cheerling",
+        "direction": "adjusted",
+        "members": [
+          "cheerling",
+          "cheerlet",
+          "cheerspring",
+          "cheerstella"
+        ],
+        "changes": [
+          "Rhythmic Pierce: Healing Factor 10% → 5%",
+          "Zap Chord: Damage Factor 120% → 150%"
+        ]
+      }
+    ]
   }
 }

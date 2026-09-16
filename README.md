@@ -34,6 +34,8 @@ Six things in the changelog exist because players asked for them: the range
 indicator toggle and the buff/debuff/heal tracker (@lem77), Horde level-up
 skills (u/Nikky-Nami), the boss pull toggle (minhmax0r / @johnlmbui), and a mobile bug where
 fielded Tatari vanished (u/R2DKK). Community Formations idea (neko_ironyoffate).
+The Season 2 numbers were read off the Pioneer Server and shared by .kippy. on
+Discord; the whole Season 2 tab exists because of that.
 
 The counts come from [GoatCounter](https://www.goatcounter.com), which records
 page views and a short list of fixed button labels. It never sees a formation.

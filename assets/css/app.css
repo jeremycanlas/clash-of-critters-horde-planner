@@ -4740,6 +4740,43 @@ body.is-clean .clean-hint {
 .changes__intro:empty { display: none; }
 
 /*
+ * One tab per set of notes, on the page that normally has only one.
+ *
+ * .segmented carries the look; this only places it. The [hidden] rule is not
+ * optional: .segmented sets display:inline-flex, which beats the browser's
+ * default [hidden] { display: none } on specificity, so without this the empty
+ * nav still took a row on every copy that has nothing to preview.
+ */
+.chtabs { margin: 0 0 var(--s5); }
+.chtabs[hidden] { display: none; }
+
+/* Sits directly under the tab strip, quiet enough not to compete with the
+   first group heading. A credit is worth stating and not worth shouting. */
+.chcredit {
+  margin: calc(var(--s5) * -1 + var(--s2)) 0 var(--s5);
+  color: var(--text-mute); font-size: 12.5px;
+}
+.chcredit[hidden] { display: none; }
+
+/*
+ * "preview" beside a tab's name, not instead of it.
+ *
+ * The tab has to say which update it is AND that the update is not live, and a
+ * reader deciding which tab to press has only the strip to go on. Lighter than
+ * the label it sits beside so it reads as a qualifier rather than a second name.
+ */
+.chtab__flag {
+  margin-left: 6px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.04em;
+  vertical-align: 1px;
+}
+
+/*
  * What the update did to the mode, above what it did to any Tatari.
  *
  * Two columns of prose on a page that is otherwise a grid of records, so it has
@@ -4754,6 +4791,10 @@ body.is-clean .clean-hint {
   border-radius: var(--r-md);
   background: var(--surface);
 }
+/* Not every set of notes has mode changes, and the ones that do not were
+   drawing an empty bordered panel above the first group. Same rule, and the
+   same reason, as .changes__intro:empty. */
+.chmode:empty { display: none; }
 .chmode__head {
   margin: 0 0 var(--s3);
   font-size: 15px; font-weight: 700;
@@ -4800,11 +4841,6 @@ body.is-clean .clean-hint {
   margin-left: auto;
   color: var(--text-mute); font-size: 12px; font-weight: 600;
 }
-.chgroup__blurb {
-  margin: 0 0 var(--s3);
-  color: var(--text-mute); font-size: 12.5px;
-}
-
 /* Two columns where there is room, one where there is not. auto-fill with a
    floor rather than a fixed count, so a wide window gets a third column free
    and nothing has to know how wide the window is. */

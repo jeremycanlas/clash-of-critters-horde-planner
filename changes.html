@@ -27,6 +27,15 @@
   </header>
 
   <main class="changes__main">
+    <!-- One tab per set of notes. Hidden entirely when there is only the live
+       patch to show, so the page a reader normally arrives at is unchanged. -->
+    <nav id="changes-tabs" class="chtabs segmented" aria-label="Which update" hidden></nav>
+
+    <!-- Credited where the work is shown, the same way the boss order is: a set
+       of notes somebody read off the game and passed on says so on the tab it
+       is on, not in a list somewhere else. Hidden on notes with no `by`. -->
+    <p id="changes-credit" class="chcredit" hidden></p>
+
     <!-- Only speaks when there is nothing to show. With an update loaded the
        header carries the date and the group headings carry the counts, so a
        standing paragraph here would only restate them. -->

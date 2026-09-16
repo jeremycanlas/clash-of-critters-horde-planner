@@ -28,9 +28,9 @@ applyPrefs();
  * somebody who came to find out whether their team survived.
  */
 const ORDER = [
-  { key: 'buff', glyph: '↑', title: 'Buffed', blurb: 'Every number moved in your favour.' },
-  { key: 'adjusted', glyph: '±', title: 'Adjusted', blurb: 'Some numbers up, some down.' },
-  { key: 'nerf', glyph: '↓', title: 'Nerfed', blurb: 'Every number moved against you.' },
+  { key: 'buff', glyph: '↑', title: 'Buffed' },
+  { key: 'adjusted', glyph: '±', title: 'Adjusted' },
+  { key: 'nerf', glyph: '↓', title: 'Nerfed' },
 ];
 
 /* `many` is explicit because Tatari does not take an s -- one Tatari, 230
@@ -153,6 +153,11 @@ function render(book) {
   document.title = patch ? `Horde Drafter: What changed in the ${patch} update` : document.title;
   $('#changes-patch').textContent = patch;
 
+  /* Whoever read these off the game, named on the tab their reading is on. */
+  const credit = $('#changes-credit');
+  credit.hidden = !book.by;
+  credit.textContent = book.by ? `Read off the game and shared by ${book.by}.` : '';
+
   if (!lines.length) {
     $('#changes-mode').innerHTML = '';
     $('#changes-intro').textContent =
@@ -198,7 +203,7 @@ function render(book) {
         </section>`).join('')}
     </div>`;
 
-  $('#changes-body').innerHTML = ORDER.map(({ key, glyph, title, blurb }) => {
+  $('#changes-body').innerHTML = ORDER.map(({ key, glyph, title }) => {
     const group = lines.filter((l) => l.direction === key);
     if (!group.length) return '';
     const members = group.reduce((n, l) => n + (l.members?.length ?? 0), 0);
@@ -209,7 +214,6 @@ function render(book) {
           ${title}
           <span class="chgroup__count">${plural(group.length, 'line')}, ${tatariCount(members)}</span>
         </h2>
-        <p class="chgroup__blurb">${blurb}</p>
         <div class="chgroup__grid">${group.map(line).join('')}</div>
       </section>`;
   }).join('');
@@ -223,6 +227,70 @@ function render(book) {
  * its top level. Without this guard the test page loaded the whole roster and
  * then threw on the first element that only exists in changes.html.
  */
+/**
+ * The tab strip, and which set of notes is on screen.
+ *
+ * One file, two sets of notes: the live patch at the top level, where data.js
+ * and the roster read it, and anything not live yet under `preview`. Keeping the
+ * live one exactly where it was is the whole point of that shape -- the drafter
+ * needed no change at all, and a preview can never leak into the markers on a
+ * card by being in the wrong place in the file.
+ *
+ * With nothing to preview the nav stays hidden and the page is what it was.
+ */
+function mount(book) {
+  const books = [book, book.preview].filter((b) => b?.lines?.length);
+  const tabs = $('#changes-tabs');
+
+  if (books.length < 2) {
+    tabs.hidden = true;
+    render(book);
+    return;
+  }
+
+  tabs.hidden = false;
+  /* .segmented is the app's tab strip already, and it already styles
+     aria-selected. A second control that looked almost like it would be one
+     more thing to keep in step with the theme. */
+  tabs.innerHTML = books.map((b, i) => `
+    <button class="segmented__btn" type="button" role="tab" data-i="${i}"
+      aria-selected="${i === 0}">${esc(b.label || b.patch || 'Update')}${
+  b.provisional ? '<span class="chtab__flag">preview</span>' : ''}</button>`).join('');
+
+  /*
+   * Each tab has an address.
+   *
+   * The same argument the community gallery makes for giving one formation a
+   * URL: a tab you cannot link to is a tab nobody can send anybody. Patch
+   * mornings happen in Discord, and "look at Season 2" has to be a link rather
+   * than a link plus an instruction to press the second tab.
+   *
+   * Written with replaceState rather than by assigning location.hash, so
+   * switching tabs does not stack up history the Back button has to walk out of.
+   */
+  const slug = (b) => (b.label || b.patch || '').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  const show = (i, push) => {
+    for (const t of tabs.querySelectorAll('.segmented__btn')) {
+      t.setAttribute('aria-selected', String(Number(t.dataset.i) === i));
+    }
+    render(books[i]);
+    if (push) history.replaceState(null, '', i ? `#${slug(books[i])}` : location.pathname);
+  };
+
+  tabs.addEventListener('click', (e) => {
+    const btn = e.target.closest('.segmented__btn');
+    if (!btn) return;
+    show(Number(btn.dataset.i), true);
+    /* Back to the top of the notes, not wherever the last tab was scrolled to.
+       Switching tabs and landing halfway down a different update reads as the
+       page having jumped on its own. */
+    $('#changes-body').scrollIntoView({ block: 'start', behavior: 'auto' });
+  });
+
+  const wanted = books.findIndex((b) => `#${slug(b)}` === location.hash);
+  show(wanted > 0 ? wanted : 0, false);
+}
+
 if ($('#changes-body')) {
   await load();
   const book = await fetch('data/changes.json')
@@ -230,5 +298,5 @@ if ($('#changes-body')) {
     // A copy without the file still renders the page and says so, the same way
     // the drafter simply marks nothing.
     .catch(() => ({ lines: [] }));
-  render(book);
+  mount(book);
 }

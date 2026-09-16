@@ -144,6 +144,83 @@ ok('an adjusted line really does move both ways',
    !adjusted.length || (adjusted.includes('up') && adjusted.includes('down')),
    adjusted.join(', '));
 
+/*
+ * The preview set, held to every rule the live one is held to except the
+ * loader's.
+ *
+ * It is deliberately NOT loaded into state, so the fan-out and chip-count
+ * checks above have nothing to say about it. Everything else applies unchanged:
+ * a slug that is not in the roster or an arrow pointing the wrong way is just
+ * as wrong on a tab nobody has pressed yet, and worse, because the tab it is on
+ * is the one nobody is checking by eye.
+ */
+const preview = book.preview;
+if (preview?.lines?.length) {
+  const plines = preview.lines;
+  const p = (name, cond, detail) => ok(`preview: ${name}`, cond, detail);
+
+  /* The flag is what puts "preview" on the tab. Without it the set is
+     indistinguishable from live notes, which is the one way this fails
+     silently. */
+  p('carries a label and is flagged provisional', !!preview.label && preview.provisional === true);
+  /* Somebody read every one of these off the game by hand and passed them on.
+     A credit that quietly disappears in an edit is worse than one that was
+     never there, so it is checked rather than trusted. */
+  p('still credits whoever read it off the game',
+    typeof preview.by === 'string' && preview.by.trim().length > 0);
+  p('every entry names a direction we render', plines.every((l) => DIRECTIONS.includes(l.direction)),
+    plines.filter((l) => !DIRECTIONS.includes(l.direction)).map((l) => l.line).join(', '));
+  p('every entry carries at least one change', plines.every((l) => (l.changes ?? []).length > 0),
+    plines.filter((l) => !(l.changes ?? []).length).map((l) => l.line).join(', '));
+
+  const pUnknown = plines.flatMap((l) => (l.members ?? []).filter((s) => !state.bySlug.has(s)));
+  p('every member slug is a real Tatari', pUnknown.length === 0, pUnknown.join(', '));
+
+  const pStale = [];
+  for (const l of plines) {
+    const head = state.all.find((t) => t.name === l.line);
+    if (!head) { pStale.push(`${l.line}: not a Tatari`); continue; }
+    const expected = (head.evolutionLine ?? [head.name])
+      .map((n) => state.all.find((t) => t.name === n)?.slug).filter(Boolean);
+    const missing = expected.filter((s) => !(l.members ?? []).includes(s));
+    const extra = (l.members ?? []).filter((s) => !expected.includes(s));
+    if (missing.length || extra.length) pStale.push(`${l.line}: ${missing.join('/')}${extra.join('/')}`);
+  }
+  p('every line covers its whole evolution family', pStale.length === 0, pStale.join('; '));
+
+  const pSeen = new Set();
+  const pDupes = [];
+  for (const l of plines) for (const s of l.members ?? []) {
+    if (pSeen.has(s)) pDupes.push(s); else pSeen.add(s);
+  }
+  p('no Tatari appears in two entries', pDupes.length === 0, pDupes.join(', '));
+
+  const pFrags = plines.flatMap((l) => split(l).map((q) => ({ dir: l.direction, line: l.line, p: q })));
+  const pUnread = pFrags.filter((f) => movement(f.p) === null);
+  p('every stat fragment has two readable numbers', pUnread.length === 0,
+    pUnread.map((f) => `${f.line}: ${f.p}`).join('; '));
+
+  const pWrong = pFrags.filter((f) => f.dir !== 'adjusted'
+    && (movement(f.p) === 'up') !== (f.dir === 'buff'));
+  p('every arrow agrees with the direction on its entry', pWrong.length === 0,
+    pWrong.map((f) => `${f.line}: ${f.p}`).join('; '));
+
+  const pAdjusted = plines.filter((l) => l.direction === 'adjusted').flatMap((l) => split(l).map(movement));
+  p('an adjusted line really does move both ways',
+    !pAdjusted.length || (pAdjusted.includes('up') && pAdjusted.includes('down')), pAdjusted.join(', '));
+
+  /*
+   * The property the whole shape exists to guarantee. A preview is unreleased
+   * numbers; if one ever reached state.changes it would mark cards in the
+   * drafter, and somebody would draft off a number the live game does not have.
+   * The loader reads the top level only, and this is what keeps it that way.
+   */
+  p('never reaches the drafter', state.patch?.label === book.label && state.patch.label !== preview.label,
+    `state is showing ${state.patch?.label}`);
+  p('marked Tatari still come only from the live patch', state.changes.size === seen.size,
+    `${state.changes.size} marked, ${seen.size} in the live file`);
+}
+
 const counts = DIRECTIONS.map((d) => `${d} ${lines.filter((l) => l.direction === d).length}`).join(', ');
 out.innerHTML += `<div style="margin-top:12px">${pass} passed, ${fail} failed`
   + `. ${lines.length} lines (${counts}) covering ${state.changes.size} of ${state.all.length} Tatari</div>`;
