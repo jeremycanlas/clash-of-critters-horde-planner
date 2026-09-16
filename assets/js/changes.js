@@ -15,6 +15,7 @@
 
 import { load, state } from './data.js';
 import { applyPrefs } from './prefs.js';
+import { buildAnalytics, track } from './analytics.js';
 import { $, artHTML, esc } from './ui.js';
 
 // Safe on import: it only reads localStorage and writes to <html>.
@@ -242,8 +243,20 @@ function mount(book) {
   const books = [book, book.preview].filter((b) => b?.lines?.length);
   const tabs = $('#changes-tabs');
 
+  /*
+   * Fixed labels, not the tab's own text.
+   *
+   * analytics.js only ever sends a short list of labels written into this repo,
+   * and a label built from a data file would quietly widen that the first time
+   * a set of notes was named after something it should not be. "live" and
+   * "preview" are the two things worth telling apart anyway: what is counted is
+   * whether anybody reads notes that have not shipped, not which month it is.
+   */
+  const kind = (b) => (b.provisional ? 'preview' : 'live');
+
   if (books.length < 2) {
     tabs.hidden = true;
+    track(`changes-open-${kind(book)}`);
     render(book);
     return;
   }
@@ -269,12 +282,22 @@ function mount(book) {
    * switching tabs does not stack up history the Back button has to walk out of.
    */
   const slug = (b) => (b.label || b.patch || '').toLowerCase().replace(/[^a-z0-9]+/g, '-');
-  const show = (i, push) => {
+  /*
+   * `clicked` separates the two questions a shared link raises.
+   *
+   * "changes-open-preview" is somebody arriving on #season-2 because that is
+   * the link they were given; "changes-tab-preview" is somebody who arrived on
+   * the live notes and went looking. Counting both under one label would make a
+   * link that got passed around look like a tab that got discovered, and those
+   * call for opposite things.
+   */
+  const show = (i, clicked) => {
     for (const t of tabs.querySelectorAll('.segmented__btn')) {
       t.setAttribute('aria-selected', String(Number(t.dataset.i) === i));
     }
+    track(`changes-${clicked ? 'tab' : 'open'}-${kind(books[i])}`);
     render(books[i]);
-    if (push) history.replaceState(null, '', i ? `#${slug(books[i])}` : location.pathname);
+    if (clicked) history.replaceState(null, '', i ? `#${slug(books[i])}` : location.pathname);
   };
 
   tabs.addEventListener('click', (e) => {
@@ -292,6 +315,9 @@ function mount(book) {
 }
 
 if ($('#changes-body')) {
+  /* Before mount(), which counts which tab the page opened on. Off the
+     published site this does nothing and every track() below is a no-op. */
+  buildAnalytics();
   await load();
   const book = await fetch('data/changes.json')
     .then((r) => r.json())
