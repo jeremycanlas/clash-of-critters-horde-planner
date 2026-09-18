@@ -1,0 +1,74 @@
+/*
+ * Cozy Farm rewards. Layout, panels, fields and footer come from app.css; this
+ * is only the input row and the prize grid.
+ */
+
+/* Calculator left, the full list right in its own scroll. Stacked on phones,
+   where a scroll inside a scroll is a trap for the thumb. */
+.farm__main {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: var(--s5) var(--s4) var(--s6);
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--s4); align-items: start;
+}
+.farm__left { display: flex; flex-direction: column; gap: var(--s4); min-width: 0; }
+.farm__right {
+  position: sticky; top: var(--s4);
+  max-height: calc(100vh - 2 * var(--s4));
+  overflow-y: auto; overscroll-behavior: contain;
+}
+@media (max-width: 900px) {
+  .farm__main { grid-template-columns: minmax(0, 1fr); }
+  .farm__right { position: static; max-height: none; overflow: visible; }
+}
+
+.farm__inputs { display: flex; flex-wrap: wrap; gap: var(--s3) var(--s4); }
+.farm__label {
+  display: flex; flex-direction: column; gap: var(--s1);
+  flex: 1 1 200px;
+  font-size: 13px; color: var(--text-dim);
+}
+.farm__label .field { font-size: 16px; } /* 16px or iOS zooms on focus */
+
+.farm__panel h2 { margin: 0 0 var(--s3); font-size: 15px; }
+
+.farm__prizes {
+  list-style: none; margin: 0; padding: 0;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: var(--s2);
+}
+.farm__prize {
+  display: grid; grid-template-columns: 48px 1fr; grid-template-rows: auto auto;
+  column-gap: var(--s3); align-items: center;
+  padding: var(--s2);
+  border: 1px solid var(--line-soft); border-radius: var(--r-md);
+  background: var(--surface-2);
+}
+.farm__prize img { grid-row: 1 / 3; width: 48px; height: 48px; object-fit: contain; }
+.farm__count { font-size: 17px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.farm__name { font-size: 12.5px; color: var(--text-dim); }
+
+/* The full list, lowest first. Reached tiers dim with a tick, the next one is outlined. */
+.farm__tiers { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--s1); }
+.farm__tier {
+  display: flex; align-items: center; flex-wrap: wrap; gap: var(--s1) var(--s3);
+  padding: var(--s2) var(--s3);
+  border: 1px solid var(--line-soft); border-radius: var(--r-md);
+  background: var(--surface-2);
+}
+.farm__reach { flex: 0 0 150px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.farm__chips { display: flex; flex-wrap: wrap; gap: var(--s3); }
+.farm__chip { display: inline-flex; align-items: center; gap: var(--s1); font-weight: 650; font-variant-numeric: tabular-nums; }
+.farm__chip img { width: 32px; height: 32px; object-fit: contain; }
+.farm__tier.is-reached { opacity: .5; }
+.farm__tier.is-reached .farm__reach::after { content: " ✓"; color: var(--ok); }
+.farm__tier.is-next { border-color: var(--accent); }
+.farm__tier--bonus { border-style: dashed; }
+/* Keep the list's title in view while it scrolls under it. */
+.farm__right h2 {
+  position: sticky; top: calc(-1 * var(--s4)); z-index: 1;
+  margin: calc(-1 * var(--s4)) calc(-1 * var(--s4)) var(--s3); padding: var(--s4);
+  background: var(--surface);
+}
+@media (max-width: 900px) { .farm__right h2 { position: static; } }

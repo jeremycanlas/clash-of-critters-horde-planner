@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <!-- viewport-fit=cover, or env(safe-area-inset-*) resolves to 0 on iOS and every
+     safe-area rule in app.css silently does nothing. -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Horde Drafter: Cozy Farm rewards</title>
+  <meta name="description"
+    content="Type your Cozy Farm score and see every reward it has paid out, what the next tier gives, and what a target score would add.">
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='19' font-size='20'>🐾</text></svg>">
+  <link rel="stylesheet" href="assets/css/app.css">
+  <link rel="stylesheet" href="assets/css/farm.css">
+</head>
+
+<body class="farm">
+
+  <header class="topbar">
+    <div class="topbar__title">
+      <h1>Cozy Farm rewards</h1>
+      <span class="topbar__sub">Horde&nbsp;Drafter</span>
+    </div>
+
+    <div class="topbar__actions">
+      <a class="btn btn--quiet" href="index.html">Back to the drafter</a>
+    </div>
+  </header>
+
+  <main class="farm__main">
+    <div class="farm__left">
+    <div class="farm__inputs">
+      <label class="farm__label"><span>Your score</span>
+        <input id="farm-score" class="field" inputmode="decimal" autocomplete="off" placeholder="e.g. 354 or 45k">
+      </label>
+      <label class="farm__label"><span>Target score <span class="muted">(optional)</span></span>
+        <input id="farm-target" class="field" inputmode="decimal" autocomplete="off" placeholder="e.g. 1.2M">
+      </label>
+    </div>
+
+    <section class="panel farm__panel">
+      <h2 id="farm-next-head">Next tier</h2>
+      <div id="farm-next"></div>
+    </section>
+
+    <section class="panel farm__panel" id="farm-gain-panel" hidden>
+      <h2 id="farm-gain-head">Reaching your target adds</h2>
+      <div id="farm-gain"></div>
+    </section>
+
+    <section class="panel farm__panel">
+      <h2 id="farm-earned-head">Earned so far</h2>
+      <div id="farm-earned"></div>
+    </section>
+
+    </div>
+
+    <section class="panel farm__panel farm__right">
+      <h2>All rewards</h2>
+      <ol id="farm-all" class="farm__tiers"></ol>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <span>Fan-made, unofficial.</span>
+    <span class="muted">The 100 tiers were read off the in-game reward list by hand, so any of
+      them can be wrong. Past the last tier the game pays one glitter fruit for every 30K
+      extra points.</span>
+  </footer>
+
+  <script type="module" src="assets/js/farm.js"></script>
+</body>
+
+</html>
