@@ -228,6 +228,7 @@ function openEdit(uid) {
   $('#tr-f-checked').value = r?.checked_at ? r.checked_at.slice(0, 10) : '';
   $('#tr-f-meta').textContent = r?.updated_by ? `Last updated by ${r.updated_by}, ${when(r.updated_at)}.` : '';
   $('#tr-f-delete').hidden = !r;
+  $('#tr-f-queue').hidden = !!r;
   $('#tr-f-delete').textContent = 'Delete player';
   $('#tr-f-error').hidden = true;
   $('#tr-edit').dataset.uid = r ? String(r.uid) : '';
@@ -312,7 +313,7 @@ $('#tr-f-fruits').addEventListener('input', () => {
   $('#tr-f-checked').value = new Date().toISOString().slice(0, 10);
 });
 
-async function save() {
+async function save(queue = false) {
   const existing = $('#tr-edit').dataset.uid;
   const uid = Number($('#tr-f-uid').value);
   if (!Number.isInteger(uid) || uid <= 0) return fail('The UID has to be a whole number.');
@@ -320,11 +321,11 @@ async function save() {
 
   const body = { name: $('#tr-f-name').value.trim(), aliases: $('#tr-f-aliases').value.trim() || null };
   for (const input of document.querySelectorAll('[data-fruit]')) {
-    const v = input.value.trim();
+    const v = queue ? '' : input.value.trim();
     if (v !== '' && !(Number(v) >= 0 && Number(v) <= 999)) return fail('Each % has to be between 0 and 999.');
     body[input.dataset.fruit] = v === '' ? null : Math.round(Number(v));
   }
-  const d = $('#tr-f-checked').value;
+  const d = queue ? '' : $('#tr-f-checked').value;
   body.checked_at = d ? new Date(`${d}T12:00:00`).toISOString() : null;
 
   if (testMode) {
@@ -370,6 +371,7 @@ $('#tr-f-delete').addEventListener('click', async (e) => {
 
 $('#tr-form').addEventListener('submit', (e) => {
   if (e.submitter?.value === 'save') { e.preventDefault(); save(); }
+  if (e.submitter?.value === 'queue') { e.preventDefault(); save(true); }
 });
 
 // ------------------------------------------------------------------ wiring

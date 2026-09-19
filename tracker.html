@@ -45,7 +45,7 @@
         <input id="tr-q" class="field tr-q" type="search" autocomplete="off" placeholder="Search name, alias or UID" aria-label="Search players">
         <select id="tr-progress" class="field" aria-label="Which players">
           <option value="all">All players</option>
-          <option value="none">Not recorded yet</option>
+          <option value="none">Queue: no numbers yet</option>
           <option value="some">Partly recorded</option>
           <option value="full">All six recorded</option>
           <option value="stale">Not checked recently</option>
@@ -111,6 +111,9 @@
       <p id="tr-f-error" class="tr-form__error" role="alert" hidden></p>
       <div class="modal__actions">
         <button id="tr-f-save" class="btn btn--primary" type="submit" value="save">Save</button>
+        <!-- Adding only: the game shows Tatari during the Cozy Farm event alone, so a
+             UID found any other time goes in the queue to be read later. -->
+        <button id="tr-f-queue" class="btn" type="submit" value="queue">Add to queue, check later</button>
         <button class="btn" type="submit" value="cancel" formnovalidate>Cancel</button>
         <button id="tr-f-delete" class="btn btn--quiet tr-form__delete" type="button">Delete player</button>
       </div>
