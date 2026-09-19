@@ -3,7 +3,7 @@
  * app.css; this is the filter bar, the table and the top boards.
  */
 
-.tr-main { max-width: 1400px; margin: 0 auto; padding: var(--s4) var(--s4) var(--s6); display: flex; flex-direction: column; gap: var(--s3); }
+.tr-main { --tr-best: #8b5cf6; max-width: 1400px; margin: 0 auto; padding: var(--s4) var(--s4) var(--s6); display: flex; flex-direction: column; gap: var(--s3); }
 .tr-signout { margin-left: auto; }
 .tr-gate { max-width: 460px; margin: var(--s6) auto; display: flex; flex-direction: column; align-items: flex-start; gap: var(--s3); }
 .tr-gate h2 { margin: 0; }
@@ -66,6 +66,12 @@
   color: var(--text); font-weight: 750;
 }
 .tr-board b[data-top] { padding: 0 6px; border-radius: 4px; }
+/* 250+: violet, a step past gold. */
+.tr-legend { display: flex; gap: var(--s2); margin: 0; font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.tr-legend span { padding: 1px 8px; border-radius: 4px; background: color-mix(in srgb, var(--accent) 42%, var(--surface)); }
+.tr-heat[data-top="best"], .tr-board b[data-top="best"], .tr-legend span[data-top="best"] {
+  background: color-mix(in srgb, var(--tr-best) 38%, var(--surface));
+}
 .tr-empty { color: var(--text-mute); }
 .tr-total { font-weight: 700; }
 .tr-total small { margin-left: 6px; color: var(--text-mute); font-weight: 500; font-size: 11px; }

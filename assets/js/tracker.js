@@ -57,9 +57,12 @@ const icon = (f, size = 22) => (f.tatari
 const when = (iso) => (iso ? new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : '');
 
 /* A soft green by value up to 199, so a column scans without reading every
-   number; 200 and up turns gold, the players worth asking for support. */
+   number; 200 and up turns gold, the players worth asking for support, and
+   250 and up violet, the best there are. */
 const TOP = 200;
-const heat = (v) => (v == null ? '' : v >= TOP ? ' data-top'
+const BEST = 250;
+const tier = (v) => (v >= BEST ? ' data-top="best"' : v >= TOP ? ' data-top' : '');
+const heat = (v) => (v == null ? '' : v >= TOP ? tier(v)
   : ` style="--heat:${Math.max(0, Math.min(1, (v - 50) / (TOP - 50))).toFixed(2)}"`);
 
 // ------------------------------------------------------------------ gate
@@ -203,7 +206,7 @@ function render() {
       const best = topFor(shown, f.key, 20);
       return `<section class="panel tr-board">
         <h3>${icon(f, 26)}${esc(f.name)}${f.who ? ` <span class="muted">${esc(f.who)}</span>` : ''}</h3>
-        <ol>${best.map((r) => `<li data-uid="${r.uid}"><span>${esc(r.name || String(r.uid))}</span><button type="button" class="tr-copy tr-copy--small" data-copy="${r.uid}" title="Copy UID">${r.uid}</button><b${r[f.key] >= TOP ? ' data-top' : ''}>${r[f.key]}</b></li>`).join('')
+        <ol>${best.map((r) => `<li data-uid="${r.uid}"><span>${esc(r.name || String(r.uid))}</span><button type="button" class="tr-copy tr-copy--small" data-copy="${r.uid}" title="Copy UID">${r.uid}</button><b${tier(r[f.key])}>${r[f.key]}</b></li>`).join('')
           || '<li class="muted">Nobody recorded yet.</li>'}</ol>
       </section>`;
     }).join('');
