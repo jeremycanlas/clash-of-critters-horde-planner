@@ -8,6 +8,7 @@
  */
 
 import { rest, signedIn } from './supabase.js';
+import { track } from './analytics.js';
 
 const PAGES = [
   { href: 'index.html', name: 'Drafter' },
@@ -57,6 +58,15 @@ if (nav) {
     <a class="sitetabs__tab${p.add ? ' sitetabs__tab--add' : ''}" href="${p.href}"${p.href === here ? ' aria-current="page"' : ''}>
       <span class="sitetabs__long">${p.name}</span>${p.short ? `<span class="sitetabs__short">${p.short}</span>` : ''}
     </a>`).join('');
+
+  // Which tab, from where: tab-community-to-changes. Counts only on pages that
+  // started the counter, and never the private Players tab.
+  nav.addEventListener('click', (e) => {
+    const tab = e.target.closest('a.sitetabs__tab:not(.sitetabs__tab--private)');
+    if (!tab || tab.getAttribute('aria-current')) return;
+    const name = (href) => href.replace(/\.html$/, '') || 'index';
+    track(`tab-${name(here)}-to-${name(tab.getAttribute('href'))}`);
+  });
 
   // A phone may start the row scrolled; keep the current page's tab in view.
   nav.querySelector('[aria-current]')?.scrollIntoView({ block: 'nearest', inline: 'nearest' });

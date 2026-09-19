@@ -231,7 +231,7 @@ function renderSaves() {
 
   const n = saves.length ? String(saves.length) : '';
   $('#saves-count').textContent = n;
-  $('#saves-handle-n').textContent = n;
+  for (const el of document.querySelectorAll('.saves-handle__n')) el.textContent = n;
   const barCount = $('#appbar-saves');
   if (barCount) barCount.textContent = n;
 
@@ -271,7 +271,7 @@ function setDrawer(open) {
   if (open === drawerOpen) return;
   drawerOpen = open;
   document.body.classList.toggle('saves-open', open);
-  $('#saves-handle').setAttribute('aria-expanded', String(open));
+  for (const b of document.querySelectorAll('.saves-handle')) b.setAttribute('aria-expanded', String(open));
 
   if (open) {
     returnTo = document.activeElement;
@@ -297,7 +297,8 @@ export function buildSaves(opts = {}) {
   // Wrapped rather than passed straight in: the listener would hand saveCurrent
   // the click event as its options object.
   $('#btn-keep').addEventListener('click', () => saveCurrent());
-  $('#saves-handle').addEventListener('click', () => setDrawer(!drawerOpen));
+  // Two ways in: the button in the formation bar and the tab on the right edge.
+  for (const b of document.querySelectorAll('.saves-handle')) b.addEventListener('click', () => setDrawer(!drawerOpen));
   $('#saves-close').addEventListener('click', () => setDrawer(false));
 
   $('#saves-list').addEventListener('click', (e) => {
@@ -321,7 +322,7 @@ export function buildSaves(opts = {}) {
   // The toast is exempt: pressing its Undo is acting on the list, not leaving it.
   document.addEventListener('pointerdown', (e) => {
     if (!drawerOpen) return;
-    if (e.target.closest('#sec-saves, #saves-handle, #toast')) return;
+    if (e.target.closest('#sec-saves, .saves-handle, #toast')) return;
     setDrawer(false);
   });
 

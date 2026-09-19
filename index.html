@@ -118,8 +118,9 @@
 
     <span id="live-who" class="who-strip" hidden></span>
 
-    <!-- Desktop and tablet only (phones have Saved on the app bar). It was a
-       sideways tab stuck to the right edge, where most people never looked. -->
+    <!-- Desktop and tablet only (phones have Saved on the app bar). The same
+       drawer also keeps its sideways tab on the right edge (#saves-edge):
+       this one is where people look, that one is where regulars reach. -->
     <button id="saves-handle" class="btn saves-handle" type="button" aria-controls="sec-saves" aria-expanded="false"
       title="Formations saved in this browser">
       <span class="saves-handle__label">Saved</span>
@@ -745,6 +746,12 @@
 
   <!-- One element, two homes: a right-edge drawer on desktop, an app-bar sheet on
      a phone. Outside .layout because it never takes part in the page grid. -->
+  <button id="saves-edge" class="saves-handle saves-handle--edge" type="button" aria-controls="sec-saves" aria-expanded="false"
+    title="Formations saved in this browser">
+    <span class="saves-handle__label">Saved</span>
+    <span class="saves-handle__n"></span>
+  </button>
+
   <section id="sec-saves" class="panel panel--saves" aria-labelledby="h-saves">
     <div class="panel__head">
       <h2 id="h-saves">Saved formations <span id="saves-count" class="muted"></span></h2>

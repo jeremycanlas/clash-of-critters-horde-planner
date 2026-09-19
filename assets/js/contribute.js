@@ -27,10 +27,12 @@ import { rangeStatus } from './range.js';
 import { parseContribution } from './range-import.js';
 import { loadIssues, issueFor } from './issues.js';
 import { applyPrefs } from './prefs.js';
+import { buildAnalytics, track } from './analytics.js';
 
 /* As on the gallery: the theme and the contrast setting belong to the reader,
    so they apply on every page, whether or not that page offers the switch. */
 applyPrefs();
+buildAnalytics();
 
 const REPO = 'jeremycanlas/clash-of-critters-horde-planner';
 
@@ -325,11 +327,13 @@ function wire() {
   wireImport();
 
   $('#btn-copy').addEventListener('click', async () => {
+    track('range-copied');
     toast(await copyText(entryText()) ? 'Entry copied' : 'Could not copy. Select it and copy by hand',
       'ok');
   });
 
   $('#btn-download').addEventListener('click', () => {
+    track('range-downloaded');
     const n = queue.size;
     const name = n === 1
       ? `range-${[...queue.values()][0].kind}-${[...queue.values()][0].slug}.json`

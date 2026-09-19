@@ -5,7 +5,7 @@
  */
 
 import { applyPrefs } from './prefs.js';
-import { buildAnalytics } from './analytics.js';
+import { buildAnalytics, trackOnce } from './analytics.js';
 import { $, esc } from './ui.js';
 import { parseScore, earned, nextTier, gain } from './farm-math.js';
 
@@ -95,4 +95,9 @@ $('#farm-score').value = params.get('score') ?? '';
 $('#farm-target').value = params.get('target') ?? '';
 $('#farm-score').addEventListener('input', render);
 $('#farm-target').addEventListener('input', render);
+// Once a visit, and on change rather than every keystroke: a visitor who typed a
+// score used the calculator, one who only looked did not. A shared link with
+// ?score= already filled counts as a look.
+$('#farm-score').addEventListener('change', () => trackOnce('farm-score-entered'));
+$('#farm-target').addEventListener('change', () => trackOnce('farm-target-set'));
 render();

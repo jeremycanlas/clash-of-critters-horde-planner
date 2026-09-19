@@ -22,7 +22,7 @@ import { buildSubmit, openSubmit, resumeSubmit } from './submit.js';
 import { buildSession } from './session.js';
 import { roomInHash } from './hash.js';
 import { isConfigured, readCallback } from './supabase.js';
-import { buildAnalytics, track } from './analytics.js';
+import { buildAnalytics, track, trackOnce } from './analytics.js';
 import { importTatari } from './custom.js';
 import * as prefs from './prefs.js';
 
@@ -96,6 +96,7 @@ async function main() {
   buildHelp();
   const pending = buildSubmit();
   buildAnalytics();
+  countFirstUses();
   buildFilters(() => renderRoster());
 
   /*
@@ -804,3 +805,46 @@ function wireDragAutoScroll() {
 }
 
 main();
+
+/*
+ * Which parts of the drafter get used, each counted once per visit, so the
+ * dashboard reads as "how many visits touched this" next to `used`. Fixed
+ * labels only: never a name, a formation or a search term.
+ */
+const FIRST_USE = [
+  ['[data-mode]', (el) => `mode-${el.dataset.mode}`],
+  ['[data-list]', (el) => `roster-${el.dataset.list}`],
+  ['[data-view]', (el) => `view-${el.dataset.view}`],
+  ['[data-sheet]', (el) => `sheet-${el.dataset.sheet}`],
+  ['[data-scope]', (el) => `share-scope-${el.dataset.scope}`],
+  ['[data-theme-choice]', (el) => `theme-${el.dataset.themeChoice}`],
+  ['#saves-edge', () => 'saves-opened-edge'],
+  ['#saves-handle', () => 'saves-opened-bar'],
+  ['#btn-share', () => 'share-opened'],
+  ['#filters-toggle', () => 'filters-opened'],
+  ['#advanced-toggle', () => 'advanced-opened'],
+  ['#swap-save', () => 'swap-saved'],
+  ['#btn-save', () => 'formation-exported'],
+  ['#btn-clear', () => 'formation-cleared'],
+  ['#btn-clear-field', () => 'field-cleared'],
+  ['#sec-priority', () => 'plan-used'],
+];
+
+function countFirstUses() {
+  document.addEventListener('click', (e) => {
+    for (const [sel, label] of FIRST_USE) {
+      const el = e.target.closest(sel);
+      if (el) trackOnce(label(el));
+    }
+  }, true);
+  document.addEventListener('change', (e) => {
+    const el = e.target;
+    // Switches count when turned on: "who wanted this", not "who tidied it away".
+    if (el.matches?.('input[type="checkbox"][id^="opt-"]') && el.checked) trackOnce(`${el.id}-on`);
+    else if (el.id === 'sort') trackOnce('sort-changed');
+    else if (el.id === 'import-file') trackOnce('formation-imported');
+  }, true);
+  document.addEventListener('input', (e) => {
+    if (e.target.id === 'search') trackOnce('search-used');
+  }, true);
+}

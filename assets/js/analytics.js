@@ -41,7 +41,7 @@ const send = (label) => {
 };
 
 export function buildAnalytics() {
-  if (location.hostname !== PUBLISHED_HOST) return;
+  if (live || location.hostname !== PUBLISHED_HOST) return;
 
   const script = document.createElement('script');
   script.async = true;
@@ -64,4 +64,16 @@ export function track(label) {
   if (!live) return;
   if (window.goatcounter?.count) send(label);
   else if (pending.length < PENDING_MAX) pending.push(label);
+}
+
+/**
+ * Counts a label at most once per page load. For "did anybody use this at all",
+ * which is the question most features need answered: fifty toggles from one
+ * visitor would otherwise read as fifty people.
+ */
+const counted = new Set();
+export function trackOnce(label) {
+  if (counted.has(label)) return;
+  counted.add(label);
+  track(label);
 }

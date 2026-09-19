@@ -18,6 +18,7 @@
 
 import { load, state } from './data.js';
 import { applyPrefs } from './prefs.js';
+import { buildAnalytics } from './analytics.js';
 import { draggable, dropZone } from './dnd.js';
 import * as store from './store.js';
 import { $, artHTML, esc } from './ui.js';
@@ -702,6 +703,7 @@ function renderPage() {
  */
 if ($('#chips-body')) {
   applyPrefs();
+  buildAnalytics();
   await load();
   store.restore();
   await loadChips();
