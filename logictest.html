@@ -26,6 +26,7 @@ import {
 } from './assets/js/hash.js';
 import { coveredFrom, coverage, hasRange } from './assets/js/range.js';
 import { parseContribution } from './assets/js/range-import.js';
+import { OUTCOMES, expected, spread, withSpecials, totalChance, toCap } from './assets/js/pinball.js';
 
 const out = document.getElementById('log');
 let pass = 0, fail = 0, suite = '';
@@ -74,13 +75,16 @@ const B = families.find((f) => f[0].slug !== A.slug)[0];    // a different famil
 const C = families.find((f) => ![A, B].some((x) => x.familyId === f[0].familyId))[0];
 const line = families.find((f) => f.length >= 2)             // two tiers, one line
   .slice().sort((a, b) => a.tier - b.tier);
+/* Families are keyed by familyId, so one Tatari out of each of the first six
+   is six distinct lines -- enough to fill three squares and shortlist three. */
+const [D, E, F] = [families[3][0], families[4][0], families[5][0]];
 const zoboSlug = [...state.zoboBySlug.keys()][0];
 
 /* A full blank formation: clearAll leaves mode, name and lines alone, which would
    leak between groups. applySnapshot with a complete blob resets everything. */
 const reset = () => store.applySnapshot({
   mode: 'solo', sandbox: false, zoboGround: false, pullRows: 0,
-  cells: [], flex: [], bench: { 1: [], 2: [] }, plan: [],
+  cells: [], flex: [], swaps: [], bench: { 1: [], 2: [] }, plan: [],
   name: '', lines: { lf: { wants: [], note: '' }, have: { wants: [], note: '' } },
   lfMode: 'lf',
 });
@@ -105,6 +109,11 @@ const shapeOf = (s, { flex = false } = {}) => ({
   have: `${[...s.lines.have.wants].join('+')}|${s.lines.have.note}`,
   ...(flex ? { flex: [...s.flex].sort((a, b) => a - b) } : {}),
 });
+
+/* A group as the store is responsible for it: which squares, and who is on the
+   shortlist. Cells sorted because the order you tapped them in is not a fact. */
+const swapShape = (s) => (s.swaps ?? []).map((g) =>
+  `${[...g.cells].sort((a, b) => a - b).join('/')}=${[...g.slugs].sort().join('+')}`);
 
 // A note holding every separator the grammar uses, to prove the double-encode
 // survives all of them.
@@ -472,6 +481,349 @@ await group('boss order: every stage names a real boss, and every boss has a sta
   const reachable = new Set([...state.bossStages.values()].flat());
   eq('every stage from 1 to 25 is on at least one card',
     [...Array(stages.length)].map((_, i) => i + 1).filter((n) => !reachable.has(n)), []);
+});
+
+await group('share link: a flex square travels, which it never used to', () => {
+  reset();
+  store.place(A.slug, 0);
+  store.toggleFlex(7);
+  store.toggleFlex(9);
+
+  const before = store.snapshot();
+  eq('two squares are marked', before.flex.slice().sort((x, y) => x - y), [7, 9]);
+
+  const frag = toFragment(before);
+  ok('the link carries them', /~?fx=/.test(frag), frag);
+  store.applySnapshot(fromFragment('#' + frag).blob);
+  eq('and they are still marked after the round trip',
+    shapeOf(store.snapshot(), { flex: true }), shapeOf(before, { flex: true }));
+
+  /* The rule that outlives the codec: a mark says nothing is here on purpose. */
+  store.place(B.slug, 7);
+  eq('placing into one clears it', store.snapshot().flex, [9]);
+});
+
+await group('flex: a mark trades places with a Tatari dragged onto it', () => {
+  reset();
+  store.place(A.slug, 0);
+  store.toggleFlex(5);
+  eq('one square is open on purpose', store.snapshot().flex, [5]);
+
+  // The drag path and the keyboard both land here.
+  const moved = store.moveFrom(0, 5);
+  ok('the move is allowed', moved.ok, moved.reason);
+  eq('the Tatari is in the square that was marked', store.formation.cells[5].slug, A.slug);
+  eq('nobody is left behind', store.formation.cells[0] ?? null, null);
+  eq('and the mark took the square she left', store.snapshot().flex, [0]);
+
+  /* The count is the invariant. Rearranging a board cannot change how many
+     squares it leaves open -- that would be the tool editing your statement. */
+  store.moveFrom(5, 0);
+  eq('trading back returns the mark too', store.snapshot().flex, [5]);
+  eq('and she is home', store.formation.cells[0].slug, A.slug);
+
+  /* A mark spent is still spent: filling an open square from the bench is what
+     the mark invited, and there is no vacated square for it to move to. */
+  store.place(B.slug, 5);
+  eq('a bench placement still consumes it', store.snapshot().flex, []);
+});
+
+await group('flex: a swap between two occupied squares leaves marks alone', () => {
+  reset();
+  store.place(A.slug, 0);
+  store.place(B.slug, 1);
+  store.toggleFlex(9);
+
+  store.moveFrom(0, 1);
+  eq('they exchange squares', store.formation.cells[0].slug, B.slug);
+  eq('and back again', store.formation.cells[1].slug, A.slug);
+  eq('the unrelated mark is untouched', store.snapshot().flex, [9]);
+});
+
+// ============================================================ swap groups
+await group('swaps: a shortlist is recorded and saved with the formation', () => {
+  reset();
+  // Three front-line squares, holding the best guess out of six candidates.
+  store.place(A.slug, 0);
+  store.place(B.slug, 1);
+  store.place(C.slug, 2);
+  for (const t of [D, E, F]) store.addToBench(t.slug);
+
+  const added = store.addSwap([0, 1, 2], [A, B, C, D, E, F].map((t) => t.slug));
+  ok('the group is recorded', added.ok, added.reason);
+  eq('naming all six lists only the three not already standing there',
+    store.swapAt(0)?.slugs.slice().sort(), [D, E, F].map((t) => t.slug).sort());
+  eq('every square in it finds the same group',
+    [0, 1, 2].map((i) => store.swapIndexAt(i)), [0, 0, 0]);
+  eq('a square outside it finds none', store.swapIndexAt(8), -1);
+
+  const before = store.snapshot();
+  store.applySnapshot(JSON.parse(JSON.stringify(before)));
+  eq('it survives a save and a reload', swapShape(store.snapshot()), swapShape(before));
+
+  const frag = toFragment(before);
+  ok('the link carries it in the meta segment, not the layout', /~?sw=/.test(frag), frag);
+  store.applySnapshot(fromFragment('#' + frag).blob);
+  eq('and it survives the share link', swapShape(store.snapshot()), swapShape(before));
+
+  /* The reason it needed no version bump: strip the key a reader would not know
+     and the formation is still whole, just undecided about nothing. */
+  const older = frag.replace(/~?sw=[^~]*/, '');
+  const back = fromFragment('#' + older);
+  eq('a reader that skips the key still gets the whole board',
+    back.blob.cells.filter(Boolean).length, 3);
+  eq('and simply knows of no shortlist', back.blob.swaps, undefined);
+});
+
+await group('swaps: the shortlist tracks the board it annotates', () => {
+  reset();
+  store.place(A.slug, 0);
+  store.place(B.slug, 1);
+  store.place(C.slug, 2);
+  for (const t of [D, E, F]) store.addToBench(t.slug);
+  store.addSwap([0, 1, 2], [D, E, F].map((t) => t.slug));
+
+  // Swapping one in makes it the answer, so it stops being a question.
+  store.place(D.slug, 0);
+  eq('a candidate you go on to place stops being a candidate',
+    store.swapAt(0)?.slugs.slice().sort(), [E.slug, F.slug].sort());
+
+  store.unplaceAt(0);
+  eq('an emptied square leaves the group', store.swapAt(0), null);
+  eq('and the squares still filled keep it', store.swapAt(1)?.cells.slice().sort(), [1, 2]);
+
+  store.unplaceAt(1);
+  store.unplaceAt(2);
+  eq('a group with no filled squares left goes with them', store.snapshot().swaps, []);
+});
+
+await group('swaps: a group only ever annotates a real placement', () => {
+  reset();
+  store.place(A.slug, 0);
+  store.addToBench(B.slug);
+
+  eq('an empty square is refused', store.addSwap([9], [B.slug]).ok, false);
+  eq('so is naming only somebody already standing there',
+    store.addSwap([0], [A.slug]).ok, false);
+  ok('a one-square group is the same record as a three-square one',
+    store.addSwap([0], [B.slug]).ok);
+  eq('and a square cannot be in two groups at once',
+    store.addSwap([0], [C.slug]).ok, false);
+
+  store.toggleSwapSlug(0, C.slug);
+  eq('a candidate can be named after the fact',
+    store.swapAt(0)?.slugs.slice().sort(), [B.slug, C.slug].sort());
+  store.toggleSwapSlug(0, C.slug);
+  eq('and taken off again', store.swapAt(0)?.slugs, [B.slug]);
+
+  store.removeSwap(0);
+  eq('dropping the group leaves the board alone',
+    [store.snapshot().swaps.length, store.snapshot().cells[0]?.slug], [0, A.slug]);
+});
+
+/*
+ * The pinball board is a flat lottery, and the one property that says the table
+ * is complete rather than merely plausible is that its chances sum to exactly
+ * 100. Everything else here is arithmetic off that table -- which is the point:
+ * if a payout or an odds figure is ever edited wrong, these are the numbers that
+ * move, and nothing on the page itself would look broken.
+ */
+await group('pinball: the board pays what it says it pays', () => {
+  const r2 = (n) => Math.round(n * 100) / 100;
+
+  eq('every outcome on the board is accounted for', r2(totalChance()), 100);
+
+  const one = expected(1);
+  eq('one ball is worth 319.7 candy', r2(one.candy), 319.7);
+  eq('and 1.02 Lightbulbs', r2(one.lightbulb), 1.02);
+  eq('and .22 of a pickaxe and an energy drink',
+    [r2(one.pickaxe), r2(one.energy)], [0.22, 0.22]);
+
+  /* The two the page counts rather than values -- the ones worth watching,
+     because a mis-typed 3.3 is invisible everywhere else. */
+  eq('the gift box lands 3.3 times in a hundred', r2(expected(100).hits.card), 3.3);
+  eq('and the "?" slot 1.7', r2(expected(100).hits.raid), 1.7);
+
+  eq('a stack scales linearly', r2(expected(4687).candy), r2(one.candy * 4687));
+  eq('and an empty stack is worth nothing', expected(0).candy, 0);
+
+  /* The multiplier is not a bonus: forty balls spent one at a time and forty
+     spent in one push are the same yield. If that ever stops being true, the
+     whole page is wrong in a way no test of a single push would catch. */
+  eq('the multiplier pays no premium', r2(expected(40).candy), r2(one.candy * 40));
+});
+
+await group('pinball: the tree cap', () => {
+  eq('a hoarded stack has to spend down to the cap',
+    toCap({ stock: 4687, cap: 420, mult: 40 }), { over: 4267, pushes: 107, blocked: true });
+
+  /* 4267 / 40 is 106.675: the last push overshoots the cap rather than landing
+     on it, so this rounds up. Rounding down leaves you one push short and still
+     blocked, which is the failure worth naming. */
+  eq('and the last push overshoots rather than falling short',
+    toCap({ stock: 4267 + 420, cap: 420, mult: 40 }).pushes, 107);
+
+  eq('sitting on the cap exactly is not blocked',
+    toCap({ stock: 420, cap: 420, mult: 40 }), { over: 0, pushes: 0, blocked: false });
+  eq('nor is sitting under it',
+    toCap({ stock: 12, cap: 420, mult: 1 }).blocked, false);
+
+  eq('at x1 a ball is a push', toCap({ stock: 425, cap: 420, mult: 1 }).pushes, 5);
+});
+
+/*
+ * The multiplier: same average, wider swing.
+ *
+ * This is the one thing about the board that is genuinely counter-intuitive, and
+ * the one a player acts on -- so it is the one worth pinning down. A x40 push is
+ * a single roll paid forty times, which means the average cannot move and the
+ * deviation must, by exactly root-40. Get either half wrong and the page gives
+ * confident advice in the wrong direction.
+ */
+await group('pinball: the multiplier trades spread, never yield', () => {
+  const r2 = (n) => Math.round(n * 100) / 100;
+  const BALLS = 4680;   // divides by every multiplier the page offers
+
+  eq('x40 pays the same candy as x1', r2(expected(BALLS).candy), 1496196);
+
+  /* Averages are a property of the balls, not of how they are spent -- which is
+     why expected() refuses to take a multiplier at all. */
+  eq('and the same rares', [r2(expected(BALLS).raid), r2(expected(BALLS).card)],
+    [79.56, 154.44]);
+
+  const one = spread(BALLS, 1);
+  const forty = spread(BALLS, 40);
+
+  ok('a x1 stack still has a spread', one.candy > 0);
+  eq('x40 widens it by exactly root-40',
+    r2(forty.candy / one.candy), r2(Math.sqrt(40)));
+  eq('rares widen by the same factor',
+    r2(forty.raid / one.raid), r2(Math.sqrt(40)));
+
+  /* The number the page prints, and the reason the panel exists: at x40 the
+     raid count swings by two thirds of itself. */
+  eq('camp raids swing ~56 at x40', Math.round(forty.raid), 56);
+  eq('and ~9 at x1', Math.round(one.raid), 9);
+
+  /* Candy is the counter-example: even at x40 it is within a few percent, which
+     is what lets the page say "near enough a certainty" about it and not the
+     others. */
+  ok('candy stays inside 4% even at x40', forty.candy / expected(BALLS).candy < 0.04);
+
+  eq('one roll of one ball has the spread of one roll',
+    r2(spread(1, 1).candy), r2(spread(40, 40).candy / 40));
+  eq('a stack too small for one push has no spread', spread(10, 40).candy, 0);
+});
+
+/*
+ * The specials fold in only once somebody has measured them, and an unmeasured
+ * special must change nothing. That is the property worth testing: the failure
+ * mode is not a wrong total, it is a page that quietly starts treating zero as
+ * a measurement and reports the board's floor as the whole answer.
+ */
+await group('pinball: the specials are added, never assumed', () => {
+  const ev = expected(4680);
+
+  eq('nothing measured changes nothing',
+    withSpecials(ev, {}).candy, ev.candy);
+  eq('and a partly-filled measurement only moves what it names',
+    withSpecials(ev, { cardBalls: 10 }).candy, ev.candy);
+
+  /* 154.44 cards at 5000 candy each, on top of the board's own 1,496,196. */
+  eq('candy from cards lands on top of the board candy',
+    Math.round(withSpecials(ev, { cardCandy: 5000 }).candy), 2268396);
+  eq('raids pay into the same pot',
+    Math.round(withSpecials(ev, { raidCandy: 8000 }).candy), 2132676);
+
+  eq('pinballs come back as stock rather than yield',
+    Math.round(withSpecials(ev, { cardBalls: 10 }).balls), 1544);
+  eq('energy from cards joins the energy from slot 4',
+    Math.round(withSpecials(ev, { cardEnergy: 2 }).energy), Math.round(ev.energy + ev.card * 2));
+
+  /* The multiplier is already inside the card count, so a per-card figure must
+     not be scaled again -- doing it twice is the one arithmetic slip here that
+     would look plausible on screen. */
+  eq('a card is worth the same per card at any multiplier',
+    withSpecials(expected(4680), { cardCandy: 100 }).candy
+      - expected(4680).candy,
+    expected(4680).card * 100);
+});
+
+/*
+ * A pinball is worth the same wherever you spend it.
+ *
+ * The step you pick is both the pinball cost of a ball and the multiple printed
+ * on the slots, so they cancel: stock/mult rolls each paying mult. A draft of
+ * this page split them into separate fields and announced x60 as a four-to-one
+ * bargain; 11,000 pinballs spent for about 3,000 pickaxes said otherwise. These
+ * pin the cancellation, because it is the property the whole page rests on and
+ * the one that was got wrong.
+ */
+await group('pinball: every step is the same value per pinball', () => {
+  const r2 = (n) => Math.round(n * 100) / 100;
+  /* What the page computes: floor(stock / mult) rolls, each paid mult times. */
+  const units = (stock, mult) => Math.floor(stock / mult) * mult;
+
+  for (const m of [1, 2, 3, 5, 10, 20, 40, 60]) {
+    eq(`x${m} on a stack that divides by it spends the lot`, units(4800, m), 4800);
+  }
+
+  eq('11,000 pinballs buy 2,420 pickaxes at x1',
+    Math.round(expected(units(11000, 1)).pickaxe), 2420);
+  eq('and the same 2,420 at x40',
+    Math.round(expected(units(11000, 40)).pickaxe), 2420);
+  eq('and all but the remainder of them at x60',
+    Math.round(expected(units(11000, 60)).pickaxe), 2416);
+
+  /* The 4x reading this replaced would have predicted 9,676 here. Named so the
+     wrong answer cannot come back without a test going red. */
+  ok('no step pays anything like four times another',
+    expected(units(11000, 60)).pickaxe < expected(units(11000, 1)).pickaxe * 1.01);
+
+  /* What the step DOES buy: fewer, larger rolls. Same mean, wider spread. */
+  eq('x40 swings root-40 wider than x1 on one stack',
+    r2(spread(units(4680, 40), 40).candy / spread(units(4680, 1), 1).candy),
+    r2(Math.sqrt(40)));
+
+  /* Spending down to the cap is a pinball count, and the step is what a ball
+     costs, so this counts balls at that step. */
+  eq('the cap is cleared in balls at the step you press',
+    toCap({ stock: 4687, cap: 420, mult: 40 }).pushes, 107);
+});
+
+/*
+ * Landings, not awards.
+ *
+ * The gift box and the "?" slot report how many times the ball hits them, while
+ * every other figure reports what you are handed. They coincide at x1 and
+ * diverge by exactly the multiplier -- so the bug guarded against here is the
+ * page reporting 154 landings at x40, which would read as an entirely plausible
+ * number and be wrong by a factor of forty.
+ */
+await group('pinball: the two specials are counted in landings', () => {
+  const r2 = (n) => Math.round(n * 100) / 100;
+  const rolls = Math.floor(4680 / 40);              // the x40 step
+  eq('4,680 pinballs at x40 is 117 rolls', rolls, 117);
+
+  const lands = expected(rolls);
+  const awards = expected(rolls * 40);
+
+  eq('the ball hits the gift box about four times', r2(lands.card), r2(rolls * 0.033));
+  eq('and slot 3 about twice', r2(lands.raid), r2(rolls * 0.017));
+
+  eq('each landing pays the multiplier', r2(awards.card), r2(lands.card * 40));
+  ok('so the award dwarfs the landing count', awards.card > lands.card * 30);
+
+  /* A landing count is a plain binomial over the rolls -- no multiplier in it at
+     all, because you cannot land a fraction of a ball. */
+  eq('landings swing like a coin count, not like a payout',
+    r2(spread(rolls, 1).card), r2(Math.sqrt(rolls * 0.033 * 0.967)));
+
+  /* Holding the button launches fifteen balls at once -- fifteen rolls, which
+     is how three Reward Cards fit in one pull. It is convenience only, so no
+     total may depend on it. */
+  eq('a full hold is fifteen rolls and changes no total',
+    expected(15).candy, expected(1).candy * 15);
 });
 
 // ---------------------------------------------------------------- verdict

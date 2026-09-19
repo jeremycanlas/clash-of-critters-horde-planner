@@ -124,6 +124,26 @@ export const formation = {
    */
   flex: [],
 
+  /**
+   * Spots you have filled but have not settled.
+   *
+   * A group is some cells and the Tatari you would put there instead: three
+   * front-line squares, and the three others you were choosing between. Your
+   * best guess stands on the board normally, which is the whole design in one
+   * sentence -- every tally that counts placements stays exactly as true as it
+   * was, and a reader whose copy of the tool has never heard of swaps still gets
+   * a whole, legal formation. It just does not know what else you considered.
+   *
+   * One record covers both shapes people asked for. Three cells and three
+   * candidates is a front line; one cell and two candidates is a single square
+   * you cannot decide about. The number of cells is the "any N of", so nobody
+   * has to type it.
+   *
+   * Beside `cells` rather than inside it, for the same reason flex is: a swap is
+   * a note about a placement, not a placement.
+   */
+  swaps: [],
+
   /** Which of the two the editor is pointed at. */
   lfMode: 'lf',
   activePlayer: 1,
@@ -500,6 +520,29 @@ export function moveFrom(fromCell, toCell) {
   const displaced = formation.cells[toCell] ?? null;
   formation.cells[toCell] = occ;
   formation.cells[fromCell] = displaced;
+
+  /*
+   * A flex mark travels with the square it loses.
+   *
+   * Dropping somebody onto a marked square used to delete the mark: reconcile()
+   * enforces "nothing is here on purpose", the square now had somebody on it,
+   * and the note went. That is right when the mark is spent -- a Tatari coming
+   * off the bench fills the open square, which is what the mark invited -- but
+   * it is wrong for a move within the board, where nothing was gained and a
+   * square was still traded. You meant "these two swap", and the tool answered
+   * by throwing one of them away.
+   *
+   * So the mark follows the vacancy. Two squares change hands and the marked
+   * one is still marked, just not the one it was. Marks in, marks out: a drag
+   * across the board cannot change how many open squares a formation has.
+   *
+   * Only for a target that was empty, which a marked square always is. The
+   * source may be off the grid or otherwise unfit to hold a mark; reconcile()
+   * is the judge of that, as it is for every other write in this file.
+   */
+  const mark = formation.flex.indexOf(toCell);
+  if (mark >= 0) formation.flex[mark] = fromCell;
+
   emit();
   return { ok: true };
 }
@@ -910,9 +953,97 @@ export function toggleFlex(cell) {
   return true;
 }
 
+/**
+ * How many candidates one group can name.
+ *
+ * Six for the reason LF_WANTS_MAX is six: they are drawn as a row of sprites on
+ * the card, and a seventh stops fitting the width that strip has.
+ */
+export const SWAP_MAX = 6;
+
+/**
+ * How many groups a formation can carry.
+ *
+ * Each one costs the card a labelled row. Past four, a picture meant to say what
+ * you built is mostly saying what you did not.
+ */
+export const SWAP_GROUPS_MAX = 4;
+
+/** The group this cell is part of, or null. A cell is in at most one. */
+export const swapAt = (cell) => formation.swaps.find((g) => g.cells.includes(cell)) ?? null;
+
+/** Its index, for callers that address a group rather than read it. */
+export const swapIndexAt = (cell) => formation.swaps.findIndex((g) => g.cells.includes(cell));
+
+/**
+ * Records a group: these cells, and the Tatari you would swap into them.
+ *
+ * Every cell has to be occupied. That rule is the design -- a group annotates
+ * placements you have already made, so a square with nothing on it has nothing
+ * to annotate, and FLEX is already how you say "bring what you like here".
+ *
+ * Candidates already standing in the group's own cells are dropped rather than
+ * refused, so selecting all six of your six does the obvious thing and lists the
+ * three you did not place. reconcile() applies that same rule afterwards, which
+ * is what keeps it true once you swap one of them in.
+ */
+export function addSwap(cells, slugs) {
+  if (formation.swaps.length >= SWAP_GROUPS_MAX) {
+    return { ok: false, reason: `${SWAP_GROUPS_MAX} groups is as many as the card holds` };
+  }
+  const where = [...new Set((cells ?? []).map(Number))]
+    .filter((i) => Number.isInteger(i) && cellInPlay(i) && formation.cells[i]);
+  if (!where.length) return { ok: false, reason: 'Pick a square with somebody standing on it' };
+  if (where.some((i) => swapAt(i))) {
+    return { ok: false, reason: 'One of those squares is already in a group' };
+  }
+
+  const standing = new Set(where.map((i) => formation.cells[i].slug));
+  const named = [...new Set((slugs ?? []).filter((s) => state.bySlug.has(s)))]
+    .filter((s) => !standing.has(s));
+  if (!named.length) return { ok: false, reason: 'Name somebody you have not already put there' };
+  if (named.length > SWAP_MAX) return { ok: false, reason: `A group names ${SWAP_MAX} at a time` };
+
+  formation.swaps.push({ cells: where, slugs: named });
+  emit();
+  return { ok: true };
+}
+
+/** Drops a group. Whoever is standing in its cells stays exactly where they are. */
+export function removeSwap(index) {
+  if (!formation.swaps[index]) return false;
+  formation.swaps.splice(index, 1);
+  emit();
+  return true;
+}
+
+/** Names one more candidate in an existing group, or takes one off again. */
+export function toggleSwapSlug(index, slug) {
+  const group = formation.swaps[index];
+  if (!group) return { ok: false, reason: 'No such group' };
+  if (!state.bySlug.has(slug)) return { ok: false, reason: 'Unknown Tatari' };
+  const at = group.slugs.indexOf(slug);
+  if (at !== -1) group.slugs.splice(at, 1);
+  else {
+    if (group.slugs.length >= SWAP_MAX) {
+      return { ok: false, reason: `A group names ${SWAP_MAX} at a time` };
+    }
+    group.slugs.push(slug);
+  }
+  emit();
+  return { ok: true };
+}
+
+export function clearSwaps() {
+  if (!formation.swaps.length) return;
+  formation.swaps = [];
+  emit();
+}
+
 export function clearField() {
   formation.cells = Array(ALL_CELLS).fill(null);
   formation.flex = [];
+  formation.swaps = [];
   formation.plan = [];
   emit();
 }
@@ -1323,6 +1454,34 @@ function reconcile() {
     seenSingles.add(key);
     return true;
   });
+
+  /*
+   * A group annotates placements, so it cannot outlive them.
+   *
+   * A cell that emptied leaves its group. A candidate that has since been placed
+   * in one of the group's own cells stops being a candidate -- it is the answer
+   * now. A group left with no cells, or with no candidates, is not saying
+   * anything and goes with them.
+   *
+   * Last in reconcile() rather than up beside the flex filter, because it reads
+   * `cells` and the map above is what makes `cells` final: an over-cap or
+   * off-bench Tatari is cleared there, and a group asked before that ran would
+   * be annotating a placement that is about to stop existing.
+   */
+  const grouped = new Set();
+  formation.swaps = formation.swaps
+    .slice(0, SWAP_GROUPS_MAX)
+    .map((g) => {
+      const cells = (Array.isArray(g?.cells) ? g.cells : [])
+        .map(Number)
+        .filter((i) => Number.isInteger(i) && cellInPlay(i) && formation.cells[i]
+          && !grouped.has(i) && grouped.add(i));
+      const standing = new Set(cells.map((i) => formation.cells[i].slug));
+      const slugs = (Array.isArray(g?.slugs) ? g.slugs : [])
+        .filter((s) => state.bySlug.has(s) && !standing.has(s));
+      return { cells, slugs: [...new Set(slugs)].slice(0, SWAP_MAX) };
+    })
+    .filter((g) => g.cells.length && g.slugs.length);
 }
 
 // ---------------------------------------------------------------- persistence
@@ -1353,6 +1512,7 @@ export function snapshot() {
     pullRows: formation.pullRows,
     cells: formation.cells.map((o) => (o ? { ...o } : null)),
     flex: [...formation.flex],
+    swaps: formation.swaps.map((g) => ({ cells: [...g.cells], slugs: [...g.slugs] })),
     bench: { 1: [...formation.bench[1]], 2: [...formation.bench[2]] },
     plan: formation.plan.map((s) => ({ ...s, members: s.members.map((m) => ({ ...m })) })),
     name: formation.name,
@@ -1382,7 +1542,8 @@ export function restore() {
 }
 
 /** Loads a raw state blob, letting reconcile() enforce every invariant. */
-function apply({ mode: m, sandbox, zoboGround, pullRows: rows, cells, flex, bench, plan, name, lf, lfWants, lfMode, lines }) {
+function apply({ mode: m, sandbox, zoboGround, pullRows: rows, cells, flex, swaps,
+                 bench, plan, name, lf, lfWants, lfMode, lines }) {
   formation.mode = MODES[m] ? m : 'solo';
   /*
    * Set before anything else reads a cap. reconcile() at the end of this
@@ -1402,6 +1563,12 @@ function apply({ mode: m, sandbox, zoboGround, pullRows: rows, cells, flex, benc
   formation.flex = (Array.isArray(flex) ? flex : [])
     .map(Number)
     .filter((i) => Number.isInteger(i) && i >= 0 && i < ALL_CELLS);
+
+  /* Shaped here, judged later. Every other rule a group obeys needs the cells
+     this function has not written yet, so the rest is reconcile()'s job. */
+  formation.swaps = (Array.isArray(swaps) ? swaps : [])
+    .filter((g) => g && Array.isArray(g.cells) && Array.isArray(g.slugs))
+    .map((g) => ({ cells: g.cells, slugs: g.slugs.filter((x) => typeof x === 'string') }));
 
   formation.cells = Array(ALL_CELLS).fill(null);
   (Array.isArray(cells) ? cells : []).slice(0, ALL_CELLS).forEach((occ, i) => {

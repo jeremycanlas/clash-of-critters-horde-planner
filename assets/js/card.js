@@ -152,6 +152,9 @@ export function cardSlugs(view = store) {
     // Asked-for Tatari are on nobody's bench by definition, so they need
     // fetching too or the LF band draws empty chips.
     ...view.filledLines().flatMap((l) => l.wants),
+    // Same reason as the line above: a shortlisted Tatari need not be on any
+    // bench, and an unfetched sprite draws as an empty chip.
+    ...(view.formation.swaps ?? []).flatMap((g) => g.slugs),
   ];
 }
 
@@ -301,6 +304,27 @@ function planLines(view, player) {
  * look like the Tatari it is, badge and owner colour and all, and a Zobo has to
  * look like nothing you brought.
  */
+/**
+ * Where the placed Tatari and its runners-up go inside one tile.
+ *
+ * The main keeps 78% and the runners-up run down the right edge at 30%,
+ * because the first thing a reader asks a square is which Tatari is actually
+ * standing on it, and only a size difference answers that without words.
+ *
+ * @param {number} S the drawable box inside the tile
+ * @param {number} n how many runners-up, 1 to 3
+ * @returns {Array<[x, y, w]>} the main first, then each runner-up
+ */
+function swapLayout(S, n) {
+  const main = S * 0.78;
+  const alt = S * 0.30;
+  return [
+    [0, (S - main) / 2, main],
+    ...Array.from({ length: n }, (_, i) =>
+      [S - alt, (S - alt * n) / 2 + i * alt, alt]),
+  ];
+}
+
 function drawCell(ctx, colours, sprites, view, cx, cy, cell, coop) {
   const occ = view.formation.cells[cell];
 
@@ -351,7 +375,38 @@ function drawCell(ctx, colours, sprites, view, cx, cy, cell, coop) {
     ctx.stroke();
 
     const sprite = sprites.get(occ.slug);
-    if (sprite) ctx.drawImage(sprite, cx + 4, cy + 4, CELL - 8, CELL - 8);
+
+    /*
+     * The runners-up for this square, drawn beside the one that won it.
+     *
+     * Not gated on anything the reader can switch. The board hides these behind
+     * a toggle because 49px cannot hold them; a card tile is 86px and can, and
+     * the card is the half that travels to somebody who has no toggle to find.
+     *
+     * Three at most: a fourth has nowhere to go in a 2x2, and the band under the
+     * board names every one of them regardless.
+     */
+    const group = view.swapIndexAt ? view.swapIndexAt(cell) : -1;
+    const alts = group >= 0
+      ? (view.formation.swaps[group]?.slugs ?? []).slice(0, 3)
+        .map((slug) => sprites.get(slug)).filter(Boolean)
+      : [];
+
+    if (sprite && alts.length) {
+      const S = CELL - 8;
+      const spots = swapLayout(S, alts.length);
+      const [mx, my, mw] = spots[0];
+      ctx.drawImage(sprite, cx + 4 + mx, cy + 4 + my, mw, mw);
+      /* The runners-up, held back: the size difference already says which
+         one is down, so they only need the alpha. */
+      ctx.save();
+      ctx.globalAlpha = 0.85;
+      alts.forEach((img, k) => {
+        const [ax, ay, aw] = spots[k + 1];
+        ctx.drawImage(img, cx + 4 + ax, cy + 4 + ay, aw, aw);
+      });
+      ctx.restore();
+    } else if (sprite) ctx.drawImage(sprite, cx + 4, cy + 4, CELL - 8, CELL - 8);
     else {
       ctx.font = font(11, 600);
       ctx.fillStyle = colours.dim;
@@ -460,6 +515,32 @@ function drawCell(ctx, colours, sprites, view, cx, cy, cell, coop) {
       ctx.fillStyle = colours.ownerInk;
       ctx.fillText(`P${occ.player}`, cx + 7, by + 11);
     }
+
+    /*
+     * The group letter, if this square is in one.
+     *
+     * Dashes and a letter, both, because the picture is read by somebody with no
+     * legend: the dashes say "not settled" the way an empty flex square does,
+     * and the letter is what ties the square to the line under the board naming
+     * who else was in the running. Drawn last so the sprite cannot cover it, and
+     * shifted right of the owner badge in co-op, which owns this corner first.
+     */
+    if (group >= 0) {
+      ctx.save();
+      ctx.strokeStyle = colours.accent;
+      ctx.lineWidth = 2;
+      ctx.setLineDash([5, 4]);
+      roundRect(ctx, cx + 1, cy + 1, CELL - 2, CELL - 2, 8);
+      ctx.stroke();
+      ctx.restore();
+
+      const by = cy + CELL - 20;
+      const bx = cx + 4 + (coop && !isZobo ? 25 : 0);
+      ctx.font = font(11, 800);
+      fill(ctx, colours.accent, bx, by, 15, 15, 4);
+      ctx.fillStyle = colours.accentInk;
+      ctx.fillText(String.fromCharCode(65 + group), bx + 4, by + 11);
+    }
 }
 
 function drawField(ctx, colours, sprites, view, x, y) {
@@ -481,7 +562,7 @@ function drawField(ctx, colours, sprites, view, x, y) {
     for (let col = 0; col < view.COLS; col++) {
       const cx = x + col * (CELL + CELL_GAP);
       const cy = top + (beyond - r) * (CELL + CELL_GAP);
-      drawCell(ctx, colours, sprites, view, cx, cy, view.cellAtRow(-r, col), coop, true);
+      drawCell(ctx, colours, sprites, view, cx, cy, view.cellAtRow(-r, col), coop);
     }
   }
   if (beyond) top += beyond * (CELL + CELL_GAP) + CELL_GAP;
@@ -517,7 +598,16 @@ function drawField(ctx, colours, sprites, view, x, y) {
   // Both co-op lines, banded under the field so they survive a crop to just
   // the grid — the same reason they are drawn inside the frame in the app.
   const lines = coop ? view.filledLines() : [];
-  if (!lines.length) return bottom + 24;
+  /*
+   * The shortlists, banded under the field beside the co-op lines and for
+   * exactly the same reason: this is what survives a crop to just the grid. A
+   * letter on a square with nothing to explain it is worse than no letter.
+   *
+   * Solo as well as co-op, unlike LF -- an ask is aimed at a partner, but "I was
+   * torn between these three" is aimed at anyone reading the board.
+   */
+  const groups = view.formation.swaps ?? [];
+  if (!lines.length && !groups.length) return bottom + 24;
 
   const H = 40;
   let band = bottom + 26;
@@ -576,6 +666,63 @@ function drawField(ctx, colours, sprites, view, x, y) {
     ctx.textBaseline = 'alphabetic';
     band += H + 8;
   }
+
+  groups.forEach((g, i) => {
+    const ink = colours.accent;
+    const named = g.slugs.map((slug) => state.bySlug.get(slug)).filter(Boolean);
+    if (!named.length) return;
+    const tag = String.fromCharCode(65 + i);
+
+    const done = tint(ctx, ink, 0.14);
+    roundRect(ctx, x, band, GRID_W, H, 8);
+    ctx.fill();
+    done();
+
+    // Measured before anything is drawn, so the run can be centred -- the same
+    // two-pass the LF band above does.
+    const SP = 30;
+    const GAP = 8;
+    ctx.font = font(15, 800);
+    const tagW = ctx.measureText(tag).width;
+    ctx.font = font(13, 700);
+    const orW = ctx.measureText('or').width;
+    const chipWs = named.map((t) => SP + 4 + ctx.measureText(t.name).width + 10);
+    const runW = Math.min(
+      tagW + GAP + orW + GAP + chipWs.reduce((n, w) => n + w + GAP, 0),
+      GRID_W - 20
+    );
+
+    let at = x + (GRID_W - runW) / 2;
+    const mid = band + H / 2;
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.font = font(15, 800);
+    ctx.fillStyle = ink;
+    ctx.fillText(tag, at, mid);
+    at += tagW + GAP;
+
+    ctx.font = font(13, 700);
+    ctx.fillStyle = colours.mute;
+    ctx.fillText('or', at, mid + 1);
+    at += orW + GAP;
+
+    named.forEach((t, n) => {
+      const w = chipWs[n];
+      const chip = tint(ctx, colours.bg, 0.5);
+      roundRect(ctx, at, mid - 15, w, 30, 15);
+      ctx.fill();
+      chip();
+
+      const sprite = sprites.get(t.slug);
+      if (sprite) ctx.drawImage(sprite, at + 2, mid - 14, SP - 4, 28);
+      ctx.fillStyle = ink;
+      ctx.fillText(t.name, at + SP, mid + 1);
+      at += w + GAP;
+    });
+    ctx.textBaseline = 'alphabetic';
+    band += H + 8;
+  });
+
   return band;
 }
 
@@ -999,13 +1146,18 @@ export async function drawCard({
   // The LF band only exists in co-op, and only once something is being asked
   // for; drawField returns past it, so the measure has to agree.
   const lfH = coop ? view.filledLines().length * 48 : 0;
+  /* And the shortlists, which band the same way and in solo too. Counted with
+     the same test the drawing uses -- a group whose Tatari this roster cannot
+     resolve draws nothing, so it must measure nothing. */
+  const swapsH = (view.formation.swaps ?? [])
+    .filter((g) => g.slugs.some((slug) => state.bySlug.has(slug))).length * 48;
   /*
    * The rows past the contact line are part of the field's height. Left out,
    * the canvas stayed sized for six rows and the board simply ran off the
    * bottom of the picture — the one failure mode a share card cannot have.
    */
   const beyondH = (view.beyondRows ? view.beyondRows() : 0) * (CELL + CELL_GAP);
-  const fieldH = 42 + beyondH + view.ROWS * CELL + (view.ROWS - 1) * CELL_GAP + 24 + lfH;
+  const fieldH = 42 + beyondH + view.ROWS * CELL + (view.ROWS - 1) * CELL_GAP + 24 + lfH + swapsH;
 
   // On both cards, so measured for both. drawEffects returns its own bottom,
   // which lets the probe run the measurement rather than duplicating the wrap.

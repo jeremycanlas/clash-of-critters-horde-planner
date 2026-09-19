@@ -26,3 +26,7 @@ Thumbs.db
 .imgtest/
 rectest.html
 gamereview.png
+
+# Private player tracker data for local test mode (tracker.js). Real players'
+# UIDs and numbers: never committed, never served by the live site.
+*.local.json

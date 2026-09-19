@@ -355,8 +355,17 @@ async function refreshProfile() {
  * A usable access token, refreshing it if the one in memory has gone stale.
  * @returns {Promise<{ok: true, jwt: string} | {ok: false, why: string}>}
  */
-export async function token() {
-  if (live.jwt && Date.now() < live.until) return { ok: true, jwt: live.jwt };
+/* One refresh at a time: the nav's Players check and a page's own call can both
+   find the token stale on load, and a refresh token spent twice can be refused,
+   which would sign the visitor out. */
+let refreshing = null;
+export function token() {
+  if (live.jwt && Date.now() < live.until) return Promise.resolve({ ok: true, jwt: live.jwt });
+  refreshing ??= refresh().finally(() => { refreshing = null; });
+  return refreshing;
+}
+
+async function refresh() {
 
   const held = session();
   if (!held?.refresh_token) return { ok: false, why: 'You are not signed in.' };

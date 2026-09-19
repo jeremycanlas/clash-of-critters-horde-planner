@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Horde Drafter: Players</title>
+  <!-- Private: nothing here for a search engine, and nothing in the page itself.
+     The data is only ever sent to allowlisted Discord accounts (supabase/migrations/010). -->
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='19' font-size='20'>🐾</text></svg>">
+  <link rel="stylesheet" href="assets/css/app.css">
+  <link rel="stylesheet" href="assets/css/site-nav.css">
+  <link rel="stylesheet" href="assets/css/tracker.css">
+</head>
+
+<body class="tracker">
+
+  <header class="topbar">
+    <div class="topbar__title">
+      <h1>Players</h1>
+      <span class="topbar__sub">Support&nbsp;%&nbsp;by&nbsp;fruit</span>
+    </div>
+    <button id="tr-signout" class="btn btn--quiet tr-signout" type="button" hidden>Sign out</button>
+  </header>
+
+  <nav id="site-tabs" class="sitetabs" aria-label="Horde Drafter pages"></nav>
+
+  <main class="tr-main">
+    <!-- One of these three is shown: signed out, signed in but not on the list, or the tracker. -->
+    <section id="tr-gate" class="panel tr-gate" hidden>
+      <h2 id="tr-gate-head">This page is private</h2>
+      <p id="tr-gate-text" class="muted">Sign in with Discord to see it. Only accounts on the list can open it.</p>
+      <button id="tr-signin" class="btn btn--primary" type="button">Sign in with Discord</button>
+    </section>
+
+    <section id="tr-app" hidden>
+      <p id="tr-test" class="tr-test" hidden>
+        <b>Test mode.</b> <span class="tr-test__more">Your spreadsheet data, on this computer only: no sign-in, no database,
+        and your edits are saved in this browser alone.</span>
+        <button id="tr-test-reset" class="btn btn--quiet" type="button">Reset to the spreadsheet</button>
+      </p>
+      <div class="tr-bar">
+        <input id="tr-q" class="field tr-q" type="search" autocomplete="off" placeholder="Search name, alias or UID" aria-label="Search players">
+        <select id="tr-progress" class="field" aria-label="Which players">
+          <option value="all">All players</option>
+          <option value="none">Not recorded yet</option>
+          <option value="some">Partly recorded</option>
+          <option value="full">All six recorded</option>
+          <option value="stale">Not checked recently</option>
+          <option value="never">Never checked in the game</option>
+        </select>
+        <label id="tr-stale-wrap" class="tr-stale" hidden>older than
+          <input id="tr-stale" class="field" type="number" min="1" max="365" value="30" inputmode="numeric"> days</label>
+        <div class="segmented" role="group" aria-label="View">
+          <button class="segmented__btn" type="button" data-view="table" aria-pressed="true">Table</button>
+          <button class="segmented__btn" type="button" data-view="top" aria-pressed="false">Top per fruit</button>
+        </div>
+        <span id="tr-count" class="muted tr-count" role="status" aria-live="polite"></span>
+        <button id="tr-clear" class="btn btn--quiet" type="button">Clear filters</button>
+        <button id="tr-add" class="btn btn--primary" type="button">Add player</button>
+      </div>
+
+      <!-- One min/max pair per fruit. Filled ones combine: every range must hold.
+           Folded away on a phone, where it would fill the first screen. -->
+      <details id="tr-filters" class="tr-filters">
+        <summary><span class="tr-filters__label">Filter by Support %</span> <span id="tr-filters-on" class="tr-filters__on"></span>
+          <span id="tr-filters-icons" class="tr-filters__icons" aria-hidden="true"></span></summary>
+        <div id="tr-ranges" class="tr-ranges" aria-label="Filter by Support %"></div>
+      </details>
+
+      <div id="tr-table-wrap" class="tr-tablewrap">
+        <table class="tr-table">
+          <thead id="tr-head"></thead>
+          <tbody id="tr-body"></tbody>
+        </table>
+      </div>
+
+      <div id="tr-top" class="tr-top" hidden></div>
+
+      <!-- Deleted players stay in the history; this brings one back. Live only. -->
+      <details id="tr-deleted" class="tr-deleted" hidden>
+        <summary>Deleted players</summary>
+        <ul id="tr-deleted-list" class="tr-history__list"></ul>
+      </details>
+    </section>
+
+    <p id="tr-status" class="muted tr-status" role="status" aria-live="polite">Loading…</p>
+  </main>
+
+  <dialog id="tr-edit" class="modal tr-edit">
+    <form id="tr-form" method="dialog">
+      <h2 id="tr-edit-head">Player</h2>
+      <div class="tr-form__ids">
+        <label>UID <input id="tr-f-uid" class="field" required inputmode="numeric" pattern="[0-9]{1,15}"></label>
+        <label>Name <input id="tr-f-name" class="field" maxlength="60" autocomplete="off"></label>
+        <label class="tr-form__wide">Aliases <input id="tr-f-aliases" class="field" maxlength="200" autocomplete="off"></label>
+      </div>
+      <p class="muted tr-form__hint">Support % as the game shows it. Leave a box empty if you have not seen that one.</p>
+      <div id="tr-f-fruits" class="tr-form__fruits"></div>
+      <label class="tr-form__checked">Checked on <input id="tr-f-checked" class="field" type="date"></label>
+      <p id="tr-f-meta" class="muted tr-form__meta"></p>
+      <!-- Every past version, newest first. "Use these numbers" fills the form; Save puts them back. -->
+      <details id="tr-f-history" class="tr-history" hidden>
+        <summary>Change history</summary>
+        <ol id="tr-f-hist-list" class="tr-history__list"></ol>
+      </details>
+      <p id="tr-f-error" class="tr-form__error" role="alert" hidden></p>
+      <div class="modal__actions">
+        <button id="tr-f-save" class="btn btn--primary" type="submit" value="save">Save</button>
+        <button class="btn" type="submit" value="cancel" formnovalidate>Cancel</button>
+        <button id="tr-f-delete" class="btn btn--quiet tr-form__delete" type="button">Delete player</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script type="module" src="assets/js/tracker.js"></script>
+  <script type="module" src="assets/js/site-nav.js"></script>
+</body>
+
+</html>

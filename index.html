@@ -29,17 +29,37 @@
   <link rel="stylesheet"
     href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
   <link rel="stylesheet" href="assets/css/app.css">
+  <link rel="stylesheet" href="assets/css/site-nav.css">
 </head>
 
 <body>
 
+  <!--
+    The masthead, in three bands (header redesign B, 2026-09-18).
+    ==============================================================
+
+    1. Who and where: the name of the tool, help, and the credit.
+    2. Every page of the site as a tab (site-nav.js), so Community formations,
+       the patch notes and the other tools are on screen rather than behind a
+       More button -- the reason 1.8.0 pulled them out of a menu in the first
+       place, now solved without costing a row of buttons.
+    3. This formation: its name as the headline, Solo/Co-op, Saved, one
+       labelled Formation menu for the rarely used file actions, and Share as
+       the only filled button. Sticky on a computer, so Share never scrolls
+       away.
+
+    The old header put fourteen controls of five styles into one wrapping row;
+    what used to be there and why is in git history.
+  -->
   <header class="topbar">
     <div class="topbar__title">
       <h1>Horde Drafter</h1>
       <span id="app-version" class="ver-pill"></span>
       <span class="topbar__sub">Clash&nbsp;of&nbsp;Critters</span>
     </div>
-
+    <button id="btn-help" class="btn btn--quiet topbar__help" type="button"
+      aria-label="How saving, posting and finding formations work"
+      title="How saving, posting and finding formations work">?</button>
     <!-- Sits in the header, not on the field: visible the moment the page opens,
        but never inside a screenshot of the grid. -->
     <span class="byline" title="Created by jacc6475 on Discord">
@@ -67,7 +87,11 @@
         <span class="byline__tip-text">Say thanks</span>
       </a>
     </span>
+  </header>
 
+  <nav id="site-tabs" class="sitetabs" aria-label="Horde Drafter pages"></nav>
+
+  <div class="formbar">
     <input id="formation-name" class="field field--name js-name" type="text" placeholder="Name this formation"
       aria-label="Formation name" maxlength="60">
 
@@ -92,142 +116,40 @@
       <button class="segmented__btn" type="button" data-mode="coop" aria-pressed="false">Co-op</button>
     </div>
 
-    <!--
-    All of it in the open, on every screen. These spent a while behind one ⋮
-    button, which bought the field a row on a phone and charged every control in
-    here its discoverability: a thing you cannot see is a thing most players
-    never find out exists, and "Community" and "Record a range" are exactly the
-    two that live or die on being noticed. On a narrow screen the row wraps to a
-    line of its own rather than collapsing, so what this costs is height, which
-    is recoverable by scrolling, rather than knowledge, which is not.
+    <span id="live-who" class="who-strip" hidden></span>
 
-    Order: the two links that leave the page, then the four that act on the
-    formation in front of you.
-  -->
-    <!--
-      The seven links, behind one button on a phone.
-      ==============================================
+    <!-- Desktop and tablet only (phones have Saved on the app bar). It was a
+       sideways tab stuck to the right edge, where most people never looked. -->
+    <button id="saves-handle" class="btn saves-handle" type="button" aria-controls="sec-saves" aria-expanded="false"
+      title="Formations saved in this browser">
+      <span class="saves-handle__label">Saved</span>
+      <span id="saves-handle-n" class="saves-handle__n"></span>
+    </button>
 
-      1a's phone header is the formation's name, what is placed, and Share --
-      three things, one row. Ours carried nine buttons over two wrapped rows
-      above a field that wanted the space, on the surface three quarters of the
-      traffic is on.
+    <!-- The four actions few people need, under one label that says what they
+       act on. A <details>, so it opens with no script and closes itself. -->
+    <details id="formation-menu" class="formmenu">
+      <summary class="btn">Formation <span class="formmenu__caret" aria-hidden="true">▾</span></summary>
+      <div class="formmenu__list">
+        <button id="btn-live" class="formmenu__item topbar__live" type="button">
+          <b>Live</b><span>Edit this formation together with somebody else</span></button>
+        <button id="btn-save" class="formmenu__item" type="button">
+          <b>Export</b><span>Download it as a file you can open again</span></button>
+        <!-- A real label, so the file picker opens on the browser's own activation
+           rather than a synthetic .click(). Files can also just be dropped on the page. -->
+        <label class="formmenu__item" for="import-file">
+          <b>Import</b><span>Open a saved .json file, or drop one on the page</span>
+          <input id="import-file" class="sr-only" type="file" accept=".json">
+        </label>
+        <button id="btn-clear" class="formmenu__item formmenu__item--danger" type="button">
+          <b>Clear all</b><span>Empty the field, benches and plan. Saved ones stay.</span></button>
+      </div>
+    </details>
 
-      Folded rather than dropped, because the canvas is explicit that nothing is
-      removed from the product, and because 1.8.0 moved these out of a ⋮ menu for
-      a reason worth respecting: Community formations and Record a range live or
-      die on being noticed. What that argues for is not "never fold" but "fold on
-      the screen that cannot afford them, and say what is behind it". Hence the
-      count, the same as the Filter and Advanced pills carry.
-
-      Phone only. On a wide screen the row has always fitted and still does, so
-      nothing there changes and the button is not rendered at all.
-    -->
-    <button id="topbar-more" class="pill pill--more touch-only" type="button"
-      aria-expanded="false" aria-controls="topbar-actions">More</button>
-
-    <div id="topbar-actions" class="topbar__actions">
-      <!--
-      "Community formations", not "Community". On its own the word is a
-      category, not a description: in a fan tool it reads just as easily as a
-      Discord invite or a wiki, which is a poor showing for the page most
-      players do not know exists. The second word is what says what is there.
-
-      It is first in the row on purpose. The full label is 152px against about
-      107px of spare width on a 411px phone, so the row wraps there — and
-      because this is the first item, the wrap costs "Clear all" its place on
-      line one and costs this nothing. Prominence and width are not the same
-      problem, and only one of them was worth solving here.
-
-      Outlined in the accent rather than filled: findable at a glance without
-      outbidding Share, which is the action this tool exists to produce.
-    -->
-      <a class="btn topbar__community" href="community.html" title="Formations other players have posted">Community
-        formations</a>
-
-      <!--
-      Beside Community formations, because what it explains is how a formation
-      gets there. A player who posted one told us it "wasn't immediately obvious"
-      how, and asked for exactly this.
-
-      A question mark rather than a word: the row above is already the widest
-      thing on a 411px phone, and every character here costs another wrap. The
-      accessible name and the tooltip carry the meaning that the glyph cannot,
-      and it is quiet, because help is the one control in this row nobody should
-      be reading past the thing they came to do.
-
-      Worth saying: this is the second answer, not the first. The first is that
-      Share now offers Post, so the path exists whether or not anybody presses
-      this. A help page is a poor substitute for a findable button, and a fine
-      companion to one.
-    -->
-      <button id="btn-help" class="btn btn--quiet topbar__help" type="button"
-        aria-label="How saving, posting and finding formations work"
-        title="How saving, posting and finding formations work">?</button>
-
-      <!--
-      The other half of the "72 of 218 ranges recorded" problem. The Ranges
-      toggle tells you the data is thin; this is the standing way to do something
-      about it, so it sits with the global actions rather than buried in the
-      footer. A link, not a button: it goes somewhere.
-
-      Not btn--quiet. Quiet made it the faintest thing in the row, which is a
-      strange rank for an item that leads somewhere — it read as a lesser
-      formation action. At plain .btn weight it sits level with Share and Export,
-      and the leading + says it adds something rather than doing something to the
-      formation. The moment-of-need ask is #range-gap, under the field; this is
-      wayfinding, and wayfinding only has to be findable.
-    -->
-      <a class="btn topbar__contribute" href="contribute.html"
-        title="Record a Tatari's attack range or support reach. It takes a couple of minutes, and the data is missing for most of the roster"><span
-          class="topbar__contribute-plus" aria-hidden="true">+</span>Record a range</a>
-
-      <!-- Phones only, and invisible: forces the row to break here, between the
-         two links that leave the page and the three buttons that act on the
-         formation, rather than wherever the last label happens to run out of
-         width. Nothing on a wide screen, where the row fits on one line. -->
-      <span class="topbar__break" aria-hidden="true"></span>
-
-      <!-- Wide screens only, and the one exception to bringing everything back:
-         on a phone the app bar already carries Share, filled and in a thumb's
-         reach, and a second one here would be the same action twice on one
-         screen rather than a control anybody had lost. -->
-      <button id="btn-share" class="btn btn--primary topbar__share wide-only" type="button"
-        title="Share this formation as a picture or a link">Share</button>
-
-      <!--
-      Next to Share, because it answers the same question with a different
-      tense. Share hands somebody the formation as it is now; this hands them
-      the formation as it keeps being — a link that puts you both on one board.
-
-      Not btn--primary. Share is still the thing this tool exists to produce,
-      and two filled buttons side by side would make the row argue with itself
-      about which one you came for.
-
-      The dot beside it is who is here, and it only exists during a session, so
-      on every other visit this is one word and nothing else.
-    -->
-      <button id="btn-live" class="btn topbar__live" type="button"
-        title="Edit this formation together with somebody else, live">Live</button>
-      <span id="live-who" class="who-strip" hidden></span>
-
-      <!-- Was "Save" while a file download was the only way to keep a formation.
-         The in-browser Saved list owns that word now, and a "Save" that writes
-         a file next to a "Saved" that does not would be two features wearing
-         one name. Export/Import also read as the pair they are. -->
-      <button id="btn-save" class="btn" type="button"
-        title="Download this formation as a file you can open again">Export</button>
-
-      <!-- A real label, so the file picker opens on the browser's own activation
-         rather than a synthetic .click(). Files can also just be dropped on the page. -->
-      <label class="btn" for="import-file" title="Open a saved .json formation, or drop one on the page">Import
-        <input id="import-file" class="sr-only" type="file" accept=".json">
-      </label>
-
-      <button id="btn-clear" class="btn btn--quiet" type="button"
-        title="Empty the field, the benches and the plan. Saved formations are kept.">Clear all</button>
-    </div>
-  </header>
+    <!-- Phones share from the app bar at the bottom, in a thumb's reach. -->
+    <button id="btn-share" class="btn btn--primary topbar__share wide-only" type="button"
+      title="Share this formation as a picture or a link">Share</button>
+  </div>
 
   <!-- Narrow screens stack the three panels into one long page, so this is the way
      back up. Plain anchors: it must work before any script runs. Hidden on
@@ -290,8 +212,20 @@
           reason: Ranges and Boss pull both silently repaint the field, and a
           switch that is on out of sight is worse than one that is off in view.
           -->
+          <!--
+            One switch, because it was always one idea: this square is not
+            settled. What a tap means follows from what is already on the
+            square, which is the only thing that could distinguish the two
+            cases anyway.
+
+            An empty square becomes FLEX: nothing here on purpose, bring what
+            you like. A filled one starts a group: somebody is here, but I had
+            others in mind. Two switches made the reader pick which kind of
+            not-settled they meant before they had said anything, and got the
+            answer wrong whenever the square disagreed with the mode.
+          -->
           <label class="check"
-            title="Mark empty squares as somebody else's choice, so a posted formation reads as a template rather than as unfinished.">
+            title="Mark the squares you have not settled. An empty one becomes a flex slot, anyone's choice; a filled one lets you name who else you would put there.">
             <input id="opt-flex" type="checkbox"> <span class="check__text">Flex slots</span></label>
 
           <!-- The button and its drawer share a positioning context so the
@@ -377,13 +311,21 @@
 
       <!-- Two hints, one shown. Telling a phone to double-click and press Delete
          describes a keyboard nobody holding it has. -->
-      <p class="hint hint--pointer">Zobos advance from the top. Drag Tatari in from the roster, drag them between
+      <!-- One line, the rest on request: the full paragraph was four lines above
+         the grid on every visit, read once and then only in the way. -->
+      <details class="hint hint--pointer">
+        <summary><b>Tip:</b> drag Tatari from the roster onto the field. <span class="hint__more">How it works</span></summary>
+        Zobos advance from the top. Drag Tatari in from the roster, drag them between
         cells to rearrange, and double-click or press <kbd>Delete</kbd> to take one off the field.
-        Turn on <b>Flex slots</b> and press an empty square to indicate a flex spot.</p>
+        Turn on <b>Flex slots</b> and press an empty square to indicate a flex spot.
+      </details>
       <!-- Short on purpose: this sits between the header and the field on a phone,
          and every line it takes is a line the grid does not get. -->
-      <p class="hint hint--touch">Zobos advance from the top. Tap one on the bench to see where it lands,
-        then tap again to place it. Double-tap to take it off.</p>
+      <details class="hint hint--touch">
+        <summary><b>Tip:</b> tap a Tatari on the bench, then a square. <span class="hint__more">More</span></summary>
+        Zobos advance from the top. Tap one on the bench to see where it lands,
+        then tap again to place it. Double-tap to take it off.
+      </details>
 
       <!--
       The LF / HAVE editor was here, and is gone.
@@ -463,6 +405,11 @@
         <div class="field-frame__enemy">Zobos spawn beyond this line</div>
         <div id="grid" class="grid" role="grid" aria-label="Formation grid, 6 columns by 6 rows"></div>
         <p id="field-lf" class="field-frame__lf" hidden></p>
+        <!-- Inside the frame deliberately. A shortlist is only worth recording
+           because somebody else reads the board and wonders what else you tried,
+           and they read it as a screenshot -- so it has to be in the picture.
+           See the LF band above, which is here for the same reason. -->
+        <p id="field-swaps" class="field-frame__swaps" hidden></p>
         <!-- No site URL here. It was on this row to carry the way back when a
            screenshot got posted, and posting dropped sharply once it appeared:
            a watermarked grid reads as an advert rather than someone's team. -->
@@ -483,6 +430,20 @@
       already learned that lesson with the site URL.
     -->
       <p id="range-gap" class="rangegap" hidden></p>
+
+      <!--
+      The swap editor. Outside .field-frame for the reason range-gap is: it is a
+      control, the frame is what gets photographed, and a control in the picture
+      is noise in every share of it.
+    -->
+      <div id="swap-bar" class="swapbar" hidden>
+        <p id="swap-hint" class="swapbar__hint"></p>
+        <div id="swap-picker" class="swapbar__picker"></div>
+        <div class="swapbar__acts">
+          <button id="swap-save" class="btn" type="button">Save group</button>
+          <button id="swap-cancel" class="btn btn--quiet" type="button">Cancel</button>
+        </div>
+      </div>
 
       <!--
       The dock: what you are bringing, under the board you are bringing it to.
@@ -782,15 +743,6 @@
 
   <!-- ------------------------------------------------ saved formations -->
 
-  <!-- Desktop and tablet: the drawer's tab, pinned to the right edge where it is
-     always in view without costing the field or the roster a pixel. Phones get
-     the Saved button on the app bar instead, and never see this. -->
-  <button id="saves-handle" class="saves-handle" type="button" aria-controls="sec-saves" aria-expanded="false"
-    title="Formations saved in this browser">
-    <span class="saves-handle__label">Saved</span>
-    <span id="saves-handle-n" class="saves-handle__n"></span>
-  </button>
-
   <!-- One element, two homes: a right-edge drawer on desktop, an app-bar sheet on
      a phone. Outside .layout because it never takes part in the page grid. -->
   <section id="sec-saves" class="panel panel--saves" aria-labelledby="h-saves">
@@ -884,7 +836,7 @@
       <li>
         <b>Save this formation</b> keeps what is on the field (both benches and the
         level-up plan with it) in this browser. Nothing leaves the page. Find your
-        saved formations under <b>Saved</b>: the tab on the right edge on a computer,
+        saved formations under <b>Saved</b>: next to the formation name on a computer,
         the button on the bottom bar on a phone.
       </li>
       <li>
@@ -919,6 +871,14 @@
     <span>Data and sprites from the
       <a href="https://clashofcritters.wiki.gg/wiki/Tatari" target="_blank" rel="noopener">Clash of Critters Wiki</a>.
       Fan-made, unofficial.</span>
+    <!--
+      The other tool in here. Not in the app bar: that row is already the widest
+      thing on a phone and every item in it acts on the formation you are
+      looking at, which this does not -- it is a different event entirely. A
+      footer link is how you find a sibling tool, not how you reach for one.
+    -->
+    <span>Also here: <a href="pinball.html">the Mad Invention pinball calculator</a>
+      &mdash; what a stack of pinballs is worth, and when the trees stop paying.</span>
     <span class="muted">Your formations stay in your browser unless you post one to
       <a href="community.html">Community</a>. That is the one thing here that sends
       anything anywhere, and it only happens when you press a button that says so.
@@ -990,6 +950,25 @@
       <button id="share-copy-link" class="btn" type="button">Copy link</button>
       <button id="share-close" class="btn btn--quiet" type="button">Close</button>
     </div>
+
+    <!--
+      The ask, at the moment something was actually got.
+      =================================================
+
+      The tip jar in the header is seen on arrival, which is the one moment a
+      visitor owes nothing: they have not used the tool yet. This appears only
+      after a card has been downloaded, copied or shared, or a link copied --
+      the moment somebody has a thing they wanted enough to save.
+
+      Hidden until then, and it never interrupts: one line under the buttons,
+      no dialog of its own, no dismissal to perform. It says the tool is free
+      first, because that is the question anyone hesitating is actually asking,
+      and it is the same promise the header's tooltip makes.
+    -->
+    <p id="share-thanks" class="share__thanks" hidden>
+      Glad that worked. Horde Drafter is free and always will be &mdash; if it saved you a run,
+      <a href="https://ko-fi.com/jacc6475" target="_blank" rel="noopener" data-tip>there's a tip jar</a>.
+    </p>
 
     <!--
       Posting, here, because this is the button people press when they want other
@@ -1105,6 +1084,7 @@
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
   <script type="module" src="assets/js/app.js"></script>
+  <script type="module" src="assets/js/site-nav.js"></script>
 </body>
 
 </html>

@@ -67,6 +67,65 @@ field, HAVE above LF.
 
 ## Changelog
 
+### 1.9.4
+
+#### Changes:
+- Every page of the site is a tab under the header now: Drafter, Community formations, Patch notes, Chips, Cozy Farm and Record a range. Nothing is behind a More menu, and Patch notes says "New" for two weeks after an update.
+- The drafter's header is three calm rows instead of one crowded one: the title, the page tabs, and the formation's own bar with its name, the mode, Share, and a Formation menu for the rarer jobs (live session, export, import, clear).
+- Filter chips say what they are, not just show an icon, and Flex slots reads as the switch it is.
+- Swaps: keep the Tatari you were choosing between on a spot. Your best pick stands on the board as normal; the others ride along in the frame and the share link, so the thinking isn't lost.
+- The Share window fits on one screen, phone included, instead of scrolling.
+- Took out "Equal share tiles" from Advanced.
+- A Cozy Farm reward calculator: type your score, see every prize you've earned and what the next tier pays, glitter fruit past 1.45M included.
+- What changed now has a tab for Season 2, alongside the August patch, read off the Pioneer Server and shared by .kippy. on Discord. Twenty evolution lines move: eleven buffed, eight nerfed and the Cheerling line adjusted, with the old and new number on every stat. It is the test build, so nothing on that tab marks a card in the drafter. Each tab has its own link, so "look at Season 2" is something you can paste.
+- Six new Tatari, taking the roster from 230 to 236. There's a whole new four-stage thief line, Ringtail into Rizzler into Zorrock into Phantothief, and two families that used to stop at three grew a fourth: Morphanessa after Waveflutter, and Blechlama after Ptooielama.
+- Every Tatari in the tool now has both its own skill and its horde skills. The Ringtail line was the only gap, and the wiki page those come from still doesn't list it, so those three were read straight off the game.
+- Skills read off the game now have somewhere to live, so the next time the wiki is re-read they don't quietly vanish. When the wiki catches up, the refresh says which ones it can now supply itself.
+- Eleven new Zobos, and where 76 Tatari names come from.
+- The field hint says "Indicate a flex spot", which is what the switch above it actually does.
+- The code is under an MIT licence now, with a paragraph saying what it doesn't cover: the sprites and the names belong to the game, and are here so a fan tool can point at what the game already shows you. The repo page has a Sponsor button pointing at the same Ko-fi the site header does.
+
+#### Bug Fixes:
+- Clicking the Season 2 tab on the patch notes threw the view below the tabs instead of staying on them.
+- Signing in could be undone by the page itself: two parts refreshing the sign-in at once could spend it twice and sign you out.
+- "Just the grid" drew the board 438px wide against the left edge of the screen, with most of the window empty beside it, on the one view whose whole purpose is showing the board as big as possible. It's large and centred again.
+- The patch notes page had two entries out of date. The Lollama buff and the Dewgrub nerf were recorded when those families had three members each; both have four now, and the new arrival was missing from both. They carry the buff and the nerf they should.
+
+### 1.9.2
+
+#### Changes:
+- You can name a formation from the Share dialog as well as from the board frame, and the name travels with the screenshot either way.
+- The co-op summary fits on one screen instead of 924px of scrolling.
+- The separate LF/HAVE editor is gone; both are edited on the field.
+- Chip names in the grid stopped shouting over the art they sit on.
+
+#### Bug Fixes:
+- Sandbox moved the wrong copy. With three of the same Tatari on the field, dragging one moved a different one. Dropping one on the bench and dragging one back to the roster had it too.
+- The roster tabs slid 31px sideways as you moved between them, out from under the pointer that was clicking them.
+- The Filter drawer opened below all 230 cards, so you had to scroll back up to see what you'd filtered. A filter must not hide the thing it filters.
+- The bench claimed "all placed" before you'd brought anything at all.
+- The phone header was four rows, three of them nearly empty, and stayed four once a formation was under way.
+- You couldn't scroll past the chips in the grid without picking one up. Flick to scroll, press and hold to drag, the same as a Tatari card.
+
+### 1.9.1
+
+#### Changes:
+- The board frame's header is the formation's name now, and you edit it right where you read it. The frame is the part people screenshot into Discord, so a named formation finally carries its name into the picture.
+- Took out the "Brings heals ..." sentence under the field. It read well with four critters on the board and fell apart with fifteen: three clauses, six names, twelve more unnamed, and no answer to any question you actually had. The tallies and effect rows under it were already saying the same thing in a form you can scan.
+- Took out the rule above TYPES. It was dividing the summary from the bench back when the two were stacked, and the summary sits beside the board now.
+
+### 1.9.0
+
+#### Changes:
+- The redesign. Three typefaces; the field frame carries the formation and the credit so they travel with the screenshot; nine chip groups fold behind one Filter pill that names what's on; eight field switches fold behind an Advanced pill that counts them, both hanging over their panels rather than shoving them aside; elements read "Grass 6"; the bench says "1 left to place"; the summary admits what your formation lacks, not just what it has; the phone leads with your formation's name and folds seven links behind More; the roster reads as cards or as a list; and on a wide screen the summary sits beside the board, paid for out of margin the page was leaving empty.
+- The Zobo tab reads as a running order, not just a roster. Waves lists stages 1 to 25 as numbered entries flowing down each column, which answers what's coming and in what order. Filters apply there too, so filtering to Fire gives you 3, 8, 13, 17, 23, 25.
+- The boss stage order is on the Zobo cards, so you can see which boss you're drafting against next. It isn't in the game's gallery and isn't on the wiki: cotard_urn played out all 25 stages and recorded them.
+- Add is called Roster.
+
+#### Bug Fixes:
+- The wave list laid its 25 stages into seven columns, ran three of them off the right edge and gave the page a sideways scrollbar. Every check passed while it was broken; it was found by looking at it.
+- The three stages that send two bosses wrapped inside their column, so stage 15 came out twice as tall as its neighbours and every row after it sat at a different height. A stacked pair also read as two stages that had lost their numbers. Those entries span two columns now.
+
 ### 1.8.0
 
 #### Changes:

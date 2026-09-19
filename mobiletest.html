@@ -1558,37 +1558,64 @@ await runGroup('the update page on a phone', async () => {
 });
 
 /*
- * The header is two rows, and both of them are full.
+ * The masthead is three bands, and nothing in it is behind a button.
  *
- * It was four, three of them nearly empty: the title alone with 230px of
- * nothing beside it, the credit alone with 180px, More alone with 300px. Every
- * item's natural width was a shade too wide to share a line, so each took one
- * and then shrank to fit it -- the worst of both.
+ * Header redesign B: who and where (title, help, credit) on one row; every
+ * page of the site as a tab, scrolling sideways rather than wrapping; then
+ * this formation, with its name alone and full width and the mode switch and
+ * the Formation menu under it. Community formations and Record a range used
+ * to live behind "More 7" on a phone; they are tabs now, on screen.
  *
- * Counted as rows rather than measured as a height, because height is what the
- * fix produced and rows are what was wrong. A future item that wraps to a line
- * of its own would fail this while barely moving the pixel count.
+ * Rows are grouped by vertical overlap, not by rounding each item's top, and
+ * the group has to find the header at all: an earlier version measured a
+ * hidden app and passed on zero items.
  */
-await runGroup('the phone header is two rows, neither of them mostly empty', async () => {
-  const bar = $('.topbar');
-  const shown = [...bar.children].filter((k) => k.offsetWidth > 0);
-  const rows = [...new Set(shown.map((k) => Math.round(k.getBoundingClientRect().top / 8)))];
-  ok('the header is two rows', rows.length <= 2,
-     `${rows.length} rows: ${shown.map((k) => k.id || k.className.split(' ')[0]).join(', ')}`);
+await runGroup('the phone masthead: three bands, nothing hidden', async () => {
+  // The update-page group hides the app and does not put it back.
+  app.style.display = '';
+  await sleep(100);
+  const label = (k) => k.id || k.className.split(' ')[0];
+  const group = (items) => {
+    const out = [];
+    for (const k of [...items].sort((x, y) => x.getBoundingClientRect().top - y.getBoundingClientRect().top)) {
+      const r = k.getBoundingClientRect();
+      const row = out.find((g) => r.top < g.bottom && r.bottom > g.top);
+      if (row) { row.items.push(k); row.bottom = Math.max(row.bottom, r.bottom); }
+      else out.push({ top: r.top, bottom: r.bottom, items: [k] });
+    }
+    return out;
+  };
+  const visible = (host) => [...host.children].filter((k) => k.offsetWidth > 0);
 
-  /* Both rows reach most of the way across: an item alone on a line with 300px
-     spare beside it is the thing being checked for. */
-  const usable = 390 - 24;
-  for (const top of rows) {
-    const onRow = shown.filter((k) => Math.round(k.getBoundingClientRect().top / 8) === top);
-    const right = Math.max(...onRow.map((k) => k.getBoundingClientRect().right));
-    const left = Math.min(...onRow.map((k) => k.getBoundingClientRect().left));
-    ok(`a header row fills its width (${onRow.length} item(s))`, right - left > usable * 0.7,
-       `${Math.round(right - left)}px of ${usable}`);
-  }
-
+  const top = visible($('.topbar'));
+  ok('the brand row is found and measured', top.length >= 3, `${top.length} items`);
+  eq('title, help and credit share one row', group(top).length, 1);
   ok('and the credit still says "Say thanks" in full',
      !!$('.byline__tip-text') && W.getComputedStyle($('.byline__tip-text')).display !== 'none');
+
+  const tabs = $('#site-tabs');
+  const links = [...tabs.querySelectorAll('a')];
+  ok('every page has a tab', ['index.html', 'community.html', 'changes.html', 'contribute.html']
+     .every((h) => links.some((a) => a.getAttribute('href') === h)), links.map((a) => a.getAttribute('href')).join(', '));
+  eq('the tabs are one row', group(links).length, 1);
+  ok('the drafter is the current tab', tabs.querySelector('[aria-current="page"]')?.getAttribute('href') === 'index.html');
+  ok('Community formations is on screen without opening anything',
+     links.find((a) => a.getAttribute('href') === 'community.html').getBoundingClientRect().right <= 390);
+  ok('the tab row scrolls rather than widening the page',
+     tabs.scrollWidth > tabs.clientWidth && D.documentElement.scrollWidth <= 390 + 1,
+     `${tabs.scrollWidth} in ${tabs.clientWidth}, page ${D.documentElement.scrollWidth}`);
+
+  const bar = $('.formbar');
+  const rows = group(visible(bar).filter((k) => k.id !== 'formation-status'));
+  ok('the formation bar is found and measured', rows.length > 0);
+  eq('the formation bar is two rows', rows.length, 2);
+  ok('the name is first, alone and full width', rows[0]?.items.length === 1 && rows[0].items[0].id === 'formation-name'
+     && $('#formation-name').offsetWidth > (390 - 24) * 0.9, `${$('#formation-name').offsetWidth}px`);
+  ok('the mode switch and the Formation menu share the second',
+     rows[1]?.items.includes($('#mode-switch')) && rows[1]?.items.includes($('#formation-menu')),
+     rows.map((g) => g.items.map(label).join('+')).join(' / '));
+  ok('the file actions are in the Formation menu',
+     ['#btn-save', '#import-file', '#btn-clear'].every((sel) => $('#formation-menu').contains($(sel))));
   ok('with the name not truncated away',
      $('.byline__text').scrollWidth <= $('.byline__text').clientWidth + 1);
 
@@ -1613,10 +1640,9 @@ await runGroup('the phone header is two rows, neither of them mostly empty', asy
 
   ok('the count appears once something is placed', !$('#formation-status').hidden,
      $('#formation-status').textContent || '(empty)');
-  const busy = [...bar.children].filter((k) => k.offsetWidth > 0);
-  const busyRows = [...new Set(busy.map((k) => Math.round(k.getBoundingClientRect().top / 8)))];
-  ok('and the header is still at most three rows with it', busyRows.length <= 3,
-     `${busyRows.length} rows: ${busy.map((k) => k.id || k.className.split(' ')[0]).join(', ')}`);
+  const busyRows = group(visible(bar));
+  ok('and the formation bar is at most three rows with it', busyRows.length <= 3,
+     busyRows.map((g) => g.items.map(label).join('+')).join(' / '));
 });
 
 /*

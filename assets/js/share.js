@@ -94,6 +94,25 @@ export function buildShare(opts = {}) {
   });
 
   /*
+   * Shown once something has actually been got, and never before.
+   *
+   * Every path below that succeeds calls this: a card downloaded, copied or
+   * handed to the system share sheet, or a link copied. Those are the four
+   * moments somebody has a thing they wanted enough to keep, which is the only
+   * point at which asking is a fair question rather than a toll on the door.
+   *
+   * It stays up for the rest of the session rather than re-appearing per
+   * action -- an ask that reruns every time you press Download is nagging.
+   */
+  const thanks = $('#share-thanks');
+  const thank = () => {
+    if (!thanks || !thanks.hidden) return;
+    thanks.hidden = false;
+    track('tip-shown');
+  };
+  thanks?.querySelector('[data-tip]')?.addEventListener('click', () => track('tip-followed'));
+
+  /*
    * The native share sheet, when the browser has one.
    *
    * This is the answer to the number in PRODUCT.md: 286 opens produced four
@@ -126,6 +145,7 @@ export function buildShare(opts = {}) {
         title: store.formation.name || 'Horde formation',
       });
       track('card-shared');
+      thank();
     } catch (err) {
       if (err?.name !== 'AbortError') toast('Could not open the share sheet', 'error');
     }
@@ -136,6 +156,7 @@ export function buildShare(opts = {}) {
     downloadBlob(slugFilename(store.formation.name, 'horde-formation', 'png'), cardBlob);
     toast('Card downloaded', 'ok');
     track('card-downloaded');
+    thank();
   });
 
   $('#share-copy-image').addEventListener('click', async () => {
@@ -144,6 +165,7 @@ export function buildShare(opts = {}) {
       await navigator.clipboard.write([new ClipboardItem({ 'image/png': cardBlob })]);
       toast('Card copied. Paste it anywhere', 'ok');
       track('card-copied');
+      thank();
     } catch {
       toast('This browser will not let a page copy an image. Use Download instead', 'error');
     }
@@ -167,6 +189,7 @@ export function buildShare(opts = {}) {
       ? 'Share link copied'
       : 'Link is in the address bar. Copy it from there', 'ok');
     track('link-copied');
+    thank();
   });
 
   $('#share-close').addEventListener('click', () => dialog.close());

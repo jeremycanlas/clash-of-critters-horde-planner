@@ -13,6 +13,7 @@
   <link rel="icon"
     href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='19' font-size='20'>🐾</text></svg>">
   <link rel="stylesheet" href="assets/css/app.css">
+  <link rel="stylesheet" href="assets/css/site-nav.css">
   <link rel="stylesheet" href="assets/css/contribute.css">
 </head>
 
@@ -23,10 +24,9 @@
       <h1>Record a range</h1>
       <span class="topbar__sub">Horde&nbsp;Drafter</span>
     </div>
-    <div class="topbar__actions">
-      <a class="btn btn--quiet" href="index.html">Back to the drafter</a>
-    </div>
   </header>
+
+  <nav id="site-tabs" class="sitetabs" aria-label="Horde Drafter pages"></nav>
 
   <!--
   The drafter's own layout, verbatim: .panel--field beside .panel--roster on a
@@ -301,6 +301,7 @@
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
   <script type="module" src="assets/js/contribute.js"></script>
+  <script type="module" src="assets/js/site-nav.js"></script>
 </body>
 
 </html>

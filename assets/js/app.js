@@ -12,6 +12,7 @@ import {
 } from './grid.js';
 import { buildFilters, renderRoster } from './roster.js';
 import { buildPriority, renderPriority } from './priority.js';
+import { buildSwaps, renderSwaps } from './swaps.js';
 import { buildShare, openShare } from './share.js';
 import { warmSprites } from './card.js';
 import { buildShell, renderShell } from './shell.js';
@@ -40,6 +41,7 @@ function renderAll() {
   renderGrid();
   renderBench();
   renderPriority();
+  renderSwaps();
   renderRoster();
   renderSummary();
   renderShell();
@@ -87,6 +89,7 @@ async function main() {
 
   buildGrid();
   buildPriority();
+  buildSwaps();
   buildShare({ canPost: isConfigured(), onPost: postCurrent });
   buildShell();
   buildSaves({ canPost: isConfigured(), onPost: openSubmit });
@@ -396,6 +399,8 @@ function wireToolbar() {
     rangesOn.value = e.target.checked;
     renderRanges();
   });
+
+
 
   /*
    * Both pull toggles take the snapshot again; nothing else does. That is the

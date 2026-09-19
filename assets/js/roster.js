@@ -344,8 +344,8 @@ export function buildFilters(onChange, { onPick = bringToBench } = {}) {
       <button class="chip chip--${kind}" type="button" data-value="${esc(v)}"
               data-type="${kind === 'type' ? esc(v) : ''}"
               aria-pressed="false" title="${esc(label(v))}">
-        ${kind === 'type' ? typeIcon(v, { badge: false })
-          : kind === 'role' ? roleIcon(v, { badge: false })
+        ${kind === 'type' ? `${typeIcon(v, { badge: false })}<span class="chip__label">${esc(v)}</span>`
+          : kind === 'role' ? `${roleIcon(v, { badge: false })}<span class="chip__label">${esc(v)}</span>`
             : kind === 'effect'
               ? `${EFFECTS.find((e) => e.key === v).glyph}<span>${
                 EFFECTS.find((e) => e.key === v).label}</span>`

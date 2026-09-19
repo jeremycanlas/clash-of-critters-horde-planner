@@ -130,6 +130,41 @@ export function toFragment(snap) {
   // without them, and both have to survive being pasted.
   if (snap.zoboGround) meta.push('zg=1');
 
+  /*
+   * The shortlists: `sw=12.13.14*shellshy+capywata,20*frugagon`. Cells joined by
+   * `.`, candidates by `+`, the two halves split on `*` and the groups on `,`.
+   * `*` because a slug can hold a `-` and every other separator in this grammar
+   * is already spoken for; encodeURIComponent leaves it alone, so it survives
+   * both passes as itself.
+   *
+   * A meta key rather than part of the layout, and that is the whole reason this
+   * degrades cleanly. A reader that has never heard of swaps skips the key it
+   * does not know and still gets a complete, legal formation -- because the best
+   * guess is standing on the board as an ordinary placement. It loses what else
+   * you were considering, which is the only thing it could honestly lose.
+   */
+  /*
+   * The squares left open on purpose.
+   *
+   * These were missing from the link entirely, which quietly broke the feature
+   * in the one place it was built for: a flex mark says "bring what you like
+   * here", the whole point of it is that somebody else reads it, and the way a
+   * formation reaches somebody else is this string. Marking a square, copying
+   * the link and pasting it produced a board with an ordinary empty square on
+   * it -- the exact ambiguity flex exists to remove.
+   *
+   * A meta key, so a reader older than this line skips it and gets what it
+   * always got rather than choking.
+   */
+  const flex = (Array.isArray(snap.flex) ? snap.flex : [])
+    .filter((i) => Number.isInteger(i));
+  if (flex.length) meta.push(`fx=${flex.join('.')}`);
+
+  const swaps = (Array.isArray(snap.swaps) ? snap.swaps : [])
+    .filter((g) => g?.cells?.length && g?.slugs?.length)
+    .map((g) => `${g.cells.join('.')}*${g.slugs.join('+')}`);
+  if (swaps.length) meta.push(`sw=${swaps.join(',')}`);
+
   return `${HASH_VERSION}=${mode}/${tokens.join(',')};${plan};${meta.join('~')}`;
 }
 
@@ -244,6 +279,8 @@ export function fromFragment(hash) {
   let haveWants;
   let sandbox = false;
   let zoboGround = false;
+  let swaps;
+  let flex;
   for (const field of metaPart.split('~')) {
     const eq = field.indexOf('=');
     if (eq === -1) continue;
@@ -256,6 +293,22 @@ export function fromFragment(hash) {
     else if (key === 'hw') haveWants = value.split('+').filter(Boolean);
     else if (key === 'sb') sandbox = value === '1';
     else if (key === 'zg') zoboGround = value === '1';
+    else if (key === 'fx') {
+      flex = value.split('.').map(Number).filter(Number.isInteger);
+    }
+    /* Shaped only. Which cells are real, and whether a candidate is still a
+       candidate, both need the board -- so store's reconcile() decides, exactly
+       as it does for a group that arrived from a save. */
+    else if (key === 'sw') {
+      swaps = value.split(',').map((one) => {
+        const star = one.indexOf('*');
+        if (star === -1) return null;
+        return {
+          cells: one.slice(0, star).split('.').map(Number).filter(Number.isInteger),
+          slugs: one.slice(star + 1).split('+').filter(Boolean),
+        };
+      }).filter((g) => g?.cells.length && g.slugs.length);
+    }
     // v6 links written before the two lines existed said which side they meant.
     else if (key === 'm') lfMode = value;
   }
@@ -270,7 +323,10 @@ export function fromFragment(hash) {
     : undefined;
 
   return {
-    blob: { mode, sandbox, zoboGround, pullRows, cells, bench, plan, name, lf, lfWants, lfMode, lines },
+    blob: {
+      mode, sandbox, zoboGround, pullRows, cells, bench, flex, swaps, plan,
+      name, lf, lfWants, lfMode, lines,
+    },
     unknown,
   };
 }

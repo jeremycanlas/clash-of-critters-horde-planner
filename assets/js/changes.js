@@ -306,8 +306,10 @@ function mount(book) {
     show(Number(btn.dataset.i), true);
     /* Back to the top of the notes, not wherever the last tab was scrolled to.
        Switching tabs and landing halfway down a different update reads as the
-       page having jumped on its own. */
-    $('#changes-body').scrollIntoView({ block: 'start', behavior: 'auto' });
+       page having jumped on its own. Only when the tabs have scrolled out of
+       view, and to the tabs rather than past them: scrolling the notes to the
+       top of the screen hid the tabs you had just pressed. */
+    if (tabs.getBoundingClientRect().top < 0) tabs.scrollIntoView({ block: 'start', behavior: 'auto' });
   });
 
   const wanted = books.findIndex((b) => `#${slug(b)}` === location.hash);

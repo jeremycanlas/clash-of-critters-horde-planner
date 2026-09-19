@@ -1,0 +1,83 @@
+/*
+ * The page tabs (site-nav.js) and the labelled drop-down menu (.formmenu).
+ * Their own file so every page links them the same way; tokens from app.css.
+ */
+
+/* ------------------------------------------------------------ page tabs */
+
+.sitetabs {
+  display: flex; gap: 2px;
+  padding: 0 var(--s5);
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  overflow-x: auto; scrollbar-width: none;
+  overscroll-behavior-x: contain;
+}
+.sitetabs::-webkit-scrollbar { display: none; }
+
+.sitetabs__tab {
+  flex: 0 0 auto;
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 10px var(--s3);
+  border-bottom: 2px solid transparent; margin-bottom: -1px;
+  color: var(--text-dim); font-size: 13.5px; font-weight: 550;
+  text-decoration: none; white-space: nowrap;
+  transition: color 120ms ease, border-color 120ms ease;
+}
+.sitetabs__tab:hover { color: var(--text); border-bottom-color: var(--line); }
+.sitetabs__tab:focus-visible { outline: 2px solid var(--accent); outline-offset: -4px; border-radius: var(--r-sm); }
+.sitetabs__tab[aria-current="page"] { color: var(--text); border-bottom-color: var(--accent); }
+.sitetabs__tab--add::before { content: "+"; font-weight: 700; color: var(--text-mute); }
+.sitetabs__short { display: none; }
+.sitetabs__new {
+  padding: 2px 6px; border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+  color: var(--accent-ink-on);
+  font-size: 10.5px; font-weight: 650;
+}
+
+@media (max-width: 760px) {
+  .sitetabs {
+    padding: 0 var(--s2);
+    /* Says "there is more this way" on the only screen where there is. */
+    mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent);
+  }
+  .sitetabs__tab { padding: 10px var(--s2); min-height: 44px; font-size: 13px; }
+  .sitetabs__long:has(+ .sitetabs__short) { display: none; }
+  .sitetabs__short { display: inline; }
+}
+
+/* ------------------------------------------------------------ labelled menu */
+
+.formmenu { position: relative; flex: 0 0 auto; }
+.formmenu > summary { list-style: none; cursor: pointer; gap: 6px; }
+.formmenu > summary::-webkit-details-marker { display: none; }
+.formmenu__caret { font-size: 10px; color: var(--text-mute); }
+.formmenu[open] > summary { background: var(--surface-3); }
+
+.formmenu__list {
+  position: absolute; top: calc(100% + 6px); right: 0; z-index: var(--z-modal);
+  width: min(330px, calc(100vw - 2 * var(--s3)));
+  display: flex; flex-direction: column;
+  padding: var(--s1);
+  border: 1px solid var(--line); border-radius: var(--r-md);
+  background: var(--surface);
+  box-shadow: var(--lift-2);
+}
+.formmenu__item {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 1px;
+  padding: var(--s2) var(--s3);
+  border: 0; border-radius: var(--r-sm);
+  background: transparent; color: var(--text);
+  font: inherit; font-size: 13.5px; text-align: left;
+  cursor: pointer;
+}
+.formmenu__item[hidden] { display: none; }
+.formmenu__item b { font-weight: 600; }
+.formmenu__item span { font-size: 12px; color: var(--text-dim); }
+.formmenu__item:hover, .formmenu__item:focus-visible, .formmenu__item:focus-within { background: var(--surface-2); }
+.formmenu__item:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.formmenu__item--danger b { color: var(--danger); }
+
+/* Players is private: a small lock says so, and that it is not for everyone. */
+.sitetabs__tab--private::after { content: "🔒"; font-size: 11px; opacity: .7; }

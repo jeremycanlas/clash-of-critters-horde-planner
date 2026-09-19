@@ -100,8 +100,34 @@ export function viewOf(snap) {
   });
   const lines = { lf: line(snap?.lines?.lf), have: line(snap?.lines?.have) };
 
+  /*
+   * The squares left open on purpose.
+   *
+   * A gallery card drew none of these, so a posted template -- which is what a
+   * formation with flex squares IS -- arrived in the gallery looking like a
+   * half-finished board. The filter is the same rule store's reconcile() keeps:
+   * a mark says nothing is here on purpose, so it cannot survive something
+   * being here.
+   */
+  const flex = (Array.isArray(snap?.flex) ? snap.flex : [])
+    .map(Number)
+    .filter((i) => Number.isInteger(i) && i >= 0 && i < ALL_CELLS && !cells[i]);
+
+  /* Shaped the way store's reconcile() leaves them, and filtered against the
+     board this view actually holds -- a posted formation can name a square that
+     emptied before it was sent, or a Tatari this roster no longer has. */
+  const grouped = new Set();
+  const swaps = (Array.isArray(snap?.swaps) ? snap.swaps : [])
+    .map((g) => ({
+      cells: (Array.isArray(g?.cells) ? g.cells : [])
+        .map(Number)
+        .filter((i) => Number.isInteger(i) && cells[i] && !grouped.has(i) && grouped.add(i)),
+      slugs: (Array.isArray(g?.slugs) ? g.slugs : []).filter((x) => typeof x === 'string'),
+    }))
+    .filter((g) => g.cells.length && g.slugs.length);
+
   const formation = {
-    mode, cells, bench, plan, lines,
+    mode, cells, bench, plan, lines, swaps, flex,
     name: typeof snap?.name === 'string' ? snap.name : '',
     lfMode: snap?.lfMode === 'have' ? 'have' : 'lf',
     activePlayer: 1,
@@ -137,6 +163,8 @@ export function viewOf(snap) {
       : ENEMY_FIRST + (row + ENEMY_ROWS) * COLS + col),
 
     formation,
+    /** Which group a square is in, or -1. Same answer store gives, same name. */
+    swapIndexAt: (cell) => swaps.findIndex((g) => g.cells.includes(cell)),
     players,
     playerCount: () => playerCount,
     mode: () => MODES[mode],

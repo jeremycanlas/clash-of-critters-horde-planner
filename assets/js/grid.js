@@ -9,6 +9,7 @@
 
 import { state, matches, pieceBySlug } from './data.js';
 import * as store from './store.js';
+import { swapTap, swapLetter } from './swaps.js';
 import { $, artHTML, esc, roleIcon, typeIcon, toast } from './ui.js';
 import { draggable, dropZone } from './dnd.js';
 import { quickAddStep } from './priority.js';
@@ -357,11 +358,21 @@ export function buildGrid() {
      * chip below, because the two modes cannot both own a tap and the one you
      * switched on deliberately is the one that should win.
      */
+    /*
+     * Marking. One mode, and the square decides what the tap means.
+     *
+     * Empty, and it becomes FLEX: nothing here on purpose. Filled, and it joins
+     * the group you are building: somebody is here, but you had others in mind.
+     * Both are the same statement -- this square is not settled -- and asking
+     * the board rather than a second toggle means the answer cannot disagree
+     * with what you are actually pointing at.
+     */
     if (document.body.classList.contains('is-flexing')) {
       const cell = e.target.closest('.cell');
       if (!cell) return;
       const i = Number(cell.dataset.cell);
-      if (!store.toggleFlex(i)) toast('That square is taken', 'error');
+      if (store.formation.cells[i]) swapTap(i);
+      else store.toggleFlex(i);
       return;
     }
 
@@ -969,6 +980,44 @@ export function renderGrid() {
      */
     const flex = !t && store.isFlex(i);
     cell.classList.toggle('is-flex', flex);
+
+    /*
+     * The group letter, drawn by CSS off this attribute rather than as markup.
+     *
+     * Every corner of a token is already taken -- tier, role, owner, planned
+     * level -- so the badge belongs to the square, not to whoever is standing on
+     * it. That is also the truer statement: the group is about the spot.
+     */
+    const group = store.swapIndexAt(i);
+    if (group >= 0) cell.dataset.swap = swapLetter(group);
+    else delete cell.dataset.swap;
+
+    /*
+     * Who else was in the running for this square.
+     *
+     * Named in the label whether or not the lens is on, because the lens is a
+     * picture and a picture is the one thing a screen reader cannot use -- the
+     * badge alone would say a group exists and never say what is in it.
+     *
+     * Drawn always, and only the first three: two share a tile diagonally,
+     * three make a triangle, four a square, and a fifth has nowhere to go. The
+     * band under the board names all of them regardless.
+     *
+     * There is no switch for this. A group exists only because you made one, so
+     * the opting-in already happened; a toggle on top of that was asking the
+     * same question twice.
+     *
+     * The same layout the card draws, at half the size -- see swapLayout() in
+     * card.js for the ratios and .token[data-alts] in app.css for this half of
+     * them. One design at two scales, so a board and a picture of it agree.
+     */
+    const alts = group >= 0
+      ? store.formation.swaps[group].slugs.map((s) => state.bySlug.get(s)).filter(Boolean)
+      : [];
+    const drawnAlts = alts.slice(0, 3);
+    const swapNote = alts.length
+      ? `, swap group ${swapLetter(group)}: or ${alts.map((a) => a.name).join(', ')}`
+      : '';
     cell.classList.toggle('is-carried', carried === i);
     cell.classList.remove('is-over');
 
@@ -1028,8 +1077,12 @@ export function renderGrid() {
     cell.dataset.type = t.type;
     cell.dataset.player = String(occ.player);
     cell.innerHTML = `
-      <span class="token" data-type="${t.type}" data-player="${occ.player}">
+      <span class="token${drawnAlts.length ? ' token--alted' : ''}"
+            ${drawnAlts.length ? `data-alts="${drawnAlts.length}"` : ''}
+            data-type="${t.type}" data-player="${occ.player}">
         ${artHTML(t, ON_CARD)}
+        ${drawnAlts.length ? `<span class="token__alts" aria-hidden="true">${
+          drawnAlts.map((a) => artHTML(a, ON_CARD)).join('')}</span>` : ''}
         ${elemGlyph(t.type)}
         <span class="token__tier">T${t.tier}</span>
         <span class="token__role">${roleIcon(t.role)}</span>
@@ -1043,7 +1096,7 @@ export function renderGrid() {
       </span>`;
     cell.setAttribute('aria-label',
       `${where}${landed.has(i) ? ', dragged here by the boss' : ''}: ${t.name}, ${who}${t.type} ${t.role}, tier ${t.tier}, ${plan}${
-        seat ? `, step ${seat} of the plan` : ''}`);
+        seat ? `, step ${seat} of the plan` : ''}${swapNote}`);
   }
   renderRanges();
   renderArmed();
@@ -1365,9 +1418,14 @@ function onKeydown(e) {
       renderGrid();
       toast('Picked up. Arrow keys to move, Enter to drop');
     } else {
-      const occ = store.formation.cells[carried];
+      const from = carried;
       carried = null;
-      const result = store.place(occ.slug, i, occ.player);
+      /* moveFrom rather than place(), for the reason the drag path uses it: it
+         moves the square you took hold of, where place() moves the first square
+         holding that slug -- a different one in Sandbox. Carrying a Tatari onto
+         a flex square trades them here too; the keyboard is the same gesture
+         with a different input, and would be the one route where it did not. */
+      const result = store.moveFrom(from, i);
       if (!result.ok) toast(result.reason, 'error');
       renderGrid();
     }

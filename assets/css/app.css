@@ -439,7 +439,6 @@ img { -webkit-user-drag: none; }
   background: color-mix(in srgb, var(--accent) 14%, transparent);
 }
 .topbar__sub { color: var(--text-mute); font-size: 11.5px; text-transform: uppercase; letter-spacing: .08em; }
-.topbar__actions { display: flex; align-items: center; gap: var(--s2); margin-left: auto; flex-wrap: wrap; }
 
 /*
  * The two items in this row that leave the page, set apart from the four that
@@ -448,16 +447,6 @@ img { -webkit-user-drag: none; }
  * down); these keep their own, because a link squeezed to "Record a…" is a link
  * nobody follows.
  */
-.topbar__contribute { flex: 0 0 auto; margin-right: var(--s2); gap: 5px; }
-/* Only ever visible on a phone, where it splits the row in two; see the
-   .topbar__break rule in the phone block near the bottom of this file. */
-.topbar__break { display: none; }
-/* Dim, so it reads as a mark on the label rather than a second word in it. */
-.topbar__contribute-plus {
-  color: var(--text-mute);
-  font-size: 14px; font-weight: 700; line-height: 1;
-}
-.topbar__contribute:hover .topbar__contribute-plus { color: var(--accent); }
 
 /* Narrow screens: two tight rows that scroll away instead of a sticky slab. */
 @media (max-width: 760px) {
@@ -533,12 +522,10 @@ img { -webkit-user-drag: none; }
    * than in a menu is that they can be read.
    */
   .field--name { order: 1; flex: 1 1 auto; min-width: 0; }
-  .topbar__actions { order: 2; flex: 1 1 100%; margin-left: 0; gap: var(--s1); }
   /*
    * min-height, not just padding. This selector is 0,2,0 and the touch-size
    * rule further down is 0,1,0, so whatever is set here wins.
    */
-  .topbar__actions .btn { min-height: 44px; padding: 7px var(--s2); }
 }
 
 /* ============================================================ section nav */
@@ -2395,6 +2382,23 @@ body[data-switching="true"] .cell[data-zobo] { box-shadow: none; cursor: default
   margin: 0; padding: var(--s3) var(--s2);
   color: var(--text-mute); font-size: 12px;
 }
+/*
+ * The tip line under the share buttons.
+ *
+ * Deliberately not a button and not accented: it appears next to the row you
+ * just pressed something in, and anything with a fill on it there would read as
+ * a fifth thing to do rather than as a sentence. Muted, one line, the link
+ * carrying the only colour -- the same restraint the header's tip jar uses, and
+ * for the same reason.
+ */
+.share__thanks {
+  margin: var(--s2) 0 0;
+  color: var(--text-mute);
+  font-size: 12.5px; line-height: 1.5;
+}
+.share__thanks[hidden] { display: none; }
+.share__thanks a { color: var(--accent-ink-on); }
+
 /* Under the Zobo list, saying what the numbers are and who counted them. */
 .roster__note {
   margin: 0;
@@ -3615,26 +3619,6 @@ body.is-dragging-active {
    phone it is .wide-only and the app bar carries it instead. */
 .topbar__share { flex: 0 0 auto; }
 
-/*
- * Community sits with Record a range as the row's other destination, and keeps
- * its own width for the same reason. Outlined in the accent rather than filled:
- * the row's one item whose problem was that nobody knew it existed, ranked
- * above the plain buttons and below the filled Share, which is the action this
- * tool exists to produce.
- *
- * The selectors are a step heavier than they look because they are fighting
- * `.topbar__actions .btn`, which sets flex, padding and hover further down.
- */
-.topbar__actions .topbar__community {
-  flex: 0 0 auto;
-  padding: 7px var(--s3);
-  border-color: color-mix(in srgb, var(--accent) 55%, var(--line));
-}
-.topbar__actions .topbar__community:hover {
-  --btn-bg: color-mix(in srgb, var(--accent) 12%, var(--surface-2));
-  border-color: color-mix(in srgb, var(--accent) 85%, var(--line));
-}
-
 /* ============================================================ footer */
 
 .foot {
@@ -3961,81 +3945,7 @@ body.is-dragging-active {
     padding-left: 0; padding-right: 0;
   }
   .field--name:focus { background: var(--surface-2); border-color: var(--line); padding-left: var(--s2); }
-  /*
-   * The count comes after the controls, not between them.
-   *
-   * At order 1 it sat in the middle of the second row's group -- name, status,
-   * mode switch, More -- and its 100% basis broke the line right there. So the
-   * name got a row to itself, the count got a row to itself, and the switch and
-   * More were pushed to a fourth: four rows, three of them with one thing on
-   * them. Only visible once something is placed, which is why the empty-header
-   * check did not see it.
-   *
-   * At order 2 the name, the switch and More pack the row first and the count
-   * takes the line below, where it reads as a caption to the name above it.
-   */
-  #formation-status { order: 2; flex: 1 1 100%; margin-top: -2px; }
-
-  /*
-   * The seven links, folded behind More. See the note in index.html.
-   *
-   * order: 0 puts it on the credit row rather than a line of its own, and the
-   * auto margin pushes it to the right-hand end of that row -- which is where a
-   * menu button belongs and, usefully, is the one place on the row with space
-   * going spare.
-   */
-  #topbar-more { order: 1; margin-left: auto; flex: 0 0 auto; }
-  .topbar__actions { order: 4; }
-  /* Room to shrink so the name, the mode switch and nothing else share row two. */
-  .field--name { flex: 1 1 120px; }
-  body:not([data-topmore="open"]) .topbar__actions { display: none; }
-
-  /*
-   * The mode switch joins the name field rather than taking a line of its own.
-   * It is about 120px and was sitting alone against the right edge with 250px
-   * of nothing beside it, because title + byline + switch overflows 387px by a
-   * hair and the switch is what wrapped. Two half-rows became one full one.
-   */
-  #mode-switch { order: 1; }
-
-  .topbar__actions { gap: 4px; }
-  /*
-   * Filling their line, and breaking where the meaning breaks.
-   *
-   * The row needs 439px of a 411px phone, so it wraps whatever happens -- and
-   * left to itself it wrapped after "Import", stranding "Clear all" alone on a
-   * line looking like something that fell off. The break below puts the seam
-   * where the row already has one: the two links that leave the page, then the
-   * three buttons that act on the formation. `1 1 auto` then fills both lines,
-   * so two deliberate rows rather than four items and an orphan.
-   */
-  .topbar__actions .btn { flex: 1 1 auto; padding: 6px 4px; font-size: 12px; }
-  .topbar__actions .topbar__community { flex: 1 1 auto; }
-  .topbar__contribute { margin-right: 0; }
-  /* A zero-height item with a full-width basis: the standard way to force a
-     flex line break without a wrapper element the wide layout does not want. */
-  .topbar__break { display: block; flex-basis: 100%; height: 0; margin: 0; }
-
-  /*
-   * A 160px flex-basis, not `auto`.
-   *
-   * `auto` resolves to the input's intrinsic width -- about 260px from the
-   * default `size` attribute -- and 260 + 8 + the 120px mode switch is 388
-   * against 387 of usable width. One pixel, and the switch dropped to a line of
-   * its own with a quarter of the screen empty beside it. A basis small enough
-   * to leave the switch room settles the line break; `flex-grow` then hands the
-   * field every pixel the switch does not use, so it still ends up ~259px wide.
-   *
-   * Not `flex-basis: 0`: at zero the field is small enough to join the title's
-   * line instead, which puts a text input next to the byline.
-   */
-  /* The flex maths above still holds; the size is set with the rest of the
-     name's treatment further up, where 1a promotes it to the phone's heading. */
-  /* 120, not 160. With the mode switch (118) and More (79) beside it, a 160
-     basis put the row 7px over 366 and More took a line of its own. The field
-     still ends up the widest thing on the row -- grow gives it every pixel the
-     other two do not use. */
-  .field--name { flex: 1 1 120px; padding: 6px 0; }
+  /* The header's phone layout is with the rest of the masthead, at the end of this file. */
 
   /* Three checkboxes and a button were wrapping to two rows of their own. */
   .panel--field .panel__tools { gap: 2px var(--s2); font-size: 12px; }
@@ -4403,6 +4313,8 @@ body.is-dragging-active {
  * frame goes, because it is a control.
  */
 body.is-clean .topbar,
+body.is-clean .sitetabs,
+body.is-clean .formbar,
 body.is-clean .secnav,
 body.is-clean .appbar,
 body.is-clean .scrim,
@@ -6143,8 +6055,16 @@ body.is-flexing .cell:not(.is-filled):hover {
   border-color: var(--accent);
   background: color-mix(in srgb, var(--accent) 12%, transparent);
 }
-/* The filled ones are not targets, and saying so beats a toast after the tap. */
-body.is-flexing .cell.is-filled { opacity: .55; }
+/*
+ * Filled squares are targets too now, and a different kind: pressing one starts
+ * a group rather than marking the square. Outlined rather than dashed, because
+ * dashes already mean "nothing here" everywhere else on this board and a filled
+ * square is the opposite of that.
+ */
+body.is-flexing .cell.is-filled { cursor: pointer; }
+body.is-flexing .cell.is-filled:hover {
+  outline: 2px solid var(--accent); outline-offset: -2px;
+}
 
 /* High contrast: the dash pattern is the only thing separating a flex square
    from an empty one, and a dash pattern is a single channel. */
@@ -6437,3 +6357,454 @@ body.is-dragging-active .chipbench__slot { border-color: var(--accent); }
 .card--chip,
 .chipbench__chip,
 .chiptray__zone { user-select: none; -webkit-user-select: none; }
+
+
+/* ============================================================ swap groups
+ *
+ * A square you filled but did not settle. Two surfaces, and they are drawn to
+ * different rules on purpose: the legend lives inside the frame and is read from
+ * a screenshot by somebody with no legend to check, so it names its Tatari in
+ * words as well as art; the editor lives outside the frame and is read by you,
+ * with the board in front of you, so it is sprites and nothing else.
+ */
+
+/* The badge on the square. Bottom-left, the one corner a token leaves free --
+   tier, role, owner and planned level have the other three. */
+.cell[data-swap] { border-style: dashed; border-color: var(--accent); }
+.cell[data-swap]::after {
+  content: attr(data-swap);
+  position: absolute; left: 2px; bottom: 2px; z-index: 2;
+  min-width: 11px; padding: 0 2px;
+  border-radius: 3px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 8.5px; font-weight: 800; line-height: 12px; text-align: center;
+  pointer-events: none; user-select: none;
+}
+
+/* Both kinds of square are a target while marking; see the pair of rules by
+   the .is-flexing block above, which is where the empty half lives. */
+
+/* ---- the legend, inside the frame ---- */
+.field-frame__swaps {
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2);
+  margin: 0;
+  padding: 5px var(--s3);
+  border-top: 1px solid var(--line-soft);
+  background: var(--surface-2);
+  font-size: 13px; font-weight: 700; letter-spacing: .01em;
+  overflow-wrap: anywhere;
+}
+.field-swap { display: inline-flex; align-items: center; gap: 4px; }
+.field-swap__tag {
+  min-width: 15px; padding: 0 3px;
+  border-radius: 3px;
+  background: var(--accent); color: var(--accent-ink);
+  font-size: 11px; line-height: 15px; text-align: center; letter-spacing: .06em;
+}
+.field-swap__or { color: var(--text-mute); font-weight: 600; }
+.field-swap__want { display: inline-flex; align-items: center; gap: 3px; }
+.field-swap__want img { width: 20px; height: 20px; }
+
+/* ---- the editor, outside it ---- */
+.swapbar {
+  display: flex; flex-direction: column; gap: var(--s2);
+  margin: var(--s2) 0 0;
+  padding: var(--s2) var(--s3);
+  border: 1px dashed var(--accent);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+}
+.swapbar__hint { margin: 0; color: var(--text-mute); font-size: 12.5px; line-height: 1.4; }
+.swapbar__none { margin: 0; color: var(--text-mute); font-size: 12.5px; }
+.swapbar__picker { display: flex; flex-wrap: wrap; gap: 4px; }
+.swapbar__acts { display: flex; gap: var(--s2); }
+.swap-pick {
+  padding: 2px;
+  border: 1px solid var(--line-soft); border-radius: 6px;
+  background: var(--surface-1);
+  cursor: pointer;
+  /* Only the border moves. A sprite that changes size on press makes a row of
+     them jump, and the row is what you are reading. */
+  transition: border-color .12s ease, background-color .12s ease;
+}
+.swap-pick img { display: block; width: 34px; height: 34px; }
+.swap-pick[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+}
+
+/*
+ * The alternates lens: runners-up drawn on the square they are runners-up for.
+ *
+ * A field tile is 49.2px on a 390px phone and a sprite fills 47 of it. That is
+ * the whole budget, and it is what decides which of the two layouts below is
+ * the default: an equal four-way split leaves about 22px each, a shape and a
+ * colour rather than an identification, and it takes with it the one thing the
+ * square has to say -- which of them is actually standing there.
+ *
+ * Whichever is chosen, the board and the card draw the same one. A board that
+ * looked different from a picture of itself would be the worse failure.
+ */
+/*
+ * The two layouts, as percentages of the tile. Same numbers as swapLayout() in
+ * card.js -- that function is the source, this is the same set written in CSS,
+ * and the two are meant to be read side by side whenever either changes.
+ *
+ * Default: the one that is down keeps 78% and the runners-up run down the right
+ * edge at 30%. The first question anybody asks a square is which Tatari is
+ * actually standing on it, and only a size difference answers that without
+ * words. At ~15px the runners-up are a count and a hint of colour, which is
+ * honest about what they are -- the band under the board is where they are
+ * named.
+ */
+.token--alted > img { position: absolute; }
+.token__alts { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+.token__alts img { position: absolute; object-fit: contain; }
+
+/* The placed one dominant, runners-up down the edge. */
+.token--alted > img { left: 0; top: 11%; width: 78%; height: 78%; }
+.token__alts img { right: 0; width: 30%; height: 30%; opacity: .85; }
+.token[data-alts="1"] .token__alts img:nth-child(1) { top: 35%; }
+.token[data-alts="2"] .token__alts img:nth-child(1) { top: 20%; }
+.token[data-alts="2"] .token__alts img:nth-child(2) { top: 50%; }
+.token[data-alts="3"] .token__alts img:nth-child(1) { top: 5%; }
+.token[data-alts="3"] .token__alts img:nth-child(2) { top: 35%; }
+.token[data-alts="3"] .token__alts img:nth-child(3) { top: 65%; }
+
+/*
+ * Two badges give way on a square with runners-up.
+ *
+ * The runners-up run down the right edge, so the role icon top-right and the
+ * planned level bottom-right would sit on top of them. Tier stays: it is
+ * top-left, over the one that is actually down, which is whose tier it is.
+ */
+.token--alted .token__role,
+.token--alted .token__rank,
+.token--alted .token__add { display: none; }
+
+/* ============================================================ pinball */
+
+/*
+ * The pinball calculator. One column, because every panel on it is a short
+ * question with a short answer and a second column would only put half of them
+ * below the fold on a phone anyway.
+ *
+ * Nothing here invents a colour or a border: .panel, .field and .eyebrow carry
+ * the page, and the only new shapes are the number tiles, which need a size the
+ * rest of the app has no use for.
+ */
+.pinball {
+  display: grid;
+  gap: var(--s4);
+  max-width: 720px;
+  padding: var(--s5) var(--s5) var(--s6);
+  margin: 0 auto;
+}
+
+/* Fields wrap to their own row before they shrink: a number input narrower than
+   about ten characters starts hiding the digits it exists to show. */
+.pinball__inputs { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--s3); }
+.pinball__f { display: grid; gap: 5px; flex: 0 1 150px; min-width: 120px; }
+.pinball__f .field { width: 100%; }
+
+/* Reads as a sentence beside the inputs, and drops under them when the row
+   runs out of width. */
+.pinball__push {
+  flex: 1 1 200px; min-width: 160px;
+  margin: 0 0 2px;
+  display: grid; gap: 1px;
+  font-size: 13.5px;
+}
+.pinball__push b { font-weight: 700; }
+.pinball__push span { font-size: 12.5px; }
+
+/*
+ * A number and what it counts. The number is the whole point, so it gets the
+ * display face and enough size to be read from across a desk, and the label
+ * underneath is deliberately small -- you already know you asked for candy.
+ */
+.pbstat {
+  display: grid; gap: 1px;
+  padding: var(--s3);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+}
+.pbstat__n {
+  font-family: var(--font-display);
+  font-size: 22px; font-weight: 700; letter-spacing: -.02em;
+  line-height: 1.05;
+}
+.pbstat__k { font-size: 12.5px; font-weight: 600; }
+.pbstat__per { font-family: var(--font-mono); font-size: 11px; }
+
+/* Candy is the headline: two thirds of what a stack pays, and the only figure
+   here that runs to seven digits. */
+.pbstat--lead {
+  margin-bottom: var(--s3);
+  border-color: color-mix(in srgb, var(--accent) 38%, var(--line));
+  background: color-mix(in srgb, var(--accent) 7%, var(--surface-2));
+}
+.pbstat--lead .pbstat__n { font-size: 34px; color: var(--accent-ink-on); }
+
+/* 175px rather than 150: at 150 the five tiles fit four across and leave the
+   fifth alone on a row of its own, which reads as a straggler rather than a
+   set. Three and two is a shape. */
+.pbstat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+  gap: var(--s2);
+}
+
+/*
+ * The two outcomes this page counts but cannot value. Dashed, because a dashed
+ * edge is the app's existing shorthand for "this figure is not the whole story"
+ * -- see .card__fx[data-base="false"] -- and these are hits, not payouts.
+ */
+.pbstat--roll {
+  border-style: dashed;
+  background: none;
+}
+
+/* The one sentence per panel that answers the question the panel asked. */
+.pinball__verdict {
+  margin: var(--s3) 0 0;
+  padding: var(--s3);
+  border-radius: var(--r-md);
+  border: 1px solid var(--line-soft);
+  background: var(--surface-2);
+  font-size: 13.5px;
+}
+.pinball__verdict[data-state="blocked"] {
+  border-color: color-mix(in srgb, var(--danger) 40%, var(--line));
+  background: color-mix(in srgb, var(--danger) 7%, var(--surface-2));
+}
+.pinball__verdict[data-state="ok"] {
+  border-color: color-mix(in srgb, var(--ok) 40%, var(--line));
+  background: color-mix(in srgb, var(--ok) 7%, var(--surface-2));
+}
+
+/* Only ever on screen when an edit has left the table not summing to 100. */
+.pinball__warn {
+  margin: var(--s3) 0 0;
+  color: var(--danger);
+  font-size: 12.5px; font-weight: 600;
+}
+
+.pinball__variance { margin-top: var(--s3); margin-bottom: 0; }
+
+/* Five number columns do not fit a 360px phone at any font size worth reading,
+   so the table scrolls inside its own box rather than the page scrolling. */
+.pinball__tablewrap { overflow-x: auto; margin-bottom: var(--s3); }
+.pinball__table { border-collapse: collapse; width: 100%; font-size: 13px; }
+.pinball__table th, .pinball__table td {
+  padding: var(--s2) var(--s2) var(--s2) 0;
+  text-align: left;
+  border-bottom: 1px solid var(--line-soft);
+}
+.pinball__table thead th {
+  font-family: var(--font-mono);
+  font-size: 10.5px; font-weight: 500;
+  letter-spacing: .1em; text-transform: uppercase;
+  color: var(--text-mute);
+  white-space: nowrap;
+}
+.pinball__table tbody th { font-weight: 600; white-space: nowrap; }
+.pinball__table tbody tr:last-child th,
+.pinball__table tbody tr:last-child td { border-bottom: 0; }
+.pinball__table .field--tiny { width: 5.5em; }
+
+.pinballpage .hint:last-child { margin-bottom: 0; }
+
+/*
+ * The "give or take" under each figure. Mono and dim on purpose: it is a
+ * qualifier on the number above it, and the moment it competes with that number
+ * the tile stops answering the question it was asked. Empty for anything whose
+ * spread rounds to nothing, and :empty keeps the tile from reserving the line.
+ */
+.pbstat__sd {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-mute);
+}
+.pbstat__sd:empty { display: none; }
+/* The dashed tiles are the two the spread actually matters for -- at x40 a
+   Camp-raid count swings by two thirds of itself -- so there it is not a
+   footnote and does not read as one. */
+.pbstat--roll .pbstat__sd { color: var(--text-dim); }
+
+
+/* ============================================================ masthead (B)
+ *
+ * Three bands, top to bottom: who and where (.topbar), every page as a tab
+ * (.sitetabs, in site-nav.css), and this formation (.formbar). See the note
+ * above the header in index.html. Last in the file on purpose: it replaces
+ * the one-row header's rules, and the few older ones that still match
+ * (.field--name, #mode-switch, .saves-handle) are settled here.
+ */
+
+/* The brand row scrolls away; the formation bar is what stays. */
+.topbar { position: static; border-bottom: 0; padding-block: var(--s2); }
+.topbar__help { margin-left: auto; }
+
+.formbar {
+  position: sticky; top: 0; z-index: var(--z-sticky);
+  display: flex; align-items: center; gap: var(--s3);
+  padding: var(--s2) var(--s5);
+  background: color-mix(in srgb, var(--surface-2) 94%, transparent);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--line);
+}
+.formbar .field--name {
+  order: 0; flex: 0 1 320px; min-width: 140px;
+  padding: 4px var(--s2); margin-left: calc(var(--s2) * -1);
+  border-color: transparent; background: transparent;
+  font-family: var(--font-display); font-size: 19px; font-weight: 700; letter-spacing: -.02em;
+}
+.formbar .field--name:hover { border-color: var(--line); }
+.formbar .field--name:focus { background: var(--surface); border-color: var(--line); }
+.formbar #formation-status { order: 0; flex: 0 1 auto; margin: 0; }
+.formbar #mode-switch { order: 0; margin-left: 0; }
+
+/* Was a sideways tab fixed to the right edge; now an ordinary button here. */
+.formbar .saves-handle {
+  position: static; transform: none; writing-mode: horizontal-tb;
+  flex-direction: row; gap: 6px;
+  margin-left: auto;
+  padding: 7px var(--s3);
+  border: 1px solid var(--line); border-radius: var(--r-sm);
+  background: var(--surface); color: var(--text);
+  font-size: 13px; font-weight: 550; letter-spacing: 0;
+}
+.formbar .saves-handle[aria-expanded="true"] { border-color: var(--accent); }
+
+/* A running Live session is inside the menu now, so the menu says so. */
+body.is-live .formmenu > summary::before {
+  content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--accent);
+}
+body.is-live-down .formmenu > summary::before { background: transparent; box-shadow: inset 0 0 0 1px var(--accent); }
+
+@media (max-width: 760px) {
+  .topbar { padding: var(--s2) var(--s3); gap: var(--s2); flex-wrap: nowrap; }
+  .topbar__help { min-width: 36px; min-height: 36px; padding: 0; }
+
+  /* Name on its own line, the count under it, then the switch and the menu. */
+  .formbar {
+    position: static; flex-wrap: wrap;
+    gap: var(--s2); padding: var(--s2) var(--s3) var(--s3);
+    backdrop-filter: none; background: var(--surface-2);
+  }
+  .formbar .field--name { flex: 1 1 100%; min-width: 0; margin-left: 0; padding: 4px 0; }
+  .formbar .field--name:focus { padding-left: var(--s2); }
+  .formbar #formation-status { flex: 1 1 100%; margin-top: -6px; }
+  .formbar .saves-handle { display: none; }
+  .formbar .formmenu { margin-left: auto; }
+  .formbar .formmenu > summary { min-height: 40px; }
+}
+
+/* ============================================================ toolbars inside the drafter
+ *
+ * Same rules as the masthead: one filled thing per row, toggles that look
+ * like toggles, and nothing that reads as a different kind of control from
+ * its neighbour for no reason.
+ */
+
+/* Flex slots is an on/off setting, so it is drawn as a switch rather than a
+   bare checkbox sitting between three buttons. */
+.panel--field .panel__tools > .check {
+  gap: 8px; padding: 4px 10px 4px 6px;
+  border: 1px solid var(--line); border-radius: 999px; background: var(--surface-2);
+  font-size: 12.5px; font-weight: 550; cursor: pointer;
+}
+.panel--field .panel__tools > .check input {
+  appearance: none; margin: 0; flex: none;
+  width: 28px; height: 16px; border-radius: 999px;
+  background: var(--surface-3); box-shadow: inset 0 0 0 1px var(--line);
+  position: relative; cursor: pointer;
+  transition: background-color 140ms ease;
+}
+.panel--field .panel__tools > .check input::after {
+  content: ""; position: absolute; top: 2px; left: 2px;
+  width: 12px; height: 12px; border-radius: 50%;
+  background: var(--text-mute);
+  transition: transform 140ms var(--ease-out), background-color 140ms ease;
+}
+.panel--field .panel__tools > .check input:checked { background: var(--accent); box-shadow: none; }
+.panel--field .panel__tools > .check input:checked::after { transform: translateX(12px); background: var(--accent-ink); }
+.panel--field .panel__tools > .check input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Advanced reads as a button that opens something, like its neighbours. */
+.panel--field .pill--advanced { border-style: solid; border-radius: var(--r-sm); color: var(--text-dim); }
+/* Clear field is the one that throws work away; it goes to the far end. */
+.panel--field .panel__tools #btn-clear-field { margin-left: auto; }
+
+/* The hint: one line, "How it works" for the rest. */
+details.hint > summary { list-style: none; cursor: pointer; }
+details.hint > summary::-webkit-details-marker { display: none; }
+details.hint { padding: 7px 10px; border-radius: var(--r-sm); background: var(--surface-2); }
+details.hint[open] { line-height: 1.55; }
+details.hint > summary b { color: var(--text); font-weight: 600; }
+.hint__more { margin-left: var(--s2); color: var(--accent-ink-on); font-weight: 600; white-space: nowrap; }
+details.hint[open] .hint__more { display: none; }
+details.hint[open] > summary { margin-bottom: var(--s1); }
+
+/* Tatari / Zobos / Chips are what the panel is showing, so they are tabs:
+   underlined, not filled. The yellow fill is kept for one thing per row. */
+#roster-tabs { padding: 0; border: 0; background: transparent; gap: var(--s1); }
+#roster-tabs .segmented__btn {
+  padding: 6px var(--s2); border-radius: 0; background: transparent;
+  border-bottom: 2px solid transparent; box-shadow: none; color: var(--text-dim);
+}
+#roster-tabs .segmented__btn:hover { color: var(--text); }
+#roster-tabs .segmented__btn[aria-selected="true"],
+#roster-tabs .segmented__btn[aria-selected="true"]:hover {
+  background: transparent; color: var(--text); box-shadow: none;
+  border-bottom-color: var(--accent);
+}
+/* Cards / List is a view setting, so it gets the quiet selected state. */
+.panel__views .segmented__btn[aria-selected="true"],
+.panel__views .segmented__btn[aria-selected="true"]:hover {
+  background: var(--surface-3); color: var(--text); box-shadow: inset 0 0 0 1px var(--line);
+}
+
+/* Type and role chips carry their word, not just an icon: on a phone there is
+   no hover, so an unlabelled circle was a guess. */
+.chip__label { text-transform: capitalize; font-size: 12px; font-weight: 550; }
+.chip--type, .chip--role { display: inline-flex; width: auto; gap: 5px; padding-inline: 6px 10px; }
+
+/* ============================================================ share sheet on one screen
+ *
+ * The preview used to take the sheet's full width, which made the picture
+ * taller than the window and pushed Download and Copy below the fold. Now the
+ * picture is sized to the screen and the controls sit beside it (computer) or
+ * under it (phone), so everything is visible without scrolling. The sheet still
+ * scrolls as a last resort on a very short window.
+ */
+.share__preview img { width: auto; max-width: 100%; margin-inline: auto; object-fit: contain; }
+
+@media (min-width: 761px) {
+  .modal--share {
+    width: min(1120px, calc(100vw - 2 * var(--s4)));
+    grid-template-columns: minmax(0, 1fr) 300px;
+    grid-auto-rows: min-content;
+    gap: var(--s2) var(--s5);
+    align-content: start;
+  }
+  .modal--share[open] { display: grid; }
+  .modal--share > * { grid-column: 2; }
+  .modal--share > #share-scope { justify-self: start; }
+  .modal--share > .share__preview { grid-column: 1; grid-row: 1 / span 20; align-self: start; margin: 0; }
+  /* Window minus the sheet's margin and padding and the preview's own padding. */
+  .share__preview img { max-height: calc(100svh - 4 * var(--s5) - 2 * var(--s2) - 4px); }
+  .modal--share .modal__actions { margin-top: var(--s2); }
+  .modal--share .modal__actions .btn { flex: 1 1 auto; }
+}
+
+@media (max-width: 760px) {
+  /* About 580px of controls under the picture (measured on a 390 x 844 phone,
+     Post to Community included); it gets the rest, never less than 160. */
+  .share__preview img { max-height: max(160px, calc(100svh - 580px)); }
+  .modal--share { padding: var(--s4); }
+  .modal--share .share__preview { margin: var(--s2) 0; }
+}
