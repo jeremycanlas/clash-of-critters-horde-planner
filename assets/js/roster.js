@@ -9,7 +9,7 @@ import { TYPES, ROLES } from './icons.js';
 import { $, artHTML, esc, typeIcon, roleIcon, toast, glitterOn, BLANK_PIXEL } from './ui.js';
 import { draggable, dropZone } from './dnd.js';
 import { openDetail } from './detail.js';
-import { measureDock } from './shell.js';
+import { measureDock, peekSheet } from './shell.js';
 import {
   effectGroupsOf, effectsOf, helpFor, GROUP_LABELS,
   bringsTypeBy, bringsEffectBy, groupOf,
@@ -164,9 +164,34 @@ function buildRosterDropZone() {
  * page it is sitting on, and neither page should need its own copy of the
  * search, the filters or the cards.
  */
+/*
+ * A phone has no room for the roster and the field at once, which is why
+ * picking there was four steps and a memory test. So on a touch layout a tap
+ * does the whole thing: it brings the Tatari, arms it, and drops the sheet to
+ * half height so the board is visible -- the next tap on a square places it,
+ * and the sheet stays where it is for the next pick.
+ *
+ * Taking one back off the bench is still just a tap, and never peeks: nothing
+ * is waiting to be placed.
+ */
+const PHONE = matchMedia('(max-width: 760px)');
+
 function bringToBench(slug) {
+  const had = store.benchOf(store.formation.activePlayer).some((b) => b.slug === slug);
   const result = store.toggleBench(slug);
-  if (!result.ok) toast(result.reason, 'error');
+  if (!result.ok) { toast(result.reason, 'error'); return; }
+  if (had || !PHONE.matches) return;
+  /*
+   * Asked for rather than called: importing the grid here would put it into the
+   * roster's import chain, and the order modules first run in is the order they
+   * register their drop zones in — which decides which zone wins an overlapping
+   * point. A one-line event keeps the graph, and the gesture, as they were.
+   *
+   * Peek first: arming scrolls the marked square into view, and what counts as
+   * "in view" depends on the sheet already being half height.
+   */
+  peekSheet(true);
+  document.dispatchEvent(new CustomEvent('coc-pick', { detail: { slug } }));
 }
 
 /*

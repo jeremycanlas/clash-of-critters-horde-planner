@@ -1724,6 +1724,64 @@ await runGroup('the wave list fits the phone', async () => {
   await click($('#roster-tabs [data-list="tatari"]'), 420);
 });
 
+await runGroup('picking with the roster half up', async () => {
+  /*
+   * The two-tap path, which is the one a phone should be on: tap a Tatari in
+   * the roster and the sheet drops to half the screen with an empty square
+   * already marked, so the next tap places it and the board was visible while
+   * you chose. The three-tap path below still works and is what moving an
+   * already-brought Tatari uses.
+   */
+  const count = (sel) => Number($(sel).textContent || 0);
+
+  const before = count('#appbar-field');
+
+  /* Opened, not toggled: a group before this one may have left it open, and
+     toggling would have closed it -- after which tapping a card still benches
+     one (the cards are in the DOM) and nothing peeks, which is exactly right
+     and would read here as a broken feature. */
+  if (D.body.dataset.sheet !== 'roster') await click(barBtn('roster'), 340);
+  ok('the roster is open to pick from', D.body.dataset.sheet === 'roster');
+  // Earlier groups leave the roster on another list; a Zobo goes straight to
+  // the field and never benches, so this group would be testing nothing.
+  await click($('#roster-tabs [data-list="tatari"]'), 320);
+  const fresh = $$('.panel--roster .card')
+    .find((c) => !c.classList.contains('is-benched') && !c.dataset.switchFrom);
+  await click(fresh, 320);
+
+  ok('the roster drops to half the screen', D.body.classList.contains('is-peek'),
+     `sheet ${D.body.dataset.sheet}, bench ${count('#appbar-bench')}, card ${fresh?.dataset.slug}`);
+  const target = $('.cell.is-target');
+  ok('with an empty square marked', !!target);
+  /* The promise of peek is that you can see where it is about to go, so the
+     marked square -- not merely the board -- has to be above the sheet. */
+  const sheetTop = $('.panel--roster').getBoundingClientRect().top;
+  const mark = target?.getBoundingClientRect();
+  ok('and the marked square is visible above the sheet', !!mark && mark.top < sheetTop && mark.bottom > 0);
+  ok('the scrim is gone, so the board can be tapped', $('#scrim').hidden);
+
+  await click(target, 340);
+  eq('tapping the square places it', count('#appbar-field'), before + 1);
+  /* Nothing is waiting to be placed now, so the roster takes its screen back:
+     the half-height state belongs to a pick in progress, not to the sheet. */
+  ok('and the roster goes back to full height', !D.body.classList.contains('is-peek'));
+
+  const again = $$('.panel--roster .card')
+    .find((c) => !c.classList.contains('is-benched') && !c.dataset.switchFrom);
+  await click(again, 320);
+  ok('the next pick drops it again', D.body.classList.contains('is-peek'));
+  await click($('.cell.is-target'), 340);
+  eq('so the one after it is two taps as well', count('#appbar-field'), before + 2);
+
+  if (D.body.dataset.sheet === 'roster') await click(barBtn('roster'), 340);
+  ok('closing the roster ends the pick', !D.body.classList.contains('is-peek') && !$('.cell.is-target'));
+
+  // Put the field back as it was found: the groups after this one start from
+  // an empty board, and a suite that depends on its own order is a suite that
+  // fails for the wrong reason.
+  await click($('#btn-clear-field'), 360);
+});
+
 localStorage.clear();
 for (const [k, v] of Object.entries(saved)) localStorage.setItem(k, v);
 

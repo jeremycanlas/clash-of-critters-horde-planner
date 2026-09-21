@@ -4151,6 +4151,25 @@ body.is-dragging-active {
     visibility: visible;
   }
 
+  /*
+   * Peek: the sheet at half height, with the field above it.
+   *
+   * Picking used to mean closing the roster to find out what you had picked.
+   * Tapping a card now arms it and drops the sheet to here, so the board is on
+   * screen with an empty square already marked and the next tap places it.
+   */
+  body.is-peek .panel--roster,
+  body.is-peek .panel--priority,
+  body.is-peek #summary {
+    max-height: min(46svh, 430px);
+    box-shadow: 0 -10px 30px -14px rgb(0 0 0 / .6);
+  }
+  /* The field is being tapped, not read behind a scrim -- see peekSheet(). */
+  body.is-peek .scrim { display: none; }
+  /* The bottom strip is the half-height sheet now, not the bench dock, so a
+     square scrolled "into view" has to land above the sheet to be any use. */
+  body.is-peek .cell { scroll-margin-bottom: calc(min(46svh, 430px) + var(--appbar-h) + 12px); }
+
   /* The app bar's Saved button owns the feature here; the edge tab is
      desktop furniture. */
   .saves-handle { display: none; }

@@ -13,6 +13,7 @@ import { swapTap, swapLetter } from './swaps.js';
 import { $, artHTML, esc, roleIcon, typeIcon, toast } from './ui.js';
 import { draggable, dropZone } from './dnd.js';
 import { quickAddStep } from './priority.js';
+import { peekSheet } from './shell.js';
 import { coveredFrom, coverage, hasRange } from './range.js';
 import { effectsOf, GROUP_LABELS, helpFor } from './effects.js';
 
@@ -824,6 +825,26 @@ let armed = null;
 /** Said once per session. After that the preview speaks for itself. */
 let taughtArming = false;
 
+/**
+ * Arms a Tatari from somewhere that is not the bench strip.
+ *
+ * The roster hands one over the moment it is tapped on a phone, so that the
+ * next tap on a square places it -- see peekSheet() and bringToBench().
+ */
+// Opening or closing a sheet ends the pick that was in progress. See setSheet().
+document.addEventListener('coc-sheet', () => { if (armed) disarm(); });
+
+/* A Tatari tapped in the roster on a phone: bring it, then arm it, so the next
+   tap on a square places it. Sent by bringToBench(), which explains why. */
+document.addEventListener('coc-pick', (e) => {
+  const slug = e.detail?.slug;
+  if (!slug) return;
+  if (armed?.slug === slug) return;
+  armed = null;
+  arm(slug, store.formation.activePlayer);
+  if (!armed) peekSheet(false);
+});
+
 function arm(slug, player) {
   // A second tap on the same chip means "yes, there".
   if (armed && armed.slug === slug && armed.player === player) {
@@ -847,11 +868,20 @@ function arm(slug, player) {
   // takes. The cells carry a scroll-margin the height of the dock and the app
   // bar, so "nearest" knows the bottom strip is spoken for; centring it instead
   // hauled the whole page and pushed the top of the field off the screen.
-  cellEls[cell]?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  /* Instant while the roster is half up: the sheet is already animating, and a
+     second, slower animation competing with it reads as the board lagging. */
+  cellEls[cell]?.scrollIntoView({
+    block: 'nearest',
+    behavior: document.body.classList.contains('is-peek') ? 'auto' : 'smooth',
+  });
 
   if (!taughtArming) {
     taughtArming = true;
-    toast('Tap again to place it there, or tap the cell you want');
+    // Two ways in, two sentences: from the bench strip you tap the same chip
+    // again, and from the roster there is no chip to tap again.
+    toast(document.body.classList.contains('is-peek')
+      ? 'Tap the marked square, or any other one'
+      : 'Tap again to place it there, or tap the cell you want');
   }
 }
 
@@ -866,6 +896,10 @@ function commit(cell) {
 function disarm() {
   armed = null;
   renderArmed();
+  /* The half-height roster exists to show the board while something is waiting
+     to be placed. Nothing is waiting now, so the sheet gets its screen back --
+     and the next tap on a card drops it again. */
+  peekSheet(false);
 }
 
 /**

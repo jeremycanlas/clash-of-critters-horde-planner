@@ -180,6 +180,12 @@ function setSheet(name, { fromPop = false } = {}) {
 
   if (name) document.body.dataset.sheet = name;
   else delete document.body.dataset.sheet;
+  // A new sheet, or none, is a full-height sheet: peek belongs to one picking run.
+  document.body.classList.remove('is-peek');
+  /* And so does the Tatari waiting to be placed. Leaving it armed meant that
+     closing the roster and pressing its bench chip -- which means "yes, there"
+     to something already armed -- placed it instead of offering a square. */
+  document.dispatchEvent(new CustomEvent('coc-sheet', { detail: name ?? null }));
 
   scrim.hidden = !name;
 
@@ -236,6 +242,33 @@ function setSheet(name, { fromPop = false } = {}) {
 }
 
 /** Closes any open sheet. Exported so placing a Tatari can get out of the way. */
+/*
+ * Half a sheet.
+ *
+ * Picking on a phone was four steps -- open the roster, tap a card, close the
+ * roster, tap the bench chip, tap a square -- and the two screens were never up
+ * together, so you chose a Tatari for a board you could not see. Peek drops the
+ * open sheet to the bottom half: the field is visible above it, the roster is
+ * still scrollable below, and the Tatari you just tapped is already armed, so
+ * the next tap on a square places it and the one after that picks the next one.
+ *
+ * It is a state of the open sheet rather than a fifth sheet, so everything that
+ * closes a sheet already closes this.
+ */
+export function peekSheet(on = true) {
+  const peeking = !!on && !!open;
+  document.body.classList.toggle('is-peek', peeking);
+  /* The field has to be tappable again: while a sheet is up it sits behind a
+     scrim and is inert, which is right for a sheet you are reading and wrong
+     for one you are picking from onto the board above it. */
+  scrim.hidden = peeking ? true : !open;
+  const field = $('.panel--field');
+  if (field) {
+    if (peeking) field.inert = false;
+    else if (open) field.inert = true;
+  }
+}
+
 export function closeSheet() {
   setSheet(null);
 }
