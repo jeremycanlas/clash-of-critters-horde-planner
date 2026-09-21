@@ -919,7 +919,9 @@ function currentDiff() {
 
 function buildGrid() {
   const cell = (col, row, cls) =>
-    `<div class="cell ${cls}" role="gridcell" data-col="${col}" data-row="${row}"></div>`;
+    // role="button": a square is pressed to add or drop a tile, and a plain div
+    // may not carry the aria-label that says which square it is.
+    `<div class="cell ${cls}" role="button" data-col="${col}" data-row="${row}"></div>`;
 
   // Beyond the line: rows -7 up to -1, with -1 sitting directly on the line.
   $('#enemy').innerHTML = Array.from({ length: ENEMY_ROWS }, (_, i) =>
@@ -1137,7 +1139,9 @@ function renderOutput() {
 
   const ready = all.length > 0;
   for (const id of ['#btn-copy', '#btn-download']) $(id).disabled = !ready;
+  // Greyed and unclickable: say so, rather than only looking it.
   $('#btn-issue').classList.toggle('is-disabled', !ready);
+  $('#btn-issue').setAttribute('aria-disabled', String(!ready));
 
   const title = all.length === 1
     ? `${KINDS.find((k) => k.id === all[0].kind).label} range: ${nameOf(all[0].slug)}`

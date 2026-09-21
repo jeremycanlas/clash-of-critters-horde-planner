@@ -136,6 +136,9 @@
   font: 600 11px/1.3 var(--font-ui); white-space: nowrap; pointer-events: none;
 }
 .tr-copy--small { margin: 0 6px; padding: 1px 5px; font-size: 11px; }
+/* Comfortably tappable: 24px is the WCAG 2.2 floor for a target. */
+.tr-copy { min-height: 24px; }
+.tr-copy--small { min-height: 24px; }
 /* Phones keep the UID column now: copying it is the reason to be here. */
 @media (max-width: 760px) { .tr-table .tr-c-uid { display: table-cell; } }
 
@@ -166,7 +169,7 @@
   .tr-main { padding: var(--s3) var(--s3) var(--s5); gap: var(--s2); }
   .tr-test { padding: 6px var(--s2); }
   .tr-test__more { display: none; }
-  .tr-bar > .field, .tr-q { font-size: 16px; } /* 16px stops iOS zooming in on focus */
+  /* 16px on every field: see the pointer:coarse block in app.css. */
   .tr-tablewrap { max-height: none; overflow: visible; }
   .tr-table { font-size: 13px; table-layout: fixed; }
   .tr-table .tr-c-uid, .tr-table .tr-c-date, .tr-table .tr-c-by { display: none; }

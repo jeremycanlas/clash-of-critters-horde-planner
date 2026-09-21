@@ -5231,8 +5231,10 @@ body.is-clean .clean-hint {
   color: var(--text-mute);
 }
 .chip__tier[data-tier="1"] { color: var(--text-dim); }
-.chip__tier[data-tier="2"] { color: var(--fire); }
-.chip__tier[data-tier="3"] { color: var(--water); }
+/* Mixed toward the page's own ink: at 10px bold these need 4.5:1, and the raw
+   element colours are tuned for a 22px badge on a card, not for small print. */
+.chip__tier[data-tier="2"] { color: color-mix(in srgb, var(--fire) 62%, var(--text)); }
+.chip__tier[data-tier="3"] { color: color-mix(in srgb, var(--water) 62%, var(--text)); }
 .chip--rarity[aria-pressed="true"] .chip__tier { color: inherit; }
 .chipspage__none {
   max-width: 60ch;
@@ -6740,7 +6742,8 @@ body.is-live-down .formmenu > summary::before { background: transparent; box-sha
 .panel--field .panel__tools #btn-clear-field { margin-left: auto; }
 
 /* The hint: one line, "How it works" for the rest. */
-details.hint > summary { list-style: none; cursor: pointer; }
+/* A row of text is 19px tall; a thing you press needs 24. */
+details.hint > summary { list-style: none; cursor: pointer; padding: 4px 0; min-height: 24px; }
 details.hint > summary::-webkit-details-marker { display: none; }
 details.hint { padding: 7px 10px; border-radius: var(--r-sm); background: var(--surface-2); }
 details.hint[open] { line-height: 1.55; }
@@ -6807,4 +6810,16 @@ details.hint[open] > summary { margin-bottom: var(--s1); }
   .share__preview img { max-height: max(160px, calc(100svh - 580px)); }
   .modal--share { padding: var(--s4); }
   .modal--share .share__preview { margin: var(--s2) 0; }
+}
+
+/* iOS zooms the whole page in when a text box under 16px is tapped, and never
+   zooms back out: every field on a touch screen is 16px, whatever it looks like
+   on a desktop. Checkboxes, radios and ranges have no text to zoom. */
+@media (pointer: coarse) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  select,
+  textarea,
+  .field {
+    font-size: 16px;
+  }
 }

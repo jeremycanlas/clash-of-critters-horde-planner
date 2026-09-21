@@ -159,15 +159,15 @@ function buildControls() {
 }
 
 function headHTML() {
-  const col = (key, label, cls = '') => {
+  const col = (key, label, cls = '', name = '') => {
     const on = view.sort === key;
     const sort = on ? (view.dir === 'desc' ? 'descending' : 'ascending') : 'none';
-    return `<th class="${cls}" aria-sort="${sort}"><button type="button" data-sort="${key}">${label}${on ? `<span aria-hidden="true">${view.dir === 'desc' ? ' ▼' : ' ▲'}</span>` : ''}</button></th>`;
+    return `<th class="${cls}" aria-sort="${sort}"><button type="button" data-sort="${key}"${name ? ` aria-label="Sort by ${esc(name)}"` : ''}>${label}${on ? `<span aria-hidden="true">${view.dir === 'desc' ? ' ▼' : ' ▲'}</span>` : ''}</button></th>`;
   };
   return `<tr>
     ${col('uid', 'UID', 'tr-c-uid')}
     ${col('name', 'Name', 'tr-c-name')}
-    ${FRUITS.map((f) => col(f.key, `${icon(f)}<span class="tr-fruitname">${esc(f.name)}</span>`, 'tr-c-num')).join('')}
+    ${FRUITS.map((f) => col(f.key, `${icon(f)}<span class="tr-fruitname">${esc(f.name)}</span>`, 'tr-c-num', f.name)).join('')}
     ${col('total', 'Total', 'tr-c-num')}
     ${col('checked_at', 'Checked', 'tr-c-date')}
     <th class="tr-c-by">Updated by</th>

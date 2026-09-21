@@ -656,6 +656,27 @@ virtual clock, which is what makes it seconds instead of a forty-minute watch.
 --no-verify` gets past it once and `git config --unset core.hooksPath` turns it
 off. On a machine with no Chrome the hook says so and stands aside.
 
+### The iPhone sweep
+
+Headless Chrome is the wrong judge of an iPhone: its phone mode only resizes
+Chrome. `tools/iphone.mjs` drives WebKit, the engine Safari runs, at iPhone SE
+and iPhone 14 sizes with touch on, over every page:
+
+```
+node tools/iphone.mjs                 every page, both phones, local server
+node tools/iphone.mjs farm chips      only pages whose name matches
+node tools/iphone.mjs --live          the published site instead
+node tools/iphone.mjs --shots         also save a screenshot per page
+```
+
+It fails on: a page that scrolls sideways, a text box under 16px (iOS zooms in
+on tap and never back out), a tap target under 24px (the WCAG 2.2 AA floor), a
+serious or critical axe-core violation against WCAG 2.1 AA, a script error, a
+failed request, and the three-tap phone path -- card, bench chip, square --
+breaking. Anything between 24 and Apple's 44px guideline is a warning, not a
+failure. Playwright and axe-core live outside this repo; the file's header has
+the one-time setup.
+
 A filter that matches no group in a page reports "ok, nothing matched" rather than a
 plain ok, and the runner prints it as `--`. A page that checked nothing must never
 look like a page that checked everything and was happy.
