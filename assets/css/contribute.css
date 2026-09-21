@@ -629,3 +629,5 @@
   .contrib__actions .btn { flex: 1 1 100%; }
   .contrib__json { max-height: 200px; font-size: 11.5px; }
 }
+
+@media (pointer: coarse) { #out { min-height: 44px; } }

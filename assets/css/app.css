@@ -3938,6 +3938,9 @@ body.is-dragging-active {
   #app-version { display: none; }
   .byline { flex: 0 1 auto; min-width: 0; }
   .byline__text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  /* On the narrowest phones the name came out as "by...", which credits nobody.
+     The avatar still links to the same place, and the footer spells it out. */
+  @media (max-width: 400px) { .byline__text { display: none; } }
   .field--name {
     font-family: var(--font-display);
     font-size: 19px; font-weight: 700; letter-spacing: -.02em;
@@ -6702,7 +6705,7 @@ body.is-live-down .formmenu > summary::before { background: transparent; box-sha
   .formbar #formation-status { flex: 1 1 100%; margin-top: -6px; }
   .formbar .saves-handle { display: none; }
   .formbar .formmenu { margin-left: auto; }
-  .formbar .formmenu > summary { min-height: 40px; }
+  .formbar .formmenu > summary { min-height: 44px; }
 }
 
 /* ============================================================ toolbars inside the drafter
@@ -6822,4 +6825,21 @@ details.hint[open] > summary { margin-bottom: var(--s1); }
   .field {
     font-size: 16px;
   }
+}
+
+/* Apple's guideline is a 44px target, and a finger is not a mouse pointer: on a
+   touch screen the small controls grow to it. Only where it costs nothing --
+   the grid's squares stay 40px on a 375px screen because six of them plus the
+   margins is the whole width, and that is the board, not a button. */
+@media (pointer: coarse) {
+  .btn, .chip, .segmented__btn, summary.btn, .topbar__help,
+  #advanced-toggle, #filters-toggle, #frame-name {
+    min-height: 44px;
+  }
+  .chip, .segmented__btn { min-width: 44px; }
+  .topbar__help { min-width: 44px; }
+  .patchnote__x, .chipcard__keep { width: 44px; height: 44px; }
+  /* nowrap: the taller target squeezed the width and broke "Say thanks" over
+     two lines, which made the header taller than the button saved. */
+  .byline__tip { display: inline-flex; align-items: center; min-height: 44px; white-space: nowrap; }
 }

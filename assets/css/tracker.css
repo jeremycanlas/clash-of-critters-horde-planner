@@ -203,3 +203,11 @@
 .tr-history__when { color: var(--text-mute); font-size: 12px; }
 .tr-history__use, #tr-deleted-list .btn { margin-top: 4px; padding: 4px 8px; font-size: 12.5px; }
 .tr-deleted .tr-history__list { max-height: none; }
+
+/* The fruit columns are as wide as six of them fit on a phone, so their headers
+   stay narrow on purpose; everything else in the table reaches 44px. */
+@media (pointer: coarse) {
+  .tr-table th button { min-height: 44px; }
+  .tr-copy { min-height: 32px; }
+  .tr-filters > summary { min-height: 44px; }
+}
