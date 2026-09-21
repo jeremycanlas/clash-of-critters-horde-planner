@@ -418,7 +418,7 @@ const screens = asked.length ? asked : Object.keys(SCREENS);
 const pageNames = only.filter((o) => !Object.keys(SCREENS).includes(o));
 
 for (const screen of screens) {
-  for (const size of SCREENS[screen]) {
+  for (const size of (quick ? SCREENS[screen].slice(0, 1) : SCREENS[screen])) {
     for (const p of PAGES) {
       if (pageNames.length && !pageNames.some((o) => p.name.includes(o))) continue;
       const where = `${p.name} on ${size.name}`;
