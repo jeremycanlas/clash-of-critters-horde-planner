@@ -656,26 +656,38 @@ virtual clock, which is what makes it seconds instead of a forty-minute watch.
 --no-verify` gets past it once and `git config --unset core.hooksPath` turns it
 off. On a machine with no Chrome the hook says so and stands aside.
 
-### The iPhone sweep
+### The screen sweep
 
-Headless Chrome is the wrong judge of an iPhone: its phone mode only resizes
-Chrome. `tools/iphone.mjs` drives WebKit, the engine Safari runs, at iPhone SE
-and iPhone 14 sizes with touch on, over every page:
+Headless Chrome is the wrong judge of a phone: its phone mode only resizes
+Chrome. `tools/screens.mjs` drives WebKit, the engine Safari runs, across the
+three screens the tool is used on -- phone (iPhone SE, iPhone 14), tablet (iPad
+mini, iPad Pro 11) and desktop (1280, 1680) -- with touch where there is touch:
 
 ```
-node tools/iphone.mjs                 every page, both phones, local server
-node tools/iphone.mjs farm chips      only pages whose name matches
-node tools/iphone.mjs --live          the published site instead
-node tools/iphone.mjs --shots         also save a screenshot per page
+node tools/screens.mjs                 every screen, every page, local server
+node tools/screens.mjs phone           one screen: phone, tablet or desktop
+node tools/screens.mjs farm chips      only pages whose name matches
+node tools/screens.mjs --live          the published site instead
+node tools/screens.mjs --shots         also save a screenshot of each
 ```
 
-It fails on: a page that scrolls sideways, a text box under 16px (iOS zooms in
-on tap and never back out), a tap target under 24px (the WCAG 2.2 AA floor), a
-serious or critical axe-core violation against WCAG 2.1 AA, a script error, a
-failed request, and the three-tap phone path -- card, bench chip, square --
-breaking. Anything between 24 and Apple's 44px guideline is a warning, not a
-failure. Playwright and axe-core live outside this repo; the file's header has
-the one-time setup.
+It fails on: a page that scrolls sideways; a text box under 16px on a touch
+screen (iOS zooms in on tap and never back out); a tap target under 24px on a
+touch screen (the WCAG 2.2 AA floor); a serious or critical axe-core violation
+against WCAG 2.1 AA; a script error; a failed request; a budget missed -- 1.8s
+to first paint, 3s until the page has something to read, 1.6MB of markup, CSS,
+script and data, 700KB of that as script; and any of the gestures breaking.
+
+The gestures are the point of the three screens. A desktop drags with the
+mouse, a tablet drags with a finger, and a phone cannot drag at all, because
+the roster and the field are never on screen together -- it taps card, bench
+chip, square. Each is driven the way that screen really does it, and a touch
+drag is dispatched as pointer events because a trackpad drag arrives as
+`pointerType: "mouse"` and takes the other branch of `dnd.js` entirely.
+Anything between 24 and Apple's 44px guideline is a warning, not a failure.
+
+Playwright and axe-core live outside this repo; the file's header has the
+one-time setup.
 
 A filter that matches no group in a page reports "ok, nothing matched" rather than a
 plain ok, and the runner prints it as `--`. A page that checked nothing must never

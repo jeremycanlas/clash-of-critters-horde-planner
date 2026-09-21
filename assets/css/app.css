@@ -6819,10 +6819,12 @@ details.hint[open] > summary { margin-bottom: var(--s1); }
    zooms back out: every field on a touch screen is 16px, whatever it looks like
    on a desktop. Checkboxes, radios and ranges have no text to zoom. */
 @media (pointer: coarse) {
-  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
-  select,
-  textarea,
-  .field {
+  /* :root in front of each, so this outranks the class rules that set 13px --
+     .btn on the sort dropdown was the one that got through. */
+  :root input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  :root select,
+  :root textarea,
+  :root .field {
     font-size: 16px;
   }
 }
@@ -6832,7 +6834,8 @@ details.hint[open] > summary { margin-bottom: var(--s1); }
    the grid's squares stay 40px on a 375px screen because six of them plus the
    margins is the whole width, and that is the board, not a button. */
 @media (pointer: coarse) {
-  .btn, .chip, .segmented__btn, summary.btn, .topbar__help,
+  :root .btn, :root .chip, :root .segmented__btn, :root summary.btn,
+  :root .topbar__help, :root select,
   #advanced-toggle, #filters-toggle, #frame-name {
     min-height: 44px;
   }

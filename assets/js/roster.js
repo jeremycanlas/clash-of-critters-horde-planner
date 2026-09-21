@@ -883,7 +883,8 @@ function patchMark(t) {
   const { glyph, label } = PATCH_MARKS[change.direction] ?? {};
   if (!glyph) return '';
   const title = [`${label} in the ${state.patch?.label ?? 'latest'} update`, ...change.changes].join('\n');
-  return `<span class="card__patch" data-patch="${change.direction}" data-glyph="${glyph}"
+  // role="img": the glyph is drawn in CSS, and a plain span may not carry a label.
+  return `<span class="card__patch" role="img" data-patch="${change.direction}" data-glyph="${glyph}"
     title="${esc(title)}" aria-label="${esc(label)} in the latest update"></span>`;
 }
 
