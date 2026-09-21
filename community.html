@@ -50,10 +50,10 @@
         other people's builds and the tool has no way to know whether any of them
         is good, only that somebody thought it was worth posting.
       -->
-      <p class="hint">Formations other players have posted, with the field, both benches
-        and the level-up plan. Click one to load it into the drafter. Nothing you do to it here is saved back. This tool
-        has no way to know
-        whether any of them is good (WIP).</p>
+      <p class="hint">Formations other players have posted. Press one to read the whole card &mdash; the field,
+        both benches and the level-up plan &mdash; or <b>Open</b> to load it into the drafter, where nothing you do is
+        saved back here. Almost nobody has voted, so <b>Best first</b> ranks what you can check for yourself: upvotes,
+        then a full field, a level-up plan, and the poster having said what it is for.</p>
 
       <!--
         Two decisions, one row, never taller. Porting the drafter's three chip
@@ -62,8 +62,16 @@
       -->
       <div class="community__controls">
         <div id="sort-switch" class="segmented" role="group" aria-label="How to order these">
-          <button class="segmented__btn" type="button" data-sort="top" aria-pressed="true">Most upvoted</button>
+          <button class="segmented__btn" type="button" data-sort="best" aria-pressed="true">Best first</button>
+          <button class="segmented__btn" type="button" data-sort="match" aria-pressed="false" hidden>Like mine</button>
+          <button class="segmented__btn" type="button" data-sort="top" aria-pressed="false">Most upvoted</button>
           <button class="segmented__btn" type="button" data-sort="new" aria-pressed="false">Newest</button>
+        </div>
+        <!-- Grid scans, full cards read. The grid is the default: choosing
+             which of twenty-seven to look at comes before looking at one. -->
+        <div id="layout-switch" class="segmented" role="group" aria-label="How much of each formation to show">
+          <button class="segmented__btn" type="button" data-layout="grid" aria-pressed="true">Grid</button>
+          <button class="segmented__btn" type="button" data-layout="full" aria-pressed="false">Full cards</button>
         </div>
         <div id="mode-filter" class="segmented" role="group" aria-label="Filter by number of players">
           <button class="segmented__btn" type="button" data-mode="" aria-pressed="true">All</button>

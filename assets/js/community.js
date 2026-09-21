@@ -20,6 +20,7 @@
  */
 
 import { load, state } from './data.js';
+import * as store from './store.js';
 import { $, esc, toast, copyText, downloadBlob, slugFilename, dismissOnBackdrop } from './ui.js';
 // mapHTML and statsOf are gone from here: the row is a drawn card now, not a
 // stamp and a line of facts. saves.js and submit.js still use both.
@@ -50,6 +51,11 @@ applyPrefs();
  * cannot read — and "Show more" carries the rest.
  */
 const PAGE = 10;
+/* A grid row is a thumbnail and four facts, so a screen holds six of them and a
+   phone two. Ten would be one flick. Sixty is every formation posted so far,
+   which is what the sorts that rank the whole list need anyway. */
+const GRID_PAGE = 60;
+const pageSize = () => (view.layout === 'grid' ? GRID_PAGE : PAGE);
 
 const COLUMNS = 'id,name,note,mode,slugs,placed,steps,author_name,author_avatar,'
   + 'submitted_at,patch_id,score,snapshot';
@@ -69,8 +75,11 @@ let loading = false;
  * press away, and score ties break on recency, so a gallery with no votes in it
  * still reads newest-first.
  */
+const LAYOUT_KEY = 'coc.community.layout.v1';
 const view = {
-  sort: 'top', mode: '', patch: '', tier: '',
+  sort: 'best', mode: '', patch: '', tier: '',
+  /** 'grid' scans, 'full' reads. See gridCardHTML() and cardHTML(). */
+  layout: (() => { try { return localStorage.getItem(LAYOUT_KEY) === 'full' ? 'full' : 'grid'; } catch { return 'grid'; } })(),
   /** '' for everyone's, '1' for only what this browser posted. See mineWhere(). */
   mine: '',
 };
@@ -177,7 +186,17 @@ async function loadMore({ append = true } = {}) {
   paintMore();
   if (!append) skeleton();
 
-  const order = view.sort === 'top'
+  /*
+   * Two of these the database can do, and two it cannot.
+   *
+   * "Most upvoted" and "Newest" are one column each. "Best first" weighs five
+   * facts the database does not hold -- whether the field is full, whether
+   * there is a plan, whether the poster said anything, whether it predates the
+   * current patch -- and "Like mine" compares against a formation that exists
+   * only in this browser. Both of those ask for the whole gallery at once and
+   * rank it here, which is honest at this size and would not be at ten times it.
+   */
+  const order = view.sort === 'top' || view.sort === 'best'
     // submitted_at breaks ties, so equal scores keep a stable, meaningful order
     // rather than whatever the planner happens to return.
     ? 'score.desc,submitted_at.desc'
@@ -191,7 +210,7 @@ async function loadMore({ append = true } = {}) {
 
   const res = await rest(
     `/formation_cards?select=${COLUMNS}&order=${order}${where}`
-    + `&limit=${PAGE}&offset=${append ? rows.length : 0}`,
+    + `&limit=${pageSize()}&offset=${append ? rows.length : 0}`,
     { cache: true, headers: { Prefer: 'count=exact' } },
   );
   loading = false;
@@ -219,7 +238,7 @@ async function loadMore({ append = true } = {}) {
     seen.add(String(row.id));
     merged.push(row);
   }
-  rows = merged;
+  rows = ranked(merged);
   total = res.total ?? total;
 
   say('');
@@ -513,6 +532,143 @@ function paintVote(id) {
   btn.outerHTML = voteHTML(row);
 }
 
+/*
+ * What a formation is, worked out from what the gallery already stores.
+ *
+ * None of this is in the database and none of it needs to be: the slugs say
+ * which tiers are fielded, the count says whether the field is full, `steps`
+ * says whether there is a plan, `patch_id` says whether it predates the update
+ * everybody is playing. Together they are the difference between a wall of
+ * pictures and a list you can choose from.
+ */
+function factsOf(row) {
+  const tiers = { 1: 0, 2: 0, 3: 0, 4: 0 };
+  for (const slug of row.slugs ?? []) {
+    const t = state.bySlug.get(slug)?.tier;
+    if (t) tiers[t] += 1;
+  }
+  const top = [4, 3, 2, 1].find((t) => tiers[t] > 0) ?? 0;
+  const newest = patches[0];
+  return {
+    tiers,
+    top,
+    /* The highest tier it fields, and how many of them: "T4 x3" is the fact
+       somebody browsing for a build they can afford is actually looking for. */
+    tierLabel: top ? `T${top} x${tiers[top]}` : '',
+    full: row.placed >= (row.mode === 'coop' ? 20 : 10),
+    plan: row.steps > 0,
+    note: !!row.note?.trim(),
+    /* Older than the current patch window. Not wrong, but a formation built
+       before twenty families moved is a different claim from one built after. */
+    stale: !!(newest && row.patch_id && String(row.patch_id) !== String(newest.id)),
+  };
+}
+
+/*
+ * "Best first": the order to look in when nobody has voted.
+ *
+ * Every formation in the gallery has a score of 0 or 1, so ranking by votes is
+ * ranking by nothing, and ranking by date puts a two-Tatari test post above a
+ * finished D4 build. So the things a reader can check for themselves count:
+ * an upvote is worth the most, then a full field, then a level-up plan, then
+ * the poster having said what it is for. A pre-patch build gives one back.
+ */
+function meritOf(row) {
+  const f = factsOf(row);
+  return (row.score ?? 0) * 6 + (f.full ? 3 : 0) + (f.plan ? 2 : 0) + (f.note ? 2 : 0) + (f.stale ? -1 : 0);
+}
+
+/** How much of this formation you already have on your own field. */
+function overlapOf(row) {
+  if (!myBoard.size) return null;
+  const theirs = new Set(row.slugs ?? []);
+  if (!theirs.size) return null;
+  let same = 0;
+  for (const slug of theirs) if (myBoard.has(slug)) same += 1;
+  return { same, of: theirs.size };
+}
+
+/** The formation this browser is working on, for "Like mine". */
+let myBoard = new Set();
+
+function readMyBoard() {
+  try {
+    store.restore();
+    myBoard = new Set(store.allPlaced().map((p) => p.slug));
+  } catch { myBoard = new Set(); }
+  $('[data-sort="match"]').hidden = myBoard.size < 3;
+}
+
+/** Applies the orders the database cannot: see loadMore(). */
+function ranked(list) {
+  if (view.sort === 'best') return [...list].sort((a, b) => meritOf(b) - meritOf(a));
+  if (view.sort === 'match') {
+    const of = (r) => (overlapOf(r)?.same ?? -1);
+    return [...list].sort((a, b) => of(b) - of(a) || meritOf(b) - meritOf(a));
+  }
+  return list;
+}
+
+/*
+ * A name that says something.
+ *
+ * A third of the gallery is called "Formation 29 Aug 23:04" or "test 3",
+ * because that is what the drafter calls a formation nobody renamed. The card
+ * still shows it -- it is what the poster called it -- but the line under it
+ * carries what it actually is, so a junk name costs the reader nothing.
+ */
+const AUTO_NAME = /^(formation\b|test\b|untitled|new formation)/i;
+const titleOf = (row) => {
+  const name = (row.name || '').trim();
+  if (name && !AUTO_NAME.test(name)) return name;
+  const f = factsOf(row);
+  return `${row.mode === 'coop' ? 'Co-op' : 'Solo'}${f.tierLabel ? `, ${f.tierLabel}` : ''}, ${row.placed} placed`;
+};
+
+/**
+ * One formation, small enough to compare with the next one.
+ *
+ * The board only, drawn at thumbnail size, and four facts beside it. The full
+ * card -- both benches, the plan, the effects -- is one press away and is what
+ * the reader wanted *after* choosing which of twenty-seven to look at.
+ */
+function gridCardHTML(row) {
+  const f = factsOf(row);
+  const lap = overlapOf(row);
+  const when = fmtWhen(row.submitted_at);
+  const tags = [
+    row.mode === 'coop' ? 'Co-op' : 'Solo',
+    f.tierLabel,
+    f.plan ? `Plan ${row.steps}` : '',
+    f.full ? '' : `${row.placed} placed`,
+    f.stale ? 'Pre-patch' : '',
+  ].filter(Boolean);
+
+  return `
+    <li class="community__tile" data-id="${esc(row.id)}">
+      <button class="community__thumbwrap" type="button" data-peek-row="${esc(row.id)}"
+              title="Look at this formation">
+        <img class="community__thumb" data-shot="${esc(row.id)}"
+             alt="${esc(`${row.name}: the field`)}" width="636" height="560" decoding="async">
+        <span class="community__shotwait">Drawing...</span>
+      </button>
+      <div class="community__tilebody">
+        <h3 class="community__tilename">${esc(titleOf(row))}</h3>
+        <p class="community__tags">${tags.map((t) => `<span class="community__tag">${esc(t)}</span>`).join('')}</p>
+        ${lap && lap.same ? `<p class="community__match">${lap.same} of your ${myBoard.size} already on your field</p>` : ''}
+        ${row.note ? `<p class="community__tilenote">${esc(row.note)}</p>` : ''}
+        <p class="community__tilewho">${esc(authorOf(row))} &middot; ${esc(when)}</p>
+        <span class="community__acts community__acts--tile">
+          ${voteHTML(row)}
+          <a class="btn btn--tiny community__act community__act--go"
+             href="${esc(drafterLink(row))}" data-open="${esc(row.id)}">Open</a>
+          ${ownedByMe(row) ? `<button class="btn btn--tiny community__act community__remove" type="button"
+                  data-remove-row="${esc(row.id)}" title="Take this formation out of the gallery.">Delete</button>` : ''}
+        </span>
+      </div>
+    </li>`;
+}
+
 function cardHTML(row) {
   const cells = row.snapshot?.cells ?? [];
   const missing = missingNote(cells);
@@ -598,7 +754,9 @@ async function paintShot(img) {
        * The grid-only card is the right thing to *send* someone; it is the
        * wrong thing to browse.
        */
-      view: viewOf(row.snapshot), full: true, stacked: stackedHere(), scale: 1,
+      /* In the grid it is the field alone: a thumbnail of the whole card is a
+         picture of a card, not a picture of a formation. */
+      view: viewOf(row.snapshot), full: view.layout !== 'grid', stacked: stackedHere(), scale: 1,
       username: authorOf(row),
       avatar: row.author_avatar || '',
       note: row.note || '',
@@ -622,7 +780,16 @@ async function paintShot(img) {
      * so keeping the guess after the fact framed a short card in a band of
      * empty surface. The guess is for the wait; the picture is the truth.
      */
-    img.closest('.community__shotwrap')?.classList.add('is-drawn');
+    // The wrapper held a guessed shape so the tile reserved its height; the
+    // picture knows better, and a tile that keeps the guess sits in a band of
+    // empty surface.
+    const wrap = img.closest('.community__shotwrap, .community__thumbwrap');
+    if (wrap) {
+      // Only the full card takes its own shape. Tiles keep one box each, so a
+      // row of them lines up: a contact sheet with ragged tiles is a wall again.
+      if (wrap.classList.contains('community__shotwrap')) wrap.style.aspectRatio = `${canvas.width} / ${canvas.height}`;
+      wrap.classList.add('is-drawn');
+    }
   } catch (err) {
     console.error(err);
     img.closest('.community__shotwrap')?.classList.add('is-failed');
@@ -676,13 +843,17 @@ function drafterLink(row) {
  */
 function render({ fresh = true } = {}) {
   const host = $('#list');
+  const draw = view.layout === 'grid' ? gridCardHTML : cardHTML;
+  host.classList.toggle('community__list--grid', view.layout === 'grid');
+  // The one-column width is for reading a card; a grid of tiles wants the page.
+  document.body.classList.toggle('is-grid', view.layout === 'grid');
   if (fresh) {
     releaseShots();
-    host.innerHTML = rows.map(cardHTML).join('');
+    host.innerHTML = rows.map(draw).join('');
   } else {
     const have = new Set([...host.children].map((li) => li.dataset.id));
     host.insertAdjacentHTML('beforeend',
-      rows.filter((r) => !have.has(String(r.id))).map(cardHTML).join(''));
+      rows.filter((r) => !have.has(String(r.id))).map(draw).join(''));
   }
   for (const img of host.querySelectorAll('[data-shot]:not([src])')) shotWatcher.observe(img);
   $('#list-count').textContent = total === null
@@ -1164,11 +1335,25 @@ async function main() {
      * row showed too little to act on. The row is the whole formation now, so
      * pressing it does the thing you came for.
      */
+    // In the grid, pressing the thumbnail opens the whole card to read; in the
+    // full list the card is already there, so pressing it loads the formation.
+    const peek = e.target.closest('[data-peek-row]');
+    if (peek) { track('community-peeked'); openPeek(peek.dataset.peekRow); return; }
     const row = e.target.closest('[data-open-row]');
     if (row) {
       const link = e.target.closest('.community__item')?.querySelector('[data-open]');
       if (link) { track('community-loaded'); location.href = link.href; }
     }
+  });
+
+  $('#layout-switch').addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-layout]');
+    if (!btn || btn.dataset.layout === view.layout) return;
+    pick($('#layout-switch'), 'layout', btn.dataset.layout);
+    try { localStorage.setItem(LAYOUT_KEY, btn.dataset.layout); } catch { /* fine without */ }
+    track(`community-layout-${btn.dataset.layout}`);
+    // The page sizes differ, so this is a reload rather than a redraw.
+    refine({ layout: btn.dataset.layout });
   });
 
   $('#list-more').addEventListener('click', () => loadMore());
@@ -1182,7 +1367,7 @@ async function main() {
     const btn = e.target.closest('[data-sort]');
     if (!btn || btn.dataset.sort === view.sort) return;
     pick($('#sort-switch'), 'sort', btn.dataset.sort);
-    track(btn.dataset.sort === 'top' ? 'community-sort-top' : 'community-sort-new');
+    track(`community-sort-${btn.dataset.sort}`);
     refine({ sort: btn.dataset.sort });
   });
 
@@ -1279,6 +1464,9 @@ async function main() {
     resume = JSON.parse(sessionStorage.getItem(RESUME_KEY) ?? 'null');
     sessionStorage.removeItem(RESUME_KEY);
   } catch { /* nothing was stashed */ }
+  readMyBoard();
+  pick($('#layout-switch'), 'layout', view.layout);
+  pick($('#sort-switch'), 'sort', view.sort);
   if (resume?.view) {
     Object.assign(view, resume.view);
     pick($('#sort-switch'), 'sort', view.sort);
