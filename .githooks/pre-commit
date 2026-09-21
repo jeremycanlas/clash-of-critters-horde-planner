@@ -19,6 +19,29 @@ if [ "$status" -eq 2 ]; then
   exit 0
 fi
 
+# The screens sweep: WebKit at phone, tablet and desktop, one size each. It
+# needs a Playwright install that lives outside this repo, so a machine without
+# it is told once and waved through rather than blocked.
+if [ "$status" -eq 0 ] && command -v node >/dev/null 2>&1; then
+  echo "running the screen sweep..."
+  PLAYWRIGHT_BROWSERS_PATH="${PLAYWRIGHT_BROWSERS_PATH:-E:/caches/ms-playwright}"     node tools/screens.mjs --quick
+  screens=$?
+  if [ "$screens" -eq 2 ]; then
+    echo "hook: no screen sweep here (see tools/screens.mjs for the setup)" >&2
+  elif [ "$screens" -ne 0 ]; then
+    cat >&2 <<'MSG'
+
+Commit stopped: the screen sweep is red.
+
+Run it yourself to see the whole list:
+  node tools/screens.mjs
+
+Commit anyway with --no-verify.
+MSG
+    exit "$screens"
+  fi
+fi
+
 if [ "$status" -ne 0 ]; then
   cat >&2 <<'MSG'
 

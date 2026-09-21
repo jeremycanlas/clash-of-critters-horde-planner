@@ -6,6 +6,7 @@
  *   node tools/screens.mjs farm chips     only pages whose name matches
  *   node tools/screens.mjs --live         the published site instead
  *   node tools/screens.mjs --shots        also save a screenshot of each
+ *   node tools/screens.mjs --quick        one size per screen, for the hook
  *
  * Why this is separate from tools/check.sh: that runs the suites in headless
  * Chrome, which is the right tool for logic and for most layout, and the wrong
@@ -58,6 +59,9 @@ const PORT = 8139;
 const args = process.argv.slice(2);
 const live = args.includes('--live');
 const shots = args.includes('--shots');
+/* One size per screen. The second size catches where a layout gives, which is
+   worth a minute before a release and not worth it before every commit. */
+const quick = args.includes('--quick');
 const only = args.filter((a) => !a.startsWith('--'));
 
 /*
