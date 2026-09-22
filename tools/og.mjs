@@ -66,7 +66,7 @@ const CARDS = [
   {
     name: 'contribute',
     title: 'Record a range',
-    line: 'Draw what a Tatari actually reaches, and send it back so everybody else has it too.',
+    line: 'Contribute to the database of Tatari base skills and horde skills.',
     sprites: ['rockzilla', 'meteorax', 'hellhound', 'boltskipper', 'wobbler'],
   },
 ];
