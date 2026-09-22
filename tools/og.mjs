@@ -36,7 +36,7 @@ const CARDS = [
   {
     name: 'index',
     title: 'Horde Drafter',
-    line: 'Plan a Clash of Critters horde: 236 Tatari, both benches, the level-up order, and a picture to paste in chat.',
+    line: 'Plan a Clash of Critters Horde Formation: 236 Tatari, both benches, the level-up order, and a picture to paste in chat.',
     sprites: ['frugantuan', 'pandagrand', 'hypnostrix', 'dagondeep', 'haplysia'],
   },
   {
@@ -90,7 +90,9 @@ const html = (card, sprites) => `<!doctype html>
   h1 { margin: 22px 0 0; font-family: 'Bricolage Grotesque', system-ui, sans-serif; font-size: 82px; font-weight: 800; line-height: 1.02; letter-spacing: -.02em; }
   p { margin: 26px 0 0; max-width: 940px; font-size: 30px; line-height: 1.4; color: #a3aab9; }
   .sprites { display: flex; align-items: flex-end; gap: 10px; margin-left: -8px; }
-  .sprites img { width: 168px; height: 168px; object-fit: contain; }
+  /* Five of these plus the address is the full 1200 once the padding is taken
+     out; any larger and the address is clipped off the right edge. */
+  .sprites img { width: 146px; height: 146px; object-fit: contain; }
   .foot { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; padding-bottom: 40px; }
   .url { font-size: 22px; font-weight: 600; color: #8f99aa; padding-bottom: 30px; white-space: nowrap; }
 </style></head>
