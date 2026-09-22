@@ -54,7 +54,7 @@ const CARDS = [
   {
     name: 'chips',
     title: 'Chips',
-    line: 'What each chip is worth to the board you are building, not to a board in the abstract.',
+    line: 'List of chips in Clash of Critters Horde.',
     sprites: ['tikowl', 'bubbit', 'ospisces', 'frugatoad', 'pandaroot'],
   },
   {
