@@ -148,6 +148,33 @@ function line(entry) {
     </article>`;
 }
 
+/*
+ * One chip the season moved, as a card.
+ *
+ * Same treatment as an evolution line, because the reader's question is the
+ * same one: is this thing I use better or worse now. The direction is stored
+ * rather than worked out -- the arrow between two numbers cannot tell you that
+ * 40 energizers instead of 200 is a loss while 40 seconds of forced
+ * auto-battle instead of 90 is a gain.
+ */
+const chipIcon = (name) =>
+  `data/images/chips/${name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}.png`;
+
+function chipCard(entry) {
+  const dir = entry.direction === 'nerf' ? 'nerf' : 'buff';
+  return `
+    <article class="chchip" data-patch="${dir}">
+      <img class="chchip__art" src="${esc(chipIcon(entry.chip))}" alt="" width="52" height="52" loading="lazy">
+      <div class="chchip__body">
+        <h4 class="chchip__name">${esc(entry.chip)}</h4>
+        <p class="chchip__change">
+          <span class="chstat__mark" data-move="${dir === 'buff' ? 'up' : 'down'}" aria-hidden="true"></span>
+          ${esc(entry.change)}
+        </p>
+      </div>
+    </article>`;
+}
+
 function render(book) {
   const lines = book.lines ?? [];
   const patch = book.label || book.patch || '';
@@ -192,7 +219,8 @@ function render(book) {
    * anything this tool models, so none of it is repeated here.
    */
   const mode = book.mode?.groups ?? [];
-  $('#changes-mode').innerHTML = !mode.length ? '' : `
+  const chips = book.mode?.chips ?? [];
+  $('#changes-mode').innerHTML = !mode.length && !chips.length ? '' : `
     <h2 class="chmode__head">The mode itself</h2>
     <div class="chmode__groups">
       ${mode.map((g) => `
@@ -202,7 +230,10 @@ function render(book) {
             ${(g.items ?? []).map((item) => `<li>${esc(item)}</li>`).join('')}
           </ul>
         </section>`).join('')}
-    </div>`;
+    </div>
+    ${!chips.length ? '' : `
+      <h3 class="chmode__title chmode__title--chips">Chips</h3>
+      <div class="chchips">${chips.map(chipCard).join('')}</div>`}`;
 
   $('#changes-body').innerHTML = ORDER.map(({ key, glyph, title }) => {
     const group = lines.filter((l) => l.direction === key);

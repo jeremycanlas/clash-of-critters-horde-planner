@@ -839,32 +839,22 @@
         "screen lists them. Same Pioneer Server caveat as the rest of this tab:",
         "these are the test build’s numbers and may not be what ships.",
         "",
-        "The chip numbers are recorded here and NOT in data/chips.json, for the",
-        "same reason no Tatari on this tab is marked in the drafter: chips.json",
-        "is what the live game does, and a chip page quoting a test build would",
-        "be wrong for everybody playing today."
+        "The chip changes carry their own direction. A number cannot say it on its",
+        "own here: Parting Gift paying 40 energizers instead of 200 is a nerf, and",
+        "AFK Mode forcing 40 seconds of auto-battle instead of 90 is a buff.",
+        "",
+        "They are recorded here and NOT in data/chips.json, for the same reason no",
+        "Tatari on this tab is marked in the drafter: chips.json is what the live",
+        "game does, and a chip page quoting a test build would be wrong for",
+        "everybody playing today."
       ],
       "groups": [
         {
           "title": "Changed",
           "items": [
-            "A Tatari knocked down in battle now gives some of its energizers back. The notes do not say how many; on the Pioneer Server it was 100.",
+            "A Tatari knocked down in battle now gives some of its energizers back. On the Pioneer Server it was confirmed to be 100 energizer.",
             "Horde Invasion skills were adjusted for some Tatari and their evolutions. The changes below are the ones the Season Update screen names; the rest are in the game’s own Horde Invasion interface.",
             "Stage difficulties moved a little: Difficulty 1 is slightly easier, and Difficulties 3 and 4 are slightly harder."
-          ]
-        },
-        {
-          "title": "Chips",
-          "items": [
-            "AFK Mode: forced auto-battle 90s → 40s",
-            "Boss Killer: damage to Zobo bosses 25% → 20%",
-            "The Exile: stat boost 20% → 35%",
-            "Backend Support: damage boost 30% → 45%",
-            "Lawn Care: max HP damage 50% → 40%",
-            "Patch Upgrade: Tatari level +1 → +2",
-            "Parting Gift: energizers 200 → 40",
-            "On the Move: duration 20s → 30s",
-            "Weakest Link: stat boost 10% → 15%"
           ]
         },
         {
@@ -872,6 +862,53 @@
           "items": [
             "Dewgrub’s Aqua Flutter dealt less damage than it should have in some situations."
           ]
+        }
+      ],
+      "chips": [
+        {
+          "chip": "AFK",
+          "direction": "buff",
+          "change": "Forced auto-battle 90s → 40s"
+        },
+        {
+          "chip": "Boss Killer",
+          "direction": "nerf",
+          "change": "Damage to Zobo bosses 25% → 20%"
+        },
+        {
+          "chip": "The Exile",
+          "direction": "buff",
+          "change": "Stat boost 20% → 35%"
+        },
+        {
+          "chip": "Backend Support",
+          "direction": "buff",
+          "change": "Damage boost 30% → 45%"
+        },
+        {
+          "chip": "Lawn Care",
+          "direction": "nerf",
+          "change": "Max HP damage 50% → 40%"
+        },
+        {
+          "chip": "Patch Upgrade",
+          "direction": "buff",
+          "change": "Tatari level +1 → +2"
+        },
+        {
+          "chip": "Parting Gift",
+          "direction": "nerf",
+          "change": "Energizers 200 → 40"
+        },
+        {
+          "chip": "On the Move",
+          "direction": "buff",
+          "change": "Duration 20s → 30s"
+        },
+        {
+          "chip": "Weakest Link",
+          "direction": "buff",
+          "change": "Stat boost 10% → 15%"
         }
       ]
     }
