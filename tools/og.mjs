@@ -48,7 +48,7 @@ const CARDS = [
   {
     name: 'changes',
     title: 'What changed',
-    line: 'Every buff and nerf in the latest Clash of Critters update, with the old number beside the new one.',
+    line: 'Every buff and nerf in Clash of Critters Horde for every patch.',
     sprites: ['pyrodaemon', 'frostluna', 'cheerspring', 'sonarbat', 'zenscarab'],
   },
   {
