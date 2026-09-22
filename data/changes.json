@@ -830,6 +830,48 @@
           "Zap Chord: Damage Factor 120% → 150%"
         ]
       }
-    ]
+    ],
+    "mode": {
+      "_note": [
+        "The Season 2 notes that are not about one Tatari, as the Season Update",
+        "screen lists them. Same Pioneer Server caveat as the rest of this tab:",
+        "these are the test build’s numbers and may not be what ships.",
+        "",
+        "The chip numbers are recorded here and NOT in data/chips.json, for the",
+        "same reason no Tatari on this tab is marked in the drafter: chips.json",
+        "is what the live game does, and a chip page quoting a test build would",
+        "be wrong for everybody playing today."
+      ],
+      "groups": [
+        {
+          "title": "Changed",
+          "items": [
+            "A Tatari knocked down in battle now gives some of its energizers back.",
+            "Horde Invasion skills were adjusted for some Tatari and their evolutions. The changes below are the ones the Season Update screen names; the rest are in the game’s own Horde Invasion interface.",
+            "Stage difficulties moved a little: Difficulty 1 is slightly easier, and Difficulties 3 and 4 are slightly harder."
+          ]
+        },
+        {
+          "title": "Chips",
+          "items": [
+            "AFK Mode: forced auto-battle 90s → 40s",
+            "Boss Killer: damage to Zobo bosses 25% → 20%",
+            "The Exile: stat boost 20% → 35%",
+            "Backend Support: damage boost 30% → 45%",
+            "Lawn Care: max HP damage 50% → 40%",
+            "Patch Upgrade: Tatari level +1 → +2",
+            "Parting Gift: energizers 200 → 40",
+            "On the Move: duration 20s → 30s",
+            "Weakest Link: stat boost 10% → 15%"
+          ]
+        },
+        {
+          "title": "Fixed",
+          "items": [
+            "Dewgrub’s Aqua Flutter dealt less damage than it should have in some situations."
+          ]
+        }
+      ]
+    }
   }
 }
