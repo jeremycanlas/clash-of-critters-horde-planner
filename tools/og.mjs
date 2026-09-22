@@ -42,7 +42,7 @@ const CARDS = [
   {
     name: 'community',
     title: 'Community formations',
-    line: 'Builds other players posted, with the field, the benches and the plan. Sorted by what you can check yourself.',
+    line: 'Builds posted by other players for Clash of Critters Horde.',
     sprites: ['chronerva', 'armorjaw', 'serrabloom', 'voltmare', 'solaflora'],
   },
   {
