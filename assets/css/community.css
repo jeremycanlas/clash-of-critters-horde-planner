@@ -226,8 +226,12 @@ body.community { --dock-h: 0px; }
 
 /* ---------------------------------------------------------------- preview */
 
+/* Wide, because this is the "look at it properly" step. The grid decides which
+   formation to open; the peek has to be readable without squinting, so it takes
+   as much of the screen as the card can use -- the card itself is 1080 across,
+   and beyond that it is only being blown up. */
 .modal--peek {
-  width: min(440px, 92vw);
+  width: min(1040px, 94vw);
   padding: var(--s4);
   border: 1px solid var(--line);
   border-radius: var(--r-lg);
@@ -284,9 +288,16 @@ body.community { --dock-h: 0px; }
  * direct answer to a share funnel that produced zero copied links.
  */
 .peek__card {
-  display: flex; justify-content: center; align-items: center;
+  /* flex-start, not center: a centred item in a scrolling box has its top
+     cropped and cannot be scrolled back to -- the first row of the board was
+     cut off on every tall card. */
+  display: flex; justify-content: center; align-items: flex-start;
   min-height: 120px;
   margin: var(--s3) 0;
+  /* Tall cards (a long plan, two full benches) scroll inside the dialog rather
+     than pushing Close and Open off the bottom of the screen. */
+  max-height: calc(100svh - 230px);
+  overflow: auto;
 }
 .peek__canvas {
   max-width: 100%; height: auto;

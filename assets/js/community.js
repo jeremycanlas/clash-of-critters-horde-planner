@@ -919,7 +919,10 @@ async function openPeek(id, { push = true } = {}) {
   const url = link.toString();
 
   dlg.innerHTML = `
-    <h2>${esc(row.name)}</h2>
+    <!-- The drawn card carries the name in 32px type a centimetre below this,
+         so the dialog's own heading is for the screen reader, which cannot read
+         a picture. -->
+    <h2 class="sr-only">${esc(row.name)}</h2>
     <p class="hint peek__by">${facePart(row)}
       Posted by <b>${esc(authorOf(row))}</b> · ${esc(fmtWhen(row.submitted_at))}</p>
     <div class="peek__card"><p class="hint" id="peek-wait">Drawing the card…</p></div>
