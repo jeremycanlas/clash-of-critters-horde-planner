@@ -96,7 +96,7 @@ const BUDGET = {
   ready: 3000,      // ms to the page's own "there is something to read here"
   code: 1600,       // KB of markup, CSS, script and data: the critical path
   scripts: 700,     // KB of that which is JavaScript
-  art: 12000,       // KB of images: 236 Tatari is a lot of sprites, but not endless
+  art: 12000,       // KB of images: 242 Tatari is a lot of sprites, but not endless
 };
 
 /* `ready` is that page's own sign that it has something to read: the roster

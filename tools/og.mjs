@@ -36,7 +36,7 @@ const CARDS = [
   {
     name: 'index',
     title: 'Horde Drafter',
-    line: 'Plan a Clash of Critters Horde Formation: 236 Tatari, both benches, the level-up order, and a picture to paste in chat.',
+    line: 'Plan a Clash of Critters Horde Formation: 242 Tatari, both benches, the level-up order, and a picture to paste in chat.',
     sprites: ['frugantuan', 'pandagrand', 'hypnostrix', 'dagondeep', 'haplysia'],
   },
   {

@@ -1,27 +1,27 @@
 {
   "source": "https://clashofcritters.wiki.gg/wiki/Tatari",
-  "scrapedAt": "2026-09-10",
+  "scrapedAt": "2026-09-22",
   "counts": {
-    "tatari": 236,
-    "families": 65,
+    "tatari": 242,
+    "families": 66,
     "byType": {
-      "Fire": 47,
+      "Fire": 48,
       "Grass": 47,
-      "Lightning": 47,
+      "Lightning": 48,
       "Rock": 47,
-      "Water": 48
+      "Water": 52
     },
     "byRole": {
-      "DPS": 94,
-      "Guardian": 45,
+      "DPS": 95,
+      "Guardian": 46,
       "Healer": 20,
       "Specialist": 19,
-      "Support": 32,
+      "Support": 36,
       "Tank": 26
     },
     "byRarity": {
       "Common": 20,
-      "Rare": 216
+      "Rare": 222
     }
   },
   "types": [
@@ -63,13 +63,16 @@
   },
   "skillTypeInfo": {
     "ATK Boost": "The Skills with ATK Boost effect can buff the ATK stat of the affected ally(s).",
+    "ATK Speed Boost": "All Tier 4 Lightning Tatari carry Aura: Lightning, which provides all allies with Attack Speed Boost. The effect for non-Lightning allies is reduced by 50%. Aura: Lightning can be stacked, but cannot take effect in some game modes.",
     "AoE": "The AoE (Area of Effect) attack inflicts damages to multiple enemies in the range at once. This skill type usually comes with wider attack range or/and longer attack distance, but also with slower attack speed.",
     "Burn": "The Skills with Burn effect inflict Fire type damage over time.",
     "Chain": "The Chain attack inflicts damages to multiple enemies as the strike bounces to another nearby enemy across lanes multiple times.",
     "DEF Boost": "The Skills with DEF Boost effect can buff the Defense stat of the affected ally(s).",
     "DMG Boost": "The Skills with Damage Boost effect can buff the final damage of the affected ally(s).",
+    "DMG Reduction": "All Tier 4 Rock Tatari carry Aura: Rock, which provides all allies with Damage Reduction. The effect for non-Rock allies is reduced by 50%. Aura: Rock can be stacked, but cannot take effect in some game modes. Other Tatari with the DMG Reduction skill only reduce damage for themselves instead of for allies.",
     "Damage Boost": "The Skills with Damage Boost effect can buff the final damage of the affected ally(s).",
     "Fragile": "The Skills with Fragile effect are known to reduce the target's DEF.",
+    "HP Boost": "All Tier 4 Grass Tatari carry Aura: Grass, which increases Max HP for all allies. The effect for non-Grass allies is reduced by 50%. Aura: Grass can be stacked, but cannot take effect in some game modes.",
     "Heal": "The Skills with Heal effects can recover HP for the user or allies.",
     "Invincible": "The Skills with Invincible effect grant the user to take no damages from enemies' attacks.",
     "Knockback": "The Skills with Knockback effect can push out the target(s).",

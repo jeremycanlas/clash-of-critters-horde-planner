@@ -1683,6 +1683,7 @@
   },
   "rangeImage": null,
   "skillTypes": [
+   "ATK Speed Boost",
    "AoE",
    "DMG Boost",
    "Knockback"
@@ -2210,7 +2211,8 @@
   },
   "rangeImage": null,
   "skillTypes": [
-   "AoE"
+   "AoE",
+   "HP Boost"
   ],
   "image": "data/images/tatari/orchitoria.png",
   "glitterImage": "data/images/glitter/orchitoria.png",
@@ -2384,6 +2386,7 @@
   },
   "rangeImage": null,
   "skillTypes": [
+   "DMG Reduction",
    "Pierce",
    "Shield"
   ],
@@ -2560,6 +2563,7 @@
   },
   "rangeImage": null,
   "skillTypes": [
+   "ATK Speed Boost",
    "Paralyze",
    "Pierce"
   ],
@@ -3223,7 +3227,8 @@
   },
   "rangeImage": null,
   "skillTypes": [
-   "AoE"
+   "AoE",
+   "Summon"
   ],
   "image": "data/images/tatari/rockwu.png",
   "glitterImage": "data/images/glitter/rockwu.png",
@@ -3267,6 +3272,7 @@
   "rangeImage": "data/images/range/rockong.jpg",
   "skillTypes": [
    "AoE",
+   "DMG Reduction",
    "Summon"
   ],
   "image": "data/images/tatari/rockong.png",
@@ -3442,6 +3448,7 @@
   },
   "rangeImage": null,
   "skillTypes": [
+   "ATK Speed Boost",
    "AoE",
    "Invincible",
    "Paralyze"
@@ -4324,6 +4331,7 @@
   },
   "rangeImage": null,
   "skillTypes": [
+   "HP Boost",
    "Planting",
    "Slow"
   ],
@@ -4849,6 +4857,7 @@
   "skillTypes": [
    "ATK Boost",
    "DEF Boost",
+   "HP Boost",
    "Heal"
   ],
   "image": "data/images/tatari/heliabloom.png",
@@ -5024,6 +5033,7 @@
   "rangeImage": null,
   "skillTypes": [
    "AoE",
+   "DMG Reduction",
    "Fragile"
   ],
   "image": "data/images/tatari/kaiseroo.png",
@@ -5203,6 +5213,7 @@
   "rangeImage": null,
   "skillTypes": [
    "ATK Boost",
+   "ATK Speed Boost",
    "Chain",
    "DMG Reduction"
   ],
@@ -5382,6 +5393,7 @@
   "rangeImage": null,
   "skillTypes": [
    "AoE",
+   "HP Boost",
    "Shield",
    "Stun"
   ],
@@ -5914,6 +5926,7 @@
   "rangeImage": null,
   "skillTypes": [
    "AoE",
+   "DMG Reduction",
    "Summon"
   ],
   "image": "data/images/tatari/crystalsnail.png",
@@ -6097,6 +6110,7 @@
   "rangeImage": "data/images/range/cheerstella.jpg",
   "skillTypes": [
    "ATK Boost",
+   "ATK Speed Boost",
    "AoE",
    "DEF Boost",
    "Heal",
@@ -6756,6 +6770,7 @@
   "rangeImage": null,
   "skillTypes": [
    "AoE",
+   "DMG Reduction",
    "Slow"
   ],
   "image": "data/images/tatari/hierotyrus.png",
@@ -6930,6 +6945,7 @@
   },
   "rangeImage": null,
   "skillTypes": [
+   "ATK Speed Boost",
    "AoE",
    "Paralyze"
   ],
@@ -7113,7 +7129,8 @@
    "ATK Speed Boost",
    "AoE",
    "DMG Reduction",
-   "Fragile"
+   "Fragile",
+   "HP Boost"
   ],
   "image": "data/images/tatari/ecstamira.png",
   "glitterImage": "data/images/glitter/ecstamira.png",
@@ -7288,7 +7305,7 @@
    "Slow"
   ],
   "image": "data/images/tatari/morphanessa.png",
-  "glitterImage": null,
+  "glitterImage": "data/images/glitter/morphanessa.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Morphanessa"
  },
  {
@@ -7633,6 +7650,7 @@
   "rangeImage": null,
   "skillTypes": [
    "AoE",
+   "DMG Reduction",
    "Pierce",
    "Stun"
   ],
@@ -7648,12 +7666,13 @@
   "tier": 1,
   "family": "Kittazap",
   "familyId": 49,
-  "stages": 3,
+  "stages": 4,
   "rarity": "Rare",
   "evolutionLine": [
    "Kittazap",
    "Nekowatt",
-   "Voltazar"
+   "Voltazar",
+   "Thunderpaw"
   ],
   "battleRow": null,
   "previousRole": "Same",
@@ -7690,12 +7709,13 @@
   "tier": 2,
   "family": "Kittazap",
   "familyId": 49,
-  "stages": 3,
+  "stages": 4,
   "rarity": "Rare",
   "evolutionLine": [
    "Kittazap",
    "Nekowatt",
-   "Voltazar"
+   "Voltazar",
+   "Thunderpaw"
   ],
   "battleRow": null,
   "previousRole": "Same",
@@ -7732,12 +7752,13 @@
   "tier": 3,
   "family": "Kittazap",
   "familyId": 49,
-  "stages": 3,
+  "stages": 4,
   "rarity": "Rare",
   "evolutionLine": [
    "Kittazap",
    "Nekowatt",
-   "Voltazar"
+   "Voltazar",
+   "Thunderpaw"
   ],
   "battleRow": null,
   "previousRole": "Same",
@@ -7766,6 +7787,47 @@
   "image": "data/images/tatari/voltazar.png",
   "glitterImage": "data/images/glitter/voltazar.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Voltazar"
+ },
+ {
+  "name": "Thunderpaw",
+  "slug": "thunderpaw",
+  "type": "Lightning",
+  "role": "Guardian",
+  "tier": 4,
+  "family": "Kittazap",
+  "familyId": 49,
+  "stages": 4,
+  "rarity": "Rare",
+  "evolutionLine": [
+   "Kittazap",
+   "Nekowatt",
+   "Voltazar",
+   "Thunderpaw"
+  ],
+  "battleRow": null,
+  "previousRole": "None",
+  "etymology": null,
+  "skill": "Fortunes Favor: Unleashes electrified punches that deal AoE damage. The closer the enemy, the higher the damage. Cooldowns decrease with each strike, and when cooldown reaches the minimum, gains increased ATK Range and grants all allies Voltkitty: DEF Boost. Voltazar shares the Paw Pals bond whenever on the field. Thunderpaw carries Aura: Lightning whenever on the field.",
+  "description": "People have build shrines for Thunderpaw, where they present offerings of food and reverently await blessings. With a gentle tilt of the paw, a flurry of lightning bolts can erupt from behind. But can Thunderpaw really bring good fortune? Certainly-if you believe in it!",
+  "hordeSkills": {
+   "level3": {
+    "name": "Got Gold?",
+    "text": "Attacks have a chance to drop gold coins that turn into energizer when they disappear."
+   },
+   "level5": {
+    "name": "Golden Charity",
+    "text": "Periodically grants 2 random allies ATK Boost."
+   },
+   "level7": {
+    "name": "Rain of Riches",
+    "text": "Summons gold coins in a large area to the front, inflicting damage and Stun. Has a chance to obtain energizers."
+   }
+  },
+  "rangeImage": null,
+  "skillTypes": [],
+  "image": "data/images/tatari/thunderpaw.png",
+  "glitterImage": null,
+  "wikiUrl": null
  },
  {
   "name": "Lollama",
@@ -7939,6 +8001,7 @@
   "skillTypes": [
    "AoE",
    "Blind",
+   "HP Boost",
    "Slow"
   ],
   "image": "data/images/tatari/blechlama.png",
@@ -8129,12 +8192,13 @@
   "tier": 1,
   "family": "Flameow",
   "familyId": 52,
-  "stages": 3,
+  "stages": 4,
   "rarity": "Rare",
   "evolutionLine": [
    "Flameow",
    "Nekoflare",
-   "Silversear"
+   "Silversear",
+   "Cinderclaw"
   ],
   "battleRow": null,
   "previousRole": "Same",
@@ -8171,12 +8235,13 @@
   "tier": 2,
   "family": "Flameow",
   "familyId": 52,
-  "stages": 3,
+  "stages": 4,
   "rarity": "Rare",
   "evolutionLine": [
    "Flameow",
    "Nekoflare",
-   "Silversear"
+   "Silversear",
+   "Cinderclaw"
   ],
   "battleRow": null,
   "previousRole": "Same",
@@ -8213,12 +8278,13 @@
   "tier": 3,
   "family": "Flameow",
   "familyId": 52,
-  "stages": 3,
+  "stages": 4,
   "rarity": "Rare",
   "evolutionLine": [
    "Flameow",
    "Nekoflare",
-   "Silversear"
+   "Silversear",
+   "Cinderclaw"
   ],
   "battleRow": null,
   "previousRole": "Same",
@@ -8247,6 +8313,47 @@
   "image": "data/images/tatari/silversear.png",
   "glitterImage": "data/images/glitter/silversear.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Silversear"
+ },
+ {
+  "name": "Cinderclaw",
+  "slug": "cinderclaw",
+  "type": "Fire",
+  "role": "DPS",
+  "tier": 4,
+  "family": "Flameow",
+  "familyId": 52,
+  "stages": 4,
+  "rarity": "Rare",
+  "evolutionLine": [
+   "Flameow",
+   "Nekoflare",
+   "Silversear",
+   "Cinderclaw"
+  ],
+  "battleRow": null,
+  "previousRole": "None",
+  "etymology": null,
+  "skill": "Meow Boom: Throws jewels. Sometimes, the jewels can bounce an increasing number of times between enemies. When the max number of bounces is reached, grants all allies Searpaw: ATK Boost. Silversear shares the Paw Pals bond whenever on the field. Cinderclaw carries Aura: Fire whenever on the field.",
+  "description": "People say that if you gaze into those eyes for too long, the dark thoughts hidden in the depths of your mind will ignite. Other Tatari keep their distance-which suits Cinderclaw just fine. Whenever the camp is in danger, however, the same terrifying flames are the first to engulf enemies.",
+  "hordeSkills": {
+   "level3": {
+    "name": "Cat Contempt",
+    "text": "Has a chance to inflict Weak when dealing damage. Cooldown applies separately to each enemy."
+   },
+   "level5": {
+    "name": "Sweeping Jewel",
+    "text": "Summons a sweeping jewel for synchronized attacks, dealing damage to enemies in its path."
+   },
+   "level7": {
+    "name": "More Jewels",
+    "text": "Launches a piercing jewel that deals increasing damage the farther it flies. Continuously deals AoE damage upon reaching its target."
+   }
+  },
+  "rangeImage": null,
+  "skillTypes": [],
+  "image": "data/images/tatari/cinderclaw.png",
+  "glitterImage": null,
+  "wikiUrl": null
  },
  {
   "name": "Drilleroo",
@@ -8546,6 +8653,7 @@
   },
   "rangeImage": null,
   "skillTypes": [
+   "ATK Speed Boost",
    "Fragile"
   ],
   "image": "data/images/tatari/umbraveil.png",
@@ -8901,6 +9009,7 @@
   "rangeImage": null,
   "skillTypes": [
    "AoE",
+   "HP Boost",
    "Slow",
    "Stun"
   ],
@@ -9080,6 +9189,7 @@
   "rangeImage": null,
   "skillTypes": [
    "AoE",
+   "DMG Reduction",
    "Heal",
    "Shield"
   ],
@@ -9437,6 +9547,7 @@
   },
   "rangeImage": null,
   "skillTypes": [
+   "ATK Speed Boost",
    "AoE",
    "Paralyze",
    "Shield"
@@ -9787,7 +9898,8 @@
   },
   "rangeImage": null,
   "skillTypes": [
-   "AoE"
+   "AoE",
+   "HP Boost"
   ],
   "image": "data/images/tatari/chomperwraith.png",
   "glitterImage": "data/images/glitter/chomperwraith.png",
@@ -9962,6 +10074,7 @@
   },
   "rangeImage": null,
   "skillTypes": [
+   "ATK Speed Boost",
    "AoE",
    "Pierce"
   ],
@@ -10185,7 +10298,11 @@
    }
   },
   "rangeImage": null,
-  "skillTypes": [],
+  "skillTypes": [
+   "ATK Boost",
+   "AoE",
+   "Heal"
+  ],
   "image": "data/images/tatari/ringtail.png",
   "glitterImage": "data/images/glitter/ringtail.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Ringtail"
@@ -10226,7 +10343,11 @@
    }
   },
   "rangeImage": null,
-  "skillTypes": [],
+  "skillTypes": [
+   "ATK Boost",
+   "AoE",
+   "Heal"
+  ],
   "image": "data/images/tatari/rizzler.png",
   "glitterImage": "data/images/glitter/rizzler.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Rizzler"
@@ -10267,7 +10388,11 @@
    }
   },
   "rangeImage": null,
-  "skillTypes": [],
+  "skillTypes": [
+   "ATK Boost",
+   "AoE",
+   "Heal"
+  ],
   "image": "data/images/tatari/zorrock.png",
   "glitterImage": "data/images/glitter/zorrock.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Zorrock"
@@ -10308,9 +10433,126 @@
    }
   },
   "rangeImage": null,
-  "skillTypes": [],
+  "skillTypes": [
+   "ATK Boost",
+   "AoE",
+   "DMG Reduction",
+   "Heal"
+  ],
   "image": "data/images/tatari/phantothief.png",
   "glitterImage": "data/images/glitter/phantothief.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Phantothief"
+ },
+ {
+  "name": "Dolphie",
+  "slug": "dolphie",
+  "type": "Water",
+  "role": "Support",
+  "tier": 1,
+  "family": "Dolphie",
+  "familyId": 65,
+  "stages": 4,
+  "rarity": "Rare",
+  "evolutionLine": [
+   "Dolphie",
+   "Blubbles",
+   "Aquariel",
+   "Irisia"
+  ],
+  "battleRow": null,
+  "previousRole": "None",
+  "etymology": null,
+  "skill": "Tidal Tunes: Launches sound waves that provide healing and grant stackable Joysong: DMG Boost to allies in their path",
+  "description": "Dolphie loves chasing clouds on sunny days, skimming across the sea as the world brightens under sunlight. The sky's a perfect shade of blue today, and Dolphie's mood couldn't be better.",
+  "hordeSkills": null,
+  "rangeImage": null,
+  "skillTypes": [],
+  "image": "data/images/tatari/dolphie.png",
+  "glitterImage": "data/images/glitter/dolphie.png",
+  "wikiUrl": null
+ },
+ {
+  "name": "Blubbles",
+  "slug": "blubbles",
+  "type": "Water",
+  "role": "Support",
+  "tier": 2,
+  "family": "Dolphie",
+  "familyId": 65,
+  "stages": 4,
+  "rarity": "Rare",
+  "evolutionLine": [
+   "Dolphie",
+   "Blubbles",
+   "Aquariel",
+   "Irisia"
+  ],
+  "battleRow": null,
+  "previousRole": "None",
+  "etymology": null,
+  "skill": "Flowing Melodies: Launches sound waves and sometimes launches larger surging waves. Allies in contact will recieve healing and stackable Joysong: DMG Boost & DMG Reduction.",
+  "description": "Each time Blubbles returns to the bay, small wooden planks carrying flowers and seashells float across the water. The petals scatter and drift as Blubbles swims through, leaving the harbor a little liveleier than before.",
+  "hordeSkills": null,
+  "rangeImage": null,
+  "skillTypes": [],
+  "image": "data/images/tatari/blubbles.png",
+  "glitterImage": "data/images/glitter/blubbles.png",
+  "wikiUrl": null
+ },
+ {
+  "name": "Aquariel",
+  "slug": "aquariel",
+  "type": "Water",
+  "role": "Support",
+  "tier": 3,
+  "family": "Dolphie",
+  "familyId": 65,
+  "stages": 4,
+  "rarity": "Rare",
+  "evolutionLine": [
+   "Dolphie",
+   "Blubbles",
+   "Aquariel",
+   "Irisia"
+  ],
+  "battleRow": null,
+  "previousRole": "None",
+  "etymology": null,
+  "skill": "Sweet Symphony: Launches sound waves and often launches larger surging waves. Allies in contact will recieve healing and stackable Joysong: DMG Boost & DMG Reduction.",
+  "description": "When Aquariel leaps out of water, the vibrant colors of rainbows would follow, skipping across the waves and into the distance. For those who are lucky enough to witness it, it is believed that good fortune will soon arrive on the sea breeze.",
+  "hordeSkills": null,
+  "rangeImage": null,
+  "skillTypes": [],
+  "image": "data/images/tatari/aquariel.png",
+  "glitterImage": "data/images/glitter/aquariel.png",
+  "wikiUrl": null
+ },
+ {
+  "name": "Irisia",
+  "slug": "irisia",
+  "type": "Water",
+  "role": "Support",
+  "tier": 4,
+  "family": "Dolphie",
+  "familyId": 65,
+  "stages": 4,
+  "rarity": "Rare",
+  "evolutionLine": [
+   "Dolphie",
+   "Blubbles",
+   "Aquariel",
+   "Irisia"
+  ],
+  "battleRow": null,
+  "previousRole": "None",
+  "etymology": null,
+  "skill": "Endless Echo: Launches sound waves and often launches larger surging waves. Allies in contact will recieve healing and stackable Joysong: DMG Boost & DMG Reduction. Irisia carries Aura: Water whenever on field.",
+  "description": "As light pours down from the sky, Irisia returns from the depths of the thunderstorm, parting massive waves to clear a safe path. As long as Irisia still roams these seas, the lights of every home along the shore will stay on, steady and bright.",
+  "hordeSkills": null,
+  "rangeImage": null,
+  "skillTypes": [],
+  "image": "data/images/tatari/irisia.png",
+  "glitterImage": null,
+  "wikiUrl": null
  }
 ]
