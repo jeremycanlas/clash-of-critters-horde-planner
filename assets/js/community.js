@@ -169,13 +169,40 @@ function tierWhere(tier) {
  */
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+/**
+ * The caller's own posts, from the database.
+ *
+ * Asked once per sign-in and kept, because it only changes when you post or
+ * delete, and both of those go through this page. Null means "not asked yet";
+ * an empty array is a real answer.
+ *
+ * @type {string[] | null}
+ */
+let myIds = null;
+
+async function loadMyIds() {
+  if (!signedIn()) { myIds = null; return; }
+  const got = await rest('/rpc/my_formation_ids', { method: 'POST', body: {}, auth: true });
+  myIds = got.ok && Array.isArray(got.data) ? got.data.map((r) => (typeof r === 'string' ? r : r?.my_formation_ids)).filter(Boolean) : [];
+}
+
 function mineWhere() {
-  const ids = posted()
-    .map((p) => String(p?.id ?? ''))
+  /*
+   * Signed in, the database answers: every formation this account posted, from
+   * whatever device. Signed out, the only honest answer left is the list this
+   * browser wrote when it posted -- "yours, from here" -- which is what this
+   * filter meant before there was a sign-in at all.
+   *
+   * What it does not do is match on author_avatar: an account with no picture
+   * of its own gets one of Discord's numbered defaults, and that URL is the
+   * same string for everybody who has it. A filter called Yours that answers
+   * with a stranger's formations is worse than one that knows less.
+   */
+  const ids = (signedIn() && myIds ? myIds : posted().map((p) => String(p?.id ?? '')))
     .filter((id) => UUID.test(id))
     .slice(0, 60);
   // No ids at all cannot happen while the control is hidden, but a filter that
-  // silently means "everyone" would be the wrong way to be wrong about it.
+  // silently meant "everyone" would be the wrong way to be wrong about it.
   if (!ids.length) return '&id=is.null';
   return `&id=in.(${ids.join(',')})`;
 }
@@ -438,6 +465,9 @@ async function onSignOut() {
   render({ fresh: true });      // the Yours/Upvote and Delete controls change
   toast('Signed out', 'ok');
   track('community-signed-out');
+  // The database's answer belonged to that account, not to this browser.
+  myIds = null;
+  showMine();
 }
 
 /** Which formations this account has already kept. Signed out, nothing. */
@@ -1030,6 +1060,7 @@ function replaceRow(row) {
 
 /** Takes one row off the page. */
 function dropRow(id) {
+  if (myIds) myIds = myIds.filter((x) => String(x) !== String(id));
   forgetShot(id);
   $(`#list [data-id="${CSS.escape(String(id))}"]`)?.remove();
 }
@@ -1273,6 +1304,13 @@ function sayIfEmpty() {
     : 'Nothing has been posted yet.');
 }
 
+/** Draws the Yours control if it has anything to answer with. */
+function showMine() {
+  const host = $('#mine-filter');
+  if (!host) return;
+  host.hidden = !(signedIn() ? (myIds?.length ?? 0) : posted().length);
+}
+
 async function refine(change) {
   Object.assign(view, change);
   rows = [];
@@ -1395,12 +1433,13 @@ async function main() {
   });
 
   /*
-   * Shown only once this browser has posted something. Before that the control
-   * has exactly one honest answer and it is an empty list, which on this page
-   * reads as a fault rather than as a filter.
+   * Shown once there is something for it to find: posts from this account, or
+   * from this browser when signed out. Before that the control has exactly one
+   * honest answer and it is an empty list, which on this page reads as a fault
+   * rather than as a filter.
    */
   const mineHost = $('#mine-filter');
-  mineHost.hidden = posted().length === 0;
+  showMine();
   mineHost.addEventListener('click', (e) => {
     const btn = e.target.closest('[data-mine]');
     if (!btn || btn.dataset.mine === view.mine) return;
@@ -1478,6 +1517,9 @@ async function main() {
     if (!$('#mine-filter').hidden) pick($('#mine-filter'), 'mine', view.mine);
     if (!$('#patch-filter').hidden) pick($('#patch-filter'), 'patch', view.patch);
   }
+
+  await loadMyIds();
+  showMine();
 
   await loadMore({ append: false });
 
