@@ -67,6 +67,27 @@ field, HAVE above LF.
 
 ## Changelog
 
+### 1.9.5
+
+#### Changes:
+- Community formations is a contact sheet rather than a wall. Every post used to be the whole share card, so two filled a screen and twenty-seven could not be compared; now each is a tile with the field as a thumbnail and the four facts that decide whether to read it -- solo or co-op, the highest tier fielded and how many of them, whether there is a level-up plan, and whether it was built before the current patch. Pressing one opens the whole card, full screen. "Full cards" brings the old list back.
+- "Best first" replaces most-upvoted as the default order there. Almost nothing in the gallery has a vote, so that order was really date order: a two-Tatari test post above a finished D4 build. It now counts an upvote most, then a full field, a level-up plan, and the poster having said what it is for. "Like mine" ranks by how much of your own formation a post already shares.
+- Yours means yours. The filter knew only what the browser you are on had posted -- post from a phone, look on a laptop, and it said you had posted nothing. Signed in, the database answers it, from any device.
+- Picking on a phone is two taps. Tapping a Tatari in the roster brings it, marks an empty square and drops the roster to half the screen, so the board is in sight while you pick; the next tap places it. The roster and the field were never on screen together before, which is why picking took four steps and a memory.
+- Every link to the site now arrives in Discord as a card with a title, a line about the page and a picture, instead of a grey line of text. `tools/og.mjs` draws them from the site's own type, colours and sprites.
+- Six new Tatari, taking the roster from 236 to 242: a whole new four-stage Water Support line, Dolphie into Blubbles into Aquariel into Irisia, and a fourth stage for two families that stopped at three -- Thunderpaw after Voltazar, Cinderclaw after Silversear. The new line's Horde Invasion skills are not on the wiki yet.
+- Season 2's notes now cover what the update does to the mode, not just to Tatari: energizers partly refunded when a Tatari goes down, difficulty 1 eased while 3 and 4 harden, and the nine chips that moved -- each with its own icon, a green or red edge and an arrow, the same treatment an evolution line gets.
+- The commit hook runs the screen sweep as well as the suites, so a broken drag, a page over its speed budget or a target too small to tap cannot be committed.
+
+#### Bug Fixes:
+- The August patch notes listed three members for the Kittazap and Flameow lines, so the buff and the nerf skipped the fourth stage each had gained. Both carry all four now.
+- A pick survived closing the roster on a phone, after which pressing its bench chip -- which means "yes, there" to something already armed -- placed it instead of offering a square.
+- Opening a formation cropped the top row of the board, because the card was centred inside a box it was taller than.
+- Text boxes under 16px made iOS zoom the page in on a tap, with no way back out: the drafter's search and formation name, the whole range editor, every number in the tracker, and the sort dropdown on a tablet.
+- Tap targets under Apple's 44px across the site, and several under the 24px floor a finger needs: the patch-note dismiss, the chip keep button, the help mark, the tracker's copy buttons, the page tabs by one pixel.
+- The roster's "buffed this patch" badge was labelled in a way a screen reader may skip, the patch notes tabs claimed to be tabs with no tab strip, the range editor's squares used table markup outside a table, the tracker's fruit columns sorted from a button with no name, and the farm's tier list scrolled with no way for a keyboard to reach it.
+- Two parts of a page refreshing the sign-in at the same moment could spend it twice and sign you out.
+
 ### 1.9.4
 
 #### Changes:
