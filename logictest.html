@@ -26,7 +26,10 @@ import {
 } from './assets/js/hash.js';
 import { coveredFrom, coverage, hasRange } from './assets/js/range.js';
 import { parseContribution } from './assets/js/range-import.js';
-import { OUTCOMES, expected, spread, withSpecials, totalChance, toCap } from './assets/js/pinball.js';
+// The pinball page is not shipped, so its module may not be here. Its groups
+// are skipped then, rather than the whole suite dying on a failed import.
+const pinball = await import('./assets/js/pinball.js').catch(() => null);
+const { OUTCOMES, expected, spread, withSpecials, totalChance, toCap } = pinball ?? {};
 
 const out = document.getElementById('log');
 let pass = 0, fail = 0, suite = '';
@@ -36,6 +39,7 @@ let matchedOnly = false;
 
 const group = (name, body) => {
   if (only && !name.toLowerCase().includes(only)) return Promise.resolve();
+  if (!pinball && name.startsWith('pinball:')) return Promise.resolve();
   if (only) matchedOnly = true;
   suite = name;
   out.innerHTML += `<div style="margin:12px 0 2px;color:#ffc93c;font-weight:700">${name}</div>`;

@@ -6898,3 +6898,19 @@ details.hint[open] > summary { margin-bottom: var(--s1); }
      two lines, which made the header taller than the button saved. */
   .byline__tip { display: inline-flex; align-items: center; min-height: 44px; white-space: nowrap; }
 }
+
+/*
+ * The filter chips wrap on a phone.
+ *
+ * The type and role chips carry their names now, and a row of five labelled
+ * chips is wider than any iPhone: the drawer grew to fit them, ran off the
+ * right edge, and Rock, Support and T3 sat off screen where no tap could
+ * reach them. A second line of chips costs some height; a chip nobody can
+ * press costs the filter. min-width: 0 keeps the drawer to the sheet's width
+ * so the wrap has an edge to wrap at. The opened effect row keeps its own
+ * sideways scroll (.chips--sub), which was a deliberate trade.
+ */
+@media (max-width: 760px) {
+  .filters__body { min-width: 0; max-width: 100%; }
+  .filters__body .chips:not(.chips--sub) { flex-wrap: wrap; }
+}
