@@ -531,6 +531,67 @@ await runGroup('the board stays in its lane, whatever is turned on', async () =>
   await click($('#opt-zobo'), 440);
 });
 
+/*
+ * Every filter control sits inside the sheet, at every phone width.
+ *
+ * Reported from an iPhone with a screenshot: the type and role chips grew their
+ * names, a row of them became wider than the phone, and the drawer stretched to
+ * fit and ran off the right edge. Rock, Support, Specialist, T3 and T4 were
+ * drawn off screen where no tap could reach them, and nothing failed, because
+ * the page itself did not scroll sideways; only the drawer overflowed.
+ *
+ * So this measures the controls, not the page. Every visible control in the
+ * open drawer must lie inside the sheet's left and right edges, on each roster
+ * tab, at 390 (iPhone 14), 375 (iPhone SE) and 320 (the narrowest iPhone).
+ * A row that scrolls sideways on purpose (the opened effect row, the chip
+ * groups on the Chips tab) may hold controls past the edge, since a swipe
+ * reaches them; the row itself still has to sit inside the sheet.
+ */
+await runGroup('the filter drawer fits the phone', async () => {
+  const widths = [390, 375, 320];
+  const tabs = ['tatari', 'zobos', 'chips'];
+  const was = stage.style.flexBasis;
+  /* Inside a row that scrolls sideways, so a swipe reaches it. */
+  const scrolls = (el) => ['auto', 'scroll'].includes(W.getComputedStyle(el).overflowX);
+  const inScroller = (el) => {
+    for (let p = el.parentElement; p && p !== D.body; p = p.parentElement) if (scrolls(p)) return true;
+    return false;
+  };
+
+  try {
+    for (const w of widths) {
+      stage.style.flexBasis = `${w}px`;
+      await sleep(300);
+      if (D.body.dataset.sheet !== 'roster') await click(barBtn('roster'), 400);
+
+      for (const tab of tabs) {
+        const btn = $(`#roster-tabs [data-list="${tab}"]`);
+        if (!btn) { skip(`${w}px ${tab}: the drawer fits`, 'no such roster tab'); continue; }
+        await click(btn, 340);
+        if (D.body.dataset.filters !== 'open') await click($('#filters-toggle'), 340);
+
+        const sheet = $('.panel--roster').getBoundingClientRect();
+        const edge = Math.min(sheet.right, W.innerWidth);
+        const out = [...D.querySelectorAll('#filters-body button, #filters-body label, #filters-body select, #filters-body a, #filters-body div')]
+          .filter((el) => (el.tagName === 'DIV' ? scrolls(el) : !inScroller(el)))
+          .map((el) => ({ el, r: el.getBoundingClientRect() }))
+          .filter(({ r }) => r.width > 0 && r.height > 0)
+          .filter(({ r }) => r.right > edge + 0.5 || r.left < sheet.left - 0.5)
+          .map(({ el, r }) => `"${el.textContent.trim().replace(/s+/g, ' ').slice(0, 20)}" at ${Math.round(r.left)}-${Math.round(r.right)}`);
+        ok(`${w}px, ${tab}: every filter control is inside the sheet`, out.length === 0,
+          `sheet ${Math.round(sheet.left)}-${Math.round(edge)}; outside: ${out.slice(0, 6).join(', ')}`);
+      }
+    }
+  } finally {
+    stage.style.flexBasis = was;
+    await sleep(300);
+    const home = $('#roster-tabs [data-list="tatari"]');
+    if (home) await click(home, 340);
+    if (D.body.dataset.filters === 'open') await click($('#filters-toggle'), 320);
+    if (D.body.dataset.sheet === 'roster') await click(barBtn('roster'), 340);
+  }
+});
+
 await runGroup('the detail sheet fits the phone', async () => {
   await click(barBtn('roster'), 340);
   const info = $('.panel--roster .card .card__info');
