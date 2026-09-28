@@ -14,6 +14,11 @@ PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8123
 
 
 class H(http.server.SimpleHTTPRequestHandler):
+    # Keep-alive. Under HTTP/1.0 every one of a drafter load's 242 sprites is a
+    # new connection, and a few browsers loading together (the screen sweep)
+    # ran Windows out of sockets: ERR_NO_BUFFER_SPACE, on a server doing nothing.
+    protocol_version = 'HTTP/1.1'
+
     def end_headers(self):
         self.send_header('Cache-Control', 'no-store, must-revalidate')
         self.send_header('Pragma', 'no-cache')
@@ -32,7 +37,15 @@ def lan_ip():
 
 
 print(f'http://{lan_ip()}:{PORT}/   (nothing cached)')
-http.server.ThreadingHTTPServer(
+class Server(http.server.ThreadingHTTPServer):
+    # The default backlog is 5, and one drafter load asks for 242 sprites at
+    # once. Several browsers loading together (the screen sweep does) had
+    # connections refused while the server was idle.
+    request_queue_size = 256
+    daemon_threads = True
+
+
+Server(
     ('0.0.0.0', PORT),
     functools.partial(H, directory=os.getcwd()),
 ).serve_forever()

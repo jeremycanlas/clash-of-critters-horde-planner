@@ -1,12 +1,15 @@
 /**
- * The site on the three screens people actually hold, in the engine Safari runs.
+ * The site on the screens people actually hold, in the engines they run.
  *
  *   node tools/screens.mjs                every screen, every page, local server
- *   node tools/screens.mjs phone          only that screen (phone, tablet, desktop)
+ *   node tools/screens.mjs phone          only that screen (phone, android, tablet, desktop)
  *   node tools/screens.mjs farm chips     only pages whose name matches
  *   node tools/screens.mjs --live         the published site instead
  *   node tools/screens.mjs --shots        also save a screenshot of each
  *   node tools/screens.mjs --quick        one size per screen, for the hook
+ *
+ *   SCREENS_VERBOSE=1   how many controls each page had pressed
+ *   SCREENS_TRACE=1     every press as it happens, and what it changed
  *
  * Why this is separate from tools/check.sh: that runs the suites in headless
  * Chrome, which is the right tool for logic and for most layout, and the wrong
@@ -20,7 +23,7 @@
  *
  *   mkdir E:/caches/iphone-test && cd E:/caches/iphone-test
  *   npm init -y && npm i playwright axe-core
- *   PLAYWRIGHT_BROWSERS_PATH=E:/caches/ms-playwright npx playwright install webkit
+ *   PLAYWRIGHT_BROWSERS_PATH=E:/caches/ms-playwright npx playwright install webkit chromium
  *
  * Point SCREENS_TEST_DIR somewhere else if you put it elsewhere.
  *
@@ -36,6 +39,15 @@
  *   - axe-core against WCAG 2.1 A and AA: serious and critical only, because
  *     this is a gate, not a lecture
  *   - the viewport meta says width=device-width and viewport-fit=cover
+ *   - nothing is out of place: every visible control sits on screen and inside
+ *     the panel it belongs to, checked on arrival and again after every press,
+ *     so a drawer, sheet or dialog that opens is checked open. A row built to
+ *     scroll sideways may hold controls past the edge; the row itself may not
+ *   - nothing is dead: every kind of control on the page is pressed once, and a
+ *     press that throws, or changes nothing at all (no change to the page, no
+ *     dialog, no download, no navigation) fails. Links to other pages are
+ *     fetched rather than followed. Anything that would write to the database
+ *     or leave the site is intercepted, so the live data is never touched
  *
  * And the gestures each screen is actually used with: dragging a Tatari from
  * the roster onto the field with a mouse, the same drag with a finger, the
@@ -75,12 +87,21 @@ const SCREENS = {
     { name: 'iPhone SE', device: 'iPhone SE' },
     { name: 'iPhone 14', device: 'iPhone 14' },
   ],
+  /* Android is Chrome's engine, which lays out, scrolls and handles touch
+     differently from the WebKit an iPhone runs; the same screen size is not
+     the same test. The small one is a 320px Galaxy, the large a Pixel. */
+  android: [
+    { name: 'Pixel 7', device: 'Pixel 7', engine: 'chromium' },
+    { name: 'Galaxy S9+', device: 'Galaxy S9+', engine: 'chromium' },
+  ],
   tablet: [
     { name: 'iPad mini', device: 'iPad Mini' },
     { name: 'iPad Pro 11', device: 'iPad Pro 11' },
   ],
+  /* Most desktops run Chrome, so the size the hook checks is Chrome; the
+     large one is Safari on a Mac. */
   desktop: [
-    { name: 'laptop 1280', viewport: { width: 1280, height: 800 } },
+    { name: 'laptop 1280', viewport: { width: 1280, height: 800 }, engine: 'chromium' },
     { name: 'desktop 1680', viewport: { width: 1680, height: 950 } },
   ],
 };
@@ -124,7 +145,7 @@ try {
     + 'See the setup lines at the top of this file.');
   process.exit(2);
 }
-const { webkit, devices } = playwright;
+const { webkit, chromium, devices } = playwright;
 
 const fails = [];
 const warns = [];
@@ -370,7 +391,7 @@ async function checkGestures(page, name, where, screen) {
   }
   if (name !== 'drafter') return;
 
-  if (screen === 'phone') {
+  if (screen === 'phone' || screen === 'android') {
     /* Card, bench chip, square: three taps on three screens, and the path most
        of this app's traffic is on. */
     const sheet = page.locator('.appbar__btn[data-sheet="roster"]');
@@ -416,30 +437,441 @@ async function checkGestures(page, name, where, screen) {
   if (await square() === wasAt) fail(where, 'a placed Tatari would not move to another square');
 }
 
+// ------------------------------------------------------------------ placement
+
+/**
+ * Every visible control that is not where a person can reach it.
+ *
+ * "Reach" is horizontal: on screen, and inside every ancestor that clips
+ * sideways. Vertical is left alone, since a sheet that scrolls down is a sheet
+ * working. A control inside a row that scrolls sideways is judged by the row,
+ * since a swipe reaches anything in it.
+ *
+ * This is the check the iPhone filter drawer needed: it grew wider than the
+ * phone and clipped Rock, Support and T3 off the edge, while the page itself
+ * never scrolled sideways, so nothing else noticed.
+ */
+function outOfPlace(tappable) {
+  const vw = window.innerWidth;
+  /* One style lookup per element per call. 242 roster cards share the same
+     dozen ancestors, and asking each of them again for every card was most of
+     the sweep's time. */
+  const seen = new Map();
+  const overflowX = (el) => {
+    if (!seen.has(el)) seen.set(el, getComputedStyle(el).overflowX);
+    return seen.get(el);
+  };
+  const scrollsX = (el) => /auto|scroll/.test(overflowX(el));
+  const clipsX = (el) => /hidden|clip/.test(overflowX(el));
+  const hidden = (el) => el.closest('[inert], [aria-hidden="true"], [hidden]')
+    || (el.checkVisibility && !el.checkVisibility({ opacityProperty: true, visibilityProperty: true }));
+  const name = (el) => (el.id ? `#${el.id}` : el.tagName.toLowerCase())
+    + (el.textContent?.trim() ? ` "${el.textContent.trim().replace(/\s+/g, ' ').slice(0, 18)}"` : '');
+
+  const out = [];
+  for (const el of document.querySelectorAll(tappable)) {
+    if (hidden(el)) continue;
+    let target = el;
+    for (let p = el.parentElement; p && p !== document.body; p = p.parentElement) {
+      if (scrollsX(p)) { target = p; break; }
+    }
+    const r = target.getBoundingClientRect();
+    if (!r.width || !r.height) continue;
+    // Deliberately parked off to the left or above, like a skip link.
+    if (r.right <= 0 || r.bottom <= 0) continue;
+
+    let left = 0, right = vw;
+    for (let p = target.parentElement; p && p !== document.body; p = p.parentElement) {
+      if (!clipsX(p)) continue;
+      const b = p.getBoundingClientRect();
+      left = Math.max(left, b.left); right = Math.min(right, b.right);
+    }
+    if (r.left < left - 1 || r.right > right + 1) {
+      out.push(`${name(el)} at ${Math.round(r.left)}-${Math.round(r.right)}, room ${Math.round(left)}-${Math.round(right)}`);
+    }
+  }
+  return [...new Set(out)];
+}
+
+// ------------------------------------------------------------------ controls
+
+/*
+ * Controls that are allowed to do nothing when pressed, each with the reason.
+ * Keep this short: every entry is a place a dead button could hide.
+ */
+/* What counts as a control: something a person presses, as opposed to
+   something that is only focusable so a keyboard can scroll it. */
+const CONTROLS = 'a[href], button, input, select, textarea, summary, [role="button"], [role="tab"], '
+  + '[role="checkbox"], [role="switch"], [role="radio"], [role="option"], [role="menuitem"], [role="link"]';
+
+const NO_EFFECT = [
+  // The tab you are already on.
+  '[aria-selected="true"]',
+  '[aria-current="page"]',
+  '[aria-current="true"]',
+  // Community's "Back to top", on a page that is already at the top.
+  '[data-top]',
+];
+
+/**
+ * Tags the controls on screen that are of a kind not pressed yet, and returns
+ * them as {id, kind}. "Kind" is the tag, the role, the classes that are not
+ * state, the nearest id, and the control's own words, except in a repeated
+ * list (five type chips, 242 roster cards, a table of rows), which is one kind
+ * and pressed once. `seen` is the kinds already pressed on this page.
+ */
+function tagControls({ tappable, controls, noEffect, seen }) {
+  const hidden = (el) => el.closest('[inert], [aria-hidden="true"], [hidden]')
+    || (el.checkVisibility && !el.checkVisibility({ opacityProperty: true, visibilityProperty: true }));
+  const taken = new Set(seen);
+  // Part of a run of look-alikes: itself, or a row or cell it sits in.
+  const repeated = (el) => {
+    for (let x = el, up = 0; x && up < 4; x = x.parentElement, up++) {
+      const same = [...(x.parentElement?.children ?? [])]
+        .filter((y) => y.tagName === x.tagName && y.className === x.className).length;
+      if (same >= 3) return true;
+    }
+    return false;
+  };
+  window.__probes ??= 0;
+  const out = [];
+  for (const el of document.querySelectorAll(tappable)) {
+    if (el.dataset.probe) continue;
+    if (hidden(el)) continue;
+    const r = el.getBoundingClientRect();
+    if (!r.width || !r.height) continue;
+    if (el.disabled || el.getAttribute('aria-disabled') === 'true') continue;
+    if (noEffect.some((sel) => el.matches(sel))) continue;
+    // Focusable only so a keyboard can scroll it (a list, a code block): not a control.
+    if (!el.matches(controls)) continue;
+    // The one option picked in a pick-one group: pressing it again is meant to do nothing.
+    const on = (x) => x.getAttribute('aria-pressed') === 'true' || x.getAttribute('aria-checked') === 'true';
+    const group = [...(el.parentElement?.children ?? [])]
+      .filter((x) => x.hasAttribute('aria-pressed') || x.hasAttribute('aria-checked'));
+    if (on(el) && group.length > 1 && group.filter(on).length === 1) continue;
+    // Typing is what these are for, and the suites type into them.
+    if (el.matches('input:not([type=checkbox]):not([type=radio]):not([type=file]), textarea')) continue;
+    // A link to another page is fetched, not followed; see checkLinks.
+    if (el.matches('a[href]') && !el.getAttribute('href').startsWith('#')) continue;
+    // A label that wraps its own input is the input, pressed once.
+    if (el.matches('label') && el.querySelector('input')) continue;
+    const kind = [
+      el.tagName, el.getAttribute('role') ?? '',
+      [...el.classList].filter((c) => !/^is-|active|selected|current|open/.test(c)).sort().join('.'),
+      el.id || el.closest('[id]')?.id || '',
+      el.id || repeated(el) ? '' : (el.textContent || el.getAttribute('aria-label') || '').trim().slice(0, 30),
+    ].join('|');
+    if (taken.has(kind)) continue;
+    taken.add(kind);
+    el.dataset.probe = String(++window.__probes);
+    out.push({ id: el.dataset.probe, kind });
+  }
+  return out;
+}
+
+/** Counts every change to the page from here on, however small. */
+function watchChanges() {
+  window.__changes = 0;
+  window.__what = [];
+  new MutationObserver((ms) => {
+    window.__changes += ms.length;
+    for (const m of ms.slice(0, 5)) {
+      const t = m.target.nodeType === 1 ? m.target : m.target.parentElement;
+      window.__what.push(`${m.type}:${t?.tagName?.toLowerCase()}${t?.id ? `#${t.id}` : ''}.${[...(t?.classList ?? [])].join('.')}${m.attributeName ? `[${m.attributeName}]` : ''}`);
+    }
+    window.__what = window.__what.slice(-20);
+  })
+    .observe(document, { subtree: true, childList: true, attributes: true, characterData: true });
+  // "Back to top" moves the page and changes nothing in it; that is a change.
+  document.addEventListener('scroll', () => { window.__changes++; }, { capture: true, passive: true });
+}
+
+/**
+ * Presses one control of each kind, and fails the ones that are dead or throw.
+ *
+ * A press that opens something (a drawer, a menu, a dialog) has what it
+ * revealed pressed next, while it is still open, and the page is checked for
+ * anything out of place with it open. That is how the controls inside the
+ * Advanced drawer or the Saved panel get pressed at all: none of them are on
+ * screen when the page loads.
+ */
+async function checkControls(page, where, url, noise, events) {
+  const report = new Map();
+  const note = (key, text) => { if (!report.has(key)) report.set(key, text); };
+  const place = async (state) => {
+    for (const bad of await page.evaluate(outOfPlace, TAPPABLE)) {
+      note(`place ${bad.split(' at ')[0]}`, `out of place ${state}: ${bad}`);
+    }
+  };
+  /* Kinds pressed on this page (done), kinds tagged in the document showing
+     now (live), and every kind met (all). A reload clears only `live`, so the
+     kinds it cut short are tagged and pressed again on the fresh page. */
+  const done = new Set(), live = new Set(), all = new Set();
+  const kindOf = new Map();
+  const tag = async () => {
+    const found = await page.evaluate(tagControls,
+      { tappable: TAPPABLE, controls: CONTROLS, noEffect: NO_EFFECT, seen: [...done, ...live] }).catch(() => []);
+    for (const f of found) { live.add(f.kind); all.add(f.kind); kindOf.set(f.id, f.kind); }
+    return found.map((f) => f.id);
+  };
+  const fresh = async () => {
+    live.clear();
+    await page.goto(url, { waitUntil: 'load', timeout: 20000 });
+    await page.waitForTimeout(400);
+    await page.evaluate(watchChanges);
+  };
+  const reset = async () => {
+    await page.keyboard.press('Escape').catch(() => {});
+    await page.evaluate(() => document.querySelectorAll('dialog[open]').forEach((d) => d.close())).catch(() => {});
+  };
+
+  let presses = 0;
+  const MAX = 150;
+
+  /* Returns true when the page was reloaded or left, so the caller stops
+     working through controls that no longer exist. */
+  const press = async (id, depth) => {
+    if (presses >= MAX) return false;
+    const loc = page.locator(`[data-probe="${id}"]`);
+    // Everything about it in one trip to the page, rather than five.
+    const it = await page.evaluate((id) => {
+      const el = document.querySelector(`[data-probe="${id}"]`);
+      if (!el) return null;
+      const r = el.getBoundingClientRect();
+      const style = getComputedStyle(el);
+      return {
+        label: (el.id ? `#${el.id}` : el.tagName.toLowerCase())
+          + (el.textContent?.trim() ? ` "${el.textContent.trim().replace(/\s+/g, ' ').slice(0, 24)}"`
+            : el.getAttribute('aria-label') ? ` "${el.getAttribute('aria-label').slice(0, 24)}"` : ''),
+        shown: r.width > 0 && r.height > 0 && style.visibility !== 'hidden' && !el.closest('[inert], [hidden]'),
+        // Switched off in this state and saying so, like the recorder's board
+        // once "reaches everything" is ticked.
+        off: el.disabled || el.getAttribute('aria-disabled') === 'true' || style.cursor === 'not-allowed',
+        select: el.tagName === 'SELECT' ? [...el.options].map((o) => o.value).filter((v) => v !== el.value) : null,
+        // A file input always sits under a styled button; it is pressed directly.
+        file: el.matches('input[type=file]'),
+        // Submitting an unfinished form answers with the browser's own bubble,
+        // which is a response but not a change to the page.
+        invalid: !!el.form && el.matches('[type=submit], button:not([type])') && !el.form.checkValidity(),
+        changes: window.__changes,
+      };
+    }, id).catch(() => null);
+    // Hidden or switched off by an earlier press: not this control's fault.
+    if (!it || !it.shown || it.off) return false;
+    const { label } = it;
+    if (depth === 0) {
+      /* Start from a closed page, and a still one. A drawer left open by an
+         earlier press closes itself on the next tap anywhere, and that change
+         would pass a dead button as a working one. */
+      await page.evaluate((id) => {
+        const target = document.querySelector(`[data-probe="${id}"]`);
+        for (const d of document.querySelectorAll('details[open]')) if (!d.contains(target)) d.open = false;
+        for (const b of document.querySelectorAll('[aria-expanded="true"]')) {
+          if (b !== target && !b.contains(target) && b.checkVisibility?.()) b.click();
+        }
+      }, id).catch(() => {});
+      await page.evaluate(() => new Promise((resolve) => {
+        let last = window.__changes, calm = 0;
+        const tick = setInterval(() => {
+          calm = window.__changes === last ? calm + 1 : 0;
+          last = window.__changes;
+          if (calm >= 3) { clearInterval(tick); resolve(); }
+        }, 50);
+        setTimeout(() => { clearInterval(tick); resolve(); }, 1500);
+      })).catch(() => {});
+      it.changes = await page.evaluate(() => { window.__what = []; return window.__changes; }).catch(() => it.changes);
+      if (!(await loc.isVisible().catch(() => false))) return false;
+    }
+    if (process.env.SCREENS_TRACE) console.log(`  ${where} ${'  '.repeat(depth)}press ${label}`);
+    presses++;
+    done.add(kindOf.get(id));
+
+    /* Brought into view before the count is taken: the press would scroll it
+       there anyway, and that scroll is the test's doing, not the button's. */
+    await loc.scrollIntoViewIfNeeded({ timeout: 1000 }).catch(() => {});
+    await page.waitForTimeout(60);
+    it.changes = await page.evaluate(() => { window.__what = []; return window.__changes; }).catch(() => it.changes);
+    const before = { url: page.url(), changes: it.changes, events: events.count, noise: noise.length };
+    try {
+      if (it.select) {
+        if (!it.select.length) { presses--; return false; }
+        await loc.selectOption(it.select[0], { timeout: 2000 });
+        // A choice read later (the level for the next Plan step) shows no
+        // change until then; the value it now holds is the change.
+        events.count++;
+      } else if (it.file) {
+        await loc.dispatchEvent('click');
+      } else {
+        await loc.click({ timeout: 2000 });
+      }
+    } catch (e) {
+      /* Playwright's call log says why: covered by something, off screen,
+         never still. A file input under its own styled label is the one
+         cover that is by design, and pressing it through the label is what
+         a person does. */
+      const why = e.message.split('\n').map((l) => l.trim())
+        .filter((l) => /intercepts pointer events|outside of the viewport|not stable|not visible/.test(l)).pop();
+      if (why && /<label[^>]*> intercepts/.test(why)) {
+        await loc.dispatchEvent('click').catch(() => {});
+      } else if (why && /not visible/.test(why)) {
+        /* Playwright's idea of visible is stricter than a person's (a sliver
+           mid-transition counts as hidden). Off-screen controls are the
+           placement check's to catch, and it does. */
+        presses--;
+        return false;
+      } else {
+        note(`press ${label}`, `could not press ${label}: ${(why ?? e.message.split('\n')[0]).replace(/^- /, '').slice(0, 160)}`);
+        return false;
+      }
+    }
+    await page.waitForTimeout(100);
+
+    // A reload keeps the address and loses the counter, which is how it shows.
+    const now = await page.evaluate(() => window.__changes).catch(() => undefined);
+    const left = page.url() !== before.url || now === undefined;
+    const changed = left || events.count > before.events || now > before.changes;
+    if (process.env.SCREENS_TRACE && changed && !left) {
+      console.log(`      changed: ${await page.evaluate(() => window.__what.slice(-6).join(' ')).catch(() => '')}`);
+    }
+    if (noise.length > before.noise) {
+      note(`throw ${label}`, `pressing ${label} ${noise.slice(before.noise).join('; ')}`);
+      noise.length = before.noise;
+    } else if (!changed && !it.invalid) {
+      note(`dead ${label}`, `pressing ${label} changed nothing`);
+    }
+
+    if (left) {
+      // What a reload cut off mid-flight is not an error anyone sees.
+      noise.length = before.noise;
+      report.delete(`throw ${label}`);
+      await fresh();
+      return true;
+    }
+    // A press that changed nothing opened nothing new to measure.
+    if (!changed) return false;
+    /* Measured once it has arrived: a panel that slides in is half off screen
+       for the first 200ms of the slide, and that is not where it stops. */
+    await page.evaluate(() => Promise.race([
+      Promise.all(document.getAnimations().map((a) => a.finished.catch(() => {}))),
+      new Promise((r) => setTimeout(r, 800)),
+    ])).catch(() => {});
+    await place(`after pressing ${label}`);
+
+    // Whatever that press revealed, pressed while it is still showing.
+    if (depth < 1) {
+      for (const inner of await tag()) {
+        if (await press(inner, depth + 1)) return true;
+      }
+    }
+    if (depth === 0) {
+      await reset();
+      /* A drawer opened by a handle is closed by the same handle, which is
+         what a person does when Escape does not reach it. */
+      if (await loc.getAttribute('aria-expanded').catch(() => null) === 'true') {
+        await loc.click({ timeout: 1000 }).catch(() => {});
+      }
+    }
+    return false;
+  };
+
+  await place('on arrival');
+  await fresh();
+  /* Round after round, until nothing new turns up: a reload puts back the
+     controls not reached yet, and the page as the last round left it can
+     show kinds the first one never saw. */
+  for (let round = 0; round < 6 && presses < MAX; round++) {
+    const ids = await tag();
+    if (!ids.length) break;
+    for (const id of ids) if (await press(id, 0)) break;
+  }
+  for (const text of report.values()) fail(where, text);
+  pressed.push({ where, n: presses, of: all.size });
+}
+
+/* How many controls each page had pressed, so a sweep that quietly pressed
+   nothing cannot pass for one that pressed everything. */
+const pressed = [];
+
+/** Links to other pages on the site are fetched, and have to answer. */
+async function checkLinks(page, where) {
+  const hrefs = await page.evaluate(() => [...new Set([...document.querySelectorAll('a[href]')]
+    .map((a) => a.href).filter((h) => h.startsWith(location.origin) && !h.includes('#')))]);
+  for (const href of hrefs) {
+    const res = await page.request.get(href).catch(() => null);
+    if (!res || res.status() >= 400) fail(where, `link to ${href.replace(base, '')} answers ${res?.status() ?? 'nothing'}`);
+  }
+}
+
 // ------------------------------------------------------------------ run
 
-const browser = await webkit.launch();
+const engines = { webkit, chromium };
+const browsers = {};
+/* The launch itself is shared, not its result: Android and desktop both ask
+   for Chromium at the same moment, and awaiting before storing launched two,
+   one of which nothing closed, so the sweep never exited. */
+const browserFor = (engine) => (browsers[engine] ??= engines[engine].launch());
 const started = Date.now();
 const timings = [];
 const asked = Object.keys(SCREENS).filter((k) => only.includes(k));
 const screens = asked.length ? asked : Object.keys(SCREENS);
 const pageNames = only.filter((o) => !Object.keys(SCREENS).includes(o));
 
-for (const screen of screens) {
+/* Screens run side by side: each is its own browser context, and the sweep is
+   mostly waiting, so four at once costs little more than one. */
+await Promise.all(screens.map(async (screen) => {
   for (const size of (quick ? SCREENS[screen].slice(0, 1) : SCREENS[screen])) {
+    const browser = await browserFor(size.engine ?? 'webkit');
     for (const p of PAGES) {
       if (pageNames.length && !pageNames.some((o) => p.name.includes(o))) continue;
       const where = `${p.name} on ${size.name}`;
-      const profile = size.device ? { ...devices[size.device] } : { viewport: size.viewport };
-      const context = await browser.newContext(profile);
+      const { defaultBrowserType, ...device } = size.device ? devices[size.device] : {};
+      const profile = size.device ? device : { viewport: size.viewport };
+      const context = await browser.newContext({ ...profile, acceptDownloads: true });
       const page = await context.newPage();
+      /*
+       * Nothing leaves. A write to the database is answered here, and a page from
+       * another site with a blank one, so pressing Post or Sign in during the
+       * sweep touches no live data and opens no Discord window.
+       */
+      await context.route('**/*', (route) => {
+        const req = route.request();
+        if (req.url().startsWith(base)) return route.continue();
+        if (req.isNavigationRequest() && req.frame() === page.mainFrame()) {
+          return route.fulfill({ status: 200, contentType: 'text/html', body: '<!doctype html><title>left the site</title>' });
+        }
+        if (!['GET', 'HEAD', 'OPTIONS'].includes(req.method())) {
+          return route.fulfill({ status: 200, contentType: 'application/json', body: 'null' });
+        }
+        return route.continue();
+      });
+      const events = { count: 0 };
+      for (const e of ['dialog', 'popup', 'download', 'filechooser']) {
+        page.on(e, async (x) => {
+          events.count++;
+          if (e === 'dialog') await x.dismiss().catch(() => {});
+          if (e === 'popup') await x.close().catch(() => {});
+        });
+      }
       const noise = [];
-      page.on('pageerror', (e) => noise.push(`script error: ${e.message}`));
+      page.on('pageerror', (e) => {
+        /* WebKit words a fetch cut off by a reload as an access-control
+           failure. For this site's own files that cannot be true; for another
+           site's it could be, and still fails. */
+        const host = base.replace(/^https?:\/\//, '');
+        if (/due to access control checks/.test(e.message) && e.message.includes(host)) return;
+        noise.push(`script error: ${e.message}`);
+      });
       page.on('console', (m) => { if (m.type() === 'error') noise.push(`console: ${m.text().slice(0, 160)}`); });
       page.on('requestfailed', (r) => {
         // A blocked counter or an absent local-only data file is not this site's bug.
         if (/goatcounter|zgo\.at|tracker\.local\.json/.test(r.url())) return;
-        noise.push(`request failed: ${r.url().replace(base, '')}`);
+        // A picture made in the page and let go of once it is drawn.
+        if (r.url().startsWith('blob:')) return;
+        /* Called off because the page went away mid-load, which a press that
+           reloads does on purpose. A request that failed on its own says so
+           in other words. */
+        if (/abort|cancel/i.test(r.failure()?.errorText ?? '')) return;
+        noise.push(`request failed: ${r.url().replace(base, '')} (${r.failure()?.errorText ?? '?'})`);
       });
 
       try {
@@ -452,6 +884,8 @@ for (const screen of screens) {
         timings.push({ where, ...(await checkSpeed(page, where, p.ready, readyMs)) });
         await checkPage(page, where, !!profile.hasTouch);
         await checkGestures(page, p.name, where, screen);
+        await checkLinks(page, where);
+        await checkControls(page, where, `${base}/${p.url}`, noise, events);
       } catch (e) {
         fail(where, `did not get through: ${e.message.split('\n')[0]}`);
       }
@@ -460,15 +894,15 @@ for (const screen of screens) {
       process.stdout.write('.');
     }
   }
-}
+}));
 
-await browser.close();
+for (const b of Object.values(browsers)) await (await b).close();
 stop();
 
 // ------------------------------------------------------------------ report
 
 const secs = ((Date.now() - started) / 1000).toFixed(1);
-console.log(`\n\nScreens: ${live ? LIVE : 'local'}, WebKit, ${screens.join(' / ')}, ${secs}s`);
+console.log(`\n\nScreens: ${live ? LIVE : 'local'}, WebKit and Chromium, ${screens.join(' / ')}, ${secs}s`);
 
 if (timings.length) {
   const worst = [...timings].sort((a, b) => b.ready - a.ready).slice(0, 5);
@@ -477,6 +911,16 @@ if (timings.length) {
     console.log(`   ${String(t.ready).padStart(5)}ms  paint ${String(Math.round(t.paint ?? 0)).padStart(4)}ms  `
       + `${String(t.code).padStart(4)}KB code + ${String(t.art).padStart(5)}KB art  ${t.where}`);
   }
+}
+if (pressed.length) {
+  const total = pressed.reduce((n, p) => n + p.n, 0);
+  const least = [...pressed].sort((a, b) => a.n - b.n)[0];
+  console.log(`\n  pressed ${total} controls across ${pressed.length} page loads; fewest: ${least.n} on ${least.where}`);
+  if (process.env.SCREENS_VERBOSE) {
+    for (const p of pressed) console.log(`   ${String(p.n).padStart(3)} of ${String(p.of).padStart(3)}  ${p.where}`);
+  }
+  // A page with controls on it that had none pressed is a sweep that looked away.
+  for (const p of pressed) if (p.of > 0 && p.n === 0) fail(p.where, 'no control on the page could be pressed');
 }
 if (warns.length) {
   console.log(`\n  ${warns.length} warning${warns.length === 1 ? '' : 's'}`);

@@ -628,6 +628,10 @@
   .contribute .appbar__btn { flex: 1; }
   .contrib__actions .btn { flex: 1 1 100%; }
   .contrib__json { max-height: 200px; font-size: 11.5px; }
+  /* This roster sheet carries two legends and filters that never fold, which
+     on an iPhone SE is taller than the sheet: only the cards scrolled, so Sort
+     and Reset sat under the app bar out of reach. The sheet scrolls as a whole. */
+  .contribute .panel--roster { overflow-y: auto; }
 }
 
 @media (pointer: coarse) { #out { min-height: 44px; } }

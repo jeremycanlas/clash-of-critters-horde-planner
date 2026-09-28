@@ -1412,7 +1412,9 @@ body[data-mode="coop"] .token {
 
 /* ============================================================ player tabs */
 
-.ptabs { display: flex; gap: var(--s2); margin-bottom: var(--s3); }
+/* Wraps: two player tabs and "Switch player" are wider than a 320px phone, and
+   unwrapped they pushed the whole page sideways in co-op. */
+.ptabs { display: flex; flex-wrap: wrap; gap: var(--s2); margin-bottom: var(--s3); }
 
 .ptab {
   flex: 1 1 0;
@@ -4039,6 +4041,10 @@ body.is-dragging-active {
     border-top: 1px solid var(--line);
     box-shadow: 0 -8px 20px -14px rgb(0 0 0 / .55);
   }
+  /* min-width: 0 down the chain, or a flex parent grows to fit every chip and
+     the strip runs past the screen's edge instead of scrolling inside it, with
+     the last chips out of reach. */
+  .bench, .bench__player, .bench__head, .bench__strip { min-width: 0; }
   .bench__player { gap: var(--s1); }
   .bench__head { gap: var(--s2); font-size: 11.5px; }
   .bench__strip {
@@ -4279,7 +4285,9 @@ body.is-dragging-active {
    */
   .wide-only { display: none; }
   .bench__head { flex-wrap: nowrap; gap: var(--s1) var(--s2); }
-  .bench__count { min-width: 0; font-size: 11px; }
+  /* The count gives way, with an ellipsis, rather than the buttons: on a 320px
+     phone in co-op "1 left to place" pushed Clear bench off the edge. */
+  .bench__count { min-width: 0; font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
   /*
    * Named, not just an icon: this is the control that makes a screenshot worth
@@ -6909,8 +6917,11 @@ details.hint[open] > summary { margin-bottom: var(--s1); }
  * press costs the filter. min-width: 0 keeps the drawer to the sheet's width
  * so the wrap has an edge to wrap at. The opened effect row keeps its own
  * sideways scroll (.chips--sub), which was a deliberate trade.
+ *
+ * .filters rather than the drafter's drawer alone: the range recorder uses the
+ * same filters with no drawer around them, and clipped the same chips.
  */
 @media (max-width: 760px) {
-  .filters__body { min-width: 0; max-width: 100%; }
-  .filters__body .chips:not(.chips--sub) { flex-wrap: wrap; }
+  .filters, .filters__body { min-width: 0; max-width: 100%; }
+  .filters .chips:not(.chips--sub) { flex-wrap: wrap; }
 }
