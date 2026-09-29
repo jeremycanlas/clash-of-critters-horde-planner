@@ -15,12 +15,12 @@ import { $, $$, esc, copyText } from './ui.js';
 
 applyPrefs();
 
-// ponytail: placeholder names and colours until the game's four are confirmed.
+// The gold rush's four teams, in the order the slots are stored (1 to 4).
 const COLORS = [
   { name: 'Red', css: 'var(--fire)' },
   { name: 'Blue', css: 'var(--water)' },
-  { name: 'Green', css: 'var(--grass)' },
   { name: 'Yellow', css: 'var(--lightning)' },
+  { name: 'Purple', css: '#9b6cf0' },
 ];
 
 const FLAG = 'coc.banquet.member';
