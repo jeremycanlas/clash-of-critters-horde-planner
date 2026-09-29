@@ -276,10 +276,16 @@ $('#bq-my').addEventListener('click', async (e) => {
 
 $('#bq-shot').addEventListener('click', () => {
   setShot(true);
-  toast('Screenshot mode. Tap the page title to bring the controls back.');
+  toast('Screenshot mode. Tap "MVP banquets" to bring the controls back.');
 });
-// The way back leaves nothing on screen to give it away. Escape does it too.
+// The way back leaves nothing on screen to give it away: the title, the page's tab, or Escape.
 $('.topbar h1').addEventListener('click', () => { if (shot && state?.groups) setShot(false); });
+// The page's own tab reads the same, "MVP banquets", and would only reload.
+$('#site-tabs').addEventListener('click', (e) => {
+  if (!shot || !state?.groups || !e.target.closest('[aria-current="page"]')) return;
+  e.preventDefault();
+  setShot(false);
+});
 addEventListener('keydown', (e) => { if (e.key === 'Escape' && shot && state?.groups) setShot(false); });
 
 $('#bq-groups').addEventListener('click', (e) => {

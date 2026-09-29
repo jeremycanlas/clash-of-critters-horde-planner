@@ -202,6 +202,9 @@ try {
   assert.equal(await V.locator('.bq-grp').count(), 0, 'still As Group 1 after the reload');
   await V.click('.topbar h1');
   assert.ok(await V.locator('#bq-view').isVisible(), 'tapping the title brings it back');
+  await V.click('#bq-shot');
+  await V.click('#site-tabs [aria-current="page"]');
+  assert.ok(await V.locator('#bq-view').isVisible(), "so does tapping the page's own tab");
   await V.click('[data-show="all"]');
   await V.click('[data-group="1"]');
   assert.equal(await V.locator('#bq-cards li').count(), 26, 'As Group 1: only Group 1');
