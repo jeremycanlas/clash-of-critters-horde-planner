@@ -193,10 +193,14 @@ try {
   assert.equal(db.claims.filter((c) => c.who === 'Ana').length, 0, 'Undo took the claim back');
   await A.click('[data-show="all"]');
   assert.equal(await A.locator('.bq-card.is-waiting').count(), 1, 'a not-yet banquet stays listed');
-  assert.equal(await A.locator('[data-show]').count(), 4, 'Ready, Claimed, Full, All');
+  assert.equal(await A.locator('[data-show]').count(), 5, 'Ready, Not open, Claimed, Full, All');
   await A.click('[data-show="ready"]');
   assert.equal(await A.locator('.bq-card.is-waiting').count(), 0, 'Ready leaves out the not-yet one');
   assert.equal(await A.locator('.bq-card.is-full, .bq-card.is-claimed').count(), 0, 'and full or claimed ones');
+  await A.click('[data-show="waiting"]');
+  assert.deepEqual(await A.locator('#bq-cards li').evaluateAll((ls) => ls.map((l) => l.dataset.key)), [':60000137'], 'Not open is only the not-yet one');
+  assert.match(await A.locator('.bq-card__checked').textContent(), /Last checked/, 'with when it was last checked');
+  await A.click('[data-show="ready"]');
   assert.ok(await A.locator('#bq-cards li').count() > 20, 'but keeps the rest');
   assert.equal(await A.evaluate(() => document.documentElement.scrollWidth - innerWidth), 0, 'the filters fit a phone');
   assert.ok(await A.locator('[data-show]').evaluateAll((bs) => bs.every((b) => b.getBoundingClientRect().height < 50)), 'each on one line');

@@ -305,6 +305,8 @@ const WHICH = {
   // What you can go and claim this minute: not full, not yours already, not waiting
   // to open. Banquets marked not yet available are under All.
   ready: (b) => !b.full && !b.claimed && !b.not_yet,
+  // Marked not yet available: the ones to go back and check.
+  waiting: (b) => !!b.not_yet,
   claimed: (b) => b.claimed,
   full: (b) => !!b.full,
   all: () => true,

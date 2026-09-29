@@ -133,3 +133,5 @@
 .bq-tag--new { color: var(--accent-ink-on); }
 @media (max-width: 560px) { .bq-new__uid { min-height: 40px; } }
 .bq-card.is-found { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* Five filters on the narrowest phones: a touch smaller so the words keep their gaps. */
+@media (max-width: 400px) { .bq-bar--pinned .segmented__btn { font-size: 12px; } }
