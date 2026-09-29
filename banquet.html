@@ -55,6 +55,14 @@
         <button id="bq-shot" class="btn btn--quiet bq-shot" type="button">Screenshot mode</button>
       </div>
 
+      <!-- For those who see both groups, never in screenshot mode or As Group N:
+           members whose UIDs someone else posted first, and UIDs in both groups. -->
+      <details id="bq-copies" class="panel bq-copies" hidden>
+        <summary><h2>Possible copies <span id="bq-copies-n" class="muted"></span></h2></summary>
+        <p class="muted bq-copies__note">Players on one game server share their MVPs, so a match is a lead, not proof. Nobody is blocked by this.</p>
+        <div id="bq-copies-body"></div>
+      </details>
+
       <!-- Yours this gold rush: what you posted in Discord, filled in by itself,
            and anything added here. Four of them opens everyone else's. -->
       <form id="bq-mine" class="panel bq-mine">

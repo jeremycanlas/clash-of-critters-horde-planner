@@ -2,7 +2,7 @@
 --
 --   psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f supabase/banquet_check.sql
 --
--- Loads 013 to 020 inside the transaction too, so it can run before a
+-- Loads 013 to 021 inside the transaction too, so it can run before a
 -- migration is applied. Discord is not asked: members are written straight
 -- into banquet_members, which is what Discord's yes leaves behind, and channel
 -- posts go through banquet_apply(), which is what banquet_sync() hands them
@@ -27,6 +27,7 @@ end $$;
 \i supabase/migrations/018_banquet_sync_window.sql
 \i supabase/migrations/019_banquet_add_limit.sql
 \i supabase/migrations/020_banquet_state_same.sql
+\i supabase/migrations/021_banquet_copies.sql
 
 -- Real entries would skew the counts. Gone for this transaction only.
 delete from public.banquet_claims; delete from public.banquet_marks; delete from public.banquet_uids;
@@ -227,6 +228,32 @@ do $$ begin
   assert jsonb_array_length(public.banquet_state() -> 'mine') = 4, 'A still has four';
 end $$;
 
+-- ---------------------------------------------------------------- possible copies
+-- A newcomer posts three of B's UIDs and one of A's, all after them.
+reset role;
+insert into public.banquet_uids (round, grp, uid, discord_id, by_name, source, added_at)
+select public.banquet_round(), 1, u, '990000000000000399', 'zz_copier', 'discord', now() + interval '1 minute'
+  from unnest('{20000001,20000002,20000003,10000001}'::bigint[]) u;
+set local role authenticated;
+select pg_temp.as_(1);
+do $$ begin
+  begin perform public.banquet_copies(); raise exception 'a member saw copies';
+  exception when raise_exception then if sqlerrm = 'a member saw copies' then raise; end if; end;
+end $$;
+select pg_temp.as_(4);
+do $$
+declare c jsonb; p jsonb;
+begin
+  c := public.banquet_copies();
+  p := c -> 'people' -> 0;
+  assert p ->> 'name' = 'zz_copier' and (p ->> 'all_copied')::boolean and (p ->> 'copied')::int = 4, 'the copier is first, all four copied';
+  assert (select array_agg(distinct x ->> 'first_by' order by x ->> 'first_by') from jsonb_array_elements(p -> 'items') x) = '{u301,u302}',
+         'and whose they were, as posted in Discord';
+  assert not exists (select 1 from jsonb_array_elements(c -> 'people') x where x ->> 'name' = 'u302'), 'the one who posted first is not flagged';
+  assert (select count(*) from jsonb_array_elements(c -> 'both_groups') x where x ->> 'uid' = '55555555') = 0,
+         '55555555 left Group 1 in the edit above, so it is in one group now';
+end $$;
+
 -- ---------------------------------------------------------------- a stale yes expires
 reset role;
 update public.banquet_members set checked_at = now() - interval '31 minutes' where discord_id = '990000000000000301';
@@ -239,7 +266,7 @@ begin
 end $$;
 
 -- ---------------------------------------------------------------- what a user can reach at all
--- The seven calls the page makes, nothing else: not the sync (it would let
+-- The eight calls the page makes, nothing else: not the sync (it would let
 -- anyone hammer Discord as the bot), not the unfiltered list, not a table, not
 -- the vault the bot token is in. Anonymous visitors reach none of it.
 reset role;
@@ -249,7 +276,7 @@ begin
   got := array(select p.proname::text from pg_proc p
                 where p.pronamespace = 'public'::regnamespace and p.proname like 'banquet%'
                   and has_function_privilege('authenticated', p.oid, 'execute') order by 1);
-  assert got = '{banquet_add,banquet_check,banquet_claim,banquet_mark,banquet_remove,banquet_round,banquet_state}',
+  assert got = '{banquet_add,banquet_check,banquet_claim,banquet_copies,banquet_mark,banquet_remove,banquet_round,banquet_state}',
          'signed-in users can call exactly the page''s functions, got ' || got::text;
   assert not exists (select 1 from pg_proc p where p.pronamespace = 'public'::regnamespace and p.proname like 'banquet%'
                       and has_function_privilege('anon', p.oid, 'execute')), 'anonymous visitors can call nothing';

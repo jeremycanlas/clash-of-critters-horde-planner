@@ -42,6 +42,7 @@ const db = {
   claims: [],
   marks: new Map([['1:60000137', { state: 'not-yet', by: 'Eli' }]]),
 };
+for (const uid of ['20000001', '55555555', '10000001', '10000002']) db.uids.push({ grp: 1, uid, who: 'Yui', source: 'discord' });
 for (let i = 0; i < 20; i++) db.uids.push({ grp: 1, uid: String(60000000 + i * 137), who: ['Dee', 'Eli', 'Fay'][i % 3], source: 'discord' });
 let syncedAgo = 60e3;
 let reads = 0;
@@ -92,6 +93,23 @@ async function open(me, opts) {
     const fn = u.pathname.split('/').pop();
     if (!['banquet_state', 'banquet_check', 'tracker_claim'].includes(fn)) sent.push({ who: me.name, fn, body });
     const g = me.all ? body.g : me.grp; // what banquet_group_for() does
+    if (fn === 'banquet_copies') {
+      if (!me.all) return route.fulfill({ status: 400, contentType: 'application/json', body: '{"code":"P0001","message":"Not for this account."}' });
+      // Earlier in the list is earlier in time.
+      const at = (i) => new Date(Date.parse('2026-09-29T00:00:00Z') + i * 60e3).toISOString();
+      const rows = db.uids.map((u, i) => ({ ...u, i }));
+      const firstOther = (u) => rows.find((o) => o.uid === u.uid && o.who !== u.who && o.i < u.i);
+      const byWho = Map.groupBy(rows, (u) => `${u.grp}:${u.who}`);
+      const people = [...byWho.values()].map((us) => {
+        const items = us.map((u) => ({ uid: u.uid, at: at(u.i), source: u.source, first_by: firstOther(u)?.who ?? null,
+          first_grp: firstOther(u)?.grp ?? null, first_at: firstOther(u) ? at(firstOther(u).i) : null }));
+        const copied = items.filter((x) => x.first_by).length;
+        return { name: us[0].who, grp: us[0].grp, uids: us.length, copied, all_copied: copied === us.length, items };
+      }).filter((p) => p.copied);
+      const both = [...new Set(rows.map((u) => u.uid))].filter((uid) => new Set(rows.filter((u) => u.uid === uid).map((u) => u.grp)).size > 1)
+        .map((uid) => ({ uid, groups: Object.fromEntries([1, 2].map((g) => [g, [...new Set(rows.filter((u) => u.uid === uid && u.grp === g).map((u) => u.who))]])) }));
+      return json({ people, both_groups: both });
+    }
     if (fn === 'banquet_check') return json('ok');
     if (fn === 'tracker_claim') return json(false);
     if (down) return route.abort('internetdisconnected');
@@ -146,6 +164,8 @@ try {
   assert.ok(!/30000001|\bCy\b/.test(await A.locator('#bq-app').innerText()), 'nothing of Group 2');
   assert.equal(await A.locator('#bq-view').isVisible(), false, 'no View as');
   assert.equal(await A.locator('#bq-shot').isVisible(), false, 'no screenshot mode for a member');
+  assert.equal(sent.filter((x) => x.who === 'Ana' && x.fn === 'banquet_copies').length, 0, 'a member never asks for copies');
+  assert.ok(await A.locator('#bq-copies').isHidden(), 'nor sees the panel');
 
   await A.fill('#bq-find', '5555');
   assert.equal(await A.locator('#bq-cards li').count(), 1, 'Find narrows to the one');
@@ -176,6 +196,11 @@ try {
   await V.click('[data-show="all"]');
   assert.equal(await V.locator('#bq-cards li').count(), 28, 'both groups');
   assert.equal(await V.locator('#bq-cards li', { hasText: '55555555' }).count(), 2, 'one card per group');
+  await V.click('#bq-copies summary');
+  assert.match(await V.locator('#bq-copies-body').innerText(), /Yui[\s\S]*all 4 posted earlier by others/, 'the copier is flagged');
+  assert.match(await V.locator('#bq-copies-body').innerText(), /In both groups[\s\S]*55555555/, 'and the UID in both groups');
+  assert.ok(!/Ana.*posted earlier/.test(await V.locator('#bq-copies-body').innerText()), 'the one who posted first is not');
+  if (process.env.BANQUET_SHOTS) await V.locator('#bq-copies').screenshot({ path: `${process.env.BANQUET_SHOTS}/copies.png` });
   assert.equal(await V.locator('#bq-cards .bq-grp').count(), 28, 'every card says its group');
 
   await V.fill('#bq-add-uid', '40000001');
@@ -195,11 +220,11 @@ try {
   // Screenshot mode: the bar goes, stays gone on reload, and the title brings it back.
   await V.click('#bq-shot');
   assert.ok(await V.locator('#bq-view').isHidden(), 'screenshot mode hides View as');
-  assert.equal(await V.locator('.bq-grp').count(), 0, 'and As Group 1 then shows nothing of groups');
+  assert.equal(await V.locator('.bq-grp:visible').count(), 0, 'and As Group 1 then shows nothing of groups');
   await V.reload();
   await V.waitForSelector('#bq-app:not([hidden])');
   assert.ok(await V.locator('#bq-view').isHidden(), 'remembered across a reload');
-  assert.equal(await V.locator('.bq-grp').count(), 0, 'still As Group 1 after the reload');
+  assert.equal(await V.locator('.bq-grp:visible').count(), 0, 'still As Group 1 after the reload');
   await V.click('.topbar h1');
   assert.ok(await V.locator('#bq-view').isVisible(), 'tapping the title brings it back');
   await V.click('#bq-shot');
@@ -208,7 +233,7 @@ try {
   await V.click('[data-show="all"]');
   await V.click('[data-group="1"]');
   assert.equal(await V.locator('#bq-cards li').count(), 26, 'As Group 1: only Group 1');
-  assert.equal(await V.locator('.bq-grp').count(), 0, 'As Group 1: no tags');
+  assert.equal(await V.locator('.bq-grp:visible').count(), 0, 'As Group 1: no tags');
   assert.ok(await V.locator('#bq-add-grp').isHidden(), 'As Group 1: no picker');
   assert.equal(await V.locator('#bq-count').textContent(), '26 of 26', 'As Group 1: counts as a member would');
   await V.click('[data-claim="20000001"]');

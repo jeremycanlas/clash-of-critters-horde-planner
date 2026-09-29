@@ -5,7 +5,7 @@
 
 .bq-main { max-width: 960px; }
 #bq-app { display: flex; flex-direction: column; gap: var(--s3); }
-#bq-app[hidden], #bq-list[hidden], .bq-locked[hidden], .bq-mine[hidden], .bq-stale[hidden] { display: none; }
+#bq-app[hidden], #bq-list[hidden], .bq-copies[hidden], .bq-locked[hidden], .bq-mine[hidden], .bq-stale[hidden] { display: none; }
 
 .bq-bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); }
 .bq-round { display: inline-flex; align-items: center; gap: var(--s2); font-size: 13px; color: var(--text-dim); }
@@ -95,3 +95,17 @@
 
 .bq-stale { margin: 0; padding: var(--s2) var(--s3); border: 1px solid color-mix(in srgb, var(--danger) 55%, var(--line));
   border-radius: var(--r-md); background: color-mix(in srgb, var(--danger) 8%, var(--surface)); font-size: 13px; }
+
+/* Possible copies: Owner and Budboo Enjoyer only. */
+.bq-copies summary { cursor: pointer; list-style: none; }
+.bq-copies summary::-webkit-details-marker { display: none; }
+.bq-copies summary h2 { margin: 0; font-size: 16px; }
+.bq-copies summary h2::after { content: ' ▸'; color: var(--text-mute); font-size: 12px; }
+.bq-copies[open] summary h2::after { content: ' ▾'; }
+.bq-copies h2 .muted { font-weight: 400; font-size: 13px; }
+.bq-copies h3 { margin: var(--s3) 0 var(--s1); font-size: 13.5px; }
+.bq-copies__note { margin: var(--s2) 0 0; font-size: 13px; }
+.bq-copies__list { margin: 0; padding-left: var(--s4); font-size: 13px; display: flex; flex-direction: column; gap: 6px; }
+.bq-copies__list ul { margin: 4px 0 0; padding-left: var(--s4); color: var(--text-dim); }
+.bq-copies__uid { font-weight: 650; font-variant-numeric: tabular-nums; color: var(--text); }
+.bq-copies__all { font-weight: 650; color: color-mix(in srgb, var(--danger) 75%, var(--text)); }

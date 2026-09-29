@@ -135,11 +135,34 @@ async function load(round = null, quiet = false) {
   const got = await rest('/rpc/banquet_state', { method: 'POST', body: { r: round, known }, auth: true });
   if (!got.ok) return quiet ? undefined : gate('Could not load the banquets', got.why, true);
   reached = Date.now();
-  state = got.data.same ? { ...state, synced_at: got.data.synced_at } : got.data;
+  const changed = !got.data.same;
+  state = changed ? got.data : { ...state, synced_at: got.data.synced_at };
   status('');
   $('#bq-gate').hidden = true;
   $('#bq-app').hidden = false;
   render();
+  if (changed && state.groups) loadCopies();
+}
+
+// ------------------------------------------------------------------ possible copies
+
+async function loadCopies() {
+  const got = await rest('/rpc/banquet_copies', { method: 'POST', body: { r: state.round }, auth: true });
+  if (!got.ok) return;
+  const { people, both_groups: both } = got.data;
+  const n = people.length + both.length;
+  $('#bq-copies-n').textContent = n ? `(${n})` : '(none)';
+  const whenBy = (by, g, at) => `${esc(by)}, Group ${g}, ${time(at)}`;
+  $('#bq-copies-body').innerHTML = (people.length ? `<h3>Posted after someone else</h3><ul class="bq-copies__list">${people.map((p) => `<li>
+      <b>${esc(p.name)}</b> <span class="bq-grp">Group ${p.grp}</span>
+      <span class="${p.all_copied ? 'bq-copies__all' : 'muted'}">${p.all_copied ? `all ${p.uids} posted earlier by others` : `${p.copied} of ${p.uids} posted earlier by others`}</span>
+      <ul>${p.items.filter((i) => i.first_by).map((i) => `<li><span class="bq-copies__uid">${i.uid}</span>
+        first by ${whenBy(i.first_by, i.first_grp, i.first_at)} · theirs ${time(i.at)}</li>`).join('')}</ul>
+    </li>`).join('')}</ul>` : '')
+    + (both.length ? `<h3>In both groups</h3><ul class="bq-copies__list">${both.map((b) => `<li>
+      <span class="bq-copies__uid">${b.uid}</span> ${Object.entries(b.groups).map(([g, names]) => `Group ${g}: ${esc(names.join(', '))}`).join(' · ')}
+    </li>`).join('')}</ul>` : '')
+    || '<p class="muted">Nothing this round.</p>';
 }
 
 /* A refresh that fails keeps the list on screen, so a phone that lost its
@@ -195,6 +218,7 @@ function render() {
   $('#bq-list').hidden = !open;
   if (!state.groups?.includes(group)) group = 0; // a member, or a stale choice
   $('#bq-view').hidden = !state.groups || shot;
+  $('#bq-copies').hidden = !state.groups || shot || !!group;
   const groups = $('#bq-groups');
   if (state.groups && !groups.children.length) {
     groups.innerHTML = [0, ...state.groups].map((g) => `<button class="segmented__btn" type="button" data-group="${g}"
