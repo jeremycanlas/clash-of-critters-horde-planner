@@ -30,6 +30,7 @@ const setMember = (on) => {
 
 let state = null;
 let show = 'open';
+let typing = false; // unsaved edits in your four, which a refresh must not wipe
 
 const status = (text) => { $('#bq-status').textContent = text; $('#bq-status').hidden = !text; };
 /* A round is one gold rush: it starts at the reset (00:00 UTC, 8am Manila) on
@@ -84,6 +85,12 @@ async function start() {
   showPrivateTab('banquet.html');
   await load();
 
+  /* Everyone else's claims and marks, every 30 seconds while the tab is in
+     view, and at once on coming back to it from the game. Nothing while hidden. */
+  const refresh = () => { if (!document.hidden) load(state.round === state.current ? null : state.round, true); };
+  setInterval(refresh, 30 * 1000);
+  document.addEventListener('visibilitychange', refresh);
+
   // Keeps the database's yes fresh, and notices a role taken away.
   setInterval(async () => {
     const again = await check();
@@ -102,9 +109,11 @@ function gate(head, text, canSignIn) {
 
 // ------------------------------------------------------------------ data
 
-async function load(round = null) {
+/* `quiet` is the timer's: a failed refresh keeps what is on screen, where a
+   failed load someone asked for says so. */
+async function load(round = null, quiet = false) {
   const got = await rest('/rpc/banquet_state', { method: 'POST', body: { r: round }, auth: true });
-  if (!got.ok) return gate('Could not load the banquets', got.why, true);
+  if (!got.ok) return quiet ? undefined : gate('Could not load the banquets', got.why, true);
   state = got.data;
   status('');
   $('#bq-gate').hidden = true;
@@ -117,15 +126,15 @@ async function load(round = null) {
 function render() {
   const past = state.round !== state.current;
   $('#bq-sub').textContent = `Gold rush ${span(state.current)}`;
-  $('#bq-round').innerHTML = state.rounds
+  if (document.activeElement !== $('#bq-round')) $('#bq-round').innerHTML = state.rounds
     .map((r) => `<option value="${r}"${r === state.round ? ' selected' : ''}>${span(r)}${r === state.current ? ' (now)' : ''}</option>`)
     .join('');
   $('#bq-when').textContent = past ? 'A past round, read only.'
     : `Ends ${utcDay(closes(state.round))}, 00:00 UTC (${localEnd(state.round)} your time)`;
 
-  // Your four: editable now, a record afterwards.
+  // Your four: editable now, a record afterwards. Left alone while being typed in.
   const mine = new Map(state.mine.map((m) => [m.color, m.uid]));
-  $('#bq-slots').innerHTML = COLORS.map((c, i) => `<label class="bq-slot">${dot(i + 1)}<span>${c.name}</span>
+  if (!typing) $('#bq-slots').innerHTML = COLORS.map((c, i) => `<label class="bq-slot">${dot(i + 1)}<span>${c.name}</span>
       <input class="field" inputmode="numeric" pattern="[0-9]{8}" maxlength="8" autocomplete="off"
         data-color="${i + 1}" value="${esc(mine.get(i + 1) ?? '')}"${past ? ' readonly' : ''} aria-label="${c.name} MVP UID"></label>`).join('');
   $('#bq-save').hidden = past;
@@ -151,7 +160,8 @@ function renderCards(past) {
   const shown = state.banquets.filter(WHICH[show])
     .sort((a, b) => !!a.not_yet - !!b.not_yet || a.claims - b.claims || a.uid.localeCompare(b.uid));
   $('#bq-count').textContent = `${shown.length} of ${state.banquets.length}`;
-  $('#bq-cards').innerHTML = shown.map((b) => `<li class="bq-card${b.full ? ' is-full' : ''}${b.not_yet ? ' is-waiting' : ''}${b.claimed ? ' is-claimed' : ''}">
+  const opened = new Set($$('#bq-cards details[open]').map((d) => d.closest('li').dataset.uid));
+  $('#bq-cards').innerHTML = shown.map((b) => `<li data-uid="${b.uid}" class="bq-card${b.full ? ' is-full' : ''}${b.not_yet ? ' is-waiting' : ''}${b.claimed ? ' is-claimed' : ''}">
       <div class="bq-card__id">
         <span class="bq-card__dots">${b.colors.map(dot).join('')}${b.extra ? '<span class="bq-extra">Extra</span>' : ''}</span>
         <button type="button" class="tr-copy bq-uid" data-copy="${b.uid}" title="Copy UID">${b.uid}</button>
@@ -172,6 +182,7 @@ function renderCards(past) {
         ${b.mine_extra ? `<button type="button" class="btn btn--quiet" data-remove="${b.uid}">Remove</button>` : ''}
       </div>`}
     </li>`).join('') || `<li class="muted bq-none">${state.banquets.length ? 'Nothing here.' : 'No banquets shared this round yet.'}</li>`;
+  for (const d of $$('#bq-cards details')) d.open = opened.has(d.closest('li').dataset.uid);
 }
 
 // ------------------------------------------------------------------ actions
@@ -186,6 +197,7 @@ $('#bq-mine').addEventListener('submit', async (e) => {
   const got = await rest('/rpc/banquet_save_mvps', { method: 'POST', body: { uids: uids.map((u) => (u ? Number(u) : null)) }, auth: true });
   $('#bq-save').disabled = false;
   if (!got.ok) { err.textContent = got.why; err.hidden = false; return; }
+  typing = false;
   $('#bq-saved').textContent = 'Saved';
   setTimeout(() => { $('#bq-saved').textContent = ''; }, 1500);
   load();
@@ -232,7 +244,8 @@ for (const b of $$('[data-show]')) {
   });
 }
 
-$('#bq-round').addEventListener('change', (e) => load(e.target.value));
+$('#bq-round').addEventListener('change', (e) => { typing = false; load(e.target.value); });
+$('#bq-slots').addEventListener('input', () => { typing = true; });
 
 document.addEventListener('click', async (e) => {
   const btn = e.target.closest('.tr-copy');
