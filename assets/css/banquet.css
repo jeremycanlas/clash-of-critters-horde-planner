@@ -135,3 +135,11 @@
 .bq-card.is-found { outline: 2px solid var(--accent); outline-offset: 2px; }
 /* Five filters on the narrowest phones: a touch smaller so the words keep their gaps. */
 @media (max-width: 400px) { .bq-bar--pinned .segmented__btn { font-size: 12px; } }
+
+/* Access log: Owner, Budboo Enjoyer and Channel Admin only. */
+.bq-access__list > li { padding: 4px 0; }
+.bq-access__list > li.is-flagged > b { color: color-mix(in srgb, var(--danger) 75%, var(--text)); }
+.bq-access__flag { font-size: 11.5px; font-weight: 650; padding: 1px 6px; border-radius: var(--r-sm);
+  color: color-mix(in srgb, var(--danger) 75%, var(--text)); background: color-mix(in srgb, var(--danger) 12%, var(--surface)); }
+.bq-access__nums { color: var(--text-dim); margin-top: 2px; }
+.bq-access__list details summary { cursor: pointer; color: var(--text-mute); }

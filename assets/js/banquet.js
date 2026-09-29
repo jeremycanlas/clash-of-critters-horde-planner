@@ -158,6 +158,7 @@ async function start() {
     if (document.hidden && Date.now() - reached < 60 * 1000) return;
     await load(state.round === state.current ? null : state.round, true);
     offline();
+    if ($('#bq-access').open && !document.hidden) loadAccess();
   };
   setInterval(refresh, 15 * 1000);
   document.addEventListener('visibilitychange', refresh);
@@ -202,6 +203,39 @@ async function load(round = null, quiet = false) {
   render();
   if (changed && state.groups) loadCopies();
 }
+
+// ------------------------------------------------------------------ access log
+
+// A copy is the one sign of taking the site can see. Not waited on: it must never slow the copy.
+function noteCopy(key) {
+  const [g, uid] = key.split(':');
+  rest('/rpc/banquet_note_copy', { method: 'POST', body: { target: Number(uid), g: g ? Number(g) : null }, auth: true });
+}
+
+const FLAGS = {
+  'copied-not-claimed': 'copied far more than they claimed',
+  'took-not-shared': 'took without sharing',
+  script: 'reads like a script, not the page',
+};
+
+async function loadAccess() {
+  const got = await rest('/rpc/banquet_access_log', { method: 'POST', body: { days: 7 }, auth: true });
+  if (!got.ok) { $('#bq-access-body').textContent = got.why; return; }
+  const people = got.data;
+  const flagged = people.filter((p) => p.flags.length).length;
+  $('#bq-access-n').textContent = `(${people.length} people${flagged ? `, ${flagged} flagged` : ''})`;
+  const day = (iso) => new Date(iso).toLocaleString(undefined, { weekday: 'short', hour: 'numeric', minute: '2-digit' });
+  $('#bq-access-body').innerHTML = people.length ? `<ul class="bq-copies__list bq-access__list">${people.map((p) => `<li${p.flags.length ? ' class="is-flagged"' : ''}>
+      <b>${esc(p.name)}</b> ${p.groups.map((g) => `<span class="bq-grp">${esc(nameOf(g))}</span>`).join(' ')}
+      ${p.flags.map((f) => `<span class="bq-access__flag">${FLAGS[f] ?? esc(f)}</span>`).join(' ')}
+      <div class="bq-access__nums">copied <b>${p.copied}</b> · claimed <b>${p.claimed}</b> · shared <b>${p.shared}</b>
+        · ${p.visits} visit${p.visits === 1 ? '' : 's'}, ${p.minutes} min · up to ${p.per_min} refreshes a minute
+        ${p.past_visits ? `· looked at past gold rushes ${p.past_visits}×` : ''} · last ${day(p.last)}</div>
+      <details><summary>Visits</summary><ul>${p.recent.map((v) => `<li>${day(v.start)} to ${time(v.last)}
+        · ${v.groups.map((g) => esc(nameOf(g))).join(' + ')} · ${v.reads} refreshes · ${v.copied} copied</li>`).join('')}</ul></details>
+    </li>`).join('')}</ul>` : '<p class="muted">Nobody in the last 7 days.</p>';
+}
+$('#bq-access').addEventListener('toggle', () => { if ($('#bq-access').open) loadAccess(); });
 
 // ------------------------------------------------------------------ possible copies
 
@@ -278,6 +312,7 @@ function render() {
   if (!state.groups?.includes(group)) group = 0; // a member, or a stale choice
   $('#bq-view').hidden = !state.groups || shot;
   $('#bq-copies').hidden = !state.groups || shot || !!group;
+  $('#bq-access').hidden = !state.groups || shot || !!group;
   const groups = $('#bq-groups');
   if (state.groups && !groups.children.length) {
     groups.innerHTML = [0, ...state.groups].map((g) => `<button class="segmented__btn" type="button" data-group="${g}"
@@ -410,6 +445,7 @@ $('#bq-new-uids').addEventListener('click', (e) => {
   const b = e.target.closest('[data-new]');
   if (!b) return;
   copyText(b.dataset.copy);
+  noteCopy(b.dataset.new);
   markSeen(b.dataset.new);
   render();
   const card = $(`#bq-cards li[data-key="${CSS.escape(b.dataset.new)}"]`);
@@ -498,6 +534,8 @@ document.addEventListener('click', async (e) => {
   const btn = e.target.closest('.tr-copy');
   if (!btn) return;
   const ok = await copyText(btn.dataset.copy);
+  const card = btn.closest('#bq-cards li[data-key]');
+  if (ok && card) noteCopy(card.dataset.key);
   btn.classList.add(ok ? 'is-copied' : 'is-failed');
   btn.dataset.label = ok ? 'Copied' : 'Copy failed';
   setTimeout(() => { btn.classList.remove('is-copied', 'is-failed'); delete btn.dataset.label; }, 1200);

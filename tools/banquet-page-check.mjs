@@ -113,6 +113,18 @@ async function open(me, opts) {
         .map((uid) => ({ uid, groups: Object.fromEntries([1, 2].map((g) => [g, [...new Set(rows.filter((u) => u.uid === uid && u.grp === g).map((u) => u.who))]])) }));
       return json({ people, both_groups: both });
     }
+    if (fn === 'banquet_note_copy') return ok();
+    if (fn === 'banquet_access_log') {
+      if (!me.all) return route.fulfill({ status: 400, contentType: 'application/json', body: '{"code":"P0001","message":"Not for this account."}' });
+      const copies = sent.filter((x) => x.fn === 'banquet_note_copy');
+      return json([
+        { name: 'Grabby', groups: [1, 2], visits: 3, minutes: 40, reads: 160, per_min: 4, copied: 22, claimed: 1, shared: 0, past_visits: 2,
+          last: new Date().toISOString(), flags: ['copied-not-claimed', 'took-not-shared'],
+          recent: [{ start: new Date().toISOString(), last: new Date().toISOString(), reads: 60, round: '2026-09-24', groups: [1, 2], copied: 12 }] },
+        { name: 'Ana', groups: [1], visits: 1, minutes: 5, reads: 20, per_min: 4, copied: copies.filter((x) => x.who === 'Ana').length, claimed: 1,
+          shared: 4, past_visits: 0, last: new Date().toISOString(), flags: [], recent: [] },
+      ]);
+    }
     if (fn === 'banquet_check') return json('ok');
     if (fn === 'tracker_claim') return json(false);
     if (down) return route.abort('internetdisconnected');
@@ -169,6 +181,7 @@ try {
   assert.equal(await A.locator('#bq-view').isVisible(), false, 'no View as');
   assert.equal(await A.locator('#bq-shot').isVisible(), false, 'no screenshot mode for a member');
   assert.equal(sent.filter((x) => x.who === 'Ana' && x.fn === 'banquet_copies').length, 0, 'a member never asks for copies');
+  assert.ok(await A.locator('#bq-access').isHidden(), 'nor sees the access log');
   assert.ok(await A.locator('#bq-copies').isHidden(), 'nor sees the panel');
 
   await A.fill('#bq-find', '5555');
@@ -179,6 +192,10 @@ try {
   assert.ok(await A.locator('#bq-cards li', { hasText: '60000137' }).count() === 1, 'any case, and who marked it counts');
   await A.fill('#bq-find', '');
   assert.equal(await A.getByRole('button', { name: 'I claimed 55555555' }).count(), 1, 'buttons say which UID');
+  // Copying a UID off a card is reported, with no group from a group member.
+  await A.locator('#bq-cards li[data-key=":55555555"] .bq-uid').click();
+  await A.waitForTimeout(200);
+  assert.deepEqual(lastSent('Ana', 'banquet_note_copy'), { target: 55555555, g: null }, 'a copy is noted');
   // Newest: the last one posted comes first, and the choice is kept.
   await A.click('[data-order="new"]');
   assert.equal(await A.locator('#bq-cards li').first().getAttribute('data-key'), ':10000004', 'Newest puts the last posted first');
@@ -227,6 +244,16 @@ try {
   await V.click('[data-show="all"]');
   assert.equal(await V.locator('#bq-cards li').count(), 28, 'both groups');
   assert.equal(await V.locator('#bq-cards li', { hasText: '55555555' }).count(), 2, 'one card per group');
+  await V.locator('#bq-cards li[data-key="2:55555555"] .bq-uid').click();
+  await V.waitForTimeout(200);
+  assert.deepEqual(lastSent('Vee', 'banquet_note_copy'), { target: 55555555, g: 2 }, "a viewer's copy says which group");
+  await V.click('#bq-access summary');
+  await V.waitForSelector('#bq-access-body li');
+  assert.match(await V.locator('#bq-access-n').textContent(), /2 people, 1 flagged/);
+  assert.match(await V.locator('#bq-access-body li').first().innerText(), /Grabby[\s\S]*copied far more than they claimed[\s\S]*took without sharing[\s\S]*copied 22 · claimed 1 · shared 0/,
+    'the flagged one first, with what they took and gave');
+  if (process.env.BANQUET_SHOTS) await V.locator('#bq-access').screenshot({ path: `${process.env.BANQUET_SHOTS}/access.png` });
+  await V.click('#bq-access summary');
   await V.click('#bq-copies summary');
   assert.match(await V.locator('#bq-copies-body').innerText(), /Yui[\s\S]*all 4 posted earlier by others/, 'the copier is flagged');
   assert.match(await V.locator('#bq-copies-body').innerText(), /In both groups[\s\S]*55555555/, 'and the UID in both groups');

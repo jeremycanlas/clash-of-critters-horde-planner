@@ -2,7 +2,7 @@
 --
 --   psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f supabase/banquet_check.sql
 --
--- Loads 013 to 025 inside the transaction too, so it can run before a
+-- Loads 013 to 026 inside the transaction too, so it can run before a
 -- migration is applied. Discord is not asked: members are written straight
 -- into banquet_members, which is what Discord's yes leaves behind, and channel
 -- posts go through banquet_apply(), which is what banquet_sync() hands them
@@ -31,9 +31,10 @@ end $$;
 \i supabase/migrations/022_banquet_posted.sql
 \i supabase/migrations/023_banquet_no_role_minute.sql
 \i supabase/migrations/025_banquet_private.sql
+\i supabase/migrations/026_banquet_access_log.sql
 
 -- Real entries would skew the counts. Gone for this transaction only.
-delete from public.banquet_claims; delete from public.banquet_marks; delete from public.banquet_uids;
+delete from public.banquet_claims; delete from public.banquet_marks; delete from public.banquet_uids; delete from public.banquet_access;
 delete from public.banquet_group_members; delete from public.banquet_groups; delete from public.banquet_members;
 insert into public.banquet_groups (grp, role_id, channel_id, synced_at) values
   (1, 'r1', 'c1', now() - interval '2 minutes'), (2, 'r2', 'c2', now() - interval '9 minutes');
@@ -308,6 +309,49 @@ do $$ begin
          'and nothing A sends reaches the private list';
 end $$;
 
+-- ---------------------------------------------------------------- the access log
+-- By now A, C, V and W have each opened the list, many times over: one visit each.
+-- W copies ten of Group 1's UIDs, claims none and shares none; V copies one
+-- from the private list; A copies one not in any list it was sent.
+set local role authenticated;
+select pg_temp.as_(6);
+select public.banquet_note_copy(u, 1::smallint) from unnest('{10000001,10000002,10000003,10000101,10000102,10000103,20000001,20000002,20000003,10000114}'::bigint[]) u;
+select public.banquet_note_copy(10000001, 1::smallint);   -- twice is once
+select pg_temp.as_(4);
+select public.banquet_note_copy(33300001, 3::smallint);
+select pg_temp.as_(1);
+select public.banquet_note_copy(30000001, 2::smallint);   -- Group 2's, which A was never sent: ignored
+do $$ begin
+  begin perform public.banquet_access_log(); raise exception 'a member read the log';
+  exception when raise_exception then if sqlerrm = 'a member read the log' then raise; end if; end;
+end $$;
+reset role;
+do $$ begin
+  assert (select count(*) from public.banquet_access where discord_id = '990000000000000301') = 1, 'many refreshes, one visit';
+  assert (select reads from public.banquet_access where discord_id = '990000000000000301') > 5, 'counted';
+  assert (select cardinality(copied) from public.banquet_access where discord_id = '990000000000000301') = 0, 'a UID A was never sent is not counted';
+end $$;
+set local role authenticated;
+select pg_temp.as_(4);
+do $$
+declare l jsonb; w jsonb;
+begin
+  l := public.banquet_access_log();
+  w := (select x from jsonb_array_elements(l) x where x ->> 'name' = 'zz_w');
+  assert l -> 0 ->> 'name' = 'zz_w', 'the one who took most comes first';
+  assert (w ->> 'copied')::int = 10 and (w ->> 'claimed')::int = 0 and (w ->> 'shared')::int = 0, 'W: copied 10, claimed 0, shared 0';
+  assert w -> 'flags' @> '["copied-not-claimed", "took-not-shared"]'::jsonb, 'and flagged for both';
+  assert (select (x ->> 'copied')::int from jsonb_array_elements(l) x where x ->> 'name' = 'zz_v') = 1, 'V, a member, sees V''s private copy';
+end $$;
+select pg_temp.as_(6);
+do $$
+declare l jsonb;
+begin
+  l := public.banquet_access_log();
+  assert (select (x ->> 'copied')::int from jsonb_array_elements(l) x where x ->> 'name' = 'zz_v') = 0, 'W does not: it was from the private list';
+  assert not exists (select 1 from jsonb_array_elements(l) x, jsonb_array_elements(x -> 'groups') g where g::int = 3), 'nor any private group';
+end $$;
+
 -- ---------------------------------------------------------------- how long an answer is remembered
 -- With no server set, anything not answered from memory comes back
 -- not-set-up, so this never asks Discord.
@@ -337,7 +381,7 @@ begin
 end $$;
 
 -- ---------------------------------------------------------------- what a user can reach at all
--- The eight calls the page makes, nothing else: not the sync (it would let
+-- The ten calls the page makes, nothing else: not the sync (it would let
 -- anyone hammer Discord as the bot), not the unfiltered list, not a table, not
 -- the vault the bot token is in. Anonymous visitors reach none of it.
 reset role;
@@ -347,7 +391,7 @@ begin
   got := array(select p.proname::text from pg_proc p
                 where p.pronamespace = 'public'::regnamespace and p.proname like 'banquet%'
                   and has_function_privilege('authenticated', p.oid, 'execute') order by 1);
-  assert got = '{banquet_add,banquet_check,banquet_claim,banquet_copies,banquet_mark,banquet_remove,banquet_round,banquet_state}',
+  assert got = '{banquet_access_log,banquet_add,banquet_check,banquet_claim,banquet_copies,banquet_mark,banquet_note_copy,banquet_remove,banquet_round,banquet_state}',
          'signed-in users can call exactly the page''s functions, got ' || got::text;
   assert not exists (select 1 from pg_proc p where p.pronamespace = 'public'::regnamespace and p.proname like 'banquet%'
                       and has_function_privilege('anon', p.oid, 'execute')), 'anonymous visitors can call nothing';

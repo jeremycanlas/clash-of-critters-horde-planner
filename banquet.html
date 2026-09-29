@@ -57,6 +57,14 @@
 
       <!-- For those who see both groups, never in screenshot mode or As Group N:
            members whose UIDs someone else posted first, and UIDs in both groups. -->
+      <!-- For those who see both groups: who might be taking UIDs. Loaded when opened. -->
+      <details id="bq-access" class="panel bq-copies bq-access" hidden>
+        <summary><h2>Access log <span id="bq-access-n" class="muted"></span></h2></summary>
+        <p class="muted bq-copies__note">The last 7 days, worst first. Copies are UIDs tapped on this page; the site cannot see
+          screenshots or UIDs typed out by hand. A flag is a reason to look, not proof.</p>
+        <div id="bq-access-body"></div>
+      </details>
+
       <details id="bq-copies" class="panel bq-copies" hidden>
         <summary><h2>Possible copies <span id="bq-copies-n" class="muted"></span></h2></summary>
         <p class="muted bq-copies__note">Players on one game server share their MVPs, so a match is a lead, not proof. Nobody is blocked by this.</p>
