@@ -35,6 +35,7 @@ const status = (text) => { $('#bq-status').textContent = text; $('#bq-status').h
 // A round is the Manila date its gold rush ended, at the 8am reset.
 const day = (d) => new Date(`${d}T08:00:00+08:00`)
   .toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'Asia/Manila' });
+const time = (iso) => new Date(iso).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
 const dot = (c) => `<span class="bq-dot" style="--c:${COLORS[c - 1].css}" title="${COLORS[c - 1].name}"></span>`;
 
 // ------------------------------------------------------------------ gate
@@ -133,14 +134,16 @@ const WHICH = {
 };
 
 function renderCards(past) {
-  // Fewest claims first: the likeliest to still have room.
-  const shown = state.banquets.filter(WHICH[show]).sort((a, b) => a.claims - b.claims || a.uid.localeCompare(b.uid));
+  // Open before not-yet-open, then fewest claims first: the likeliest to have room.
+  const shown = state.banquets.filter(WHICH[show])
+    .sort((a, b) => !!a.not_yet - !!b.not_yet || a.claims - b.claims || a.uid.localeCompare(b.uid));
   $('#bq-count').textContent = `${shown.length} of ${state.banquets.length}`;
   $('#bq-cards').innerHTML = shown.map((b) => `<li class="bq-card${b.full ? ' is-full' : ''}${b.claimed ? ' is-claimed' : ''}">
       <div class="bq-card__id">
         <span class="bq-card__dots">${b.colors.map(dot).join('')}</span>
         <button type="button" class="tr-copy bq-uid" data-copy="${b.uid}" title="Copy UID">${b.uid}</button>
         ${b.full ? `<span class="bq-tag">Full<small> · ${esc(b.full)}</small></span>` : ''}
+        ${b.not_yet ? `<span class="bq-tag bq-tag--wait">Not yet available<small> · ${esc(b.not_yet.by)}, ${time(b.not_yet.at)}</small></span>` : ''}
       </div>
       <p class="bq-card__meta">From ${esc(b.entered_by.join(', '))}</p>
       ${b.claims ? `<details class="bq-card__claims">
@@ -149,7 +152,8 @@ function renderCards(past) {
       </details>` : '<p class="bq-card__meta">No members claimed yet</p>'}
       ${past ? '' : `<div class="bq-card__actions">
         <button type="button" class="btn${b.claimed ? ' btn--primary' : ''}" data-claim="${b.uid}" aria-pressed="${b.claimed}">${b.claimed ? 'Claimed ✓' : 'I claimed'}</button>
-        <button type="button" class="btn btn--quiet" data-full="${b.uid}" aria-pressed="${!!b.full}">${b.full ? 'Not full' : 'Full'}</button>
+        <button type="button" class="btn btn--quiet" data-mark="full" data-uid="${b.uid}" aria-pressed="${!!b.full}">${b.full ? 'Not full' : 'Full'}</button>
+        <button type="button" class="btn btn--quiet" data-mark="not-yet" data-uid="${b.uid}" aria-pressed="${!!b.not_yet}">${b.not_yet ? 'Available now' : 'Not yet available'}</button>
       </div>`}
     </li>`).join('') || `<li class="muted bq-none">${state.banquets.length ? 'Nothing here.' : 'No banquets shared this round yet.'}</li>`;
 }
@@ -173,14 +177,14 @@ $('#bq-mine').addEventListener('submit', async (e) => {
 
 $('#bq-cards').addEventListener('click', async (e) => {
   const claim = e.target.closest('[data-claim]');
-  const full = e.target.closest('[data-full]');
-  const btn = claim ?? full;
+  const mark = e.target.closest('[data-mark]');
+  const btn = claim ?? mark;
   if (!btn) return;
   btn.disabled = true;
   const on = btn.getAttribute('aria-pressed') !== 'true';
   const got = claim
     ? await rest('/rpc/banquet_claim', { method: 'POST', body: { target: Number(claim.dataset.claim), claimed: on }, auth: true })
-    : await rest('/rpc/banquet_mark_full', { method: 'POST', body: { target: Number(full.dataset.full), is_full: on }, auth: true });
+    : await rest('/rpc/banquet_mark', { method: 'POST', body: { target: Number(mark.dataset.uid), state: on ? mark.dataset.mark : null }, auth: true });
   if (!got.ok) { btn.disabled = false; btn.textContent = got.why; return; }
   load(state.round);
 });

@@ -42,3 +42,4 @@
 .bq-card__claims p { margin: 4px 0 0; overflow-wrap: anywhere; }
 .bq-card__actions { display: flex; flex-wrap: wrap; gap: var(--s2); margin-top: 2px; }
 .bq-none { padding: var(--s3); }
+.bq-tag--wait { color: var(--accent-ink-on); }

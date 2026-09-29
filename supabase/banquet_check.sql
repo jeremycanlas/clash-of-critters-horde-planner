@@ -2,13 +2,17 @@
 --
 --   psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f supabase/banquet_check.sql
 --
--- Loads 013 inside the transaction too, so it can run before the migration is
+-- Loads 013 and 014 inside the transaction too, so it can run before the migration is
 -- applied. Discord is not asked: the test members are written straight into
 -- banquet_members, which is what a yes from Discord leaves behind. A clean run
 -- prints "banquet: ok"; it ends in ROLLBACK, so nothing survives.
 
 begin;
 \i supabase/migrations/013_banquet.sql
+\i supabase/migrations/014_banquet_not_yet.sql
+
+-- Real entries would skew the counts. Gone for this transaction only.
+delete from public.banquet_claims; delete from public.banquet_full; delete from public.banquet_mvps;
 
 insert into auth.users (id, aud, role, email)
 values ('00000000-0000-4000-8000-00000000bb01', 'authenticated', 'authenticated', 'banquet-a@example.invalid'),
@@ -94,7 +98,10 @@ begin
 
   perform public.banquet_claim(101, true);
   perform public.banquet_claim(101, true);   -- twice is still once
-  perform public.banquet_mark_full(102, true);
+  perform public.banquet_mark(102, 'full');
+  perform public.banquet_mark(103, 'not-yet');
+  perform public.banquet_mark(201, 'not-yet');
+  perform public.banquet_mark(201, 'full');   -- one or the other
   begin perform public.banquet_claim(999, true); raise exception 'claimed a stranger';
   exception when raise_exception then if sqlerrm = 'claimed a stranger' then raise; end if; end;
 
@@ -103,6 +110,12 @@ begin
   assert (b ->> 'claims')::int = 1 and (b ->> 'claimed')::boolean, 'B claimed 101 once';
   select x into b from jsonb_array_elements(s -> 'banquets') x where x ->> 'uid' = '102';
   assert b ->> 'full' = 'zz_b', 'B marked 102 full';
+  select x into b from jsonb_array_elements(s -> 'banquets') x where x ->> 'uid' = '103';
+  assert b -> 'not_yet' ->> 'by' = 'zz_b' and b ->> 'full' is null, 'B marked 103 not yet';
+  select x into b from jsonb_array_elements(s -> 'banquets') x where x ->> 'uid' = '201';
+  assert b ->> 'full' = 'zz_b' and b -> 'not_yet' = 'null'::jsonb, 'Full replaced not yet on 201';
+  begin perform public.banquet_mark(101, 'bogus'); raise exception 'bogus state';
+  exception when raise_exception then if sqlerrm = 'bogus state' then raise; end if; end;
   select x into b from jsonb_array_elements(s -> 'banquets') x where x ->> 'uid' = '104';
   assert jsonb_array_length(b -> 'entered_by') = 2, 'both entered 104';
 end $$;
@@ -114,7 +127,7 @@ declare b jsonb;
 begin
   select x into b from jsonb_array_elements(public.banquet_state() -> 'banquets') x where x ->> 'uid' = '101';
   assert (b ->> 'claims')::int = 1 and not (b ->> 'claimed')::boolean, 'B''s claim is not A''s';
-  perform public.banquet_mark_full(102, false);
+  perform public.banquet_mark(102, null);
   select x into b from jsonb_array_elements(public.banquet_state() -> 'banquets') x where x ->> 'uid' = '102';
   assert b ->> 'full' is null, 'anyone can undo Full';
 end $$;
