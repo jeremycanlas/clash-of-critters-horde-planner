@@ -2,19 +2,30 @@
 --
 --   psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f supabase/banquet_check.sql
 --
--- Loads 013 to 018 inside the transaction too, so it can run before a
+-- Loads 013 to 019 inside the transaction too, so it can run before a
 -- migration is applied. Discord is not asked: members are written straight
 -- into banquet_members, which is what Discord's yes leaves behind, and channel
 -- posts go through banquet_apply(), which is what banquet_sync() hands them
 -- to. A clean run prints "banquet: ok"; it ends in ROLLBACK.
 
 begin;
+-- The live sync runs every minute and touches these tables. Taking them first,
+-- in one order, makes it wait the second or two this takes instead of
+-- deadlocking with the migrations below.
+do $$
+declare t text;
+begin
+  foreach t in array array['banquet_settings', 'banquet_groups', 'banquet_members', 'banquet_uids', 'banquet_claims', 'banquet_marks'] loop
+    if to_regclass('public.' || t) is not null then execute format('lock table public.%I in access exclusive mode', t); end if;
+  end loop;
+end $$;
 \i supabase/migrations/013_banquet.sql
 \i supabase/migrations/014_banquet_not_yet.sql
 \i supabase/migrations/015_banquet_extras.sql
 \i supabase/migrations/016_banquet_groups.sql
 \i supabase/migrations/017_banquet_synced_at.sql
 \i supabase/migrations/018_banquet_sync_window.sql
+\i supabase/migrations/019_banquet_add_limit.sql
 
 -- Real entries would skew the counts. Gone for this transaction only.
 delete from public.banquet_claims; delete from public.banquet_marks; delete from public.banquet_uids;
@@ -105,6 +116,14 @@ begin
   assert s::text not like '%grp%' and s::text not like '%groups%', 'nothing says there are groups';
   assert s::text not like '%3000000%' and s::text not like '%zz_c%' and s::text not like '%u303%', 'nothing of Group 2';
   assert (s ->> 'synced_at')::timestamptz = now() - interval '2 minutes', 'A gets Group 1''s last read only';
+
+  -- Twenty added is the limit: A has one, so nineteen more fit and the next does not.
+  perform public.banquet_add(70000000 + i) from generate_series(1, 19) i;
+  begin perform public.banquet_add(70000099); raise exception 'twenty-first added';
+  exception when raise_exception then if sqlerrm = 'twenty-first added' then raise; end if; end;
+  perform public.banquet_remove(70000000 + i) from generate_series(1, 19) i;
+  s := public.banquet_state();
+  assert jsonb_array_length(s -> 'banquets') = 8, 'and removing them leaves the eight';
 
   begin perform public.banquet_add(1234567); raise exception 'seven digits added';
   exception when raise_exception then if sqlerrm = 'seven digits added' then raise; end if; end;
