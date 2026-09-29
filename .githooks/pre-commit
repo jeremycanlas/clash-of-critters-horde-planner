@@ -42,6 +42,21 @@ MSG
   fi
 fi
 
+# The banquet page, signed in, which the sweep above never sees. Only when the
+# commit touches it or what it is built on: it opens two browsers.
+if [ "$status" -eq 0 ] && command -v node >/dev/null 2>&1   && git diff --cached --name-only | grep -qE '^(banquet\.html|assets/(js/(banquet|site-nav|supabase|ui)\.js|css/(banquet|app|tracker)\.css)|tools/banquet-page-check\.mjs)$'; then
+  echo "running the banquet page check..."
+  PLAYWRIGHT_BROWSERS_PATH="${PLAYWRIGHT_BROWSERS_PATH:-E:/caches/ms-playwright}" node tools/banquet-page-check.mjs
+  banquet=$?
+  if [ "$banquet" -eq 2 ]; then
+    echo "hook: no banquet page check here (see tools/screens.mjs for the setup)" >&2
+  elif [ "$banquet" -ne 0 ]; then
+    echo "" >&2
+    echo "Commit stopped: the banquet page check is red. Run: node tools/banquet-page-check.mjs" >&2
+    exit "$banquet"
+  fi
+fi
+
 if [ "$status" -ne 0 ]; then
   cat >&2 <<'MSG'
 

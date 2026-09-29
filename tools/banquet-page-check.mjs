@@ -17,8 +17,15 @@ import path from 'node:path';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const HARNESS = process.env.SCREENS_TEST_DIR ?? process.env.IPHONE_TEST_DIR ?? 'E:/caches/iphone-test';
 const PORT = 8145;
-const { chromium, devices } = await import(new URL('node_modules/playwright/index.mjs', `file:///${HARNESS}/`).href);
-const AXE = readFileSync(path.join(HARNESS, 'node_modules/axe-core/axe.min.js'), 'utf8');
+let chromium, devices, AXE;
+try {
+  ({ chromium, devices } = await import(new URL('node_modules/playwright/index.mjs', `file:///${HARNESS}/`).href));
+  AXE = readFileSync(path.join(HARNESS, 'node_modules/axe-core/axe.min.js'), 'utf8');
+} catch (e) {
+  // 2, like tools/screens.mjs: "cannot run here", which the hook waves through.
+  console.error(`banquet page: no test harness at ${HARNESS} (see tools/screens.mjs)`);
+  process.exit(2);
+}
 
 const server = spawn('python', ['tools/serve.py', String(PORT)], { cwd: ROOT, stdio: 'ignore' });
 await new Promise((r) => setTimeout(r, 1200));
