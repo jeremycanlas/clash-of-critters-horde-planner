@@ -2,7 +2,7 @@
 --
 --   psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f supabase/banquet_check.sql
 --
--- Loads 013 to 017 inside the transaction too, so it can run before a
+-- Loads 013 to 018 inside the transaction too, so it can run before a
 -- migration is applied. Discord is not asked: members are written straight
 -- into banquet_members, which is what Discord's yes leaves behind, and channel
 -- posts go through banquet_apply(), which is what banquet_sync() hands them
@@ -14,6 +14,7 @@ begin;
 \i supabase/migrations/015_banquet_extras.sql
 \i supabase/migrations/016_banquet_groups.sql
 \i supabase/migrations/017_banquet_synced_at.sql
+\i supabase/migrations/018_banquet_sync_window.sql
 
 -- Real entries would skew the counts. Gone for this transaction only.
 delete from public.banquet_claims; delete from public.banquet_marks; delete from public.banquet_uids;
@@ -172,6 +173,24 @@ end $$;
 select pg_temp.as_(3);
 do $$ begin
   assert pg_temp.card(public.banquet_state(), '55555555') -> 'not_yet' ->> 'by' = 'zz_c', 'Group 2 untouched';
+end $$;
+
+-- ---------------------------------------------------------------- a half-hour read
+-- Only posts from the window are replaced. B's 20000004 was posted "now" in the
+-- edit above, inside the window, and is edited out; A's older posts are outside
+-- it and untouched even though this read does not include them.
+reset role;
+update public.banquet_uids set added_at = now() - interval '2 hours' where grp = 1 and discord_id = '990000000000000301';
+select public.banquet_apply(public.banquet_round(), 1::smallint, jsonb_build_array(
+  pg_temp.msg('m3', '990000000000000302', E'`20000001`
+`20000002`
+`20000003`')), now() - interval '30 minutes');
+set local role authenticated;
+select pg_temp.as_(1);
+do $$ begin
+  assert pg_temp.card(public.banquet_state(), '20000004') is null, 'edited out inside the window';
+  assert pg_temp.card(public.banquet_state(), '10000002') is not null, 'older posts outside the window stay';
+  assert jsonb_array_length(public.banquet_state() -> 'mine') = 4, 'A still has four';
 end $$;
 
 -- ---------------------------------------------------------------- a stale yes expires
