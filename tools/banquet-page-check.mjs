@@ -157,6 +157,7 @@ try {
   await A.fill('#bq-add-uid', '10000004');
   await A.click('#bq-add');
   await A.waitForSelector('#bq-list:not([hidden])');
+  assert.equal(await A.locator('[data-show="ready"]').getAttribute('aria-pressed'), 'true', 'Ready is where the page opens');
   assert.equal(lastSent('Ana', 'banquet_add').g, null, 'a group member never sends a group');
 
   await A.click('[data-show="all"]');
@@ -182,21 +183,22 @@ try {
   assert.match(await A.locator('#bq-cards li').first().locator('.bq-card__meta').first().textContent(), /From Ana · \d/, 'with its time');
   await A.click('[data-order="room"]');
   assert.notEqual(await A.locator('#bq-cards li').first().getAttribute('data-key'), ':10000004', 'Most room is the old order');
-  // A claim takes the card out of To claim; Undo brings it back.
-  await A.click('[data-show="open"]');
+  // A claim takes the card out of Ready; Undo brings it back.
+  await A.click('[data-show="ready"]');
   await A.click('[data-claim="55555555"]');
   await A.waitForSelector('#toast.is-shown');
-  assert.equal(await A.locator('[data-claim="55555555"]').count(), 0, 'claimed, gone from To claim');
+  assert.equal(await A.locator('[data-claim="55555555"]').count(), 0, 'claimed, gone from Ready');
   await A.click('#toast .toast__act');
   await A.waitForSelector('[data-claim="55555555"]');
   assert.equal(db.claims.filter((c) => c.who === 'Ana').length, 0, 'Undo took the claim back');
   await A.click('[data-show="all"]');
   assert.equal(await A.locator('.bq-card.is-waiting').count(), 1, 'a not-yet banquet stays listed');
+  assert.equal(await A.locator('[data-show]').count(), 4, 'Ready, Claimed, Full, All');
   await A.click('[data-show="ready"]');
   assert.equal(await A.locator('.bq-card.is-waiting').count(), 0, 'Ready leaves out the not-yet one');
   assert.equal(await A.locator('.bq-card.is-full, .bq-card.is-claimed').count(), 0, 'and full or claimed ones');
   assert.ok(await A.locator('#bq-cards li').count() > 20, 'but keeps the rest');
-  assert.equal(await A.evaluate(() => document.documentElement.scrollWidth - innerWidth), 0, 'five filters still fit a phone');
+  assert.equal(await A.evaluate(() => document.documentElement.scrollWidth - innerWidth), 0, 'the filters fit a phone');
   assert.ok(await A.locator('[data-show]').evaluateAll((bs) => bs.every((b) => b.getBoundingClientRect().height < 50)), 'each on one line');
   await A.setViewportSize({ width: 320, height: 640 });
   assert.ok(await A.locator('[data-show]').evaluateAll((bs) => bs.every((b) => b.scrollWidth <= b.clientWidth + 1 && b.getBoundingClientRect().height < 50)),

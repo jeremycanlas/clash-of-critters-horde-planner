@@ -83,7 +83,7 @@
   .bq-list > .bq-bar .segmented { flex: 1 1 100%; }
   .bq-list > .bq-bar--order .segmented { flex: 0 1 auto; }
   .bq-list > .bq-bar .segmented__btn { flex: 1; }
-  /* Five filters on one line of a 320px phone. */
+  /* The filters on one line of a 320px phone. */
   .bq-bar--pinned .segmented__btn { padding-inline: 2px; font-size: 13px; white-space: nowrap; }
   .bq-view .segmented { flex: 1 1 100%; }
   .bq-view .segmented__btn { flex: 1; }

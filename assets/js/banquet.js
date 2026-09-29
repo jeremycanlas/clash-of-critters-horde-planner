@@ -23,7 +23,7 @@ const setMember = (on) => {
 };
 
 let state = null;
-let show = 'open';
+let show = 'ready';
 const ORDER = 'coc.banquet.order';
 let order = 'room'; // or 'new': first posted, newest first
 try { if (localStorage.getItem(ORDER) === 'new') order = 'new'; } catch { /* most room, then */ }
@@ -302,8 +302,8 @@ function renderNews(on) {
 }
 
 const WHICH = {
-  open: (b) => !b.full && !b.claimed,
-  // What you can go and claim this minute: not full, not yours already, not waiting to open.
+  // What you can go and claim this minute: not full, not yours already, not waiting
+  // to open. Banquets marked not yet available are under All.
   ready: (b) => !b.full && !b.claimed && !b.not_yet,
   claimed: (b) => b.claimed,
   full: (b) => !!b.full,
@@ -437,7 +437,7 @@ $('#bq-cards').addEventListener('click', async (e) => {
     ? await rest('/rpc/banquet_claim', { method: 'POST', body: { target, claimed: on, g }, auth: true })
     : await rest('/rpc/banquet_mark', { method: 'POST', body: { target, state: on ? mark.dataset.mark : null, g }, auth: true });
   if (!got.ok) { btn.disabled = false; btn.textContent = got.why; btn.removeAttribute('aria-label'); return; }
-  /* Claiming takes the card out of To claim at once, so a thumb on the wrong
+  /* Claiming takes the card out of Ready at once, so a thumb on the wrong
      card gets a way back that does not mean finding it in another tab. */
   if (claim && on) {
     toast(`Claimed ${target}`, 'info', {
