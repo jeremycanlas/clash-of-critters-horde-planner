@@ -2,7 +2,7 @@
 --
 --   psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f supabase/banquet_check.sql
 --
--- Loads 013 to 022 inside the transaction too, so it can run before a
+-- Loads 013 to 023 inside the transaction too, so it can run before a
 -- migration is applied. Discord is not asked: members are written straight
 -- into banquet_members, which is what Discord's yes leaves behind, and channel
 -- posts go through banquet_apply(), which is what banquet_sync() hands them
@@ -29,6 +29,7 @@ end $$;
 \i supabase/migrations/020_banquet_state_same.sql
 \i supabase/migrations/021_banquet_copies.sql
 \i supabase/migrations/022_banquet_posted.sql
+\i supabase/migrations/023_banquet_no_role_minute.sql
 
 -- Real entries would skew the counts. Gone for this transaction only.
 delete from public.banquet_claims; delete from public.banquet_marks; delete from public.banquet_uids;
@@ -255,6 +256,23 @@ begin
   assert (select count(*) from jsonb_array_elements(c -> 'both_groups') x where x ->> 'uid' = '55555555') = 0,
          '55555555 left Group 1 in the edit above, so it is in one group now';
 end $$;
+
+-- ---------------------------------------------------------------- how long an answer is remembered
+-- With no server set, anything not answered from memory comes back
+-- not-set-up, so this never asks Discord.
+reset role;
+update public.banquet_settings set guild_id = null;
+update public.banquet_members set checked_at = now() - interval '30 seconds' where discord_id = '990000000000000305';
+set local role authenticated;
+select pg_temp.as_(5);
+do $$ begin assert public.banquet_check() = 'no-role', 'a no from 30 seconds ago is remembered'; end $$;
+reset role;
+update public.banquet_members set checked_at = now() - interval '2 minutes' where discord_id = '990000000000000305';
+update public.banquet_members set checked_at = now() - interval '5 minutes' where discord_id = '990000000000000301';
+set local role authenticated;
+do $$ begin assert public.banquet_check() = 'not-set-up', 'a no from 2 minutes ago is asked again'; end $$;
+select pg_temp.as_(1);
+do $$ begin assert public.banquet_check() = 'ok', 'a yes from 5 minutes ago is remembered'; end $$;
 
 -- ---------------------------------------------------------------- a stale yes expires
 reset role;
