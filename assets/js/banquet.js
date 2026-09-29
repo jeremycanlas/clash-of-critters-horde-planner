@@ -32,9 +32,14 @@ let state = null;
 let show = 'open';
 
 const status = (text) => { $('#bq-status').textContent = text; $('#bq-status').hidden = !text; };
-// A round is the Manila date its gold rush ended, at the 8am reset.
-const day = (d) => new Date(`${d}T08:00:00+08:00`)
-  .toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'Asia/Manila' });
+/* A round is one gold rush: it starts at the reset (00:00 UTC, 8am Manila) on
+   the date it is stored under and ends six days later. Dates read in UTC so
+   everyone sees the same ones; the end is also given in the viewer's own time. */
+const opens = (d) => new Date(`${d}T00:00:00Z`);
+const closes = (d) => new Date(opens(d).getTime() + 6 * 864e5);
+const utcDay = (t) => t.toLocaleDateString(undefined, { day: 'numeric', month: 'short', timeZone: 'UTC' });
+const span = (d) => `${utcDay(opens(d))} – ${utcDay(closes(d))}`;
+const localEnd = (d) => closes(d).toLocaleString(undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
 const time = (iso) => new Date(iso).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
 const dot = (c) => `<span class="bq-dot" style="--c:${COLORS[c - 1].css}" title="${COLORS[c - 1].name}"></span>`;
 
@@ -105,11 +110,12 @@ async function load(round = null) {
 
 function render() {
   const past = state.round !== state.current;
-  $('#bq-sub').textContent = `Gold rush ended ${day(state.current)}, 8am Manila`;
+  $('#bq-sub').textContent = `Gold rush ${span(state.current)}`;
   $('#bq-round').innerHTML = state.rounds
-    .map((r) => `<option value="${r}"${r === state.round ? ' selected' : ''}>${day(r)}${r === state.current ? ' (now)' : ''}</option>`)
+    .map((r) => `<option value="${r}"${r === state.round ? ' selected' : ''}>${span(r)}${r === state.current ? ' (now)' : ''}</option>`)
     .join('');
-  $('#bq-when').textContent = past ? 'A past round, read only.' : '';
+  $('#bq-when').textContent = past ? 'A past round, read only.'
+    : `Ends ${utcDay(closes(state.round))}, 00:00 UTC (${localEnd(state.round)} your time)`;
 
   // Your four: editable now, a record afterwards.
   const mine = new Map(state.mine.map((m) => [m.color, m.uid]));
