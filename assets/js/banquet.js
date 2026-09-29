@@ -41,6 +41,12 @@ const utcDay = (t) => t.toLocaleDateString(undefined, { day: 'numeric', month: '
 const span = (d) => `${utcDay(opens(d))} – ${utcDay(closes(d))}`;
 const localEnd = (d) => closes(d).toLocaleString(undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
 const time = (iso) => new Date(iso).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+// "2:05 PM, 12 min ago": the clock for when, the gap for whether to go and look again.
+const ago = (iso) => {
+  const min = Math.max(0, Math.round((Date.now() - Date.parse(iso)) / 60000));
+  const gap = min < 1 ? 'just now' : min < 60 ? `${min} min ago` : `${Math.floor(min / 60)} h ${min % 60} min ago`;
+  return `${time(iso)}, ${gap}`;
+};
 const dot = (c) => `<span class="bq-dot" style="--c:${COLORS[c - 1].css}" title="${COLORS[c - 1].name}"></span>`;
 
 // ------------------------------------------------------------------ gate
@@ -145,13 +151,14 @@ function renderCards(past) {
   const shown = state.banquets.filter(WHICH[show])
     .sort((a, b) => !!a.not_yet - !!b.not_yet || a.claims - b.claims || a.uid.localeCompare(b.uid));
   $('#bq-count').textContent = `${shown.length} of ${state.banquets.length}`;
-  $('#bq-cards').innerHTML = shown.map((b) => `<li class="bq-card${b.full ? ' is-full' : ''}${b.claimed ? ' is-claimed' : ''}">
+  $('#bq-cards').innerHTML = shown.map((b) => `<li class="bq-card${b.full ? ' is-full' : ''}${b.not_yet ? ' is-waiting' : ''}${b.claimed ? ' is-claimed' : ''}">
       <div class="bq-card__id">
         <span class="bq-card__dots">${b.colors.map(dot).join('')}${b.extra ? '<span class="bq-extra">Extra</span>' : ''}</span>
         <button type="button" class="tr-copy bq-uid" data-copy="${b.uid}" title="Copy UID">${b.uid}</button>
         ${b.full ? `<span class="bq-tag">Full<small> · ${esc(b.full)}</small></span>` : ''}
-        ${b.not_yet ? `<span class="bq-tag bq-tag--wait">Not yet available<small> · ${esc(b.not_yet.by)}, ${time(b.not_yet.at)}</small></span>` : ''}
+        ${b.not_yet ? '<span class="bq-tag bq-tag--wait">Not yet available</span>' : ''}
       </div>
+      ${b.not_yet ? `<p class="bq-card__checked">Last checked ${ago(b.not_yet.at)} by ${esc(b.not_yet.by)}</p>` : ''}
       <p class="bq-card__meta">From ${esc(b.entered_by.join(', '))}</p>
       ${b.claims ? `<details class="bq-card__claims">
         <summary>${b.claims} member${b.claims === 1 ? '' : 's'} claimed</summary>
@@ -161,6 +168,7 @@ function renderCards(past) {
         <button type="button" class="btn${b.claimed ? ' btn--primary' : ''}" data-claim="${b.uid}" aria-pressed="${b.claimed}">${b.claimed ? 'Claimed ✓' : 'I claimed'}</button>
         <button type="button" class="btn btn--quiet" data-mark="full" data-uid="${b.uid}" aria-pressed="${!!b.full}">${b.full ? 'Not full' : 'Full'}</button>
         <button type="button" class="btn btn--quiet" data-mark="not-yet" data-uid="${b.uid}" aria-pressed="${!!b.not_yet}">${b.not_yet ? 'Available now' : 'Not yet available'}</button>
+        ${b.not_yet ? `<button type="button" class="btn btn--quiet" data-mark="not-yet" data-uid="${b.uid}">Still not open</button>` : ''}
         ${b.mine_extra ? `<button type="button" class="btn btn--quiet" data-remove="${b.uid}">Remove</button>` : ''}
       </div>`}
     </li>`).join('') || `<li class="muted bq-none">${state.banquets.length ? 'Nothing here.' : 'No banquets shared this round yet.'}</li>`;
