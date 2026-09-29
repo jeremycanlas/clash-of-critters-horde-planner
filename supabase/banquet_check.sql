@@ -238,5 +238,26 @@ begin
   exception when raise_exception then if sqlerrm = 'stale read' then raise; end if; end;
 end $$;
 
+-- ---------------------------------------------------------------- what a user can reach at all
+-- The seven calls the page makes, nothing else: not the sync (it would let
+-- anyone hammer Discord as the bot), not the unfiltered list, not a table, not
+-- the vault the bot token is in. Anonymous visitors reach none of it.
+reset role;
+do $$
+declare got text[];
+begin
+  got := array(select p.proname::text from pg_proc p
+                where p.pronamespace = 'public'::regnamespace and p.proname like 'banquet%'
+                  and has_function_privilege('authenticated', p.oid, 'execute') order by 1);
+  assert got = '{banquet_add,banquet_check,banquet_claim,banquet_mark,banquet_remove,banquet_round,banquet_state}',
+         'signed-in users can call exactly the page''s functions, got ' || got::text;
+  assert not exists (select 1 from pg_proc p where p.pronamespace = 'public'::regnamespace and p.proname like 'banquet%'
+                      and has_function_privilege('anon', p.oid, 'execute')), 'anonymous visitors can call nothing';
+  assert not exists (select 1 from pg_class c where c.relnamespace = 'public'::regnamespace and c.relname like 'banquet%' and c.relkind = 'r'
+                      and (has_table_privilege('authenticated', c.oid, 'select') or has_table_privilege('anon', c.oid, 'select')
+                           or not c.relrowsecurity)), 'every table closed, with row security on';
+  assert not has_table_privilege('authenticated', 'vault.decrypted_secrets', 'select'), 'the bot token stays in the vault';
+end $$;
+
 \echo banquet: ok
 rollback;
