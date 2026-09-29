@@ -44,6 +44,50 @@ const setShot = (on) => {
   render();
 };
 let reached = Date.now(); // the last time a refresh got an answer
+
+/* What is new since you last looked. `seen` is every banquet you have been
+   shown, per round and per browser; a banquet you have not been shown, have
+   not claimed and is not full is new. The first visit sees everything as
+   seen, so it does not open on a wall of "new". */
+const SEEN = 'coc.banquet.seen.v1';
+let seen = null; // Set of "grp:uid", for state.round
+const latest = []; // this visit's changes, newest first
+const TITLE = document.title;
+const keyOf = (b) => `${b.grp ?? ''}:${b.uid}`;
+function loadSeen(round, banquets) {
+  let held = null;
+  try { held = JSON.parse(localStorage.getItem(SEEN) ?? 'null'); } catch { /* start fresh */ }
+  seen = new Set(held?.round === round ? held.keys : banquets.map(keyOf));
+  saveSeen(round);
+}
+function saveSeen(round) {
+  try { localStorage.setItem(SEEN, JSON.stringify({ round, keys: [...seen] })); } catch { /* this visit only */ }
+}
+const isNew = (b) => seen && !seen.has(keyOf(b)) && !b.claimed && !b.full;
+function markSeen(...keys) {
+  for (const k of keys) seen?.add(k);
+  if (state) saveSeen(state.round);
+}
+
+/* One line per change another member made, from the difference between two
+   answers. Your own presses are not news to you. */
+function diff(before, after) {
+  const was = new Map(before.banquets.map((b) => [keyOf(b), b]));
+  const said = [];
+  const where = (b) => (b.grp && !group ? ` (Group ${b.grp})` : '');
+  for (const b of after.banquets) {
+    const o = was.get(keyOf(b));
+    if (!o) { said.push(`New: ${b.uid}${where(b)} from ${b.entered_by.join(', ')}`); continue; }
+    const others = b.claims - o.claims - (b.claimed && !o.claimed ? 1 : 0) + (o.claimed && !b.claimed ? 1 : 0);
+    if (others > 0) said.push(`${b.claimed_by.slice(-others).join(', ')} claimed ${b.uid}${where(b)}`);
+    if (b.full && !o.full) said.push(`${b.full} marked ${b.uid}${where(b)} full`);
+    if (b.not_yet && !o.not_yet) said.push(`${b.not_yet.by}: ${b.uid}${where(b)} not open yet`);
+    if (!b.not_yet && o.not_yet && !b.full) said.push(`${b.uid}${where(b)} is open now`);
+  }
+  const at = Date.now();
+  latest.unshift(...said.reverse().map((text) => ({ text, at })));
+  latest.length = Math.min(latest.length, 20);
+}
 let folded = false; // Your UIDs is folded or not once, on arrival; after that it is yours
 
 const status = (text) => { $('#bq-status').textContent = text; $('#bq-status').hidden = !text; };
@@ -102,9 +146,11 @@ async function start() {
   await load();
 
   /* Everyone else's claims and marks, every 15 seconds while the tab is in
-     view, and at once on coming back to it from the game. Nothing while hidden. */
+     view, and at once on coming back to it from the game. While hidden, once a
+     minute: enough for the tab's title to say something new has come in. */
   const refresh = async () => {
-    if (document.hidden || !state) return; // no list yet: the first load failed and said so
+    if (!state) return; // no list yet: the first load failed and said so
+    if (document.hidden && Date.now() - reached < 60 * 1000) return;
     await load(state.round === state.current ? null : state.round, true);
     offline();
   };
@@ -139,7 +185,12 @@ async function load(round = null, quiet = false) {
   if (!got.ok) return quiet ? undefined : gate('Could not load the banquets', got.why, true);
   reached = Date.now();
   const changed = !got.data.same;
+  const before = state;
   state = changed ? got.data : { ...state, synced_at: got.data.synced_at };
+  if (!seen || before?.round !== state.round) loadSeen(state.round, state.banquets);
+  // Just unlocked: the list is new to you all at once, which is the same as none of it.
+  else if (!before.shared && state.shared) markSeen(...state.banquets.map(keyOf));
+  else if (changed && quiet) diff(before, state);
   status('');
   $('#bq-gate').hidden = true;
   $('#bq-app').hidden = false;
@@ -229,6 +280,25 @@ function render() {
   }
   $('#bq-view-note').textContent = group ? `What Group ${group} members see. Anything you press counts for Group ${group}.` : '';
   if (open) renderCards(past);
+  renderNews(open && !past);
+}
+
+// ------------------------------------------------------------------ what is new
+
+function renderNews(on) {
+  const fresh = on ? state.banquets.filter((b) => isNew(b) && (!group || b.grp === group)) : [];
+  fresh.sort((a, b) => (b.posted ?? '').localeCompare(a.posted ?? ''));
+  $('#bq-new').hidden = !fresh.length;
+  $('#bq-new-uids').innerHTML = fresh.slice(0, 6).map((b) => `<button type="button" class="bq-new__uid"
+      data-new="${keyOf(b)}" data-copy="${b.uid}" title="Copy and show">${b.uid}</button>`).join('')
+    + (fresh.length > 6 ? `<span class="muted">+${fresh.length - 6}</span>` : '');
+  const last = on ? latest.find((l) => Date.now() - l.at < 30 * 60 * 1000) : null;
+  $('#bq-latest').hidden = !last;
+  if (last) {
+    const min = Math.floor((Date.now() - last.at) / 60000);
+    $('#bq-latest').textContent = `Latest: ${last.text} · ${min < 1 ? 'just now' : `${min} min ago`}`;
+  }
+  document.title = fresh.length ? `(${fresh.length}) ${TITLE}` : TITLE;
 }
 
 const WHICH = {
@@ -259,6 +329,7 @@ function renderCards(past) {
         <button type="button" class="tr-copy bq-uid" data-copy="${b.uid}" title="Copy UID">${b.uid}</button>
         ${b.full ? `<span class="bq-tag">Full<small> · ${esc(b.full)}</small></span>` : ''}
         ${b.not_yet ? '<span class="bq-tag bq-tag--wait">Not yet available</span>' : ''}
+        ${isNew(b) ? '<span class="bq-tag bq-tag--new">New</span>' : ''}
       </div>
       ${b.not_yet ? `<p class="bq-card__checked">Last checked ${ago(b.not_yet.at)} by ${esc(b.not_yet.by)}</p>` : ''}
       <div class="bq-card__row">
@@ -296,6 +367,7 @@ $('#bq-mine').addEventListener('submit', async (e) => {
   $('#bq-add').disabled = false;
   if (!got.ok) { err.textContent = got.why; err.hidden = false; return; }
   $('#bq-add-uid').value = '';
+  markSeen(`${g ?? ''}:${uid}`); // yours: not news to you
   load();
 });
 
@@ -322,6 +394,24 @@ $('#site-tabs').addEventListener('click', (e) => {
 });
 addEventListener('keydown', (e) => { if (e.key === 'Escape' && shot && state?.groups) setShot(false); });
 
+// A new UID: copy it for the game's search, show its card, and it is not new any more.
+$('#bq-new-uids').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-new]');
+  if (!b) return;
+  copyText(b.dataset.copy);
+  markSeen(b.dataset.new);
+  render();
+  const card = $(`#bq-cards li[data-key="${CSS.escape(b.dataset.new)}"]`);
+  card?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  card?.classList.add('is-found');
+  setTimeout(() => card?.classList.remove('is-found'), 1600);
+  toast(`Copied ${b.dataset.copy}`);
+});
+$('#bq-new-clear').addEventListener('click', () => {
+  markSeen(...state.banquets.filter((b) => !group || b.grp === group).map(keyOf));
+  render();
+});
+
 $('#bq-groups').addEventListener('click', (e) => {
   const b = e.target.closest('[data-group]');
   if (!b) return;
@@ -340,6 +430,7 @@ $('#bq-cards').addEventListener('click', async (e) => {
   const on = btn.getAttribute('aria-pressed') !== 'true';
   const target = Number((claim ?? mark).dataset[claim ? 'claim' : 'uid']);
   const g = grpOf(btn);
+  markSeen(btn.closest('li').dataset.key); // claimed or marked: seen, whatever Undo does next
   const got = claim
     ? await rest('/rpc/banquet_claim', { method: 'POST', body: { target, claimed: on, g }, auth: true })
     : await rest('/rpc/banquet_mark', { method: 'POST', body: { target, state: on ? mark.dataset.mark : null, g }, auth: true });

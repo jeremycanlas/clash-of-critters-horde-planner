@@ -196,7 +196,7 @@ try {
 
   await A.mouse.wheel(0, 1400);
   await A.waitForTimeout(300);
-  assert.ok(await A.locator('.bq-list > .bq-bar').evaluate((e) => e.getBoundingClientRect().top <= 1), 'filters pinned while scrolling');
+  assert.ok(await A.locator('.bq-bar--pinned').evaluate((e) => e.getBoundingClientRect().top <= 1), 'filters pinned while scrolling');
   assert.equal(await A.evaluate(() => document.documentElement.scrollWidth - innerWidth), 0, 'nothing off the side');
   await A.evaluate(() => scrollTo(0, 0));
   assert.deepEqual(await axe(A), [], 'axe, group member, dark');
@@ -255,6 +255,8 @@ try {
   await A.click('[data-show="all"]');
   await A.locator('#bq-mine-fold').evaluate((d) => { d.open = true; });
   await A.fill('#bq-add-uid', '9999');
+  assert.ok(await A.locator('#bq-new').isHidden(), 'a first visit opens with nothing marked new, got ' + (await A.locator('#bq-new-uids').textContent()));
+  db.uids.push({ grp: 1, uid: '71234567', who: 'Ben', source: 'discord' });
   const before = reads;
   await A.clock.fastForward(16_000);
   await A.waitForTimeout(400);
@@ -262,6 +264,16 @@ try {
   assert.equal(await A.locator('[data-claim="20000001"]').locator('xpath=..').locator('..').locator('summary').textContent(), '1 claimed',
     "Vee's Group 1 claim shows without a reload");
   assert.equal(await A.locator('li', { hasText: '55555555' }).locator('.bq-tag').count(), 0, "Vee's Group 2 full does not");
+  // Ben's new banquet: in the strip, tagged, counted in the tab title, and in the latest line.
+  assert.equal(await A.locator('#bq-new-uids [data-new]').allTextContents().then((t) => t.join()), '71234567', 'new to claim');
+  assert.match(await A.title(), /^\(1\) /, 'the tab title counts it');
+  assert.equal(await A.locator('li[data-key=":71234567"] .bq-tag--new').count(), 1, 'its card says New');
+  assert.match(await A.locator('#bq-latest').textContent(), /Latest: (New: 71234567 from Ben|Vee claimed 20000001)/, 'the latest change, in one line');
+  if (process.env.BANQUET_SHOTS) { await A.evaluate(() => scrollTo(0, 900)); await A.waitForTimeout(300); await A.screenshot({ path: `${process.env.BANQUET_SHOTS}/news-phone.png` }); }
+  await A.click('#bq-new-uids [data-new=":71234567"]');
+  assert.ok(await A.locator('#bq-new').isHidden(), 'tapping it clears it');
+  assert.ok(!/^\(/.test(await A.title()), 'and the title count');
+  assert.equal(await A.locator('li[data-key=":71234567"] .bq-tag--new').count(), 0, 'and the tag');
   assert.equal(await A.inputValue('#bq-add-uid'), '9999', 'a refresh never wipes typing');
   const quiet = sames;
   await A.clock.fastForward(31_000);
@@ -276,7 +288,7 @@ try {
   const hidden = reads;
   await A.clock.fastForward(95_000);
   await A.waitForTimeout(300);
-  assert.equal(reads, hidden, 'nothing while the tab is hidden');
+  assert.ok(reads - hidden >= 1 && reads - hidden <= 2, `about once a minute while hidden, not every 15 seconds (got ${reads - hidden})`);
 
   // ------------------------------------------------------------------ the page lost its connection
   await A.evaluate(() => {

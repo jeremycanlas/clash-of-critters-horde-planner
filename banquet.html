@@ -81,18 +81,29 @@
       <p id="bq-locked" class="panel bq-locked" hidden></p>
 
       <section id="bq-list" class="bq-list" hidden>
-        <div class="bq-bar">
+        <div class="bq-bar bq-bar--pinned">
           <!-- First and full width: after claiming in the game, this is how you find the card. -->
           <label class="bq-find">
             <span class="bq-find__label">Search <small>UID or name</small></span>
             <input id="bq-find" class="field" type="search" maxlength="40" autocomplete="off" spellcheck="false">
           </label>
+          <!-- What changed, without interrupting: new banquets to claim, and the latest
+               thing anyone in the group did. Pinned with the rest of this bar. -->
+          <div id="bq-new" class="bq-new" hidden>
+            <span class="bq-new__label">New to claim</span>
+            <span id="bq-new-uids" class="bq-new__uids"></span>
+            <button id="bq-new-clear" class="btn btn--quiet bq-new__clear" type="button">Clear</button>
+          </div>
+          <p id="bq-latest" class="bq-latest" role="status" aria-live="polite" hidden></p>
           <div class="segmented" role="group" aria-label="Which banquets">
             <button class="segmented__btn" type="button" data-show="open" aria-pressed="true">To claim</button>
             <button class="segmented__btn" type="button" data-show="claimed" aria-pressed="false">Claimed</button>
             <button class="segmented__btn" type="button" data-show="full" aria-pressed="false">Full</button>
             <button class="segmented__btn" type="button" data-show="all" aria-pressed="false">All</button>
           </div>
+        </div>
+        <!-- Not pinned: nobody changes the order mid-scroll, and a phone needs the room. -->
+        <div class="bq-bar bq-bar--order">
           <div class="segmented" role="group" aria-label="Order">
             <button class="segmented__btn" type="button" data-order="room" aria-pressed="true">Most room</button>
             <button class="segmented__btn" type="button" data-order="new" aria-pressed="false">Newest</button>
