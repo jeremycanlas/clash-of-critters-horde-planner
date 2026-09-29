@@ -5,7 +5,7 @@
 
 .bq-main { max-width: 960px; }
 #bq-app { display: flex; flex-direction: column; gap: var(--s3); }
-#bq-app[hidden], #bq-list[hidden], .bq-locked[hidden], .bq-mine[hidden] { display: none; }
+#bq-app[hidden], #bq-list[hidden], .bq-locked[hidden], .bq-mine[hidden], .bq-stale[hidden] { display: none; }
 
 .bq-bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); }
 .bq-round { display: inline-flex; align-items: center; gap: var(--s2); font-size: 13px; color: var(--text-dim); }
@@ -90,3 +90,6 @@
   .bq-short { display: inline; }
   .bq-mine__actions input { flex: 1; min-width: 0; width: auto; }
 }
+
+.bq-stale { margin: 0; padding: var(--s2) var(--s3); border: 1px solid color-mix(in srgb, var(--danger) 55%, var(--line));
+  border-radius: var(--r-md); background: color-mix(in srgb, var(--danger) 8%, var(--surface)); font-size: 13px; }

@@ -126,6 +126,13 @@ function render() {
   if (document.activeElement !== $('#bq-round')) $('#bq-round').innerHTML = state.rounds
     .map((r) => `<option value="${r}"${r === state.round ? ' selected' : ''}>${span(r)}${r === state.current ? ' (now)' : ''}</option>`)
     .join('');
+  // How fresh the posts are: read every minute, so a gap of five means it stopped.
+  const age = state.synced_at ? Math.floor((Date.now() - Date.parse(state.synced_at)) / 60000) : null;
+  $('#bq-fresh').textContent = past || age == null ? '' : `Discord read ${age < 1 ? 'just now' : `${age} min ago`}`;
+  $('#bq-stale').hidden = past || (age != null && age < 5);
+  $('#bq-stale').textContent = age == null
+    ? 'Discord has not been read yet, so posted UIDs are missing. Tell the owner.'
+    : `Discord has not been read for ${age} minutes, so new or edited posts may be missing. Tell the owner.`;
   $('#bq-when').textContent = past ? 'A past round, read only.'
     : `Ends ${utcDay(closes(state.round))}, 00:00 UTC (${localEnd(state.round)} your time)`;
 

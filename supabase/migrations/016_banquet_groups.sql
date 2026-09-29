@@ -39,7 +39,17 @@ drop function if exists public.banquet_state(date);
 drop function if exists public.banquet_shared(text, date);
 drop function if exists public.banquet_sweep(date);
 drop function if exists public.banquet_listed(date);
-drop table if exists public.banquet_mvps, public.banquet_extras, public.banquet_claims, public.banquet_full;
+drop table if exists public.banquet_mvps, public.banquet_extras, public.banquet_full;
+-- 013's claims table has the same name as the new one. Dropped only while it
+-- is still the old shape, so running this file again keeps the live claims.
+do $$
+begin
+  if to_regclass('public.banquet_claims') is not null and not exists (
+    select 1 from information_schema.columns
+     where table_schema = 'public' and table_name = 'banquet_claims' and column_name = 'grp') then
+    drop table public.banquet_claims;
+  end if;
+end $$;
 
 -- ---------------------------------------------------------------- settings
 
@@ -63,7 +73,7 @@ delete from public.banquet_members;
 
 -- ---------------------------------------------------------------- data
 
-create table public.banquet_uids (
+create table if not exists public.banquet_uids (
   round      date not null,
   grp        smallint not null,
   uid        bigint not null check (uid between 10000000 and 99999999),
@@ -75,7 +85,7 @@ create table public.banquet_uids (
   primary key (round, grp, uid, discord_id)
 );
 
-create table public.banquet_claims (
+create table if not exists public.banquet_claims (
   round      date not null,
   grp        smallint not null,
   uid        bigint not null,
@@ -85,7 +95,7 @@ create table public.banquet_claims (
   primary key (round, grp, uid, discord_id)
 );
 
-create table public.banquet_marks (
+create table if not exists public.banquet_marks (
   round     date not null,
   grp       smallint not null,
   uid       bigint not null,

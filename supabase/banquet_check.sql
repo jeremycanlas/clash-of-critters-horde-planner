@@ -2,7 +2,7 @@
 --
 --   psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f supabase/banquet_check.sql
 --
--- Loads 013 to 016 inside the transaction too, so it can run before a
+-- Loads 013 to 017 inside the transaction too, so it can run before a
 -- migration is applied. Discord is not asked: members are written straight
 -- into banquet_members, which is what Discord's yes leaves behind, and channel
 -- posts go through banquet_apply(), which is what banquet_sync() hands them
@@ -13,11 +13,13 @@ begin;
 \i supabase/migrations/014_banquet_not_yet.sql
 \i supabase/migrations/015_banquet_extras.sql
 \i supabase/migrations/016_banquet_groups.sql
+\i supabase/migrations/017_banquet_synced_at.sql
 
 -- Real entries would skew the counts. Gone for this transaction only.
 delete from public.banquet_claims; delete from public.banquet_marks; delete from public.banquet_uids;
 delete from public.banquet_groups; delete from public.banquet_members;
-insert into public.banquet_groups (grp, role_id, channel_id) values (1, 'r1', 'c1'), (2, 'r2', 'c2');
+insert into public.banquet_groups (grp, role_id, channel_id, synced_at) values
+  (1, 'r1', 'c1', now() - interval '2 minutes'), (2, 'r2', 'c2', now() - interval '9 minutes');
 
 -- A and B are Group 1, C is Group 2, V sees both, X was refused.
 insert into auth.users (id, aud, role, email)
@@ -101,6 +103,7 @@ begin
   assert (s ->> 'shared')::boolean and jsonb_array_length(s -> 'banquets') = 8, 'four unlocks Group 1''s eight';
   assert s::text not like '%grp%' and s::text not like '%groups%', 'nothing says there are groups';
   assert s::text not like '%3000000%' and s::text not like '%zz_c%' and s::text not like '%u303%', 'nothing of Group 2';
+  assert (s ->> 'synced_at')::timestamptz = now() - interval '2 minutes', 'A gets Group 1''s last read only';
 
   begin perform public.banquet_add(1234567); raise exception 'seven digits added';
   exception when raise_exception then if sqlerrm = 'seven digits added' then raise; end if; end;
@@ -131,6 +134,7 @@ declare s jsonb;
 begin
   s := public.banquet_state();
   assert s -> 'groups' = '[1, 2]'::jsonb, 'V is told there are two';
+  assert (s ->> 'synced_at')::timestamptz = now() - interval '9 minutes', 'V gets the staler of the two';
   assert jsonb_array_length(s -> 'banquets') = 12, 'eight and four, 55555555 once per group';
   assert (select count(*) from jsonb_array_elements(s -> 'banquets') x where x ->> 'uid' = '55555555') = 2, 'one card per group';
   assert (select bool_and(x ? 'grp') from jsonb_array_elements(s -> 'banquets') x), 'every card says its group';

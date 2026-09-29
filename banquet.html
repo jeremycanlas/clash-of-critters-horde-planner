@@ -41,7 +41,10 @@
           <select id="bq-round" class="field" aria-label="Which gold rush"></select>
         </label>
         <span id="bq-when" class="muted bq-when"></span>
+        <span id="bq-fresh" class="muted bq-when"></span>
       </div>
+      <!-- The channels are read every minute; this says when that stopped. -->
+      <p id="bq-stale" class="bq-stale" role="status" hidden></p>
 
       <!-- Only for those who see both groups; built by the script. "As Group N"
            is the page exactly as that group's members see it. -->
