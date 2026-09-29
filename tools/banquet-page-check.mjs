@@ -46,6 +46,7 @@ for (let i = 0; i < 20; i++) db.uids.push({ grp: 1, uid: String(60000000 + i * 1
 let syncedAgo = 60e3;
 let reads = 0;
 let sames = 0;
+let down = false; // the database unreachable, for the offline check
 const NOT_YET_AT = new Date(Date.now() - 5 * 60e3).toISOString();
 const sent = [];
 
@@ -93,6 +94,7 @@ async function open(me, opts) {
     const g = me.all ? body.g : me.grp; // what banquet_group_for() does
     if (fn === 'banquet_check') return json('ok');
     if (fn === 'tracker_claim') return json(false);
+    if (down) return route.abort('internetdisconnected');
     if (fn === 'banquet_state') {
       const full = state(me);
       const { synced_at, ...rest } = full;
@@ -114,7 +116,7 @@ async function open(me, opts) {
   page.on('pageerror', (e) => errors.push(e.message));
   await page.clock.install();
   await page.goto(`http://127.0.0.1:${PORT}/banquet.html`);
-  await page.waitForSelector('#bq-app:not([hidden])');
+  await page.waitForSelector(me.expectGate ? '#bq-gate:not([hidden])' : '#bq-app:not([hidden])');
   return { page, errors };
 }
 
@@ -224,11 +226,37 @@ try {
   await A.waitForTimeout(300);
   assert.equal(reads, hidden, 'nothing while the tab is hidden');
 
+  // ------------------------------------------------------------------ the page lost its connection
+  await A.evaluate(() => {
+    Object.defineProperty(document, 'hidden', { configurable: true, get: () => false });
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  await A.waitForTimeout(300);
+  down = true;
+  await A.clock.fastForward(155_000);
+  await A.waitForTimeout(500);
+  assert.match(await A.locator('#bq-stale:not([hidden])').textContent(), /not reached the list for \d+ minutes.*connection/,
+    'a page that cannot reach the list says so');
+  assert.equal(await A.locator('#bq-cards li').count() > 0, true, 'and keeps what it had');
+  down = false;
+  await A.clock.fastForward(31_000);
+  await A.waitForTimeout(500);
+  assert.ok(!/connection/.test(await A.locator('#bq-stale').textContent()), 'back online, the connection warning goes');
+
   // ------------------------------------------------------------------ the sync stopped
   syncedAgo = 12 * 60e3;
   await A.reload();
   await A.waitForSelector('#bq-app:not([hidden])');
   assert.match(await A.locator('#bq-stale:not([hidden])').textContent(), /not been read for \d+ minutes/);
+
+  // ------------------------------------------------------------------ a first load that fails
+  down = true;
+  const dee = await open({ name: 'Dee', grp: 1, expectGate: true }, devices['iPhone SE']);
+  assert.match(await dee.page.locator('#bq-gate-head').textContent(), /Could not load/);
+  await dee.page.clock.fastForward(65_000);
+  await dee.page.waitForTimeout(300);
+  assert.deepEqual(dee.errors, [], 'the refresh timer stays quiet with no list');
+  down = false;
 
   assert.deepEqual([...ana.errors, ...vee.errors], [], 'no script errors');
   console.log('banquet page: ok');

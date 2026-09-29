@@ -25,6 +25,7 @@ const setMember = (on) => {
 let state = null;
 let show = 'open';
 let find = '';
+let reached = Date.now(); // the last time a refresh got an answer
 let folded = false; // Your UIDs is folded or not once, on arrival; after that it is yours
 let group = 0; // for those who see both: 0 is both, 1 or 2 is the page as that group sees it
 
@@ -85,7 +86,11 @@ async function start() {
 
   /* Everyone else's claims and marks, every 30 seconds while the tab is in
      view, and at once on coming back to it from the game. Nothing while hidden. */
-  const refresh = () => { if (!document.hidden) load(state.round === state.current ? null : state.round, true); };
+  const refresh = async () => {
+    if (document.hidden || !state) return; // no list yet: the first load failed and said so
+    await load(state.round === state.current ? null : state.round, true);
+    offline();
+  };
   setInterval(refresh, 30 * 1000);
   document.addEventListener('visibilitychange', refresh);
 
@@ -115,11 +120,22 @@ async function load(round = null, quiet = false) {
   const known = quiet && state && (round ?? state.current) === state.round ? state.hash : null;
   const got = await rest('/rpc/banquet_state', { method: 'POST', body: { r: round, known }, auth: true });
   if (!got.ok) return quiet ? undefined : gate('Could not load the banquets', got.why, true);
+  reached = Date.now();
   state = got.data.same ? { ...state, synced_at: got.data.synced_at } : got.data;
   status('');
   $('#bq-gate').hidden = true;
   $('#bq-app').hidden = false;
   render();
+}
+
+/* A refresh that fails keeps the list on screen, so a phone that lost its
+   signal would show an old list as if it were live. Two minutes without an
+   answer says so, and it is the reader's connection, not Discord. */
+function offline() {
+  const min = Math.floor((Date.now() - reached) / 60000);
+  if (min < 2) return;
+  $('#bq-stale').hidden = false;
+  $('#bq-stale').textContent = `This page has not reached the list for ${min} minutes, so what you see may be out of date. Check your connection.`;
 }
 
 // ------------------------------------------------------------------ render
