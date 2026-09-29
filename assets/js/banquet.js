@@ -36,7 +36,8 @@ const opens = (d) => new Date(`${d}T00:00:00Z`);
 const closes = (d) => new Date(opens(d).getTime() + 6 * 864e5);
 const utcDay = (t) => t.toLocaleDateString(undefined, { day: 'numeric', month: 'short', timeZone: 'UTC' });
 const span = (d) => `${utcDay(opens(d))} – ${utcDay(closes(d))}`;
-const localEnd = (d) => closes(d).toLocaleString(undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
+// The date is in the round picker already; the weekday says which day it is where you are.
+const localEnd = (d) => closes(d).toLocaleString(undefined, { weekday: 'short', hour: 'numeric', minute: '2-digit' });
 const time = (iso) => new Date(iso).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
 // "2:05 PM, 12 min ago": the clock for when, the gap for whether to go and look again.
 const ago = (iso) => {
@@ -134,7 +135,7 @@ function render() {
     ? 'Discord has not been read yet, so posted UIDs are missing. Tell the owner.'
     : `Discord has not been read for ${age} minutes, so new or edited posts may be missing. Tell the owner.`;
   $('#bq-when').textContent = past ? 'A past round, read only.'
-    : `Ends ${utcDay(closes(state.round))}, 00:00 UTC (${localEnd(state.round)} your time)`;
+    : `Ends 00:00 UTC · ${localEnd(state.round)} your time`;
 
   // Yours: posted ones come from Discord and change there; added ones can go.
   const n = state.mine.length;
