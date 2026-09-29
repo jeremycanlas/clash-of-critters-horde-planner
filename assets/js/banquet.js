@@ -101,14 +101,14 @@ async function start() {
   showPrivateTab('banquet.html');
   await load();
 
-  /* Everyone else's claims and marks, every 30 seconds while the tab is in
+  /* Everyone else's claims and marks, every 15 seconds while the tab is in
      view, and at once on coming back to it from the game. Nothing while hidden. */
   const refresh = async () => {
     if (document.hidden || !state) return; // no list yet: the first load failed and said so
     await load(state.round === state.current ? null : state.round, true);
     offline();
   };
-  setInterval(refresh, 30 * 1000);
+  setInterval(refresh, 15 * 1000);
   document.addEventListener('visibilitychange', refresh);
 
   // Keeps the database's yes fresh, and notices a role taken away.

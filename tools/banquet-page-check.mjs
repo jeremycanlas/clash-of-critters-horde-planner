@@ -256,9 +256,9 @@ try {
   await A.locator('#bq-mine-fold').evaluate((d) => { d.open = true; });
   await A.fill('#bq-add-uid', '9999');
   const before = reads;
-  await A.clock.fastForward(31_000);
+  await A.clock.fastForward(16_000);
   await A.waitForTimeout(400);
-  assert.ok(reads > before, 'refreshed after 30 seconds');
+  assert.ok(reads > before, 'refreshed within 15 seconds');
   assert.equal(await A.locator('[data-claim="20000001"]').locator('xpath=..').locator('..').locator('summary').textContent(), '1 claimed',
     "Vee's Group 1 claim shows without a reload");
   assert.equal(await A.locator('li', { hasText: '55555555' }).locator('.bq-tag').count(), 0, "Vee's Group 2 full does not");
