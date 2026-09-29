@@ -35,10 +35,12 @@
   padding: var(--s3); border: 1px solid var(--line); border-radius: var(--r-lg); background: var(--surface);
 }
 .bq-card.is-claimed { border-color: color-mix(in srgb, var(--ok) 55%, var(--line)); }
-.bq-card.is-full { opacity: .6; }
+/* Full reads as done without fading the text below legible contrast. */
+.bq-card.is-full { background: color-mix(in srgb, var(--surface) 55%, var(--bg)); }
+.bq-card.is-full .bq-uid { text-decoration: line-through; text-decoration-color: var(--danger); }
 .bq-card__id { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); }
 .bq-uid { font-size: 15px; font-weight: 650; font-variant-numeric: tabular-nums; padding: 3px 8px; }
-.bq-tag { font-size: 12px; font-weight: 650; color: var(--danger); }
+.bq-tag { font-size: 12px; font-weight: 650; color: color-mix(in srgb, var(--danger) 75%, var(--text)); }
 .bq-tag small { font-weight: 400; color: var(--text-mute); }
 .bq-card__meta { margin: 0; font-size: 12.5px; color: var(--text-dim); overflow-wrap: anywhere; }
 .bq-card__claims { font-size: 12.5px; color: var(--text-dim); }

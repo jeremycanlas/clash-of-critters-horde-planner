@@ -142,7 +142,7 @@ function render() {
   $('#bq-my').innerHTML = mineShown.map((m) => `<li class="bq-mine__uid">
       ${tagOf(m.grp)}<button type="button" class="tr-copy" data-copy="${m.uid}" title="Copy UID">${m.uid}</button>
       ${m.source === 'discord' ? '<span class="bq-src">from Discord</span>'
-        : past ? '' : `<button type="button" class="btn btn--quiet" data-remove="${m.uid}"${grpAttr(m.grp)}>Remove</button>`}
+        : past ? '' : `<button type="button" class="btn btn--quiet" data-remove="${m.uid}"${grpAttr(m.grp)} aria-label="Remove ${m.uid}">Remove</button>`}
     </li>`).join('') || `<li class="muted">${past ? 'None this gold rush.' : 'None yet. Post them in Discord, or add them here.'}</li>`;
   $('#bq-mine .bq-mine__actions').hidden = past;
   $('#bq-mine-n').textContent = mineShown.length ? `(${mineShown.length})` : '';
@@ -200,10 +200,10 @@ function renderCards(past) {
       </details>` : '<p class="bq-card__meta">No claims yet</p>'}
       </div>
       ${past ? '' : `<div class="bq-card__actions">
-        <button type="button" class="btn${b.claimed ? ' btn--primary' : ''}" data-claim="${b.uid}"${grpAttr(b.grp)} aria-pressed="${b.claimed}">${b.claimed ? 'Claimed ✓' : 'I claimed'}</button>
-        <button type="button" class="btn btn--quiet" data-mark="full" data-uid="${b.uid}"${grpAttr(b.grp)} aria-pressed="${!!b.full}">${b.full ? 'Not full' : 'Full'}</button>
-        <button type="button" class="btn btn--quiet" data-mark="not-yet" data-uid="${b.uid}"${grpAttr(b.grp)} aria-pressed="${!!b.not_yet}">${b.not_yet ? 'Open now' : '<span class="bq-long">Not yet available</span><span class="bq-short">Not open</span>'}</button>
-        ${b.not_yet ? `<button type="button" class="btn btn--quiet" data-mark="not-yet" data-uid="${b.uid}"${grpAttr(b.grp)}>Still not open</button>` : ''}
+        <button type="button" class="btn${b.claimed ? ' btn--primary' : ''}" data-claim="${b.uid}"${grpAttr(b.grp)} aria-label="I claimed ${b.uid}" aria-pressed="${b.claimed}">${b.claimed ? 'Claimed ✓' : 'I claimed'}</button>
+        <button type="button" class="btn btn--quiet" data-mark="full" data-uid="${b.uid}"${grpAttr(b.grp)} aria-label="Full: ${b.uid}" aria-pressed="${!!b.full}">${b.full ? 'Not full' : 'Full'}</button>
+        <button type="button" class="btn btn--quiet" data-mark="not-yet" data-uid="${b.uid}"${grpAttr(b.grp)} aria-label="Not yet available: ${b.uid}" aria-pressed="${!!b.not_yet}">${b.not_yet ? 'Open now' : '<span class="bq-long">Not yet available</span><span class="bq-short">Not open</span>'}</button>
+        ${b.not_yet ? `<button type="button" class="btn btn--quiet" data-mark="not-yet" data-uid="${b.uid}"${grpAttr(b.grp)} aria-label="Still not open: ${b.uid}">Still not open</button>` : ''}
       </div>`}
     </li>`).join('') || `<li class="muted bq-none">${inView.length ? 'Nothing here.' : 'No banquets shared this round yet.'}</li>`;
   for (const d of $$('#bq-cards details')) d.open = opened.has(d.closest('li').dataset.key);
@@ -257,7 +257,7 @@ $('#bq-cards').addEventListener('click', async (e) => {
   const got = claim
     ? await rest('/rpc/banquet_claim', { method: 'POST', body: { target: Number(claim.dataset.claim), claimed: on, g: grpOf(btn) }, auth: true })
     : await rest('/rpc/banquet_mark', { method: 'POST', body: { target: Number(mark.dataset.uid), state: on ? mark.dataset.mark : null, g: grpOf(btn) }, auth: true });
-  if (!got.ok) { btn.disabled = false; btn.textContent = got.why; return; }
+  if (!got.ok) { btn.disabled = false; btn.textContent = got.why; btn.removeAttribute('aria-label'); return; }
   load(state.round);
 });
 
