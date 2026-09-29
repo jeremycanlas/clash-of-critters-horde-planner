@@ -25,9 +25,23 @@ const setMember = (on) => {
 let state = null;
 let show = 'open';
 let find = '';
+let group = 0; // for those who see both: 0 is both, 1 or 2 is the page as that group sees it
+/* Screenshot mode, for those who see both groups: the View as bar goes, so a
+   capture "As Group 1" is exactly what a member sees. Kept per browser. */
+const SHOT = 'coc.banquet.shot';
+let shot = false;
+const VIEW = 'coc.banquet.view'; // which group it is viewed as, so a reload in screenshot mode keeps it
+try {
+  shot = localStorage.getItem(SHOT) === '1';
+  group = Number(localStorage.getItem(VIEW)) || 0;
+} catch { /* private mode: starts off */ }
+const setShot = (on) => {
+  shot = on;
+  try { if (on) localStorage.setItem(SHOT, '1'); else localStorage.removeItem(SHOT); } catch { /* this visit only */ }
+  render();
+};
 let reached = Date.now(); // the last time a refresh got an answer
 let folded = false; // Your UIDs is folded or not once, on arrival; after that it is yours
-let group = 0; // for those who see both: 0 is both, 1 or 2 is the page as that group sees it
 
 const status = (text) => { $('#bq-status').textContent = text; $('#bq-status').hidden = !text; };
 /* A round is one gold rush: it starts at the reset (00:00 UTC, 8am Manila) on
@@ -179,7 +193,8 @@ function render() {
   $('#bq-locked').textContent = `${state.total} banquet${state.total === 1 ? '' : 's'} shared this round. `
     + `Add ${4 - n} more UID${4 - n === 1 ? '' : 's'} of your own to see them.`;
   $('#bq-list').hidden = !open;
-  $('#bq-view').hidden = !state.groups;
+  if (!state.groups?.includes(group)) group = 0; // a member, or a stale choice
+  $('#bq-view').hidden = !state.groups || shot;
   const groups = $('#bq-groups');
   if (state.groups && !groups.children.length) {
     groups.innerHTML = [0, ...state.groups].map((g) => `<button class="segmented__btn" type="button" data-group="${g}"
@@ -259,10 +274,19 @@ $('#bq-my').addEventListener('click', async (e) => {
   load();
 });
 
+$('#bq-shot').addEventListener('click', () => {
+  setShot(true);
+  toast('Screenshot mode. Tap the page title to bring the controls back.');
+});
+// The way back leaves nothing on screen to give it away. Escape does it too.
+$('.topbar h1').addEventListener('click', () => { if (shot && state?.groups) setShot(false); });
+addEventListener('keydown', (e) => { if (e.key === 'Escape' && shot && state?.groups) setShot(false); });
+
 $('#bq-groups').addEventListener('click', (e) => {
   const b = e.target.closest('[data-group]');
   if (!b) return;
   group = Number(b.dataset.group);
+  try { localStorage.setItem(VIEW, String(group)); } catch { /* this visit only */ }
   for (const x of $$('[data-group]')) x.setAttribute('aria-pressed', String(x === b));
   render();
 });

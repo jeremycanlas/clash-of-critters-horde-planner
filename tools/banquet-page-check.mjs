@@ -145,6 +145,7 @@ try {
   assert.ok(!/group/i.test(await A.locator('body').innerText()), 'the word "group" appears nowhere');
   assert.ok(!/30000001|\bCy\b/.test(await A.locator('#bq-app').innerText()), 'nothing of Group 2');
   assert.equal(await A.locator('#bq-view').isVisible(), false, 'no View as');
+  assert.equal(await A.locator('#bq-shot').isVisible(), false, 'no screenshot mode for a member');
 
   await A.fill('#bq-find', '5555');
   assert.equal(await A.locator('#bq-cards li').count(), 1, 'Find narrows to the one');
@@ -190,6 +191,18 @@ try {
   assert.equal(lastSent('Vee', 'banquet_mark').g, 2, "a mark goes to the card's group");
   assert.deepEqual(await axe(V), [], 'axe, viewer, light, with a full card');
 
+  await V.click('[data-group="1"]');
+  // Screenshot mode: the bar goes, stays gone on reload, and the title brings it back.
+  await V.click('#bq-shot');
+  assert.ok(await V.locator('#bq-view').isHidden(), 'screenshot mode hides View as');
+  assert.equal(await V.locator('.bq-grp').count(), 0, 'and As Group 1 then shows nothing of groups');
+  await V.reload();
+  await V.waitForSelector('#bq-app:not([hidden])');
+  assert.ok(await V.locator('#bq-view').isHidden(), 'remembered across a reload');
+  assert.equal(await V.locator('.bq-grp').count(), 0, 'still As Group 1 after the reload');
+  await V.click('.topbar h1');
+  assert.ok(await V.locator('#bq-view').isVisible(), 'tapping the title brings it back');
+  await V.click('[data-show="all"]');
   await V.click('[data-group="1"]');
   assert.equal(await V.locator('#bq-cards li').count(), 26, 'As Group 1: only Group 1');
   assert.equal(await V.locator('.bq-grp').count(), 0, 'As Group 1: no tags');
