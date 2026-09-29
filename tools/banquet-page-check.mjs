@@ -192,6 +192,18 @@ try {
   assert.equal(db.claims.filter((c) => c.who === 'Ana').length, 0, 'Undo took the claim back');
   await A.click('[data-show="all"]');
   assert.equal(await A.locator('.bq-card.is-waiting').count(), 1, 'a not-yet banquet stays listed');
+  await A.click('[data-show="ready"]');
+  assert.equal(await A.locator('.bq-card.is-waiting').count(), 0, 'Ready leaves out the not-yet one');
+  assert.equal(await A.locator('.bq-card.is-full, .bq-card.is-claimed').count(), 0, 'and full or claimed ones');
+  assert.ok(await A.locator('#bq-cards li').count() > 20, 'but keeps the rest');
+  assert.equal(await A.evaluate(() => document.documentElement.scrollWidth - innerWidth), 0, 'five filters still fit a phone');
+  assert.ok(await A.locator('[data-show]').evaluateAll((bs) => bs.every((b) => b.getBoundingClientRect().height < 50)), 'each on one line');
+  await A.setViewportSize({ width: 320, height: 640 });
+  assert.ok(await A.locator('[data-show]').evaluateAll((bs) => bs.every((b) => b.scrollWidth <= b.clientWidth + 1 && b.getBoundingClientRect().height < 50)),
+    'and on a 320px phone');
+  assert.equal(await A.evaluate(() => document.documentElement.scrollWidth - innerWidth), 0, 'nothing off the side at 320px');
+  await A.setViewportSize(devices['iPhone SE'].viewport);
+  await A.click('[data-show="all"]');
   assert.match(await A.locator('.bq-card__checked').textContent(), /Last checked .* 5 min ago by Eli/);
 
   await A.mouse.wheel(0, 1400);

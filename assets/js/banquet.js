@@ -303,6 +303,8 @@ function renderNews(on) {
 
 const WHICH = {
   open: (b) => !b.full && !b.claimed,
+  // What you can go and claim this minute: not full, not yours already, not waiting to open.
+  ready: (b) => !b.full && !b.claimed && !b.not_yet,
   claimed: (b) => b.claimed,
   full: (b) => !!b.full,
   all: () => true,
