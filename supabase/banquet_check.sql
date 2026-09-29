@@ -2,7 +2,7 @@
 --
 --   psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f supabase/banquet_check.sql
 --
--- Loads 013 to 019 inside the transaction too, so it can run before a
+-- Loads 013 to 020 inside the transaction too, so it can run before a
 -- migration is applied. Discord is not asked: members are written straight
 -- into banquet_members, which is what Discord's yes leaves behind, and channel
 -- posts go through banquet_apply(), which is what banquet_sync() hands them
@@ -26,6 +26,7 @@ end $$;
 \i supabase/migrations/017_banquet_synced_at.sql
 \i supabase/migrations/018_banquet_sync_window.sql
 \i supabase/migrations/019_banquet_add_limit.sql
+\i supabase/migrations/020_banquet_state_same.sql
 
 -- Real entries would skew the counts. Gone for this transaction only.
 delete from public.banquet_claims; delete from public.banquet_marks; delete from public.banquet_uids;
@@ -133,6 +134,20 @@ begin
   -- A posted one cannot be removed on the site.
   perform public.banquet_remove(10000001);
   assert pg_temp.card(public.banquet_state(), '10000001') is not null, 'posted stays';
+end $$;
+
+-- ---------------------------------------------------------------- the same list, in a few bytes
+do $$
+declare s jsonb; h text;
+begin
+  s := public.banquet_state();
+  h := s ->> 'hash';
+  assert public.banquet_state(null, h) - 'synced_at' = jsonb_build_object('same', true, 'hash', h), 'unchanged: only same and the hash';
+  assert public.banquet_state(null, 'stale') ? 'banquets', 'a wrong fingerprint gets the list';
+  perform public.banquet_claim(20000003, true);
+  assert not (public.banquet_state(null, h) ? 'same'), 'a claim changes it';
+  perform public.banquet_claim(20000003, false);
+  assert public.banquet_state(null, h) ? 'same', 'and taking it back restores it';
 end $$;
 
 -- ---------------------------------------------------------------- C, the other group

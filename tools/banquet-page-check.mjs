@@ -38,6 +38,8 @@ const db = {
 for (let i = 0; i < 20; i++) db.uids.push({ grp: 1, uid: String(60000000 + i * 137), who: ['Dee', 'Eli', 'Fay'][i % 3], source: 'discord' });
 let syncedAgo = 60e3;
 let reads = 0;
+let sames = 0;
+const NOT_YET_AT = new Date(Date.now() - 5 * 60e3).toISOString();
 const sent = [];
 
 // What banquet_state() answers, including that a one-group member's answer has no group in it.
@@ -55,7 +57,7 @@ function state(me) {
       entered_by: [...new Set(db.uids.filter((u) => u.grp === k.grp && u.uid === k.uid).map((u) => u.who))],
       mine_site: false, claims: cl.length, claimed_by: cl.map((c) => c.who), claimed: cl.some((c) => c.who === me.name),
       full: m?.state === 'full' ? m.by : null,
-      not_yet: m?.state === 'not-yet' ? { by: m.by, at: new Date(Date.now() - 5 * 60e3).toISOString() } : null,
+      not_yet: m?.state === 'not-yet' ? { by: m.by, at: NOT_YET_AT } : null,
       ...(me.all ? { grp: k.grp } : {}),
     };
   };
@@ -84,7 +86,13 @@ async function open(me, opts) {
     const g = me.all ? body.g : me.grp; // what banquet_group_for() does
     if (fn === 'banquet_check') return json('ok');
     if (fn === 'tracker_claim') return json(false);
-    if (fn === 'banquet_state') return json(state(me));
+    if (fn === 'banquet_state') {
+      const full = state(me);
+      const { synced_at, ...rest } = full;
+      const hash = JSON.stringify(rest);
+      if (body.known === hash) { sames++; return json({ same: true, hash, synced_at }); }
+      return json({ ...full, hash });
+    }
     if (fn === 'banquet_add') { db.uids.push({ grp: g, uid: String(body.target), who: me.name, source: 'site' }); return ok(); }
     if (fn === 'banquet_claim') {
       db.claims = db.claims.filter((c) => !(c.grp === g && c.uid === String(body.target) && c.who === me.name));
@@ -194,6 +202,11 @@ try {
     "Vee's Group 1 claim shows without a reload");
   assert.equal(await A.locator('li', { hasText: '55555555' }).locator('.bq-tag').count(), 0, "Vee's Group 2 full does not");
   assert.equal(await A.inputValue('#bq-add-uid'), '9999', 'a refresh never wipes typing');
+  const quiet = sames;
+  await A.clock.fastForward(31_000);
+  await A.waitForTimeout(400);
+  assert.ok(sames > quiet, 'nothing new: the refresh gets the short answer');
+  assert.equal(await A.locator('[data-claim="20000001"]').count(), 1, 'and the list stays as it was');
 
   await A.evaluate(() => {
     Object.defineProperty(document, 'hidden', { configurable: true, get: () => true });

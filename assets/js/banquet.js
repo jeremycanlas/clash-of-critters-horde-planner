@@ -110,9 +110,12 @@ function gate(head, text, canSignIn) {
 /* `quiet` is the timer's: a failed refresh keeps what is on screen, where a
    failed load someone asked for says so. */
 async function load(round = null, quiet = false) {
-  const got = await rest('/rpc/banquet_state', { method: 'POST', body: { r: round }, auth: true });
+  /* A refresh sends the fingerprint of what it holds; an unchanged list comes
+     back as a few bytes saying so, rather than the whole list again. */
+  const known = quiet && state && (round ?? state.current) === state.round ? state.hash : null;
+  const got = await rest('/rpc/banquet_state', { method: 'POST', body: { r: round, known }, auth: true });
   if (!got.ok) return quiet ? undefined : gate('Could not load the banquets', got.why, true);
-  state = got.data;
+  state = got.data.same ? { ...state, synced_at: got.data.synced_at } : got.data;
   status('');
   $('#bq-gate').hidden = true;
   $('#bq-app').hidden = false;
