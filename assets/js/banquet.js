@@ -24,6 +24,9 @@ const setMember = (on) => {
 
 let state = null;
 let show = 'open';
+const ORDER = 'coc.banquet.order';
+let order = 'room'; // or 'new': first posted, newest first
+try { if (localStorage.getItem(ORDER) === 'new') order = 'new'; } catch { /* most room, then */ }
 let find = '';
 let group = 0; // for those who see both: 0 is both, 1 or 2 is the page as that group sees it
 /* Screenshot mode, for those who see both groups: the View as bar goes, so a
@@ -240,9 +243,12 @@ const found = (b) => !find || b.uid.includes(find)
   || [...b.entered_by, ...b.claimed_by, b.full, b.not_yet?.by].some((n) => n && n.toLowerCase().includes(find));
 
 function renderCards(past) {
-  // Open before not-yet-open, then fewest claims first: the likeliest to have room.
+  /* Most room: open before not-yet-open, then fewest claims first, the likeliest
+     to have room. Newest: by when it was first posted. */
   const shown = state.banquets.filter((b) => WHICH[show](b) && (!group || b.grp === group) && found(b))
-    .sort((a, b) => !!a.not_yet - !!b.not_yet || a.claims - b.claims || a.uid.localeCompare(b.uid));
+    .sort(order === 'new'
+      ? (a, b) => (b.posted ?? '').localeCompare(a.posted ?? '') || a.uid.localeCompare(b.uid)
+      : (a, b) => !!a.not_yet - !!b.not_yet || a.claims - b.claims || a.uid.localeCompare(b.uid));
   const inView = state.banquets.filter((b) => !group || b.grp === group);
   $('#bq-count').textContent = `${shown.length} of ${inView.length}`;
   const key = (b) => `${b.grp ?? ''}:${b.uid}`;
@@ -256,7 +262,7 @@ function renderCards(past) {
       </div>
       ${b.not_yet ? `<p class="bq-card__checked">Last checked ${ago(b.not_yet.at)} by ${esc(b.not_yet.by)}</p>` : ''}
       <div class="bq-card__row">
-      <p class="bq-card__meta">From ${esc(b.entered_by.join(', '))}</p>
+      <p class="bq-card__meta">From ${esc(b.entered_by.join(', '))}${b.posted ? ` · ${time(b.posted)}` : ''}</p>
       ${b.claims ? `<details class="bq-card__claims">
         <summary>${b.claims} claimed</summary>
         <p>${esc(b.claimed_by.join(', '))}</p>
@@ -351,6 +357,16 @@ $('#bq-cards').addEventListener('click', async (e) => {
   }
   load(state.round);
 });
+
+for (const b of $$('[data-order]')) {
+  b.setAttribute('aria-pressed', String(b.dataset.order === order));
+  b.addEventListener('click', () => {
+    order = b.dataset.order;
+    try { localStorage.setItem(ORDER, order); } catch { /* this visit only */ }
+    for (const x of $$('[data-order]')) x.setAttribute('aria-pressed', String(x === b));
+    renderCards(state.round !== state.current);
+  });
+}
 
 for (const b of $$('[data-show]')) {
   b.addEventListener('click', () => {

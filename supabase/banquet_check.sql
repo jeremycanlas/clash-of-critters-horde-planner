@@ -2,7 +2,7 @@
 --
 --   psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f supabase/banquet_check.sql
 --
--- Loads 013 to 021 inside the transaction too, so it can run before a
+-- Loads 013 to 022 inside the transaction too, so it can run before a
 -- migration is applied. Discord is not asked: members are written straight
 -- into banquet_members, which is what Discord's yes leaves behind, and channel
 -- posts go through banquet_apply(), which is what banquet_sync() hands them
@@ -28,6 +28,7 @@ end $$;
 \i supabase/migrations/019_banquet_add_limit.sql
 \i supabase/migrations/020_banquet_state_same.sql
 \i supabase/migrations/021_banquet_copies.sql
+\i supabase/migrations/022_banquet_posted.sql
 
 -- Real entries would skew the counts. Gone for this transaction only.
 delete from public.banquet_claims; delete from public.banquet_marks; delete from public.banquet_uids;
@@ -116,6 +117,7 @@ begin
   s := public.banquet_state();
   assert (s ->> 'shared')::boolean and jsonb_array_length(s -> 'banquets') = 8, 'four unlocks Group 1''s eight';
   assert s::text not like '%grp%' and s::text not like '%groups%', 'nothing says there are groups';
+  assert (select bool_and(x ? 'posted' and (x ->> 'posted')::timestamptz is not null) from jsonb_array_elements(s -> 'banquets') x), 'every banquet says when it was first posted';
   assert s::text not like '%3000000%' and s::text not like '%zz_c%' and s::text not like '%u303%', 'nothing of Group 2';
   assert (s ->> 'synced_at')::timestamptz = now() - interval '2 minutes', 'A gets Group 1''s last read only';
 

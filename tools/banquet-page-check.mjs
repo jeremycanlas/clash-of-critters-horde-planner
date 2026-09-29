@@ -63,6 +63,7 @@ function state(me) {
     const m = db.marks.get(`${k.grp}:${k.uid}`);
     return {
       uid: k.uid,
+      posted: new Date(Date.parse('2026-09-29T00:00:00Z') + db.uids.findIndex((u) => u.grp === k.grp && u.uid === k.uid) * 60e3).toISOString(),
       entered_by: [...new Set(db.uids.filter((u) => u.grp === k.grp && u.uid === k.uid).map((u) => u.who))],
       mine_site: false, claims: cl.length, claimed_by: cl.map((c) => c.who), claimed: cl.some((c) => c.who === me.name),
       full: m?.state === 'full' ? m.by : null,
@@ -175,6 +176,12 @@ try {
   assert.ok(await A.locator('#bq-cards li', { hasText: '60000137' }).count() === 1, 'any case, and who marked it counts');
   await A.fill('#bq-find', '');
   assert.equal(await A.getByRole('button', { name: 'I claimed 55555555' }).count(), 1, 'buttons say which UID');
+  // Newest: the last one posted comes first, and the choice is kept.
+  await A.click('[data-order="new"]');
+  assert.equal(await A.locator('#bq-cards li').first().getAttribute('data-key'), ':10000004', 'Newest puts the last posted first');
+  assert.match(await A.locator('#bq-cards li').first().locator('.bq-card__meta').first().textContent(), /From Ana · \d/, 'with its time');
+  await A.click('[data-order="room"]');
+  assert.notEqual(await A.locator('#bq-cards li').first().getAttribute('data-key'), ':10000004', 'Most room is the old order');
   // A claim takes the card out of To claim; Undo brings it back.
   await A.click('[data-show="open"]');
   await A.click('[data-claim="55555555"]');

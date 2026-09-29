@@ -81,6 +81,7 @@
 @media (max-width: 560px) {
   .bq-list > .bq-bar { gap: 6px; }
   .bq-list > .bq-bar .segmented { flex: 1 1 100%; }
+  .bq-list > .bq-bar .segmented[aria-label="Order"] { flex: 1 1 auto; }
   .bq-list > .bq-bar .segmented__btn { flex: 1; }
   .bq-view .segmented { flex: 1 1 100%; }
   .bq-view .segmented__btn { flex: 1; }
