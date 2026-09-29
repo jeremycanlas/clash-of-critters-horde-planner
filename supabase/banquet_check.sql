@@ -2,7 +2,7 @@
 --
 --   psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f supabase/banquet_check.sql
 --
--- Loads 013 to 023 inside the transaction too, so it can run before a
+-- Loads 013 to 025 inside the transaction too, so it can run before a
 -- migration is applied. Discord is not asked: members are written straight
 -- into banquet_members, which is what Discord's yes leaves behind, and channel
 -- posts go through banquet_apply(), which is what banquet_sync() hands them
@@ -30,26 +30,31 @@ end $$;
 \i supabase/migrations/021_banquet_copies.sql
 \i supabase/migrations/022_banquet_posted.sql
 \i supabase/migrations/023_banquet_no_role_minute.sql
+\i supabase/migrations/025_banquet_private.sql
 
 -- Real entries would skew the counts. Gone for this transaction only.
 delete from public.banquet_claims; delete from public.banquet_marks; delete from public.banquet_uids;
-delete from public.banquet_groups; delete from public.banquet_members;
+delete from public.banquet_group_members; delete from public.banquet_groups; delete from public.banquet_members;
 insert into public.banquet_groups (grp, role_id, channel_id, synced_at) values
   (1, 'r1', 'c1', now() - interval '2 minutes'), (2, 'r2', 'c2', now() - interval '9 minutes');
+insert into public.banquet_groups (grp, private, name, synced_at) values (3, true, 'Private', now());
+insert into public.banquet_group_members (grp, discord_id) values (3, '990000000000000304');
 
--- A and B are Group 1, C is Group 2, V sees both, X was refused.
+-- A and B are Group 1, C is Group 2, V sees both and is in the private list,
+-- W sees both and is not, X was refused.
 insert into auth.users (id, aud, role, email)
 select ('00000000-0000-4000-8000-0000000000d' || n)::uuid, 'authenticated', 'authenticated', 'bq' || n || '@example.invalid'
-  from generate_series(1, 5) n;
+  from generate_series(1, 6) n;
 insert into auth.identities (id, provider_id, user_id, identity_data, provider, last_sign_in_at, created_at, updated_at)
 select gen_random_uuid(), '99000000000000030' || n, ('00000000-0000-4000-8000-0000000000d' || n)::uuid,
        jsonb_build_object('name', nm, 'full_name', nm), 'discord', now(), now(), now()
-  from (values (1, 'zz_a'), (2, 'zz_b'), (3, 'zz_c'), (4, 'zz_v'), (5, 'zz_x')) v(n, nm);
+  from (values (1, 'zz_a'), (2, 'zz_b'), (3, 'zz_c'), (4, 'zz_v'), (5, 'zz_x'), (6, 'zz_w')) v(n, nm);
 insert into public.banquet_members (discord_id, display, ok, groups, sees_all) values
   ('990000000000000301', 'zz_a', true, '{1}', false),
   ('990000000000000302', 'zz_b', true, '{1}', false),
   ('990000000000000303', 'zz_c', true, '{2}', false),
-  ('990000000000000304', 'zz_v', true, '{1,2}', true),
+  ('990000000000000304', 'zz_v', true, '{1,2,3}', true),
+  ('990000000000000306', 'zz_w', true, '{1,2}', true),
   ('990000000000000305', 'zz_x', false, '{}', false);
 
 create function pg_temp.as_(n int) returns void language sql as $$
@@ -172,7 +177,7 @@ do $$
 declare s jsonb;
 begin
   s := public.banquet_state();
-  assert s -> 'groups' = '[1, 2]'::jsonb, 'V is told there are two';
+  assert s -> 'groups' = '[1, 2, 3]'::jsonb, 'V is told there are two, and the private list V is in';
   assert (s ->> 'synced_at')::timestamptz = now() - interval '9 minutes', 'V gets the staler of the two';
   assert jsonb_array_length(s -> 'banquets') = 12, 'eight and four, 55555555 once per group';
   assert (select count(*) from jsonb_array_elements(s -> 'banquets') x where x ->> 'uid' = '55555555') = 2, 'one card per group';
@@ -255,6 +260,52 @@ begin
   assert not exists (select 1 from jsonb_array_elements(c -> 'people') x where x ->> 'name' = 'u302'), 'the one who posted first is not flagged';
   assert (select count(*) from jsonb_array_elements(c -> 'both_groups') x where x ->> 'uid' = '55555555') = 0,
          '55555555 left Group 1 in the edit above, so it is in one group now';
+end $$;
+
+-- ---------------------------------------------------------------- the private list
+reset role;
+set local role authenticated;
+select pg_temp.as_(4);
+do $$
+declare s jsonb;
+begin
+  s := public.banquet_state();
+  assert s -> 'private' = '[3]'::jsonb and s -> 'names' ->> '3' = 'Private', 'V is told the private list is private';
+  perform public.banquet_add(33300001, 3::smallint);
+  perform public.banquet_claim(33300001, true, 3::smallint);
+  s := public.banquet_state();
+  assert (select count(*) from jsonb_array_elements(s -> 'banquets') x where x ->> 'grp' = '3') = 1, 'V has a private banquet, claimed';
+end $$;
+select pg_temp.as_(6);
+do $$
+declare s jsonb; c jsonb;
+begin
+  s := public.banquet_state();
+  assert s::text not like '%33300001%' and s -> 'groups' = '[1, 2]'::jsonb, 'W sees both groups, and nothing private';
+  c := public.banquet_copies();
+  assert c::text not like '%33300001%', 'nor in Possible copies';
+  begin perform public.banquet_add(33300002, 3::smallint); raise exception 'W added to private';
+  exception when raise_exception then if sqlerrm = 'W added to private' then raise; end if; end;
+end $$;
+-- One transaction is one now(): V's private add is put a minute earlier, so A's is after it.
+reset role;
+update public.banquet_uids set added_at = now() - interval '1 minute' where uid = 33300001 and grp = 3;
+set local role authenticated;
+select pg_temp.as_(1);
+do $$ declare b jsonb; begin
+  -- A adds the private list's UID, after V, sending group 3: it lands in Group 1 as A's own.
+  perform public.banquet_add(33300001, 3::smallint);
+  b := pg_temp.card(public.banquet_state(), '33300001');
+  assert b -> 'entered_by' = '["zz_a"]'::jsonb and (b ->> 'claims')::int = 0, 'A sees only their own, not V''s private one';
+end $$;
+select pg_temp.as_(6);
+do $$ begin
+  assert public.banquet_copies()::text not like '%zz_v%', 'W''s Possible copies do not say V had it first, privately';
+end $$;
+select pg_temp.as_(4);
+do $$ begin
+  assert (select count(*) from jsonb_array_elements(public.banquet_state() -> 'banquets') x where x ->> 'grp' = '3') = 1,
+         'and nothing A sends reaches the private list';
 end $$;
 
 -- ---------------------------------------------------------------- how long an answer is remembered

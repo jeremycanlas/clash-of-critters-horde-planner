@@ -74,7 +74,7 @@ function markSeen(...keys) {
 function diff(before, after) {
   const was = new Map(before.banquets.map((b) => [keyOf(b), b]));
   const said = [];
-  const where = (b) => (b.grp && !group ? ` (Group ${b.grp})` : '');
+  const where = (b) => (b.grp && !group ? ` (${nameOf(b.grp)})` : '');
   for (const b of after.banquets) {
     const o = was.get(keyOf(b));
     if (!o) { said.push(`New: ${b.uid}${where(b)} from ${b.entered_by.join(', ')}`); continue; }
@@ -107,7 +107,12 @@ const ago = (iso) => {
   const gap = min < 1 ? 'just now' : min < 60 ? `${min} min ago` : `${Math.floor(min / 60)} h ${min % 60} min ago`;
   return `${time(iso)}, ${gap}`;
 };
-const tagOf = (g) => (g && !group ? `<span class="bq-grp">Group ${g}</span>` : '');
+// A group's name, and whether it is a private list: never part of Both groups.
+const nameOf = (g) => state?.names?.[g] ?? `Group ${g}`;
+const isPrivate = (g) => !!state?.private?.includes(g);
+// In the current view: one group, or Both groups, which leaves private lists out.
+const inView = (g) => (group ? g === group : !isPrivate(g));
+const tagOf = (g) => (g && !group ? `<span class="bq-grp">${esc(nameOf(g))}</span>` : '');
 const grpAttr = (g) => (g ? ` data-grp="${g}"` : '');
 
 // ------------------------------------------------------------------ gate
@@ -206,15 +211,15 @@ async function loadCopies() {
   const { people, both_groups: both } = got.data;
   const n = people.length + both.length;
   $('#bq-copies-n').textContent = n ? `(${n})` : '(none)';
-  const whenBy = (by, g, at) => `${esc(by)}, Group ${g}, ${time(at)}`;
+  const whenBy = (by, g, at) => `${esc(by)}, ${esc(nameOf(g))}, ${time(at)}`;
   $('#bq-copies-body').innerHTML = (people.length ? `<h3>Posted after someone else</h3><ul class="bq-copies__list">${people.map((p) => `<li>
-      <b>${esc(p.name)}</b> <span class="bq-grp">Group ${p.grp}</span>
+      <b>${esc(p.name)}</b> <span class="bq-grp">${esc(nameOf(p.grp))}</span>
       <span class="${p.all_copied ? 'bq-copies__all' : 'muted'}">${p.all_copied ? `all ${p.uids} posted earlier by others` : `${p.copied} of ${p.uids} posted earlier by others`}</span>
       <ul>${p.items.filter((i) => i.first_by).map((i) => `<li><span class="bq-copies__uid">${i.uid}</span>
         first by ${whenBy(i.first_by, i.first_grp, i.first_at)} · theirs ${time(i.at)}</li>`).join('')}</ul>
     </li>`).join('')}</ul>` : '')
     + (both.length ? `<h3>In both groups</h3><ul class="bq-copies__list">${both.map((b) => `<li>
-      <span class="bq-copies__uid">${b.uid}</span> ${Object.entries(b.groups).map(([g, names]) => `Group ${g}: ${esc(names.join(', '))}`).join(' · ')}
+      <span class="bq-copies__uid">${b.uid}</span> ${Object.entries(b.groups).map(([g, names]) => `${esc(nameOf(Number(g)))}: ${esc(names.join(', '))}`).join(' · ')}
     </li>`).join('')}</ul>` : '')
     || '<p class="muted">Nothing this round.</p>';
 }
@@ -249,7 +254,7 @@ function render() {
 
   // Yours: posted ones come from Discord and change there; added ones can go.
   const n = state.mine.length;
-  const mineShown = state.mine.filter((m) => !group || m.grp === group);
+  const mineShown = state.mine.filter((m) => !m.grp || inView(m.grp));
   $('#bq-my').innerHTML = mineShown.map((m) => `<li class="bq-mine__uid">
       ${tagOf(m.grp)}<button type="button" class="tr-copy" data-copy="${m.uid}" title="Copy UID">${m.uid}</button>
       ${m.source === 'discord' ? '<span class="bq-src">from Discord</span>'
@@ -262,7 +267,7 @@ function render() {
   const pick = $('#bq-add-grp');
   pick.hidden = !state.groups || !!group;
   if (state.groups && !pick.options.length) {
-    pick.innerHTML = `<option value="">Group…</option>${state.groups.map((g) => `<option value="${g}">Group ${g}</option>`).join('')}`;
+    pick.innerHTML = `<option value="">Group…</option>${state.groups.map((g) => `<option value="${g}">${esc(nameOf(g))}</option>`).join('')}`;
   }
 
   const open = past || state.shared;
@@ -276,9 +281,11 @@ function render() {
   const groups = $('#bq-groups');
   if (state.groups && !groups.children.length) {
     groups.innerHTML = [0, ...state.groups].map((g) => `<button class="segmented__btn" type="button" data-group="${g}"
-      aria-pressed="${g === group}">${g ? `As Group ${g}` : 'Both groups'}</button>`).join('');
+      aria-pressed="${g === group}">${!g ? 'Both groups' : isPrivate(g) ? esc(nameOf(g)) : `As ${esc(nameOf(g))}`}</button>`).join('');
   }
-  $('#bq-view-note').textContent = group ? `What Group ${group} members see. Anything you press counts for Group ${group}.` : '';
+  $('#bq-view-note').textContent = !group ? ''
+    : isPrivate(group) ? `${nameOf(group)}: only the people added to it can see it. Anything you add or press is kept here.`
+    : `What ${nameOf(group)} members see. Anything you press counts for ${nameOf(group)}.`;
   if (open) renderCards(past);
   renderNews(open && !past);
 }
@@ -286,7 +293,7 @@ function render() {
 // ------------------------------------------------------------------ what is new
 
 function renderNews(on) {
-  const fresh = on ? state.banquets.filter((b) => isNew(b) && (!group || b.grp === group)) : [];
+  const fresh = on ? state.banquets.filter((b) => isNew(b) && (!b.grp || inView(b.grp))) : [];
   fresh.sort((a, b) => (b.posted ?? '').localeCompare(a.posted ?? ''));
   $('#bq-new').hidden = !fresh.length;
   $('#bq-new-uids').innerHTML = fresh.slice(0, 6).map((b) => `<button type="button" class="bq-new__uid"
@@ -319,12 +326,12 @@ const found = (b) => !find || b.uid.includes(find)
 function renderCards(past) {
   /* Most room: open before not-yet-open, then fewest claims first, the likeliest
      to have room. Newest: by when it was first posted. */
-  const shown = state.banquets.filter((b) => WHICH[show](b) && (!group || b.grp === group) && found(b))
+  const shown = state.banquets.filter((b) => WHICH[show](b) && (!b.grp || inView(b.grp)) && found(b))
     .sort(order === 'new'
       ? (a, b) => (b.posted ?? '').localeCompare(a.posted ?? '') || a.uid.localeCompare(b.uid)
       : (a, b) => !!a.not_yet - !!b.not_yet || a.claims - b.claims || a.uid.localeCompare(b.uid));
-  const inView = state.banquets.filter((b) => !group || b.grp === group);
-  $('#bq-count').textContent = `${shown.length} of ${inView.length}`;
+  const inViewList = state.banquets.filter((b) => !b.grp || inView(b.grp));
+  $('#bq-count').textContent = `${shown.length} of ${inViewList.length}`;
   const key = (b) => `${b.grp ?? ''}:${b.uid}`;
   const opened = new Set($$('#bq-cards details[open]').map((d) => d.closest('li').dataset.key));
   $('#bq-cards').innerHTML = shown.map((b) => `<li data-key="${key(b)}" class="bq-card${b.full ? ' is-full' : ''}${b.not_yet ? ' is-waiting' : ''}${b.claimed ? ' is-claimed' : ''}">
@@ -349,7 +356,7 @@ function renderCards(past) {
         <button type="button" class="btn btn--quiet" data-mark="not-yet" data-uid="${b.uid}"${grpAttr(b.grp)} aria-label="Not yet available: ${b.uid}" aria-pressed="${!!b.not_yet}">${b.not_yet ? 'Open now' : '<span class="bq-long">Not yet available</span><span class="bq-short">Not open</span>'}</button>
         ${b.not_yet ? `<button type="button" class="btn btn--quiet" data-mark="not-yet" data-uid="${b.uid}"${grpAttr(b.grp)} aria-label="Still not open: ${b.uid}">Still not open</button>` : ''}
       </div>`}
-    </li>`).join('') || `<li class="muted bq-none">${inView.length ? 'Nothing here.' : 'No banquets shared this round yet.'}</li>`;
+    </li>`).join('') || `<li class="muted bq-none">${inViewList.length ? 'Nothing here.' : 'No banquets shared this round yet.'}</li>`;
   for (const d of $$('#bq-cards details')) d.open = opened.has(d.closest('li').dataset.key);
 }
 
@@ -412,7 +419,7 @@ $('#bq-new-uids').addEventListener('click', (e) => {
   toast(`Copied ${b.dataset.copy}`);
 });
 $('#bq-new-clear').addEventListener('click', () => {
-  markSeen(...state.banquets.filter((b) => !group || b.grp === group).map(keyOf));
+  markSeen(...state.banquets.filter((b) => !b.grp || inView(b.grp)).map(keyOf));
   render();
 });
 

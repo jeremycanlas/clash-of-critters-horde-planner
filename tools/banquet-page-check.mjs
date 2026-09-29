@@ -43,6 +43,8 @@ const db = {
   marks: new Map([['1:60000137', { state: 'not-yet', by: 'Eli' }]]),
 };
 for (const uid of ['20000001', '55555555', '10000001', '10000002']) db.uids.push({ grp: 1, uid, who: 'Yui', source: 'discord' });
+// A private list, 3, that Vee is in and Ana is not.
+db.uids.push({ grp: 3, uid: '39900001', who: 'maryal', source: 'site' });
 for (let i = 0; i < 20; i++) db.uids.push({ grp: 1, uid: String(60000000 + i * 137), who: ['Dee', 'Eli', 'Fay'][i % 3], source: 'discord' });
 let syncedAgo = 60e3;
 let reads = 0;
@@ -54,7 +56,7 @@ const sent = [];
 // What banquet_state() answers, including that a one-group member's answer has no group in it.
 function state(me) {
   reads++;
-  const groups = me.all ? [1, 2] : [me.grp];
+  const groups = me.all ? [1, 2, 3] : [me.grp];
   const mine = db.uids.filter((u) => u.who === me.name && groups.includes(u.grp));
   const shared = me.all || mine.length >= 4;
   const keys = [...new Map(db.uids.filter((u) => groups.includes(u.grp)).map((u) => [`${u.grp}:${u.uid}`, u])).values()];
@@ -76,7 +78,7 @@ function state(me) {
     synced_at: new Date(Date.now() - syncedAgo).toISOString(),
     mine: mine.map((u) => ({ uid: u.uid, source: u.source, ...(me.all ? { grp: u.grp } : {}) })),
     banquets: shared ? keys.map(card) : [],
-    ...(me.all ? { groups } : {}),
+    ...(me.all ? { groups, names: { 1: 'Group 1', 2: 'Group 2', 3: 'Private' }, private: [3] } : {}),
   };
 }
 
@@ -98,7 +100,7 @@ async function open(me, opts) {
       if (!me.all) return route.fulfill({ status: 400, contentType: 'application/json', body: '{"code":"P0001","message":"Not for this account."}' });
       // Earlier in the list is earlier in time.
       const at = (i) => new Date(Date.parse('2026-09-29T00:00:00Z') + i * 60e3).toISOString();
-      const rows = db.uids.map((u, i) => ({ ...u, i }));
+      const rows = db.uids.map((u, i) => ({ ...u, i })).filter((u) => u.grp !== 3); // never the private list
       const firstOther = (u) => rows.find((o) => o.uid === u.uid && o.who !== u.who && o.i < u.i);
       const byWho = Map.groupBy(rows, (u) => `${u.grp}:${u.who}`);
       const people = [...byWho.values()].map((us) => {
@@ -232,6 +234,18 @@ try {
   if (process.env.BANQUET_SHOTS) await V.locator('#bq-copies').screenshot({ path: `${process.env.BANQUET_SHOTS}/copies.png` });
   assert.equal(await V.locator('#bq-cards .bq-grp').count(), 28, 'every card says its group');
 
+  // The private list: not in Both groups, its own button, and adding there stays there.
+  assert.equal(await V.locator('li[data-key="3:39900001"]').count(), 0, 'Both groups leaves the private list out');
+  await V.click('[data-group="3"]');
+  assert.equal(await V.locator('[data-group="3"]').textContent(), 'Private', 'it has its own button');
+  assert.deepEqual(await V.locator('#bq-cards li').evaluateAll((ls) => ls.map((l) => l.dataset.key)), ['3:39900001'], 'and only its banquets');
+  assert.match(await V.locator('#bq-view-note').textContent(), /only the people added to it/);
+  await V.fill('#bq-add-uid', '39900002');
+  await V.click('#bq-add');
+  await V.waitForTimeout(300);
+  assert.equal(lastSent('Vee', 'banquet_add').g, 3, 'adding in Private goes to the private list');
+  await V.click('[data-group="0"]');
+  assert.equal(await V.locator('li[data-key="3:39900002"]').count(), 0, 'and does not show in Both groups');
   await V.fill('#bq-add-uid', '40000001');
   await V.click('#bq-add');
   assert.equal(await V.locator('#bq-mine-error').textContent(), 'Pick a group.');
