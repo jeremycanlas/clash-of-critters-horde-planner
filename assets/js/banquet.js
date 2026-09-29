@@ -123,7 +123,7 @@ function render() {
   $('#bq-locked').hidden = open;
   $('#bq-locked').textContent = `${state.total} banquet${state.total === 1 ? '' : 's'} shared this round. Enter all four of yours above to see them.`;
   $('#bq-list').hidden = !open;
-  $('#bq-extra').hidden = past;
+  $('#bq-extra').hidden = past || !state.shared;
   if (open) renderCards(past);
 }
 
