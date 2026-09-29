@@ -45,7 +45,7 @@
 
       <form id="bq-mine" class="panel bq-mine">
         <h2>Your MVPs</h2>
-        <p class="muted bq-hint">The UID of each colour's MVP in your game. Enter all four to see everyone else's.</p>
+        <p class="muted bq-hint">The 8-digit UID of each colour's MVP in your game. Enter all four to see everyone else's.</p>
         <div id="bq-slots" class="bq-slots"></div>
         <p id="bq-mine-error" class="tr-form__error" role="alert" hidden></p>
         <div class="bq-mine__actions">
@@ -68,6 +68,13 @@
         </div>
         <p class="muted bq-hint">First 50 players per banquet, and only players who logged in the day the gold rush ended.
           The count is members of this page only, so press Full when you find one empty, or Not yet available if it has not opened.</p>
+        <!-- A banquet somebody heard about, beyond the four. Shared like any other. -->
+        <form id="bq-extra" class="bq-extra-form">
+          <label for="bq-extra-uid">Add one more UID</label>
+          <input id="bq-extra-uid" class="field" inputmode="numeric" pattern="[0-9]{8}" maxlength="8" autocomplete="off">
+          <button class="btn" type="submit">Add</button>
+          <p id="bq-extra-error" class="tr-form__error" role="alert" hidden></p>
+        </form>
         <ul id="bq-cards" class="bq-cards"></ul>
       </section>
     </section>

@@ -43,3 +43,8 @@
 .bq-card__actions { display: flex; flex-wrap: wrap; gap: var(--s2); margin-top: 2px; }
 .bq-none { padding: var(--s3); }
 .bq-tag--wait { color: var(--accent-ink-on); }
+.bq-extra { font-size: 11.5px; font-weight: 650; color: var(--text-mute); }
+.bq-extra-form { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); font-size: 13px; color: var(--text-dim); }
+.bq-extra-form[hidden] { display: none; }
+.bq-extra-form input { width: 9em; font-variant-numeric: tabular-nums; }
+.bq-extra-form .tr-form__error { flex-basis: 100%; margin: 0; }

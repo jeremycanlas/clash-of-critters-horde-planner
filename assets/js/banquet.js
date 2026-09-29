@@ -114,7 +114,7 @@ function render() {
   // Your four: editable now, a record afterwards.
   const mine = new Map(state.mine.map((m) => [m.color, m.uid]));
   $('#bq-slots').innerHTML = COLORS.map((c, i) => `<label class="bq-slot">${dot(i + 1)}<span>${c.name}</span>
-      <input class="field" inputmode="numeric" pattern="[0-9]{1,15}" maxlength="15" autocomplete="off"
+      <input class="field" inputmode="numeric" pattern="[0-9]{8}" maxlength="8" autocomplete="off"
         data-color="${i + 1}" value="${esc(mine.get(i + 1) ?? '')}"${past ? ' readonly' : ''} aria-label="${c.name} MVP UID"></label>`).join('');
   $('#bq-save').hidden = past;
   $('#bq-mine').hidden = past && !state.mine.length;
@@ -123,6 +123,7 @@ function render() {
   $('#bq-locked').hidden = open;
   $('#bq-locked').textContent = `${state.total} banquet${state.total === 1 ? '' : 's'} shared this round. Enter all four of yours above to see them.`;
   $('#bq-list').hidden = !open;
+  $('#bq-extra').hidden = past;
   if (open) renderCards(past);
 }
 
@@ -140,7 +141,7 @@ function renderCards(past) {
   $('#bq-count').textContent = `${shown.length} of ${state.banquets.length}`;
   $('#bq-cards').innerHTML = shown.map((b) => `<li class="bq-card${b.full ? ' is-full' : ''}${b.claimed ? ' is-claimed' : ''}">
       <div class="bq-card__id">
-        <span class="bq-card__dots">${b.colors.map(dot).join('')}</span>
+        <span class="bq-card__dots">${b.colors.map(dot).join('')}${b.extra ? '<span class="bq-extra">Extra</span>' : ''}</span>
         <button type="button" class="tr-copy bq-uid" data-copy="${b.uid}" title="Copy UID">${b.uid}</button>
         ${b.full ? `<span class="bq-tag">Full<small> · ${esc(b.full)}</small></span>` : ''}
         ${b.not_yet ? `<span class="bq-tag bq-tag--wait">Not yet available<small> · ${esc(b.not_yet.by)}, ${time(b.not_yet.at)}</small></span>` : ''}
@@ -154,6 +155,7 @@ function renderCards(past) {
         <button type="button" class="btn${b.claimed ? ' btn--primary' : ''}" data-claim="${b.uid}" aria-pressed="${b.claimed}">${b.claimed ? 'Claimed ✓' : 'I claimed'}</button>
         <button type="button" class="btn btn--quiet" data-mark="full" data-uid="${b.uid}" aria-pressed="${!!b.full}">${b.full ? 'Not full' : 'Full'}</button>
         <button type="button" class="btn btn--quiet" data-mark="not-yet" data-uid="${b.uid}" aria-pressed="${!!b.not_yet}">${b.not_yet ? 'Available now' : 'Not yet available'}</button>
+        ${b.mine_extra ? `<button type="button" class="btn btn--quiet" data-remove="${b.uid}">Remove</button>` : ''}
       </div>`}
     </li>`).join('') || `<li class="muted bq-none">${state.banquets.length ? 'Nothing here.' : 'No banquets shared this round yet.'}</li>`;
 }
@@ -165,7 +167,7 @@ $('#bq-mine').addEventListener('submit', async (e) => {
   const err = $('#bq-mine-error');
   err.hidden = true;
   const uids = $$('[data-color]').map((i) => i.value.trim());
-  if (uids.some((u) => u && !/^[0-9]{1,15}$/.test(u))) { err.textContent = 'A UID is a whole number, up to 15 digits.'; err.hidden = false; return; }
+  if (uids.some((u) => u && !/^[0-9]{8}$/.test(u))) { err.textContent = 'A UID is 8 digits.'; err.hidden = false; return; }
   $('#bq-save').disabled = true;
   const got = await rest('/rpc/banquet_save_mvps', { method: 'POST', body: { uids: uids.map((u) => (u ? Number(u) : null)) }, auth: true });
   $('#bq-save').disabled = false;
@@ -175,7 +177,26 @@ $('#bq-mine').addEventListener('submit', async (e) => {
   load();
 });
 
+$('#bq-extra').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const err = $('#bq-extra-error');
+  const uid = $('#bq-extra-uid').value.trim();
+  err.hidden = true;
+  if (!/^[0-9]{8}$/.test(uid)) { err.textContent = 'A UID is 8 digits.'; err.hidden = false; return; }
+  const got = await rest('/rpc/banquet_extra', { method: 'POST', body: { target: Number(uid), added: true }, auth: true });
+  if (!got.ok) { err.textContent = got.why; err.hidden = false; return; }
+  $('#bq-extra-uid').value = '';
+  load();
+});
+
 $('#bq-cards').addEventListener('click', async (e) => {
+  const remove = e.target.closest('[data-remove]');
+  if (remove) {
+    remove.disabled = true;
+    const got = await rest('/rpc/banquet_extra', { method: 'POST', body: { target: Number(remove.dataset.remove), added: false }, auth: true });
+    if (!got.ok) { remove.disabled = false; remove.textContent = got.why; return; }
+    return load(state.round);
+  }
   const claim = e.target.closest('[data-claim]');
   const mark = e.target.closest('[data-mark]');
   const btn = claim ?? mark;
