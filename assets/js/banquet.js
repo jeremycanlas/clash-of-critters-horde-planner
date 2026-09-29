@@ -1,11 +1,13 @@
 /**
- * MVP banquets: every member's four MVP UIDs per gold rush, and who has claimed
- * which banquet.
+ * MVP banquets: the UIDs a group posts in its Discord channel each gold rush,
+ * and who has claimed which banquet.
  *
- * Holds no data and decides nothing. Who gets in (a Discord role, asked of
- * Discord by the database), who sees what (only members who shared all four),
- * and which round is current all live in supabase/migrations/013; this page
- * shows whatever banquet_state() hands it.
+ * Holds no data and decides nothing. Who gets in and which group they are (a
+ * Discord role, asked of Discord by the database), who sees what (four UIDs of
+ * your own), and which round is current all live in supabase/migrations/016;
+ * this page shows whatever banquet_state() hands it. A group member's answer
+ * carries no group at all, so the group controls below only ever appear for
+ * someone who sees both.
  */
 
 import { rest, signIn, signOut, signedIn, readCallback, isConfigured } from './supabase.js';
@@ -15,14 +17,6 @@ import { $, $$, esc, copyText } from './ui.js';
 
 applyPrefs();
 
-// The gold rush's four teams, in the order the slots are stored (1 to 4).
-const COLORS = [
-  { name: 'Red', css: 'var(--fire)' },
-  { name: 'Blue', css: 'var(--water)' },
-  { name: 'Yellow', css: 'var(--lightning)' },
-  { name: 'Purple', css: '#9b6cf0' },
-];
-
 const FLAG = 'coc.banquet.member';
 const setMember = (on) => {
   try { if (on) localStorage.setItem(FLAG, '1'); else localStorage.removeItem(FLAG); } catch { /* private mode */ }
@@ -30,7 +24,7 @@ const setMember = (on) => {
 
 let state = null;
 let show = 'open';
-let typing = false; // unsaved edits in your four, which a refresh must not wipe
+let group = 0; // for those who see both: 0 is both
 
 const status = (text) => { $('#bq-status').textContent = text; $('#bq-status').hidden = !text; };
 /* A round is one gold rush: it starts at the reset (00:00 UTC, 8am Manila) on
@@ -48,7 +42,8 @@ const ago = (iso) => {
   const gap = min < 1 ? 'just now' : min < 60 ? `${min} min ago` : `${Math.floor(min / 60)} h ${min % 60} min ago`;
   return `${time(iso)}, ${gap}`;
 };
-const dot = (c) => `<span class="bq-dot" style="--c:${COLORS[c - 1].css}" title="${COLORS[c - 1].name}"></span>`;
+const tagOf = (g) => (g ? `<span class="bq-grp">Group ${g}</span>` : '');
+const grpAttr = (g) => (g ? ` data-grp="${g}"` : '');
 
 // ------------------------------------------------------------------ gate
 
@@ -132,19 +127,31 @@ function render() {
   $('#bq-when').textContent = past ? 'A past round, read only.'
     : `Ends ${utcDay(closes(state.round))}, 00:00 UTC (${localEnd(state.round)} your time)`;
 
-  // Your four: editable now, a record afterwards. Left alone while being typed in.
-  const mine = new Map(state.mine.map((m) => [m.color, m.uid]));
-  if (!typing) $('#bq-slots').innerHTML = COLORS.map((c, i) => `<label class="bq-slot">${dot(i + 1)}<span>${c.name}</span>
-      <input class="field" inputmode="numeric" pattern="[0-9]{8}" maxlength="8" autocomplete="off"
-        data-color="${i + 1}" value="${esc(mine.get(i + 1) ?? '')}"${past ? ' readonly' : ''} aria-label="${c.name} MVP UID"></label>`).join('');
-  $('#bq-save').hidden = past;
-  $('#bq-mine').hidden = past && !state.mine.length;
+  // Yours: posted ones come from Discord and change there; added ones can go.
+  const n = state.mine.length;
+  $('#bq-my').innerHTML = state.mine.map((m) => `<li class="bq-mine__uid">
+      ${tagOf(m.grp)}<button type="button" class="tr-copy" data-copy="${m.uid}" title="Copy UID">${m.uid}</button>
+      ${m.source === 'discord' ? '<span class="bq-src">from Discord</span>'
+        : past ? '' : `<button type="button" class="btn btn--quiet" data-remove="${m.uid}"${grpAttr(m.grp)}>Remove</button>`}
+    </li>`).join('') || `<li class="muted">${past ? 'None this gold rush.' : 'None yet. Post them in Discord, or add them here.'}</li>`;
+  $('#bq-mine .bq-mine__actions').hidden = past;
+  const pick = $('#bq-add-grp');
+  pick.hidden = !state.groups;
+  if (state.groups && !pick.options.length) {
+    pick.innerHTML = `<option value="">Group…</option>${state.groups.map((g) => `<option value="${g}">Group ${g}</option>`).join('')}`;
+  }
 
   const open = past || state.shared;
   $('#bq-locked').hidden = open;
-  $('#bq-locked').textContent = `${state.total} banquet${state.total === 1 ? '' : 's'} shared this round. Enter all four of yours above to see them.`;
+  $('#bq-locked').textContent = `${state.total} banquet${state.total === 1 ? '' : 's'} shared this round. `
+    + `Add ${4 - n} more UID${4 - n === 1 ? '' : 's'} of your own to see them.`;
   $('#bq-list').hidden = !open;
-  $('#bq-extra').hidden = past || !state.shared;
+  const groups = $('#bq-groups');
+  groups.hidden = !state.groups;
+  if (state.groups && !groups.children.length) {
+    groups.innerHTML = [0, ...state.groups].map((g) => `<button class="segmented__btn" type="button" data-group="${g}"
+      aria-pressed="${g === group}">${g ? `Group ${g}` : 'Both'}</button>`).join('');
+  }
   if (open) renderCards(past);
 }
 
@@ -157,13 +164,14 @@ const WHICH = {
 
 function renderCards(past) {
   // Open before not-yet-open, then fewest claims first: the likeliest to have room.
-  const shown = state.banquets.filter(WHICH[show])
+  const shown = state.banquets.filter((b) => WHICH[show](b) && (!group || b.grp === group))
     .sort((a, b) => !!a.not_yet - !!b.not_yet || a.claims - b.claims || a.uid.localeCompare(b.uid));
   $('#bq-count').textContent = `${shown.length} of ${state.banquets.length}`;
-  const opened = new Set($$('#bq-cards details[open]').map((d) => d.closest('li').dataset.uid));
-  $('#bq-cards').innerHTML = shown.map((b) => `<li data-uid="${b.uid}" class="bq-card${b.full ? ' is-full' : ''}${b.not_yet ? ' is-waiting' : ''}${b.claimed ? ' is-claimed' : ''}">
+  const key = (b) => `${b.grp ?? ''}:${b.uid}`;
+  const opened = new Set($$('#bq-cards details[open]').map((d) => d.closest('li').dataset.key));
+  $('#bq-cards').innerHTML = shown.map((b) => `<li data-key="${key(b)}" class="bq-card${b.full ? ' is-full' : ''}${b.not_yet ? ' is-waiting' : ''}${b.claimed ? ' is-claimed' : ''}">
       <div class="bq-card__id">
-        <span class="bq-card__dots">${b.colors.map(dot).join('')}${b.extra ? '<span class="bq-extra">Extra</span>' : ''}</span>
+        ${tagOf(b.grp)}
         <button type="button" class="tr-copy bq-uid" data-copy="${b.uid}" title="Copy UID">${b.uid}</button>
         ${b.full ? `<span class="bq-tag">Full<small> · ${esc(b.full)}</small></span>` : ''}
         ${b.not_yet ? '<span class="bq-tag bq-tag--wait">Not yet available</span>' : ''}
@@ -175,54 +183,54 @@ function renderCards(past) {
         <p>${esc(b.claimed_by.join(', '))}</p>
       </details>` : '<p class="bq-card__meta">No members claimed yet</p>'}
       ${past ? '' : `<div class="bq-card__actions">
-        <button type="button" class="btn${b.claimed ? ' btn--primary' : ''}" data-claim="${b.uid}" aria-pressed="${b.claimed}">${b.claimed ? 'Claimed ✓' : 'I claimed'}</button>
-        <button type="button" class="btn btn--quiet" data-mark="full" data-uid="${b.uid}" aria-pressed="${!!b.full}">${b.full ? 'Not full' : 'Full'}</button>
-        <button type="button" class="btn btn--quiet" data-mark="not-yet" data-uid="${b.uid}" aria-pressed="${!!b.not_yet}">${b.not_yet ? 'Available now' : 'Not yet available'}</button>
-        ${b.not_yet ? `<button type="button" class="btn btn--quiet" data-mark="not-yet" data-uid="${b.uid}">Still not open</button>` : ''}
-        ${b.mine_extra ? `<button type="button" class="btn btn--quiet" data-remove="${b.uid}">Remove</button>` : ''}
+        <button type="button" class="btn${b.claimed ? ' btn--primary' : ''}" data-claim="${b.uid}"${grpAttr(b.grp)} aria-pressed="${b.claimed}">${b.claimed ? 'Claimed ✓' : 'I claimed'}</button>
+        <button type="button" class="btn btn--quiet" data-mark="full" data-uid="${b.uid}"${grpAttr(b.grp)} aria-pressed="${!!b.full}">${b.full ? 'Not full' : 'Full'}</button>
+        <button type="button" class="btn btn--quiet" data-mark="not-yet" data-uid="${b.uid}"${grpAttr(b.grp)} aria-pressed="${!!b.not_yet}">${b.not_yet ? 'Available now' : 'Not yet available'}</button>
+        ${b.not_yet ? `<button type="button" class="btn btn--quiet" data-mark="not-yet" data-uid="${b.uid}"${grpAttr(b.grp)}>Still not open</button>` : ''}
       </div>`}
     </li>`).join('') || `<li class="muted bq-none">${state.banquets.length ? 'Nothing here.' : 'No banquets shared this round yet.'}</li>`;
-  for (const d of $$('#bq-cards details')) d.open = opened.has(d.closest('li').dataset.uid);
+  for (const d of $$('#bq-cards details')) d.open = opened.has(d.closest('li').dataset.key);
 }
 
 // ------------------------------------------------------------------ actions
 
+// The group only matters, and is only sent, for someone who sees both.
+const grpOf = (el) => (el.dataset.grp ? Number(el.dataset.grp) : null);
+
 $('#bq-mine').addEventListener('submit', async (e) => {
   e.preventDefault();
   const err = $('#bq-mine-error');
+  const uid = $('#bq-add-uid').value.trim();
   err.hidden = true;
-  const uids = $$('[data-color]').map((i) => i.value.trim());
-  if (uids.some((u) => u && !/^[0-9]{8}$/.test(u))) { err.textContent = 'A UID is 8 digits.'; err.hidden = false; return; }
-  $('#bq-save').disabled = true;
-  const got = await rest('/rpc/banquet_save_mvps', { method: 'POST', body: { uids: uids.map((u) => (u ? Number(u) : null)) }, auth: true });
-  $('#bq-save').disabled = false;
+  if (!/^[0-9]{8}$/.test(uid)) { err.textContent = 'A UID is 8 digits.'; err.hidden = false; return; }
+  const g = state.groups ? Number($('#bq-add-grp').value) || null : null;
+  if (state.groups && !g) { err.textContent = 'Pick a group.'; err.hidden = false; return; }
+  $('#bq-add').disabled = true;
+  const got = await rest('/rpc/banquet_add', { method: 'POST', body: { target: Number(uid), g }, auth: true });
+  $('#bq-add').disabled = false;
   if (!got.ok) { err.textContent = got.why; err.hidden = false; return; }
-  typing = false;
-  $('#bq-saved').textContent = 'Saved';
-  setTimeout(() => { $('#bq-saved').textContent = ''; }, 1500);
+  $('#bq-add-uid').value = '';
   load();
 });
 
-$('#bq-extra').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const err = $('#bq-extra-error');
-  const uid = $('#bq-extra-uid').value.trim();
-  err.hidden = true;
-  if (!/^[0-9]{8}$/.test(uid)) { err.textContent = 'A UID is 8 digits.'; err.hidden = false; return; }
-  const got = await rest('/rpc/banquet_extra', { method: 'POST', body: { target: Number(uid), added: true }, auth: true });
-  if (!got.ok) { err.textContent = got.why; err.hidden = false; return; }
-  $('#bq-extra-uid').value = '';
+$('#bq-my').addEventListener('click', async (e) => {
+  const remove = e.target.closest('[data-remove]');
+  if (!remove) return;
+  remove.disabled = true;
+  const got = await rest('/rpc/banquet_remove', { method: 'POST', body: { target: Number(remove.dataset.remove), g: grpOf(remove) }, auth: true });
+  if (!got.ok) { remove.disabled = false; remove.textContent = got.why; return; }
   load();
+});
+
+$('#bq-groups').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-group]');
+  if (!b) return;
+  group = Number(b.dataset.group);
+  for (const x of $$('[data-group]')) x.setAttribute('aria-pressed', String(x === b));
+  renderCards(state.round !== state.current);
 });
 
 $('#bq-cards').addEventListener('click', async (e) => {
-  const remove = e.target.closest('[data-remove]');
-  if (remove) {
-    remove.disabled = true;
-    const got = await rest('/rpc/banquet_extra', { method: 'POST', body: { target: Number(remove.dataset.remove), added: false }, auth: true });
-    if (!got.ok) { remove.disabled = false; remove.textContent = got.why; return; }
-    return load(state.round);
-  }
   const claim = e.target.closest('[data-claim]');
   const mark = e.target.closest('[data-mark]');
   const btn = claim ?? mark;
@@ -230,8 +238,8 @@ $('#bq-cards').addEventListener('click', async (e) => {
   btn.disabled = true;
   const on = btn.getAttribute('aria-pressed') !== 'true';
   const got = claim
-    ? await rest('/rpc/banquet_claim', { method: 'POST', body: { target: Number(claim.dataset.claim), claimed: on }, auth: true })
-    : await rest('/rpc/banquet_mark', { method: 'POST', body: { target: Number(mark.dataset.uid), state: on ? mark.dataset.mark : null }, auth: true });
+    ? await rest('/rpc/banquet_claim', { method: 'POST', body: { target: Number(claim.dataset.claim), claimed: on, g: grpOf(btn) }, auth: true })
+    : await rest('/rpc/banquet_mark', { method: 'POST', body: { target: Number(mark.dataset.uid), state: on ? mark.dataset.mark : null, g: grpOf(btn) }, auth: true });
   if (!got.ok) { btn.disabled = false; btn.textContent = got.why; return; }
   load(state.round);
 });
@@ -244,8 +252,7 @@ for (const b of $$('[data-show]')) {
   });
 }
 
-$('#bq-round').addEventListener('change', (e) => { typing = false; load(e.target.value); });
-$('#bq-slots').addEventListener('input', () => { typing = true; });
+$('#bq-round').addEventListener('change', (e) => load(e.target.value));
 
 document.addEventListener('click', async (e) => {
   const btn = e.target.closest('.tr-copy');

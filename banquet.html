@@ -43,24 +43,17 @@
         <span id="bq-when" class="muted bq-when"></span>
       </div>
 
+      <!-- Yours this gold rush: what you posted in Discord, filled in by itself,
+           and anything added here. Four of them opens everyone else's. -->
       <form id="bq-mine" class="panel bq-mine">
-        <h2>Your MVPs</h2>
-        <div id="bq-slots" class="bq-slots"></div>
-        <p id="bq-mine-error" class="tr-form__error" role="alert" hidden></p>
+        <h2><label for="bq-add-uid">Your UIDs</label></h2>
+        <ul id="bq-my" class="bq-my"></ul>
         <div class="bq-mine__actions">
-          <button id="bq-save" class="btn btn--primary" type="submit">Save</button>
-          <span id="bq-saved" class="muted" role="status" aria-live="polite"></span>
+          <input id="bq-add-uid" class="field" inputmode="numeric" pattern="[0-9]{8}" maxlength="8" autocomplete="off">
+          <select id="bq-add-grp" class="field" aria-label="Which group" hidden></select>
+          <button id="bq-add" class="btn btn--primary" type="submit">Add UID</button>
         </div>
-      </form>
-
-      <!-- A banquet somebody heard about, beyond the four. Shared like any other. -->
-      <form id="bq-extra" class="panel bq-extra-form" hidden>
-        <h2><label for="bq-extra-uid">Know another MVP?</label></h2>
-        <div class="bq-extra-form__row">
-          <input id="bq-extra-uid" class="field" inputmode="numeric" pattern="[0-9]{8}" maxlength="8" autocomplete="off">
-          <button class="btn btn--primary" type="submit">Add UID</button>
-        </div>
-        <p id="bq-extra-error" class="tr-form__error" role="alert" hidden></p>
+        <p id="bq-mine-error" class="tr-form__error" role="alert" hidden></p>
       </form>
 
       <p id="bq-locked" class="panel bq-locked" hidden></p>
@@ -73,6 +66,8 @@
             <button class="segmented__btn" type="button" data-show="full" aria-pressed="false">Full</button>
             <button class="segmented__btn" type="button" data-show="all" aria-pressed="false">All</button>
           </div>
+          <!-- Only for those who see both groups; built by the script. -->
+          <div id="bq-groups" class="segmented" role="group" aria-label="Which group" hidden></div>
           <span id="bq-count" class="muted tr-count" role="status" aria-live="polite"></span>
         </div>
         <ul id="bq-cards" class="bq-cards"></ul>
