@@ -23,34 +23,38 @@ const PAGES = [
    over the following week or two, then the tag would only be noise. */
 const NEW_FOR_DAYS = 14;
 
-/* The private Players tab. Nobody sees it until the database has said yes for
-   the account signed in right now: tracker.js calls showPrivateTab() after its
-   own check, and every other page asks again here, but only in a browser that
-   has been let in before (the flag), so nobody else pays for a request. The
-   database still decides who can read the data; this only hides the door. */
-const FLAG = 'coc.tracker.member';
-const flagged = () => { try { return localStorage.getItem(FLAG) === '1'; } catch { return false; } };
-const unflag = () => { try { localStorage.removeItem(FLAG); } catch { /* private mode */ } };
+/* The private tabs: Players, and MVP banquets. Nobody sees one until the
+   database has said yes for the account signed in right now: the page itself
+   calls showPrivateTab() after its own check, and every other page asks again
+   here, but only in a browser that has been let in before (the flag), so nobody
+   else pays for a request. The database still decides who can read the data;
+   this only hides the door. */
+const PRIVATE = [
+  { href: 'tracker.html', name: 'Players', flag: 'coc.tracker.member', rpc: 'tracker_claim', yes: true },
+  { href: 'banquet.html', name: 'MVP banquets', flag: 'coc.banquet.member', rpc: 'banquet_check', yes: 'ok' },
+];
+const flagged = (flag) => { try { return localStorage.getItem(flag) === '1'; } catch { return false; } };
+const unflag = (flag) => { try { localStorage.removeItem(flag); } catch { /* private mode */ } };
 
 const nav = document.getElementById('site-tabs');
 const here = location.pathname.split('/').pop() || 'index.html';
 
-export function showPrivateTab() {
-  if (!nav || nav.querySelector('[href="tracker.html"]')) return;
+export function showPrivateTab(href = 'tracker.html') {
+  const p = PRIVATE.find((x) => x.href === href);
+  if (!nav || !p || nav.querySelector(`[href="${href}"]`)) return;
   nav.insertAdjacentHTML('beforeend', `
-    <a class="sitetabs__tab sitetabs__tab--private" href="tracker.html"${here === 'tracker.html' ? ' aria-current="page"' : ''}>
-      <span class="sitetabs__long">Players</span>
+    <a class="sitetabs__tab sitetabs__tab--private" href="${href}"${here === href ? ' aria-current="page"' : ''}>
+      <span class="sitetabs__long">${p.name}</span>
     </a>`);
 }
 
-if (nav && here !== 'tracker.html' && flagged()) {
-  if (!signedIn()) unflag();
-  else {
-    rest('/rpc/tracker_claim', { method: 'POST', body: {}, auth: true }).then((r) => {
-      if (r.ok && r.data === true) showPrivateTab();
-      else if (r.ok) unflag(); // taken off the list; a network blip keeps the flag
-    });
-  }
+for (const p of PRIVATE) {
+  if (!nav || here === p.href || !flagged(p.flag)) continue;
+  if (!signedIn()) { unflag(p.flag); continue; }
+  rest(`/rpc/${p.rpc}`, { method: 'POST', body: {}, auth: true }).then((r) => {
+    if (r.ok && r.data === p.yes) showPrivateTab(p.href);
+    else if (r.ok && r.data !== 'discord-down') unflag(p.flag); // taken off; a blip keeps the flag
+  });
 }
 
 if (nav) {

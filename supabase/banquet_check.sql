@@ -1,0 +1,133 @@
+-- Proves the MVP banquet rules, then undoes everything it did.
+--
+--   psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f supabase/banquet_check.sql
+--
+-- Loads 013 inside the transaction too, so it can run before the migration is
+-- applied. Discord is not asked: the test members are written straight into
+-- banquet_members, which is what a yes from Discord leaves behind. A clean run
+-- prints "banquet: ok"; it ends in ROLLBACK, so nothing survives.
+
+begin;
+\i supabase/migrations/013_banquet.sql
+
+insert into auth.users (id, aud, role, email)
+values ('00000000-0000-4000-8000-00000000bb01', 'authenticated', 'authenticated', 'banquet-a@example.invalid'),
+       ('00000000-0000-4000-8000-00000000bb02', 'authenticated', 'authenticated', 'banquet-b@example.invalid'),
+       ('00000000-0000-4000-8000-00000000bb03', 'authenticated', 'authenticated', 'banquet-x@example.invalid');
+
+insert into auth.identities (id, provider_id, user_id, identity_data, provider, last_sign_in_at, created_at, updated_at)
+select gen_random_uuid(), p, u::uuid, jsonb_build_object('name', n, 'full_name', n, 'sub', p), 'discord', now(), now(), now()
+  from (values ('990000000000000101', '00000000-0000-4000-8000-00000000bb01', 'zz_a'),
+               ('990000000000000102', '00000000-0000-4000-8000-00000000bb02', 'zz_b'),
+               ('990000000000000103', '00000000-0000-4000-8000-00000000bb03', 'zz_x')) v(p, u, n);
+
+-- A and B hold the role; X was checked and does not.
+insert into public.banquet_members (discord_id, display, ok)
+values ('990000000000000101', 'zz_a', true), ('990000000000000102', 'zz_b', true), ('990000000000000103', 'zz_x', false);
+
+-- An old round, to prove history is browsable without sharing.
+insert into public.banquet_mvps (round, discord_id, color, uid, by_name)
+values ('2026-01-01', '990000000000000101', 1, 777, 'zz_a');
+
+-- Rounds: every six days from 2026-09-30 08:00 Manila.
+do $$
+begin
+  assert public.banquet_round('2026-09-30 07:59+08') = '2026-09-24', 'a minute before the end is the previous round';
+  assert public.banquet_round('2026-09-30 08:00+08') = '2026-09-30', 'the end starts the round';
+  assert public.banquet_round('2026-10-06 07:59+08') = '2026-09-30', 'lasts six days';
+  assert public.banquet_round('2026-10-06 08:00+08') = '2026-10-06', 'then the next';
+end $$;
+
+set local role authenticated;
+
+-- ---------------------------------------------------------------- X, no role
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-8000-00000000bb03","role":"authenticated"}', true);
+do $$
+begin
+  begin perform public.banquet_state(); raise exception 'X read the state';
+  exception when raise_exception then if sqlerrm = 'X read the state' then raise; end if; end;
+  begin perform public.banquet_save_mvps(array[1,2,3,4]::bigint[]); raise exception 'X saved';
+  exception when raise_exception then if sqlerrm = 'X saved' then raise; end if; end;
+  begin perform count(*) from public.banquet_mvps; raise exception 'X read the table';
+  exception when insufficient_privilege then null; end;
+end $$;
+
+-- ---------------------------------------------------------------- A shares
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-8000-00000000bb01","role":"authenticated"}', true);
+do $$
+declare s jsonb;
+begin
+  -- Tables are closed even to members.
+  begin perform count(*) from public.banquet_claims; raise exception 'A read a table';
+  exception when insufficient_privilege then null; end;
+
+  begin perform public.banquet_save_mvps(array[5, 5, null, null]::bigint[]); raise exception 'dupe saved';
+  exception when raise_exception then if sqlerrm = 'dupe saved' then raise; end if; end;
+
+  perform public.banquet_save_mvps(array[101, 102, 103, null]::bigint[]);
+  s := public.banquet_state();
+  assert not (s ->> 'shared')::boolean, 'three is not sharing';
+  assert jsonb_array_length(s -> 'banquets') = 0, 'nothing shown before sharing';
+  assert (s ->> 'total')::int = 3, 'but the count is';
+
+  begin perform public.banquet_claim(101, true); raise exception 'claimed before sharing';
+  exception when raise_exception then if sqlerrm = 'claimed before sharing' then raise; end if; end;
+
+  -- Past rounds are open to any member.
+  s := public.banquet_state('2026-01-01');
+  assert jsonb_array_length(s -> 'banquets') = 1, 'history is browsable';
+
+  perform public.banquet_save_mvps(array[101, 102, 103, 104]::bigint[]);
+  assert (public.banquet_state() ->> 'shared')::boolean, 'four is sharing';
+end $$;
+
+-- ---------------------------------------------------------------- B shares, claims
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-8000-00000000bb02","role":"authenticated"}', true);
+do $$
+declare s jsonb; b jsonb;
+begin
+  assert jsonb_array_length(public.banquet_state() -> 'banquets') = 0, 'B sees nothing yet';
+  -- 104 is also A's: same camp, one banquet.
+  perform public.banquet_save_mvps(array[201, 202, 203, 104]::bigint[]);
+  s := public.banquet_state();
+  assert jsonb_array_length(s -> 'banquets') = 7, 'seven distinct banquets';
+
+  perform public.banquet_claim(101, true);
+  perform public.banquet_claim(101, true);   -- twice is still once
+  perform public.banquet_mark_full(102, true);
+  begin perform public.banquet_claim(999, true); raise exception 'claimed a stranger';
+  exception when raise_exception then if sqlerrm = 'claimed a stranger' then raise; end if; end;
+
+  s := public.banquet_state();
+  select x into b from jsonb_array_elements(s -> 'banquets') x where x ->> 'uid' = '101';
+  assert (b ->> 'claims')::int = 1 and (b ->> 'claimed')::boolean, 'B claimed 101 once';
+  select x into b from jsonb_array_elements(s -> 'banquets') x where x ->> 'uid' = '102';
+  assert b ->> 'full' = 'zz_b', 'B marked 102 full';
+  select x into b from jsonb_array_elements(s -> 'banquets') x where x ->> 'uid' = '104';
+  assert jsonb_array_length(b -> 'entered_by') = 2, 'both entered 104';
+end $$;
+
+-- ---------------------------------------------------------------- A sees B's work, undoes Full
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-8000-00000000bb01","role":"authenticated"}', true);
+do $$
+declare b jsonb;
+begin
+  select x into b from jsonb_array_elements(public.banquet_state() -> 'banquets') x where x ->> 'uid' = '101';
+  assert (b ->> 'claims')::int = 1 and not (b ->> 'claimed')::boolean, 'B''s claim is not A''s';
+  perform public.banquet_mark_full(102, false);
+  select x into b from jsonb_array_elements(public.banquet_state() -> 'banquets') x where x ->> 'uid' = '102';
+  assert b ->> 'full' is null, 'anyone can undo Full';
+end $$;
+
+-- ---------------------------------------------------------------- a stale yes expires
+reset role;
+update public.banquet_members set checked_at = now() - interval '31 minutes' where discord_id = '990000000000000101';
+set local role authenticated;
+do $$
+begin
+  begin perform public.banquet_state(); raise exception 'stale read';
+  exception when raise_exception then if sqlerrm = 'stale read' then raise; end if; end;
+end $$;
+
+\echo banquet: ok
+rollback;

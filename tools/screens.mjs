@@ -131,6 +131,7 @@ const PAGES = [
   { name: 'farm', url: 'farm.html', ready: '#farm-all li' },
   { name: 'contribute', url: 'contribute.html', ready: '.cell' },
   { name: 'tracker', url: 'tracker.html', ready: '#tr-gate:not([hidden]), #tr-app:not([hidden])' },
+  { name: 'banquet', url: 'banquet.html', ready: '#bq-gate:not([hidden]), #bq-app:not([hidden])' },
 ];
 
 // ------------------------------------------------------------------ harness
@@ -386,6 +387,12 @@ async function checkGestures(page, name, where, screen) {
       const gate = await page.locator('#tr-gate').isVisible();
       const app = await page.locator('#tr-app').isVisible();
       if (!gate || app) fail(where, 'the private page showed something to a signed-out visitor');
+    }
+    return;
+  }
+  if (name === 'banquet') {
+    if (!(await page.locator('#bq-gate').isVisible()) || await page.locator('#bq-app').isVisible()) {
+      fail(where, 'the banquet page showed something to a signed-out visitor');
     }
     return;
   }
@@ -727,7 +734,13 @@ async function checkControls(page, where, url, noise, events) {
     await page.waitForTimeout(100);
 
     // A reload keeps the address and loses the counter, which is how it shows.
-    const now = await page.evaluate(() => window.__changes).catch(() => undefined);
+    let now = await page.evaluate(() => window.__changes).catch(() => undefined);
+    /* Leaving for Discord takes WebKit about a third of a second, so a press
+       that looks dead gets one longer look before it is called dead. */
+    if (page.url() === before.url && now !== undefined && now === before.changes && events.count === before.events) {
+      await page.waitForTimeout(500);
+      now = await page.evaluate(() => window.__changes).catch(() => undefined);
+    }
     const left = page.url() !== before.url || now === undefined;
     const changed = left || events.count > before.events || now > before.changes;
     if (process.env.SCREENS_TRACE && changed && !left) {

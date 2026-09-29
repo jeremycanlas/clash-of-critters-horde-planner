@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Horde Drafter: MVP banquets</title>
+  <!-- Private: only Discord accounts holding one role in one server get any data
+     back (supabase/migrations/013). -->
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='19' font-size='20'>🐾</text></svg>">
+  <link rel="stylesheet" href="assets/css/app.css">
+  <link rel="stylesheet" href="assets/css/site-nav.css">
+  <link rel="stylesheet" href="assets/css/tracker.css">
+  <link rel="stylesheet" href="assets/css/banquet.css">
+</head>
+
+<body class="tracker">
+
+  <header class="topbar">
+    <div class="topbar__title">
+      <h1>MVP banquets</h1>
+      <span id="bq-sub" class="topbar__sub">After every gold rush</span>
+    </div>
+    <button id="bq-signout" class="btn btn--quiet tr-signout" type="button" hidden>Sign out</button>
+  </header>
+
+  <nav id="site-tabs" class="sitetabs" aria-label="Horde Drafter pages"></nav>
+
+  <main class="tr-main bq-main">
+    <section id="bq-gate" class="panel tr-gate" hidden>
+      <h2 id="bq-gate-head">This page is private</h2>
+      <p id="bq-gate-text" class="muted">Sign in with Discord to see it.</p>
+      <button id="bq-signin" class="btn btn--primary" type="button">Sign in with Discord</button>
+    </section>
+
+    <section id="bq-app" hidden>
+      <div class="bq-bar">
+        <label class="bq-round">Gold rush ended
+          <select id="bq-round" class="field" aria-label="Which gold rush"></select>
+        </label>
+        <span id="bq-when" class="muted bq-when"></span>
+      </div>
+
+      <form id="bq-mine" class="panel bq-mine">
+        <h2>Your MVPs</h2>
+        <p class="muted bq-hint">The UID of each colour's MVP in your game. Enter all four to see everyone else's.</p>
+        <div id="bq-slots" class="bq-slots"></div>
+        <p id="bq-mine-error" class="tr-form__error" role="alert" hidden></p>
+        <div class="bq-mine__actions">
+          <button id="bq-save" class="btn btn--primary" type="submit">Save</button>
+          <span id="bq-saved" class="muted" role="status" aria-live="polite"></span>
+        </div>
+      </form>
+
+      <p id="bq-locked" class="panel bq-locked" hidden></p>
+
+      <section id="bq-list" class="bq-list" hidden>
+        <div class="bq-bar">
+          <div class="segmented" role="group" aria-label="Which banquets">
+            <button class="segmented__btn" type="button" data-show="open" aria-pressed="true">To claim</button>
+            <button class="segmented__btn" type="button" data-show="claimed" aria-pressed="false">Claimed</button>
+            <button class="segmented__btn" type="button" data-show="full" aria-pressed="false">Full</button>
+            <button class="segmented__btn" type="button" data-show="all" aria-pressed="false">All</button>
+          </div>
+          <span id="bq-count" class="muted tr-count" role="status" aria-live="polite"></span>
+        </div>
+        <p class="muted bq-hint">First 50 players per banquet, and only players who logged in the day the gold rush ended.
+          The count is members of this page only, so press Full when you find one empty.</p>
+        <ul id="bq-cards" class="bq-cards"></ul>
+      </section>
+    </section>
+
+    <p id="bq-status" class="muted tr-status" role="status" aria-live="polite">Loading…</p>
+  </main>
+
+  <script type="module" src="assets/js/banquet.js"></script>
+  <script type="module" src="assets/js/site-nav.js"></script>
+</body>
+
+</html>
