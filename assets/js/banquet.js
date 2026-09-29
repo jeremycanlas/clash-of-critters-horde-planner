@@ -235,9 +235,13 @@ const WHICH = {
   all: () => true,
 };
 
+// The UID, or anyone named on the card: who posted it, who claimed it, who marked it.
+const found = (b) => !find || b.uid.includes(find)
+  || [...b.entered_by, ...b.claimed_by, b.full, b.not_yet?.by].some((n) => n && n.toLowerCase().includes(find));
+
 function renderCards(past) {
   // Open before not-yet-open, then fewest claims first: the likeliest to have room.
-  const shown = state.banquets.filter((b) => WHICH[show](b) && (!group || b.grp === group) && (!find || b.uid.includes(find)))
+  const shown = state.banquets.filter((b) => WHICH[show](b) && (!group || b.grp === group) && found(b))
     .sort((a, b) => !!a.not_yet - !!b.not_yet || a.claims - b.claims || a.uid.localeCompare(b.uid));
   const inView = state.banquets.filter((b) => !group || b.grp === group);
   $('#bq-count').textContent = `${shown.length} of ${inView.length}`;
@@ -358,7 +362,7 @@ for (const b of $$('[data-show]')) {
 
 $('#bq-round').addEventListener('change', (e) => load(e.target.value));
 $('#bq-find').addEventListener('input', (e) => {
-  find = e.target.value.replace(/\D/g, '');
+  find = e.target.value.trim().toLowerCase();
   renderCards(state.round !== state.current);
 });
 

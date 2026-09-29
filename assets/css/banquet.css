@@ -68,8 +68,12 @@
   position: sticky; top: var(--bq-top, 0); z-index: var(--z-sticky);
   padding: var(--s2) 0; background: var(--bg);
 }
-.bq-find { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-dim); }
-.bq-find input { width: 8.5em; font-variant-numeric: tabular-nums; }
+.bq-find { flex: 1 1 100%; display: flex; align-items: center; gap: var(--s2); }
+.bq-find__label { font-size: 14px; font-weight: 650; white-space: nowrap; }
+.bq-find__label small { display: block; font-size: 11.5px; font-weight: 400; color: var(--text-mute); }
+/* 16px so a phone does not zoom in on it; the accent edge so it is the first thing found. */
+.bq-find input { flex: 1; min-width: 0; min-height: 44px; font-size: 16px;
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
 
 .bq-card__row { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px var(--s2); }
 .bq-short { display: none; }
@@ -78,8 +82,6 @@
   .bq-list > .bq-bar { gap: 6px; }
   .bq-list > .bq-bar .segmented { flex: 1 1 100%; }
   .bq-list > .bq-bar .segmented__btn { flex: 1; }
-  .bq-find { flex: 1; }
-  .bq-find input { flex: 1; width: auto; min-width: 0; }
   .bq-view .segmented { flex: 1 1 100%; }
   .bq-view .segmented__btn { flex: 1; }
 

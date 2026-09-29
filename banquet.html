@@ -82,13 +82,17 @@
 
       <section id="bq-list" class="bq-list" hidden>
         <div class="bq-bar">
+          <!-- First and full width: after claiming in the game, this is how you find the card. -->
+          <label class="bq-find">
+            <span class="bq-find__label">Search <small>UID or name</small></span>
+            <input id="bq-find" class="field" type="search" maxlength="40" autocomplete="off" spellcheck="false">
+          </label>
           <div class="segmented" role="group" aria-label="Which banquets">
             <button class="segmented__btn" type="button" data-show="open" aria-pressed="true">To claim</button>
             <button class="segmented__btn" type="button" data-show="claimed" aria-pressed="false">Claimed</button>
             <button class="segmented__btn" type="button" data-show="full" aria-pressed="false">Full</button>
             <button class="segmented__btn" type="button" data-show="all" aria-pressed="false">All</button>
           </div>
-          <label class="bq-find">Find <input id="bq-find" class="field" type="search" inputmode="numeric" maxlength="8" autocomplete="off"></label>
           <span id="bq-count" class="muted tr-count" role="status" aria-live="polite"></span>
         </div>
         <ul id="bq-cards" class="bq-cards"></ul>

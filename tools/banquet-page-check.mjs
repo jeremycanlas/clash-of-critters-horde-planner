@@ -169,6 +169,10 @@ try {
 
   await A.fill('#bq-find', '5555');
   assert.equal(await A.locator('#bq-cards li').count(), 1, 'Find narrows to the one');
+  await A.fill('#bq-find', 'fay');
+  assert.equal(await A.locator('#bq-cards li').count(), 6, 'a name finds everything they posted');
+  await A.fill('#bq-find', 'ELI');
+  assert.ok(await A.locator('#bq-cards li', { hasText: '60000137' }).count() === 1, 'any case, and who marked it counts');
   await A.fill('#bq-find', '');
   assert.equal(await A.getByRole('button', { name: 'I claimed 55555555' }).count(), 1, 'buttons say which UID');
   // A claim takes the card out of To claim; Undo brings it back.
