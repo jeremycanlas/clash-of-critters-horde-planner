@@ -86,7 +86,11 @@ async function open(me, opts) {
     if (fn === 'tracker_claim') return json(false);
     if (fn === 'banquet_state') return json(state(me));
     if (fn === 'banquet_add') { db.uids.push({ grp: g, uid: String(body.target), who: me.name, source: 'site' }); return ok(); }
-    if (fn === 'banquet_claim') { if (body.claimed) db.claims.push({ grp: g, uid: String(body.target), who: me.name }); return ok(); }
+    if (fn === 'banquet_claim') {
+      db.claims = db.claims.filter((c) => !(c.grp === g && c.uid === String(body.target) && c.who === me.name));
+      if (body.claimed) db.claims.push({ grp: g, uid: String(body.target), who: me.name });
+      return ok();
+    }
     if (fn === 'banquet_mark') { db.marks.set(`${g}:${body.target}`, { state: body.state, by: me.name }); return ok(); }
     return route.fulfill({ status: 404, body: '{}' });
   });
@@ -129,6 +133,15 @@ try {
   assert.equal(await A.locator('#bq-cards li').count(), 1, 'Find narrows to the one');
   await A.fill('#bq-find', '');
   assert.equal(await A.getByRole('button', { name: 'I claimed 55555555' }).count(), 1, 'buttons say which UID');
+  // A claim takes the card out of To claim; Undo brings it back.
+  await A.click('[data-show="open"]');
+  await A.click('[data-claim="55555555"]');
+  await A.waitForSelector('#toast.is-shown');
+  assert.equal(await A.locator('[data-claim="55555555"]').count(), 0, 'claimed, gone from To claim');
+  await A.click('#toast .toast__act');
+  await A.waitForSelector('[data-claim="55555555"]');
+  assert.equal(db.claims.filter((c) => c.who === 'Ana').length, 0, 'Undo took the claim back');
+  await A.click('[data-show="all"]');
   assert.equal(await A.locator('.bq-card.is-waiting').count(), 1, 'a not-yet banquet stays listed');
   assert.match(await A.locator('.bq-card__checked').textContent(), /Last checked .* 5 min ago by Eli/);
 

@@ -13,7 +13,7 @@
 import { rest, signIn, signOut, signedIn, readCallback, isConfigured } from './supabase.js';
 import { applyPrefs } from './prefs.js';
 import { showPrivateTab } from './site-nav.js';
-import { $, $$, esc, copyText } from './ui.js';
+import { $, $$, esc, copyText, toast } from './ui.js';
 
 applyPrefs();
 
@@ -255,10 +255,23 @@ $('#bq-cards').addEventListener('click', async (e) => {
   if (!btn) return;
   btn.disabled = true;
   const on = btn.getAttribute('aria-pressed') !== 'true';
+  const target = Number((claim ?? mark).dataset[claim ? 'claim' : 'uid']);
+  const g = grpOf(btn);
   const got = claim
-    ? await rest('/rpc/banquet_claim', { method: 'POST', body: { target: Number(claim.dataset.claim), claimed: on, g: grpOf(btn) }, auth: true })
-    : await rest('/rpc/banquet_mark', { method: 'POST', body: { target: Number(mark.dataset.uid), state: on ? mark.dataset.mark : null, g: grpOf(btn) }, auth: true });
+    ? await rest('/rpc/banquet_claim', { method: 'POST', body: { target, claimed: on, g }, auth: true })
+    : await rest('/rpc/banquet_mark', { method: 'POST', body: { target, state: on ? mark.dataset.mark : null, g }, auth: true });
   if (!got.ok) { btn.disabled = false; btn.textContent = got.why; btn.removeAttribute('aria-label'); return; }
+  /* Claiming takes the card out of To claim at once, so a thumb on the wrong
+     card gets a way back that does not mean finding it in another tab. */
+  if (claim && on) {
+    toast(`Claimed ${target}`, 'info', {
+      label: 'Undo',
+      fn: async () => {
+        await rest('/rpc/banquet_claim', { method: 'POST', body: { target, claimed: false, g }, auth: true });
+        load(state.round);
+      },
+    });
+  }
   load(state.round);
 });
 

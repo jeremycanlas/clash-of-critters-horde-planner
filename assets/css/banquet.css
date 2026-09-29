@@ -10,7 +10,6 @@
 .bq-bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); }
 .bq-round { display: inline-flex; align-items: center; gap: var(--s2); font-size: 13px; color: var(--text-dim); }
 .bq-when { font-size: 13px; }
-.bq-hint { margin: 0; font-size: 13px; }
 
 .bq-mine { display: flex; flex-direction: column; gap: var(--s2); }
 .bq-mine h2 { margin: 0; font-size: 16px; }
