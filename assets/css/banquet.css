@@ -19,7 +19,7 @@
 .bq-mine__uid .tr-copy { font-size: 14px; font-weight: 650; font-variant-numeric: tabular-nums; }
 .bq-src { font-size: 12px; color: var(--text-mute); }
 .bq-mine__actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); }
-.bq-mine__actions[hidden], .bq-mine select[hidden], #bq-groups[hidden] { display: none; }
+.bq-mine__actions[hidden], .bq-mine select[hidden], .bq-view[hidden] { display: none; }
 .bq-mine__actions input { width: 10em; font-size: 15px; font-variant-numeric: tabular-nums; }
 .bq-mine .tr-form__error { margin: 0; }
 
@@ -50,3 +50,43 @@
 /* Not open yet: still worth a trip, so it stays in To claim, dashed until someone finds it open. */
 .bq-card.is-waiting { border-style: dashed; border-color: color-mix(in srgb, var(--accent) 60%, var(--line)); background: color-mix(in srgb, var(--accent) 5%, var(--surface)); }
 .bq-card__checked { margin: 0; font-size: 12.5px; font-weight: 600; color: var(--accent-ink-on); }
+.bq-view { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); font-size: 13px; }
+
+/* ---------------------------------------------------------------- phone and friends */
+
+.bq-mine summary { display: flex; align-items: center; cursor: pointer; list-style: none; }
+.bq-mine summary::-webkit-details-marker { display: none; }
+.bq-mine summary h2::after { content: ' ▾'; color: var(--text-mute); font-size: 12px; }
+.bq-mine details:not([open]) summary h2::after { content: ' ▸'; }
+.bq-mine details[open] > :not(summary) { margin-top: var(--s2); }
+.bq-mine h2 .muted { font-weight: 400; font-size: 13px; }
+
+/* Filters stay in reach while scrolling a hundred cards. */
+.bq-list > .bq-bar {
+  position: sticky; top: var(--bq-top, 0); z-index: var(--z-sticky);
+  padding: var(--s2) 0; background: var(--bg);
+}
+.bq-find { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-dim); }
+.bq-find input { width: 8.5em; font-variant-numeric: tabular-nums; }
+
+.bq-card__row { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px var(--s2); }
+.bq-short { display: none; }
+
+@media (max-width: 560px) {
+  .bq-list > .bq-bar { gap: 6px; }
+  .bq-list > .bq-bar .segmented { flex: 1 1 100%; }
+  .bq-list > .bq-bar .segmented__btn { flex: 1; }
+  .bq-find { flex: 1; }
+  .bq-find input { flex: 1; width: auto; min-width: 0; }
+  .bq-view .segmented { flex: 1 1 100%; }
+  .bq-view .segmented__btn { flex: 1; }
+
+  .bq-card { padding: var(--s2) var(--s3); gap: 4px; }
+  /* Three equal buttons, thumb-sized, short words. */
+  .bq-card__actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .bq-card__actions .btn { min-height: 44px; padding-inline: 4px; font-size: 13px; }
+  .bq-card__actions .btn:nth-child(4) { grid-column: 1 / -1; }
+  .bq-long { display: none; }
+  .bq-short { display: inline; }
+  .bq-mine__actions input { flex: 1; min-width: 0; width: auto; }
+}

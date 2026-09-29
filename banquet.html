@@ -43,17 +43,26 @@
         <span id="bq-when" class="muted bq-when"></span>
       </div>
 
+      <!-- Only for those who see both groups; built by the script. "As Group N"
+           is the page exactly as that group's members see it. -->
+      <div id="bq-view" class="bq-view" hidden>
+        <div id="bq-groups" class="segmented" role="group" aria-label="View the page as"></div>
+        <span id="bq-view-note" class="muted"></span>
+      </div>
+
       <!-- Yours this gold rush: what you posted in Discord, filled in by itself,
            and anything added here. Four of them opens everyone else's. -->
       <form id="bq-mine" class="panel bq-mine">
-        <h2><label for="bq-add-uid">Your UIDs</label></h2>
+        <details id="bq-mine-fold" open>
+        <summary><h2>Your UIDs <span id="bq-mine-n" class="muted"></span></h2></summary>
         <ul id="bq-my" class="bq-my"></ul>
         <div class="bq-mine__actions">
-          <input id="bq-add-uid" class="field" inputmode="numeric" pattern="[0-9]{8}" maxlength="8" autocomplete="off">
+          <input id="bq-add-uid" class="field" inputmode="numeric" pattern="[0-9]{8}" maxlength="8" autocomplete="off" aria-label="Add a UID">
           <select id="bq-add-grp" class="field" aria-label="Which group" hidden></select>
           <button id="bq-add" class="btn btn--primary" type="submit">Add UID</button>
         </div>
         <p id="bq-mine-error" class="tr-form__error" role="alert" hidden></p>
+        </details>
       </form>
 
       <p id="bq-locked" class="panel bq-locked" hidden></p>
@@ -66,8 +75,7 @@
             <button class="segmented__btn" type="button" data-show="full" aria-pressed="false">Full</button>
             <button class="segmented__btn" type="button" data-show="all" aria-pressed="false">All</button>
           </div>
-          <!-- Only for those who see both groups; built by the script. -->
-          <div id="bq-groups" class="segmented" role="group" aria-label="Which group" hidden></div>
+          <label class="bq-find">Find <input id="bq-find" class="field" type="search" inputmode="numeric" maxlength="8" autocomplete="off"></label>
           <span id="bq-count" class="muted tr-count" role="status" aria-live="polite"></span>
         </div>
         <ul id="bq-cards" class="bq-cards"></ul>

@@ -24,7 +24,9 @@ const setMember = (on) => {
 
 let state = null;
 let show = 'open';
-let group = 0; // for those who see both: 0 is both
+let find = '';
+let folded = false; // Your UIDs is folded or not once, on arrival; after that it is yours
+let group = 0; // for those who see both: 0 is both, 1 or 2 is the page as that group sees it
 
 const status = (text) => { $('#bq-status').textContent = text; $('#bq-status').hidden = !text; };
 /* A round is one gold rush: it starts at the reset (00:00 UTC, 8am Manila) on
@@ -42,7 +44,7 @@ const ago = (iso) => {
   const gap = min < 1 ? 'just now' : min < 60 ? `${min} min ago` : `${Math.floor(min / 60)} h ${min % 60} min ago`;
   return `${time(iso)}, ${gap}`;
 };
-const tagOf = (g) => (g ? `<span class="bq-grp">Group ${g}</span>` : '');
+const tagOf = (g) => (g && !group ? `<span class="bq-grp">Group ${g}</span>` : '');
 const grpAttr = (g) => (g ? ` data-grp="${g}"` : '');
 
 // ------------------------------------------------------------------ gate
@@ -129,14 +131,18 @@ function render() {
 
   // Yours: posted ones come from Discord and change there; added ones can go.
   const n = state.mine.length;
-  $('#bq-my').innerHTML = state.mine.map((m) => `<li class="bq-mine__uid">
+  const mineShown = state.mine.filter((m) => !group || m.grp === group);
+  $('#bq-my').innerHTML = mineShown.map((m) => `<li class="bq-mine__uid">
       ${tagOf(m.grp)}<button type="button" class="tr-copy" data-copy="${m.uid}" title="Copy UID">${m.uid}</button>
       ${m.source === 'discord' ? '<span class="bq-src">from Discord</span>'
         : past ? '' : `<button type="button" class="btn btn--quiet" data-remove="${m.uid}"${grpAttr(m.grp)}>Remove</button>`}
     </li>`).join('') || `<li class="muted">${past ? 'None this gold rush.' : 'None yet. Post them in Discord, or add them here.'}</li>`;
   $('#bq-mine .bq-mine__actions').hidden = past;
+  $('#bq-mine-n').textContent = mineShown.length ? `(${mineShown.length})` : '';
+  // Folded on arrival when there is nothing left to do in it; never while it is being used.
+  if (!folded) { $('#bq-mine-fold').open = !((past || state.shared) && mineShown.length); folded = true; }
   const pick = $('#bq-add-grp');
-  pick.hidden = !state.groups;
+  pick.hidden = !state.groups || !!group;
   if (state.groups && !pick.options.length) {
     pick.innerHTML = `<option value="">Group…</option>${state.groups.map((g) => `<option value="${g}">Group ${g}</option>`).join('')}`;
   }
@@ -146,12 +152,13 @@ function render() {
   $('#bq-locked').textContent = `${state.total} banquet${state.total === 1 ? '' : 's'} shared this round. `
     + `Add ${4 - n} more UID${4 - n === 1 ? '' : 's'} of your own to see them.`;
   $('#bq-list').hidden = !open;
+  $('#bq-view').hidden = !state.groups;
   const groups = $('#bq-groups');
-  groups.hidden = !state.groups;
   if (state.groups && !groups.children.length) {
     groups.innerHTML = [0, ...state.groups].map((g) => `<button class="segmented__btn" type="button" data-group="${g}"
-      aria-pressed="${g === group}">${g ? `Group ${g}` : 'Both'}</button>`).join('');
+      aria-pressed="${g === group}">${g ? `As Group ${g}` : 'Both groups'}</button>`).join('');
   }
+  $('#bq-view-note').textContent = group ? `What Group ${group} members see. Anything you press counts for Group ${group}.` : '';
   if (open) renderCards(past);
 }
 
@@ -164,9 +171,10 @@ const WHICH = {
 
 function renderCards(past) {
   // Open before not-yet-open, then fewest claims first: the likeliest to have room.
-  const shown = state.banquets.filter((b) => WHICH[show](b) && (!group || b.grp === group))
+  const shown = state.banquets.filter((b) => WHICH[show](b) && (!group || b.grp === group) && (!find || b.uid.includes(find)))
     .sort((a, b) => !!a.not_yet - !!b.not_yet || a.claims - b.claims || a.uid.localeCompare(b.uid));
-  $('#bq-count').textContent = `${shown.length} of ${state.banquets.length}`;
+  const inView = state.banquets.filter((b) => !group || b.grp === group);
+  $('#bq-count').textContent = `${shown.length} of ${inView.length}`;
   const key = (b) => `${b.grp ?? ''}:${b.uid}`;
   const opened = new Set($$('#bq-cards details[open]').map((d) => d.closest('li').dataset.key));
   $('#bq-cards').innerHTML = shown.map((b) => `<li data-key="${key(b)}" class="bq-card${b.full ? ' is-full' : ''}${b.not_yet ? ' is-waiting' : ''}${b.claimed ? ' is-claimed' : ''}">
@@ -177,18 +185,20 @@ function renderCards(past) {
         ${b.not_yet ? '<span class="bq-tag bq-tag--wait">Not yet available</span>' : ''}
       </div>
       ${b.not_yet ? `<p class="bq-card__checked">Last checked ${ago(b.not_yet.at)} by ${esc(b.not_yet.by)}</p>` : ''}
+      <div class="bq-card__row">
       <p class="bq-card__meta">From ${esc(b.entered_by.join(', '))}</p>
       ${b.claims ? `<details class="bq-card__claims">
-        <summary>${b.claims} member${b.claims === 1 ? '' : 's'} claimed</summary>
+        <summary>${b.claims} claimed</summary>
         <p>${esc(b.claimed_by.join(', '))}</p>
-      </details>` : '<p class="bq-card__meta">No members claimed yet</p>'}
+      </details>` : '<p class="bq-card__meta">No claims yet</p>'}
+      </div>
       ${past ? '' : `<div class="bq-card__actions">
         <button type="button" class="btn${b.claimed ? ' btn--primary' : ''}" data-claim="${b.uid}"${grpAttr(b.grp)} aria-pressed="${b.claimed}">${b.claimed ? 'Claimed ✓' : 'I claimed'}</button>
         <button type="button" class="btn btn--quiet" data-mark="full" data-uid="${b.uid}"${grpAttr(b.grp)} aria-pressed="${!!b.full}">${b.full ? 'Not full' : 'Full'}</button>
-        <button type="button" class="btn btn--quiet" data-mark="not-yet" data-uid="${b.uid}"${grpAttr(b.grp)} aria-pressed="${!!b.not_yet}">${b.not_yet ? 'Available now' : 'Not yet available'}</button>
+        <button type="button" class="btn btn--quiet" data-mark="not-yet" data-uid="${b.uid}"${grpAttr(b.grp)} aria-pressed="${!!b.not_yet}">${b.not_yet ? 'Open now' : '<span class="bq-long">Not yet available</span><span class="bq-short">Not open</span>'}</button>
         ${b.not_yet ? `<button type="button" class="btn btn--quiet" data-mark="not-yet" data-uid="${b.uid}"${grpAttr(b.grp)}>Still not open</button>` : ''}
       </div>`}
-    </li>`).join('') || `<li class="muted bq-none">${state.banquets.length ? 'Nothing here.' : 'No banquets shared this round yet.'}</li>`;
+    </li>`).join('') || `<li class="muted bq-none">${inView.length ? 'Nothing here.' : 'No banquets shared this round yet.'}</li>`;
   for (const d of $$('#bq-cards details')) d.open = opened.has(d.closest('li').dataset.key);
 }
 
@@ -203,7 +213,7 @@ $('#bq-mine').addEventListener('submit', async (e) => {
   const uid = $('#bq-add-uid').value.trim();
   err.hidden = true;
   if (!/^[0-9]{8}$/.test(uid)) { err.textContent = 'A UID is 8 digits.'; err.hidden = false; return; }
-  const g = state.groups ? Number($('#bq-add-grp').value) || null : null;
+  const g = state.groups ? group || Number($('#bq-add-grp').value) || null : null;
   if (state.groups && !g) { err.textContent = 'Pick a group.'; err.hidden = false; return; }
   $('#bq-add').disabled = true;
   const got = await rest('/rpc/banquet_add', { method: 'POST', body: { target: Number(uid), g }, auth: true });
@@ -227,7 +237,7 @@ $('#bq-groups').addEventListener('click', (e) => {
   if (!b) return;
   group = Number(b.dataset.group);
   for (const x of $$('[data-group]')) x.setAttribute('aria-pressed', String(x === b));
-  renderCards(state.round !== state.current);
+  render();
 });
 
 $('#bq-cards').addEventListener('click', async (e) => {
@@ -253,6 +263,20 @@ for (const b of $$('[data-show]')) {
 }
 
 $('#bq-round').addEventListener('change', (e) => load(e.target.value));
+$('#bq-find').addEventListener('input', (e) => {
+  find = e.target.value.replace(/\D/g, '');
+  renderCards(state.round !== state.current);
+});
+
+/* The filter bar sticks under the header, which is itself sticky on a wide
+   screen and scrolls away on a phone. */
+const stickTop = () => {
+  const bar = $('.topbar');
+  const h = getComputedStyle(bar).position === 'sticky' ? bar.offsetHeight : 0;
+  document.documentElement.style.setProperty('--bq-top', `${h}px`);
+};
+stickTop();
+addEventListener('resize', stickTop);
 
 document.addEventListener('click', async (e) => {
   const btn = e.target.closest('.tr-copy');
