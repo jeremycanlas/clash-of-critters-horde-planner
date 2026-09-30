@@ -147,10 +147,10 @@
 .bq-mine__uid.is-editing input { width: 8em; font-size: 16px; font-variant-numeric: tabular-nums; }
 .bq-mine__uid.is-editing .tr-form__error { flex-basis: 100%; margin: 0; }
 
-/* The last UID copied: its own colour, so the card being checked is found at a glance. */
+/* The last UID copied: its box in its own colour, so the one being checked is found at a glance. */
 .bq-tag--last { color: color-mix(in srgb, var(--water) 55%, var(--text)); }
-.bq-card.is-last-copied { border: 2px solid var(--water); background: color-mix(in srgb, var(--water) 10%, var(--surface)); }
-.bq-card.is-last-copied .bq-uid { border-color: var(--water); }
+/* The UID box itself is what changes: filled blue, dark text, readable in both themes. */
+.bq-card.is-last-copied .bq-uid { background: var(--water); border-color: var(--water); color: #04121c; }
 .bq-last { align-self: flex-start; min-height: 36px; padding: 4px 12px; border-radius: 999px; cursor: pointer; font: inherit; font-size: 13px;
   border: 1px solid var(--water); background: color-mix(in srgb, var(--water) 12%, var(--surface)); color: var(--text); }
 .bq-last b { font-variant-numeric: tabular-nums; }
