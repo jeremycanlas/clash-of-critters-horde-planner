@@ -220,6 +220,17 @@ try {
   await A.locator('#bq-cards li[data-key=":55555555"] .bq-uid').click();
   await A.waitForTimeout(200);
   assert.deepEqual(lastSent('Ana', 'banquet_note_copy'), { target: 55555555, g: null }, 'a copy is noted');
+  // The last one copied: its own colour, and a button back to it from anywhere.
+  assert.equal(await A.locator('#bq-cards li.is-last-copied').getAttribute('data-key'), ':55555555', 'the copied card is marked');
+  assert.match(await A.locator('#bq-last').textContent(), /Last copied 55555555/);
+  await A.click('[data-show="claimed"]');
+  await A.click('#bq-last');
+  await A.waitForTimeout(600);
+  assert.ok(await A.locator('#bq-cards li.is-last-copied').isVisible(), 'the button finds it even when a filter hid it');
+  assert.ok(await A.locator('#bq-cards li.is-last-copied').evaluate((e) => { const r = e.getBoundingClientRect(); return r.top >= 0 && r.bottom <= innerHeight; }), 'and brings it on screen');
+  await A.reload();
+  await A.waitForSelector('#bq-list:not([hidden])');
+  assert.equal(await A.locator('#bq-cards li.is-last-copied').count() + await A.locator('#bq-last:not([hidden])').count(), 2, 'kept across a reload');
   // Newest: the last one posted comes first, and the choice is kept.
   await A.click('[data-order="new"]');
   assert.equal(await A.locator('#bq-cards li').first().getAttribute('data-key'), ':10000004', 'Newest puts the last posted first');
@@ -347,7 +358,7 @@ try {
   assert.ok(reads > before, 'refreshed within 15 seconds');
   assert.equal(await A.locator('[data-claim="20000001"]').locator('xpath=..').locator('..').locator('summary').textContent(), '1 claimed',
     "Vee's Group 1 claim shows without a reload");
-  assert.equal(await A.locator('li', { hasText: '55555555' }).locator('.bq-tag').count(), 0, "Vee's Group 2 full does not");
+  assert.equal(await A.locator('li', { hasText: '55555555' }).locator('.bq-tag:not(.bq-tag--last)').count(), 0, "Vee's Group 2 full does not");
   // Ben's new banquet: in the strip, tagged, counted in the tab title, and in the latest line.
   assert.equal(await A.locator('#bq-new-uids [data-new]').allTextContents().then((t) => t.join()), '71234567', 'new to claim');
   assert.match(await A.title(), /^\(1\) /, 'the tab title counts it');

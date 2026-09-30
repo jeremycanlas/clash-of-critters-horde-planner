@@ -5,7 +5,7 @@
 
 .bq-main { max-width: 960px; }
 #bq-app { display: flex; flex-direction: column; gap: var(--s3); }
-#bq-app[hidden], #bq-list[hidden], .bq-new[hidden], .bq-latest[hidden], .bq-copies[hidden], .bq-locked[hidden], .bq-mine[hidden], .bq-stale[hidden] { display: none; }
+#bq-app[hidden], #bq-list[hidden], .bq-last[hidden], .bq-new[hidden], .bq-latest[hidden], .bq-copies[hidden], .bq-locked[hidden], .bq-mine[hidden], .bq-stale[hidden] { display: none; }
 
 .bq-bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); }
 .bq-round { display: inline-flex; align-items: center; gap: var(--s2); font-size: 13px; color: var(--text-dim); }
@@ -146,3 +146,12 @@
 .bq-mine__uid.is-editing { flex-wrap: wrap; }
 .bq-mine__uid.is-editing input { width: 8em; font-size: 16px; font-variant-numeric: tabular-nums; }
 .bq-mine__uid.is-editing .tr-form__error { flex-basis: 100%; margin: 0; }
+
+/* The last UID copied: its own colour, so the card being checked is found at a glance. */
+.bq-tag--last { color: color-mix(in srgb, var(--water) 55%, var(--text)); }
+.bq-card.is-last-copied { border: 2px solid var(--water); background: color-mix(in srgb, var(--water) 10%, var(--surface)); }
+.bq-card.is-last-copied .bq-uid { border-color: var(--water); }
+.bq-last { align-self: flex-start; min-height: 36px; padding: 4px 12px; border-radius: 999px; cursor: pointer; font: inherit; font-size: 13px;
+  border: 1px solid var(--water); background: color-mix(in srgb, var(--water) 12%, var(--surface)); color: var(--text); }
+.bq-last b { font-variant-numeric: tabular-nums; }
+.bq-last:focus-visible { outline: 2px solid var(--water); outline-offset: 1px; }

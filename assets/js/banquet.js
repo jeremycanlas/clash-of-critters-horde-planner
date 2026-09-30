@@ -360,6 +360,22 @@ const WHICH = {
 const found = (b) => !find || b.uid.includes(find)
   || [...b.entered_by, ...b.claimed_by, b.full, b.not_yet?.by].some((n) => n && n.toLowerCase().includes(find));
 
+/* The last UID you copied, so the card you are checking in the game stays
+   easy to find as the list reorders and refreshes. Kept per browser. */
+const LAST = 'coc.banquet.lastcopied';
+let lastCopied = null; // "grp:uid"
+try { lastCopied = localStorage.getItem(LAST); } catch { /* this visit only */ }
+function setLastCopied(k) {
+  lastCopied = k;
+  try { localStorage.setItem(LAST, k); } catch { /* this visit only */ }
+  renderCards(state.round !== state.current); // moves the colour and the label, and the button with them
+}
+function renderLast() {
+  const b = lastCopied && state?.banquets.find((x) => keyOf(x) === lastCopied);
+  $('#bq-last').hidden = !b;
+  if (b) $('#bq-last').innerHTML = `Last copied <b>${b.uid}</b> <span aria-hidden="true">↕</span>`;
+}
+
 function renderCards(past) {
   /* Most room: open before not-yet-open, then fewest claims first, the likeliest
      to have room. Newest: by when it was first posted. */
@@ -371,13 +387,14 @@ function renderCards(past) {
   $('#bq-count').textContent = `${shown.length} of ${inViewList.length}`;
   const key = (b) => `${b.grp ?? ''}:${b.uid}`;
   const opened = new Set($$('#bq-cards details[open]').map((d) => d.closest('li').dataset.key));
-  $('#bq-cards').innerHTML = shown.map((b) => `<li data-key="${key(b)}" class="bq-card${b.full ? ' is-full' : ''}${b.not_yet ? ' is-waiting' : ''}${b.claimed ? ' is-claimed' : ''}">
+  $('#bq-cards').innerHTML = shown.map((b) => `<li data-key="${key(b)}" class="bq-card${b.full ? ' is-full' : ''}${b.not_yet ? ' is-waiting' : ''}${b.claimed ? ' is-claimed' : ''}${key(b) === lastCopied ? ' is-last-copied' : ''}">
       <div class="bq-card__id">
         ${tagOf(b.grp)}
         <button type="button" class="tr-copy bq-uid" data-copy="${b.uid}" title="Copy UID">${b.uid}</button>
         ${b.full ? `<span class="bq-tag">Full<small> · ${esc(b.full)}</small></span>` : ''}
         ${b.not_yet ? '<span class="bq-tag bq-tag--wait">Not yet available</span>' : ''}
         ${isNew(b) ? '<span class="bq-tag bq-tag--new">New</span>' : ''}
+        ${key(b) === lastCopied ? '<span class="bq-tag bq-tag--last">Last copied</span>' : ''}
       </div>
       ${b.not_yet ? `<p class="bq-card__checked">Last checked ${ago(b.not_yet.at)} by ${esc(b.not_yet.by)}</p>` : ''}
       <div class="bq-card__row">
@@ -395,6 +412,7 @@ function renderCards(past) {
       </div>`}
     </li>`).join('') || `<li class="muted bq-none">${inViewList.length ? 'Nothing here.' : 'No banquets shared this round yet.'}</li>`;
   for (const d of $$('#bq-cards details')) d.open = opened.has(d.closest('li').dataset.key);
+  renderLast();
 }
 
 // ------------------------------------------------------------------ actions
@@ -492,6 +510,7 @@ $('#bq-new-uids').addEventListener('click', (e) => {
   if (!b) return;
   copyText(b.dataset.copy);
   noteCopy(b.dataset.new);
+  setLastCopied(b.dataset.new);
   markSeen(b.dataset.new);
   render();
   const card = $(`#bq-cards li[data-key="${CSS.escape(b.dataset.new)}"]`);
@@ -499,6 +518,18 @@ $('#bq-new-uids').addEventListener('click', (e) => {
   card?.classList.add('is-found');
   setTimeout(() => card?.classList.remove('is-found'), 1600);
   toast(`Copied ${b.dataset.copy}`);
+});
+$('#bq-last').addEventListener('click', () => {
+  let card = $(`#bq-cards li[data-key="${CSS.escape(lastCopied)}"]`);
+  if (!card) { // filtered or searched out of view: show everything, then find it
+    show = 'all'; find = ''; $('#bq-find').value = '';
+    for (const x of $$('[data-show]')) x.setAttribute('aria-pressed', String(x.dataset.show === 'all'));
+    renderCards(state.round !== state.current);
+    card = $(`#bq-cards li[data-key="${CSS.escape(lastCopied)}"]`);
+  }
+  card?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  card?.classList.add('is-found');
+  setTimeout(() => card?.classList.remove('is-found'), 1600);
 });
 $('#bq-new-clear').addEventListener('click', () => {
   markSeen(...state.banquets.filter((b) => !b.grp || inView(b.grp)).map(keyOf));
@@ -581,7 +612,7 @@ document.addEventListener('click', async (e) => {
   if (!btn) return;
   const ok = await copyText(btn.dataset.copy);
   const card = btn.closest('#bq-cards li[data-key]');
-  if (ok && card) noteCopy(card.dataset.key);
+  if (ok && card) { noteCopy(card.dataset.key); setLastCopied(card.dataset.key); }
   btn.classList.add(ok ? 'is-copied' : 'is-failed');
   btn.dataset.label = ok ? 'Copied' : 'Copy failed';
   setTimeout(() => { btn.classList.remove('is-copied', 'is-failed'); delete btn.dataset.label; }, 1200);
