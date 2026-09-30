@@ -961,13 +961,12 @@ export function toggleFlex(cell) {
  */
 export const SWAP_MAX = 6;
 
-/**
- * How many groups a formation can carry.
- *
- * Each one costs the card a labelled row. Past four, a picture meant to say what
- * you built is mostly saying what you did not.
+/*
+ * How many groups a formation can carry: no set number. Each one needs a
+ * square with somebody on it and a square is in one group at most, so the
+ * board is the limit. Each costs the card a labelled row, and the card grows
+ * to fit; the letters, A onwards, outlast any board.
  */
-export const SWAP_GROUPS_MAX = 4;
 
 /** The group this cell is part of, or null. A cell is in at most one. */
 export const swapAt = (cell) => formation.swaps.find((g) => g.cells.includes(cell)) ?? null;
@@ -988,9 +987,6 @@ export const swapIndexAt = (cell) => formation.swaps.findIndex((g) => g.cells.in
  * is what keeps it true once you swap one of them in.
  */
 export function addSwap(cells, slugs) {
-  if (formation.swaps.length >= SWAP_GROUPS_MAX) {
-    return { ok: false, reason: `${SWAP_GROUPS_MAX} groups is as many as the card holds` };
-  }
   const where = [...new Set((cells ?? []).map(Number))]
     .filter((i) => Number.isInteger(i) && cellInPlay(i) && formation.cells[i]);
   if (!where.length) return { ok: false, reason: 'Pick a square with somebody standing on it' };
@@ -1470,7 +1466,6 @@ function reconcile() {
    */
   const grouped = new Set();
   formation.swaps = formation.swaps
-    .slice(0, SWAP_GROUPS_MAX)
     .map((g) => {
       const cells = (Array.isArray(g?.cells) ? g.cells : [])
         .map(Number)

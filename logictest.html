@@ -625,6 +625,17 @@ await group('swaps: a group only ever annotates a real placement', () => {
     [store.snapshot().swaps.length, store.snapshot().cells[0]?.slug], [0, A.slug]);
 });
 
+await group('swaps: no cap on how many groups, only the board', () => {
+  reset();
+  const six = [A, B, C, D, E, F];
+  six.forEach((t, i) => store.place(t.slug, i));
+  // One group per square, each naming the Tatari on the next square along.
+  const added = six.map((t, i) => store.addSwap([i], [six[(i + 1) % 6].slug]));
+  ok('six groups go in, past the four there used to be', added.every((r) => r.ok), added.find((r) => !r.ok)?.reason);
+  eq('and all six are saved', store.snapshot().swaps.length, 6);
+  ok('each is still one group per square', six.every((_, i) => store.swapAt(i)?.cells.join() === String(i)));
+});
+
 /*
  * The pinball board is a flat lottery, and the one property that says the table
  * is complete rather than merely plausible is that its chances sum to exactly
