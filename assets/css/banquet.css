@@ -148,10 +148,10 @@
 .bq-mine__uid.is-editing .tr-form__error { flex-basis: 100%; margin: 0; }
 
 /* The last UID copied: its box in its own colour, so the one being checked is found at a glance. */
-.bq-tag--last { color: color-mix(in srgb, var(--water) 55%, var(--text)); }
-/* The UID box itself is what changes: filled blue, dark text, readable in both themes. */
-.bq-card.is-last-copied .bq-uid { background: var(--water); border-color: var(--water); color: #04121c; }
+.bq-tag--last { color: color-mix(in srgb, var(--ok) 55%, var(--text)); }
+/* The same green a UID flashes when it is copied, kept on the last one. */
+.bq-card.is-last-copied .bq-uid { border-color: var(--ok); background: color-mix(in srgb, var(--ok) 18%, var(--surface-2)); }
 .bq-last { align-self: flex-start; min-height: 36px; padding: 4px 12px; border-radius: 999px; cursor: pointer; font: inherit; font-size: 13px;
-  border: 1px solid var(--water); background: color-mix(in srgb, var(--water) 12%, var(--surface)); color: var(--text); }
+  border: 1px solid var(--ok); background: color-mix(in srgb, var(--ok) 12%, var(--surface)); color: var(--text); }
 .bq-last b { font-variant-numeric: tabular-nums; }
-.bq-last:focus-visible { outline: 2px solid var(--water); outline-offset: 1px; }
+.bq-last:focus-visible { outline: 2px solid var(--ok); outline-offset: 1px; }
