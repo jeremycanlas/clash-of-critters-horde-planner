@@ -289,10 +289,12 @@ function render() {
   // Yours: posted ones come from Discord and change there; added ones can go.
   const n = state.mine.length;
   const mineShown = state.mine.filter((m) => !m.grp || inView(m.grp));
-  $('#bq-my').innerHTML = mineShown.map((m) => `<li class="bq-mine__uid">
+  // Left alone while one is being edited: a refresh must not throw the edit away.
+  if (!editing) $('#bq-my').innerHTML = mineShown.map((m) => `<li class="bq-mine__uid">
       ${tagOf(m.grp)}<button type="button" class="tr-copy" data-copy="${m.uid}" title="Copy UID">${m.uid}</button>
       ${m.source === 'discord' ? '<span class="bq-src">from Discord</span>'
-        : past ? '' : `<button type="button" class="btn btn--quiet" data-remove="${m.uid}"${grpAttr(m.grp)} aria-label="Remove ${m.uid}">Remove</button>`}
+        : past ? '' : `<button type="button" class="btn btn--quiet" data-edit="${m.uid}"${grpAttr(m.grp)} aria-label="Edit ${m.uid}">Edit</button>
+          <button type="button" class="btn btn--quiet" data-remove="${m.uid}"${grpAttr(m.grp)} aria-label="Remove ${m.uid}">Remove</button>`}
     </li>`).join('') || `<li class="muted">${past ? 'None this gold rush.' : 'None yet. Post them in Discord, or add them here.'}</li>`;
   $('#bq-mine .bq-mine__actions').hidden = past;
   $('#bq-mine-n').textContent = mineShown.length ? `(${mineShown.length})` : '';
@@ -417,7 +419,51 @@ $('#bq-mine').addEventListener('submit', async (e) => {
   load();
 });
 
+/* Edit, for UIDs added here: the row becomes a box with the UID in it. Save
+   swaps it in one step; Cancel, or Escape, puts the row back. */
+let editing = false;
+function stopEditing() { editing = false; render(); }
+async function saveEdit(li) {
+  const input = li.querySelector('input');
+  const err = li.querySelector('.tr-form__error');
+  const next = input.value.trim();
+  if (!/^[0-9]{8}$/.test(next)) { err.textContent = 'A UID is 8 digits.'; err.hidden = false; return; }
+  li.querySelector('[data-save]').disabled = true;
+  const got = await rest('/rpc/banquet_edit', { method: 'POST',
+    body: { target: Number(li.dataset.uid), replacement: Number(next), g: li.dataset.grp ? Number(li.dataset.grp) : null }, auth: true });
+  li.querySelector('[data-save]').disabled = false;
+  if (!got.ok) { err.textContent = got.why; err.hidden = false; return; }
+  const g = li.dataset.grp ?? '';
+  markSeen(`${g}:${next}`); // yours: not news to you
+  editing = false;
+  toast(`Changed ${li.dataset.uid} to ${next}`);
+  load();
+}
+$('#bq-my').addEventListener('keydown', (e) => {
+  const li = e.target.closest('li.is-editing');
+  if (!li) return;
+  if (e.key === 'Enter') { e.preventDefault(); saveEdit(li); }
+  if (e.key === 'Escape') stopEditing();
+});
+
 $('#bq-my').addEventListener('click', async (e) => {
+  const edit = e.target.closest('[data-edit]');
+  if (edit) {
+    const li = edit.closest('li');
+    editing = true;
+    li.classList.add('is-editing');
+    li.dataset.uid = edit.dataset.edit;
+    if (edit.dataset.grp) li.dataset.grp = edit.dataset.grp;
+    li.innerHTML = `${edit.dataset.grp ? tagOf(Number(edit.dataset.grp)) : ''}
+      <input class="field" inputmode="numeric" pattern="[0-9]{8}" maxlength="8" autocomplete="off" value="${edit.dataset.edit}" aria-label="New UID for ${edit.dataset.edit}">
+      <button type="button" class="btn btn--primary" data-save>Save</button>
+      <button type="button" class="btn btn--quiet" data-cancel>Cancel</button>
+      <p class="tr-form__error" role="alert" hidden></p>`;
+    li.querySelector('input').select();
+    return;
+  }
+  if (e.target.closest('[data-save]')) return saveEdit(e.target.closest('li'));
+  if (e.target.closest('[data-cancel]')) return stopEditing();
   const remove = e.target.closest('[data-remove]');
   if (!remove) return;
   remove.disabled = true;

@@ -114,6 +114,12 @@ async function open(me, opts) {
       return json({ people, both_groups: both });
     }
     if (fn === 'banquet_note_copy') return ok();
+    if (fn === 'banquet_edit') {
+      const row = db.uids.find((u) => u.who === me.name && u.grp === g && u.uid === String(body.target) && u.source === 'site');
+      if (!row) return route.fulfill({ status: 400, contentType: 'application/json', body: '{"code":"P0001","message":"Only a UID you added on the site can be edited here."}' });
+      row.uid = String(body.replacement);
+      return ok();
+    }
     if (fn === 'banquet_access_log') {
       if (!me.all) return route.fulfill({ status: 400, contentType: 'application/json', body: '{"code":"P0001","message":"Not for this account."}' });
       const copies = sent.filter((x) => x.fn === 'banquet_note_copy');
@@ -173,6 +179,24 @@ try {
   await A.waitForSelector('#bq-list:not([hidden])');
   assert.equal(await A.locator('[data-show="ready"]').getAttribute('aria-pressed'), 'true', 'Ready is where the page opens');
   assert.equal(lastSent('Ana', 'banquet_add').g, null, 'a group member never sends a group');
+  // Edit: only on UIDs added here, one step, Escape backs out.
+  await A.locator('#bq-mine-fold').evaluate((d) => { d.open = true; });
+  assert.equal(await A.locator('#bq-my [data-edit]').count(), 1, 'Edit only on the one added here, not the posted ones');
+  await A.click('#bq-my [data-edit="10000004"]');
+  await A.keyboard.press('Escape');
+  assert.equal(await A.locator('#bq-my li.is-editing').count(), 0, 'Escape backs out');
+  await A.click('#bq-my [data-edit="10000004"]');
+  await A.fill('#bq-my li.is-editing input', '1000004');
+  await A.click('#bq-my [data-save]');
+  assert.equal(await A.locator('#bq-my .tr-form__error').textContent(), 'A UID is 8 digits.');
+  await A.fill('#bq-my li.is-editing input', '10000044');
+  await A.keyboard.press('Enter');
+  await A.waitForSelector('#bq-my [data-edit="10000044"]');
+  assert.deepEqual(lastSent('Ana', 'banquet_edit'), { target: 10000004, replacement: 10000044, g: null }, 'one call, old and new');
+  await A.click('#bq-my [data-edit="10000044"]');
+  await A.fill('#bq-my li.is-editing input', '10000004');
+  await A.keyboard.press('Enter');
+  await A.waitForSelector('#bq-my [data-edit="10000004"]');
 
   await A.click('[data-show="all"]');
   assert.equal(await A.locator('#bq-cards li').count(), 26, 'Group 1 only');
@@ -206,6 +230,7 @@ try {
   await A.click('[data-show="ready"]');
   await A.click('[data-claim="55555555"]');
   await A.waitForSelector('#toast.is-shown');
+  await A.waitForSelector('[data-claim="55555555"]', { state: 'detached', timeout: 3000 });
   assert.equal(await A.locator('[data-claim="55555555"]').count(), 0, 'claimed, gone from Ready');
   await A.click('#toast .toast__act');
   await A.waitForSelector('[data-claim="55555555"]');

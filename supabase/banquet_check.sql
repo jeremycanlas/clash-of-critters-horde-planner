@@ -2,7 +2,7 @@
 --
 --   psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f supabase/banquet_check.sql
 --
--- Loads 013 to 026 inside the transaction too, so it can run before a
+-- Loads 013 to 027 inside the transaction too, so it can run before a
 -- migration is applied. Discord is not asked: members are written straight
 -- into banquet_members, which is what Discord's yes leaves behind, and channel
 -- posts go through banquet_apply(), which is what banquet_sync() hands them
@@ -32,6 +32,7 @@ end $$;
 \i supabase/migrations/023_banquet_no_role_minute.sql
 \i supabase/migrations/025_banquet_private.sql
 \i supabase/migrations/026_banquet_access_log.sql
+\i supabase/migrations/027_banquet_edit.sql
 
 -- Real entries would skew the counts. Gone for this transaction only.
 delete from public.banquet_claims; delete from public.banquet_marks; delete from public.banquet_uids; delete from public.banquet_access;
@@ -263,6 +264,29 @@ begin
          '55555555 left Group 1 in the edit above, so it is in one group now';
 end $$;
 
+-- ---------------------------------------------------------------- editing your own
+select pg_temp.as_(1);
+do $$
+declare b jsonb;
+begin
+  perform public.banquet_add(10000777);
+  perform public.banquet_claim(10000777, true);
+  perform public.banquet_edit(10000777, 10000778);
+  assert pg_temp.card(public.banquet_state(), '10000777') is null, 'the old UID is gone';
+  b := pg_temp.card(public.banquet_state(), '10000778');
+  assert b is not null and (b ->> 'claims')::int = 0, 'the new one is there, and the old claim did not follow it';
+  begin perform public.banquet_edit(10000001, 10000009); raise exception 'edited a Discord post';
+  exception when raise_exception then if sqlerrm = 'edited a Discord post' then raise; end if; end;
+  begin perform public.banquet_edit(10000778, 1234567); raise exception 'seven digits';
+  exception when raise_exception then if sqlerrm = 'seven digits' then raise; end if; end;
+  perform public.banquet_remove(10000778);
+end $$;
+select pg_temp.as_(2);
+do $$ begin
+  begin perform public.banquet_edit(10000004, 10000005); raise exception 'B edited A''s';
+  exception when raise_exception then if sqlerrm = 'B edited A''s' then raise; end if; end;
+end $$;
+
 -- ---------------------------------------------------------------- the private list
 reset role;
 set local role authenticated;
@@ -381,7 +405,7 @@ begin
 end $$;
 
 -- ---------------------------------------------------------------- what a user can reach at all
--- The ten calls the page makes, nothing else: not the sync (it would let
+-- The eleven calls the page makes, nothing else: not the sync (it would let
 -- anyone hammer Discord as the bot), not the unfiltered list, not a table, not
 -- the vault the bot token is in. Anonymous visitors reach none of it.
 reset role;
@@ -391,7 +415,7 @@ begin
   got := array(select p.proname::text from pg_proc p
                 where p.pronamespace = 'public'::regnamespace and p.proname like 'banquet%'
                   and has_function_privilege('authenticated', p.oid, 'execute') order by 1);
-  assert got = '{banquet_access_log,banquet_add,banquet_check,banquet_claim,banquet_copies,banquet_mark,banquet_note_copy,banquet_remove,banquet_round,banquet_state}',
+  assert got = '{banquet_access_log,banquet_add,banquet_check,banquet_claim,banquet_copies,banquet_edit,banquet_mark,banquet_note_copy,banquet_remove,banquet_round,banquet_state}',
          'signed-in users can call exactly the page''s functions, got ' || got::text;
   assert not exists (select 1 from pg_proc p where p.pronamespace = 'public'::regnamespace and p.proname like 'banquet%'
                       and has_function_privilege('anon', p.oid, 'execute')), 'anonymous visitors can call nothing';

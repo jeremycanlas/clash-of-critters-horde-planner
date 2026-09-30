@@ -143,3 +143,6 @@
   color: color-mix(in srgb, var(--danger) 75%, var(--text)); background: color-mix(in srgb, var(--danger) 12%, var(--surface)); }
 .bq-access__nums { color: var(--text-dim); margin-top: 2px; }
 .bq-access__list details summary { cursor: pointer; color: var(--text-mute); }
+.bq-mine__uid.is-editing { flex-wrap: wrap; }
+.bq-mine__uid.is-editing input { width: 8em; font-size: 16px; font-variant-numeric: tabular-nums; }
+.bq-mine__uid.is-editing .tr-form__error { flex-basis: 100%; margin: 0; }
