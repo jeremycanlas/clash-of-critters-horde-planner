@@ -46,9 +46,8 @@ for (const uid of ['20000001', '55555555', '10000001', '10000002']) db.uids.push
 // A private list, 3, that Vee is in and Ana is not.
 db.uids.push({ grp: 3, uid: '39900001', who: 'maryal', source: 'site' });
 for (let i = 0; i < 20; i++) db.uids.push({ grp: 1, uid: String(60000000 + i * 137), who: ['Dee', 'Eli', 'Fay'][i % 3], source: 'discord' });
-/* The second server: its own database, one group. Bea is a member, Vee sees
-   it too. Its UIDs share one with the first (55555555), as real servers can. */
-const B_HOST = 'tidestandin.supabase.co';
+/* The second server: its own schema, one group. Bea is a member, Vee sees it
+   too. Its UIDs share one with the first (55555555), as real servers can. */
 const dbB = {
   uids: ['81000001', '81000002', '81000003', '81000004'].map((uid) => ({ uid, who: 'Bea' }))
     .concat([{ uid: '82000001', who: 'Bo' }, { uid: '55555555', who: 'Bo' }]),
@@ -73,7 +72,7 @@ function stateB(me) {
     ...(all ? { groups: [1], names: { 1: 'Group 1' }, private: [] } : {}),
   };
 }
-const hosts = []; // every database each person's page talked to
+const schemas = []; // the schema of every request each person's page made: 'public' or 'tide'
 
 let syncedAgo = 60e3;
 let reads = 0;
@@ -115,26 +114,18 @@ const browser = await chromium.launch();
 
 async function open(me, opts) {
   const ctx = await browser.newContext({ ...opts, colorScheme: me.scheme ?? 'dark' });
-  // Signed in to the first server unless told otherwise; '.tide' is the second's session.
-  await ctx.addInitScript((keys) => {
-    for (const k of keys) localStorage.setItem(`coc.community.v1${k}`, JSON.stringify({ refresh_token: 'x', uid: 'u', name: 'x' }));
-  }, me.sessions ?? ['']);
-  // The second server's address, whatever the page has for it, becomes the stand-in's.
-  await ctx.route(/assets\/js\/banquet\.js/, async (route) => {
-    const res = await route.fetch();
-    const body = (await res.text()).replace(/connect\(\{ url: '[^']*', anonKey: '[^']*' \}, '\.tide'\)/,
-      `connect({ url: 'https://${B_HOST}', anonKey: 'sb_publishable_standin_standin' }, '.tide')`);
-    return route.fulfill({ response: res, body });
-  });
+  await ctx.addInitScript(() => localStorage.setItem('coc.community.v1', JSON.stringify({ refresh_token: 'x', uid: 'u', name: 'x' })));
   await ctx.route(/supabase\.co/, async (route) => {
     const u = new URL(route.request().url());
     const body = route.request().postDataJSON?.() ?? {};
     const json = (d) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(d) });
     const ok = () => route.fulfill({ status: 204 });
-    hosts.push({ who: me.name, host: u.hostname });
     if (u.pathname.endsWith('/auth/v1/token')) return json({ access_token: 't', refresh_token: 'x', expires_in: 3600 });
     const fn = u.pathname.split('/').pop();
-    if (u.hostname === B_HOST) {
+    const headers = route.request().headers();
+    const schema = headers['content-profile'] ?? headers['accept-profile'] ?? 'public';
+    schemas.push({ who: me.name, schema });
+    if (schema === 'tide') {
       sent.push({ who: me.name, fn, body, host: 'B' });
       if (fn === 'banquet_check') return json(me.inB ? 'ok' : 'no-role');
       if (fn === 'banquet_state') return json({ ...stateB(me), hash: `b${JSON.stringify(dbB.claims)}` });
@@ -474,36 +465,42 @@ try {
   down = false;
 
   // ------------------------------------------------------------------ the second server
-  // The first server's link never reaches the second's database, and the reverse.
-  assert.ok(hosts.filter((h) => ['Ana', 'Vee', 'Dee'].includes(h.who)).every((h) => h.host !== B_HOST),
+  // The first server's link never asks the second's schema, and the reverse.
+  assert.ok(schemas.filter((x) => ['Ana', 'Vee', 'Dee'].includes(x.who)).every((x) => x.schema === 'public'),
     'the first link never reaches the second server');
   assert.equal(await A.locator('#site-tabs a[href="banquet.html"]').count(), 1, "the first link's tab is unchanged");
 
-  const bea = await open({ name: 'Bea', code: 'tide', sessions: ['.tide'], inB: true }, devices['iPhone SE']);
+  const bea = await open({ name: 'Bea', code: 'tide', inB: true }, devices['iPhone SE']);
   const B = bea.page;
   await B.click('[data-show="all"]');
   assert.deepEqual((await B.locator('#bq-cards li').evaluateAll((ls) => ls.map((l) => l.dataset.key))).sort(),
     [':55555555', ':81000001', ':81000002', ':81000003', ':81000004', ':82000001'], 'only the second server');
   assert.ok(!/group|server/i.test(await B.locator('body').innerText()), 'no word of groups or another server');
-  assert.ok(hosts.filter((h) => h.who === 'Bea').every((h) => h.host === B_HOST), 'and only its own database');
+  assert.ok(schemas.filter((x) => x.who === 'Bea').every((x) => x.schema === 'tide'), 'and only its own schema');
   assert.equal(await B.locator('#site-tabs a[href="banquet.html?s=tide"]').count(), 1, 'its tab keeps its link');
   await B.locator('[data-claim="82000001"]').click();
   await B.waitForTimeout(300);
   assert.deepEqual(sent.filter((x) => x.who === 'Bea' && x.fn === 'banquet_claim').at(-1),
     { who: 'Bea', fn: 'banquet_claim', body: { target: 82000001, claimed: true, g: null }, host: 'B' });
 
-  // Signed in to the first server only: the second's link asks, and sends nothing anywhere.
-  const out = await open({ name: 'Out', code: 'tide', sessions: [''], expectGate: true }, devices['iPhone SE']);
-  assert.match(await out.page.locator('#bq-gate-head').textContent(), /private/);
-  assert.equal(hosts.filter((h) => h.who === 'Out').length, 0, 'nothing sent anywhere before signing in');
+  // Not in the second server: its link shuts, having asked only the second's schema.
+  const out = await open({ name: 'Out', code: 'tide', expectGate: true }, devices['iPhone SE']);
+  assert.match(await out.page.locator('#bq-gate-head').textContent(), /one Discord server/);
+  assert.ok(schemas.filter((x) => x.who === 'Out').every((x) => x.schema === 'tide'), 'and asked nothing of the first');
   const junk = await open({ name: 'Junk', code: 'nope', expectGate: true }, devices['iPhone SE']);
   assert.match(await junk.page.locator('#bq-gate-head').textContent(), /not right/, 'an unknown code opens nothing');
 
   // ------------------------------------------------------------------ both servers, for Vee
-  const half = await open({ name: 'Vee', all: true, code: 'duo', sessions: [''], inB: true, expectGate: true },
-    { viewport: { width: 1280, height: 900 } });
-  assert.equal(await half.page.locator('#bq-signin').textContent(), 'Sign in for Send UIDs', 'asks for the server still missing');
-  const duo = await open({ name: 'Vee', all: true, code: 'duo', sessions: ['', '.tide'], inB: true, scheme: 'light' },
+  // Let into one server of two: that one opens, and its cards still go to it.
+  const half = await open({ name: 'Ana', grp: 1, code: 'duo' }, { viewport: { width: 1280, height: 900 } });
+  await half.page.click('[data-show="all"]');
+  assert.ok(await half.page.locator('#bq-cards li').evaluateAll((ls) => ls.every((l) => l.dataset.key.startsWith('10:'))),
+    'only the first server, numbered as in the view of both');
+  await half.page.locator('li[data-key="10:20000001"] [data-claim]').click();
+  await half.page.waitForTimeout(300);
+  assert.deepEqual(sent.filter((x) => x.who === 'Ana' && x.fn === 'banquet_claim').at(-1),
+    { who: 'Ana', fn: 'banquet_claim', body: { target: 20000001, claimed: true, g: null } }, 'and its presses go to the first server');
+  const duo = await open({ name: 'Vee', all: true, code: 'duo', inB: true, scheme: 'light' },
     { viewport: { width: 1280, height: 900 } });
   const D = duo.page;
   await D.click('[data-show="all"]');

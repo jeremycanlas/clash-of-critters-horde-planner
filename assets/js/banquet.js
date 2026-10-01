@@ -11,27 +11,27 @@
  *
  * ## Servers
  *
- * Each Discord server is its own Supabase project, so nothing in one database,
- * no query, no bug, no role, can reach the other's UIDs. The code on the
- * page's link picks which (`?s=…`); no code is the server this page has always
- * served, and behaves exactly as it did. One more code is both at once, for
- * whoever each database separately lets in: it signs into each, renumbers each
- * server's groups after its place (10s, 20s) so no two collide, and sends every
- * request to the database the card it is about came from.
+ * Each Discord server has a schema of its own: the first is public, another is
+ * a full copy of the banquet tables and functions under its own name, made by
+ * tools/setup-server.sh, whose functions name nothing outside it. The code on
+ * the page's link picks which (`?s=…`); no code is the server this page has
+ * always served, and behaves exactly as it did. One more code is both at once,
+ * for whoever each server separately lets in: it renumbers each server's groups
+ * after its place (10s, 20s) so no two collide, and sends every request to the
+ * schema the card it is about came from.
  */
 
-import { site, connect } from './supabase.js';
+import { rest, signIn, signOut, signedIn, readCallback, isConfigured } from './supabase.js';
 import { applyPrefs } from './prefs.js';
 import { showPrivateTab } from './site-nav.js';
 import { $, $$, esc, copyText, toast } from './ui.js';
 
 applyPrefs();
 
-/* The publishable key is an address, not a secret: see supabase.js. A blank
-   one leaves that server's link saying it is not connected. */
+// Link code: the server's name, and its schema (none is public).
 const SERVERS = {
-  '': { name: 'MVP UIDs', db: site },
-  tide: { name: 'Send UIDs', db: connect({ url: '', anonKey: '' }, '.tide') },
+  '': { name: 'MVP UIDs', profile: null },
+  tide: { name: 'Send UIDs', profile: 'tide' },
 };
 const BOTH = 'duo';
 const code = new URLSearchParams(location.search).get('s') ?? '';
@@ -39,11 +39,11 @@ const dbs = (code === BOTH ? Object.values(SERVERS) : [SERVERS[code]].filter(Boo
   .map((s, i, all) => ({ ...s, base: all.length > 1 ? (i + 1) * 10 : 0, state: null }));
 const combined = dbs.length > 1;
 // Where a group's requests go, and the group number that database knows it by.
-const dbOf = (g) => (combined && g ? dbs[Math.floor(g / 10) - 1] : dbs[0]);
+const dbOf = (g) => (combined && g ? dbs.find((d) => d.base === g - (g % 10)) : dbs[0]);
 const local = (g) => (combined && g ? g % 10 || null : g);
+const ask = (d, fn, body) => rest(`/rpc/${fn}`, { method: 'POST', body, auth: true, profile: d.profile });
 function call(fn, body) {
-  const routed = 'g' in body ? { ...body, g: local(body.g) } : body;
-  return dbOf(body.g).db.rest(`/rpc/${fn}`, { method: 'POST', body: routed, auth: true });
+  return ask(dbOf(body.g), fn, 'g' in body ? { ...body, g: local(body.g) } : body);
 }
 // What this browser keeps, kept per link, so two servers never mix their seen or last copied.
 const K = code ? `.${code}` : '';
@@ -51,7 +51,7 @@ const K = code ? `.${code}` : '';
 // The site's nav knows the one server only.
 const FLAG = 'coc.banquet.member';
 const setMember = (on) => {
-  if (!dbs.some((d) => d.db === site)) return;
+  if (!dbs.some((d) => !d.profile)) return;
   try { if (on) localStorage.setItem(FLAG, '1'); else localStorage.removeItem(FLAG); } catch { /* private mode */ }
 };
 
@@ -158,35 +158,29 @@ const WHY = {
 };
 
 async function check(d) {
-  const got = await d.db.rest('/rpc/banquet_check', { method: 'POST', body: {}, auth: true });
+  const got = await ask(d, 'banquet_check', {});
   if (!got.ok) return got.why;
   return got.data;
 }
 
-let signInTo = dbs[0]; // the database the sign-in button is for
 async function start() {
-  const back = dbs.map((d) => d.db.readCallback());
+  const back = readCallback();
   if (!dbs.length) return gate('This link is not right', 'Check the link you were given.', false);
-  if (!dbs.every((d) => d.db.isConfigured())) return gate('Not connected', 'This copy of the site has no database.', false);
-  const out = dbs.find((d) => !d.db.signedIn());
-  if (out) {
-    signInTo = out;
-    if (combined) $('#bq-signin').textContent = `Sign in for ${out.name}`;
-    return gate('This page is private', back.includes('failed')
+  if (!isConfigured()) return gate('Not connected', 'This copy of the site has no database.', false);
+  if (!signedIn()) {
+    return gate('This page is private', back === 'failed'
       ? 'Discord did not sign you in. Try again.'
-      : combined ? `Sign in with Discord once for each server. Next: ${out.name}.`
-        : 'Sign in with Discord to see it. Only members of one Discord server with the right role can open it.', true);
+      : 'Sign in with Discord to see it. Only members of one Discord server with the right role can open it.', true);
   }
   $('#bq-signout').hidden = false;
   status('Checking your role with Discord…');
   const said = await Promise.all(dbs.map(check));
-  const ours = said[dbs.findIndex((d) => d.db === site)];
+  const ours = said[dbs.findIndex((d) => !d.profile)];
   if (ours && ours !== 'discord-down') setMember(ours === 'ok');
   // Both servers: whichever let you in opens, and the other says why not.
   const shut = said.map((got, i) => [got, dbs[i]]).filter(([got]) => got !== 'ok');
   if (shut.length === dbs.length) {
     const [got, d] = shut[0];
-    signInTo = d;
     const [head, text] = WHY[got] ?? ['Could not check your access', got];
     return gate(combined ? `${d.name}: ${head}` : head, text, got === 'signed-out' || !WHY[got]);
   }
@@ -270,8 +264,7 @@ async function load(round = null, quiet = false) {
   /* A refresh sends the fingerprint of what it holds; an unchanged list comes
      back as a few bytes saying so, rather than the whole list again. */
   const same = quiet && state && (round ?? state.current) === state.round;
-  const got = await Promise.all(dbs.map((d) => d.db.rest('/rpc/banquet_state',
-    { method: 'POST', body: { r: round, known: same ? d.state?.hash ?? null : null }, auth: true })));
+  const got = await Promise.all(dbs.map((d) => ask(d, 'banquet_state', { r: round, known: same ? d.state?.hash ?? null : null })));
   const bad = got.find((x) => !x.ok);
   if (bad) return quiet ? undefined : gate('Could not load the banquets', bad.why, true);
   reached = Date.now();
@@ -305,7 +298,7 @@ function noteCopy(key) {
    with their groups renumbered as lift() does. One server: its answer as is. */
 async function fromEach(fn, body, renumber) {
   const got = await Promise.all(dbs.filter((d) => d.state?.groups).map(async (d) => {
-    const x = await d.db.rest(`/rpc/${fn}`, { method: 'POST', body, auth: true });
+    const x = await ask(d, fn, body);
     return x.ok && combined ? { ok: true, data: renumber(x.data, (g) => d.base + g) } : x;
   }));
   const bad = got.find((x) => !x.ok);
@@ -724,7 +717,7 @@ document.addEventListener('click', async (e) => {
 });
 
 // Back to this address, code and all; with no code it is the address it always was.
-$('#bq-signin').addEventListener('click', () => signInTo.db.signIn(`${location.origin}${location.pathname}${location.search}`));
-$('#bq-signout').addEventListener('click', () => { for (const d of dbs) d.db.signOut(); setMember(false); location.reload(); });
+$('#bq-signin').addEventListener('click', () => signIn(`${location.origin}${location.pathname}${location.search}`));
+$('#bq-signout').addEventListener('click', () => { signOut(); setMember(false); location.reload(); });
 
 start();

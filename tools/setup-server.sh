@@ -1,42 +1,85 @@
 #!/bin/sh
-# Sets up another Discord server's banquet database, a Supabase project of its
-# own.  sh tools/setup-server.sh TIDE
+# Sets up another Discord server's banquets, in a schema of its own in the
+# same database.  sh tools/setup-server.sh tide
+#
+# The schema is the banquet migrations (013 onwards) with every banquet name in
+# them moved into it: tables, functions, scheduled jobs, the bot token's name in
+# Vault. Its functions name nothing of the first server's, which public keeps,
+# and the script refuses to apply a copy that does. The one thing both share is
+# public.tracker_caller(): who you are on Discord, read from the sign-in.
 #
 # Everything comes from .env (see .env.example), so no password or bot token is
 # typed anywhere a transcript keeps it. In order:
 #
-#   1. every migration, oldest first, the first time only: the same schema and
-#      rules as the first server, from the same files
-#   2. supabase/banquet_check.sql, which proves the rules and rolls back
-#   3. this server's Discord settings: server, role, channel, viewer roles, and
+#   1. the schema, the first time only; later, any migration files named after
+#      the schema: sh tools/setup-server.sh tide supabase/migrations/029_x.sql
+#   2. supabase/banquet_check.sql, moved the same way: proves the rules in the
+#      new schema, then rolls back
+#   3. the server's Discord settings: server, role, channel, viewer roles, and
 #      the bot token into Vault
 #
-# Safe to run again: step 1 is skipped once the tables are there, and step 3
-# overwrites the settings with what .env says now.
+# Then, once, in the dashboard: Project Settings -> Data API -> Exposed schemas,
+# add the schema, or the page gets "not finished being set up yet".
 set -eu
 cd "$(dirname "$0")/.."
 . ./.env
-n=${1:?which server, e.g. TIDE}
+s=${1:?which server schema, e.g. tide}
+shift
+case $s in *[!a-z]*|public) echo "a schema name is lower-case letters, not public" >&2; exit 1 ;; esac
+up=$(echo "$s" | tr a-z A-Z)
 
-eval "db=\${SUPABASE_DB_URL_$n:?SUPABASE_DB_URL_$n is not in .env}"
-eval "guild=\${BANQUET_${n}_GUILD:?}" "role=\${BANQUET_${n}_ROLE:?}" "channel=\${BANQUET_${n}_CHANNEL:?}"
-eval "viewers=\${BANQUET_${n}_VIEWERS:-}" "token=\${BANQUET_${n}_BOT_TOKEN:?}"
-q() { psql "$db" -v ON_ERROR_STOP=1 -q "$@"; }
+eval "guild=\${BANQUET_${up}_GUILD:?}" "role=\${BANQUET_${up}_ROLE:?}" "channel=\${BANQUET_${up}_CHANNEL:?}"
+eval "viewers=\${BANQUET_${up}_VIEWERS:-}" "token=\${BANQUET_${up}_BOT_TOKEN:?}"
+q() { psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -q "$@"; }
 
-if [ "$(q -tAc "select to_regclass('public.banquet_access') is not null")" = t ]; then
-  echo "migrations: already there"
+# A file with its \i lines filled in (banquet_check.sql loads the migrations
+# itself), less any Windows line endings, which would end up in the file names.
+expand() {
+  tr -d '\r' < "$1" | while IFS= read -r line || [ -n "$line" ]; do
+    case $line in '\i '*) expand "${line#\\i }" ;; *) printf '%s\n' "$line" ;; esac
+  done
+}
+# That file, moved into the schema.
+moved() {
+  expand "$1" | sed \
+    -e "s/public\.banquet_/$s.banquet_/g" \
+    -e "s/search_path = public/search_path = $s, public/g" \
+    -e "s/'banquet-/'$s-banquet-/g" \
+    -e "s/'banquet_bot_token'/'${s}_banquet_bot_token'/g" \
+    -e "s/'public'/'$s'/g" \
+    -e "s/'public\.' ||/'$s.' ||/g" \
+    -e "s/public\.%I/$s.%I/g"
+}
+
+# The wall, checked before anything runs: nothing of public's but who you are.
+guard() {
+  left=$(grep -oE "public\.[a-z_%]+|'public'" "$1" | grep -v '^public\.tracker_caller$' || true)
+  if [ -n "$left" ]; then echo "refusing: the $s copy still names public: $left" >&2; exit 1; fi
+}
+
+tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
+if [ $# -gt 0 ]; then
+  files="$*"
+elif [ "$(q -tAc "select to_regclass('$s.banquet_access') is not null")" = t ]; then
+  files=""; echo "schema $s: already there"
 else
-  for f in supabase/migrations/0*.sql; do echo "migration: $f"; q -f "$f"; done
+  files=$(ls supabase/migrations/0*_banquet*.sql)
+  { echo "create schema if not exists $s;"; echo "grant usage on schema $s to anon, authenticated;"; } > "$tmp/0.sql"
+  q -f "$tmp/0.sql"
 fi
+for f in $files; do
+  moved "$f" > "$tmp/m.sql"; guard "$tmp/m.sql"
+  echo "$s: $f"; q -f "$tmp/m.sql"
+done
 
-q -f supabase/banquet_check.sql
+moved supabase/banquet_check.sql > "$tmp/check.sql"; guard "$tmp/check.sql"
+q -f "$tmp/check.sql"
 
-q -v guild="$guild" -v role="$role" -v channel="$channel" -v viewers="$viewers" -v token="$token" <<'SQL'
-update public.banquet_settings set guild_id = :'guild', viewer_roles = coalesce(string_to_array(nullif(:'viewers', ''), ','), '{}');
-insert into public.banquet_groups (grp, role_id, channel_id) values (1, :'role', :'channel')
+q -v guild="$guild" -v role="$role" -v channel="$channel" -v viewers="$viewers" -v token="$token" -v name="${s}_banquet_bot_token" <<SQL
+update $s.banquet_settings set guild_id = :'guild', viewer_roles = coalesce(string_to_array(nullif(:'viewers', ''), ','), '{}');
+insert into $s.banquet_groups (grp, role_id, channel_id) values (1, :'role', :'channel')
   on conflict (grp) do update set role_id = excluded.role_id, channel_id = excluded.channel_id;
-select vault.update_secret(id, :'token') from vault.secrets where name = 'banquet_bot_token';
-select vault.create_secret(:'token', 'banquet_bot_token')
- where not exists (select 1 from vault.secrets where name = 'banquet_bot_token');
+select vault.update_secret(id, :'token') from vault.secrets where name = :'name';
+select vault.create_secret(:'token', :'name') where not exists (select 1 from vault.secrets where name = :'name');
 SQL
-echo "settings: saved. The channel is read within 15 seconds: $(q -tAc "select public.banquet_sync()")"
+echo "settings: saved. First read of the channel: $(q -tAc "select $s.banquet_sync()")"
