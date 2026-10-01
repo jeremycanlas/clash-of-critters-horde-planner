@@ -16,7 +16,8 @@
 #   2. supabase/banquet_check.sql, moved the same way: proves the rules in the
 #      new schema, then rolls back
 #   3. the server's Discord settings: server, role, channel, viewer roles, and
-#      the bot token into Vault
+#      the bot token into Vault. Skipped while they are not in .env; run again
+#      once they are
 #
 # Then, once, in the dashboard: Project Settings -> Data API -> Exposed schemas,
 # add the schema, or the page gets "not finished being set up yet".
@@ -28,8 +29,8 @@ shift
 case $s in *[!a-z]*|public) echo "a schema name is lower-case letters, not public" >&2; exit 1 ;; esac
 up=$(echo "$s" | tr a-z A-Z)
 
-eval "guild=\${BANQUET_${up}_GUILD:?}" "role=\${BANQUET_${up}_ROLE:?}" "channel=\${BANQUET_${up}_CHANNEL:?}"
-eval "viewers=\${BANQUET_${up}_VIEWERS:-}" "token=\${BANQUET_${up}_BOT_TOKEN:?}"
+eval "guild=\${BANQUET_${up}_GUILD:-}" "role=\${BANQUET_${up}_ROLE:-}" "channel=\${BANQUET_${up}_CHANNEL:-}"
+eval "viewers=\${BANQUET_${up}_VIEWERS:-}" "token=\${BANQUET_${up}_BOT_TOKEN:-}"
 q() { psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -q "$@"; }
 
 # A file with its \i lines filled in (banquet_check.sql loads the migrations
@@ -75,6 +76,11 @@ done
 moved supabase/banquet_check.sql > "$tmp/check.sql"; guard "$tmp/check.sql"
 q -f "$tmp/check.sql"
 
+# Without them the schema is still built; the page says "not set up yet" until a rerun with them.
+if [ -z "$guild" ] || [ -z "$role" ] || [ -z "$channel" ] || [ -z "$token" ]; then
+  echo "settings: skipped, BANQUET_${up}_GUILD, _ROLE, _CHANNEL and _BOT_TOKEN are not all in .env yet"
+  exit 0
+fi
 q -v guild="$guild" -v role="$role" -v channel="$channel" -v viewers="$viewers" -v token="$token" -v name="${s}_banquet_bot_token" <<SQL
 update $s.banquet_settings set guild_id = :'guild', viewer_roles = coalesce(string_to_array(nullif(:'viewers', ''), ','), '{}');
 insert into $s.banquet_groups (grp, role_id, channel_id) values (1, :'role', :'channel')
