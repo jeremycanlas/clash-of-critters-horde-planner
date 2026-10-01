@@ -23,7 +23,7 @@ Site address below: `https://jeremycanlas.github.io/clash-of-critters-horde-plan
    turn on Message Content Intent, or every post reads as empty.
 2. **Roles.** Members need the member role. Viewers, who also see the access
    log and possible copies and can use the both-servers link, are named by
-   Discord user ID in `.env`; they must be in the server.
+   Discord user ID in `.env`, and get in whether or not they are in the server.
 3. **`.env`.** Add `BANQUET_TIDE_GUILD`, `BANQUET_TIDE_ROLE`,
    `BANQUET_TIDE_CHANNEL`, `BANQUET_TIDE_VIEWERS` (comma-separated user IDs) and
    `BANQUET_TIDE_BOT_TOKEN`. Discord IDs: Developer Mode on, then right-click →

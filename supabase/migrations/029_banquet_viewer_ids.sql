@@ -3,8 +3,9 @@
 -- A viewer sees every channel group, the access log and possible copies. Until
 -- now that took a role; a server can also name people outright, by Discord user
 -- ID rather than username, because a username can be given up and taken by
--- somebody else and an ID cannot. They must still be in the server: Discord is
--- asked as before, and someone not in it gets nothing.
+-- somebody else and an ID cannot. Someone named this way gets in even when they
+-- are not in the server: that is the point of naming them. Everyone else is
+-- asked of Discord as before, and someone not in the server gets nothing.
 --
 --   update public.banquet_settings set viewer_ids = '{<user id>,<user id>}';
 
@@ -65,7 +66,9 @@ begin
     -- Private lists are by name, whatever the roles.
     grps := grps || array(select m.grp from public.banquet_group_members m where m.discord_id = me.discord_id order by m.grp);
   elsif res.status = 404 and body ->> 'code' = '10007' then
-    grps := '{}'; all_ := false;      -- not in the server
+    -- Not in the server: nothing, unless named as a viewer.
+    all_ := me.discord_id = any (s.viewer_ids);
+    grps := case when all_ then array(select g.grp from public.banquet_groups g where not g.private order by g.grp) else '{}' end;
   elsif res.status in (401, 403, 404) then
     return 'not-set-up';
   else
