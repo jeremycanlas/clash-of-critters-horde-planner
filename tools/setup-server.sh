@@ -15,7 +15,8 @@
 #      the schema: sh tools/setup-server.sh tide supabase/migrations/029_x.sql
 #   2. supabase/banquet_check.sql, moved the same way: proves the rules in the
 #      new schema, then rolls back
-#   3. the server's Discord settings: server, role, channel, viewer roles, and
+#   3. the server's Discord settings: server, role, channel, viewers (Discord
+#      user IDs), and
 #      the bot token into Vault. Skipped while they are not in .env; run again
 #      once they are
 #
@@ -82,7 +83,7 @@ if [ -z "$guild" ] || [ -z "$role" ] || [ -z "$channel" ] || [ -z "$token" ]; th
   exit 0
 fi
 q -v guild="$guild" -v role="$role" -v channel="$channel" -v viewers="$viewers" -v token="$token" -v name="${s}_banquet_bot_token" <<SQL
-update $s.banquet_settings set guild_id = :'guild', viewer_roles = coalesce(string_to_array(nullif(:'viewers', ''), ','), '{}');
+update $s.banquet_settings set guild_id = :'guild', viewer_ids = coalesce(string_to_array(nullif(:'viewers', ''), ','), '{}');
 insert into $s.banquet_groups (grp, role_id, channel_id) values (1, :'role', :'channel')
   on conflict (grp) do update set role_id = excluded.role_id, channel_id = excluded.channel_id;
 select vault.update_secret(id, :'token') from vault.secrets where name = :'name';

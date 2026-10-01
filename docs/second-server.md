@@ -21,11 +21,11 @@ Site address below: `https://jeremycanlas.github.io/clash-of-critters-horde-plan
 1. **The bot.** Invite the new server's bot. On its channel (`#send-uids`) it
    needs View Channel and Read Message History. In the Developer Portal → Bot,
    turn on Message Content Intent, or every post reads as empty.
-2. **Roles.** Members need the member role. Anyone who should also see the
-   access log and possible copies, or use the both-servers link, needs a role
-   listed as a viewer role.
+2. **Roles.** Members need the member role. Viewers, who also see the access
+   log and possible copies and can use the both-servers link, are named by
+   Discord user ID in `.env`; they must be in the server.
 3. **`.env`.** Add `BANQUET_TIDE_GUILD`, `BANQUET_TIDE_ROLE`,
-   `BANQUET_TIDE_CHANNEL`, `BANQUET_TIDE_VIEWERS` (comma-separated role IDs) and
+   `BANQUET_TIDE_CHANNEL`, `BANQUET_TIDE_VIEWERS` (comma-separated user IDs) and
    `BANQUET_TIDE_BOT_TOKEN`. Discord IDs: Developer Mode on, then right-click →
    Copy ID. `.env` is gitignored; the token goes into Vault and is not shown again.
 4. **Run** `sh tools/setup-server.sh tide`. It builds the schema from the banquet
@@ -36,6 +36,9 @@ Site address below: `https://jeremycanlas.github.io/clash-of-critters-horde-plan
    and `…/banquet.html?s=duo`, unless a wildcard there already covers them.
 
 ## Later banquet migrations
+
+029 (viewers by user ID) is applied to `tide`; `public` gets it when the branch
+is merged, and with no IDs set it behaves exactly as before.
 
 A new `0NN_banquet_*.sql` is written for `public` as always, then applied to each
 other server too: `sh tools/setup-server.sh tide supabase/migrations/0NN_banquet_x.sql`.

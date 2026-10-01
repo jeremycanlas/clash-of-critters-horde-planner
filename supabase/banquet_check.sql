@@ -34,6 +34,7 @@ end $$;
 \i supabase/migrations/026_banquet_access_log.sql
 \i supabase/migrations/027_banquet_edit.sql
 \i supabase/migrations/028_banquet_add_no_limit.sql
+\i supabase/migrations/029_banquet_viewer_ids.sql
 
 -- Real entries would skew the counts. Gone for this transaction only.
 delete from public.banquet_claims; delete from public.banquet_marks; delete from public.banquet_uids; delete from public.banquet_access;
