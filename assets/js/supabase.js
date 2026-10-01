@@ -81,13 +81,15 @@ export function isConfigured() {
  *
  * @param {string} path e.g. `/formation_cards?select=*&order=submitted_at.desc`
  * @param {{method?: string, body?: object, headers?: object, cache?: boolean,
- *          signal?: AbortSignal}} [opts]
+ *          signal?: AbortSignal, profile?: string}} [opts]
  *   `cache` marks a request as repeatable within a tab. Only GETs are cached.
+ *   `profile` is the schema to ask instead of public: a second Discord
+ *   server's banquets live in one of their own (tools/setup-server.sh).
  * @returns {Promise<{ok: true, data: any, total: number|null}
  *                 | {ok: false, why: string, status: number}>}
  */
 export async function rest(path, opts = {}) {
-  const { method = 'GET', body, headers = {}, cache = false, auth = false, signal } = opts;
+  const { method = 'GET', body, headers = {}, cache = false, auth = false, signal, profile } = opts;
 
   if (!isConfigured()) {
     return { ok: false, why: 'This copy of Horde Drafter is not connected to a community list.', status: 0 };
@@ -117,6 +119,8 @@ export async function rest(path, opts = {}) {
         authorization: `Bearer ${bearer}`,
         accept: 'application/json',
         ...(body ? { 'content-type': 'application/json' } : {}),
+        // PostgREST reads the schema from Accept-Profile on a read, Content-Profile on a write.
+        ...(profile ? { [method === 'GET' ? 'accept-profile' : 'content-profile']: profile } : {}),
         ...headers,
       },
       ...(body ? { body: JSON.stringify(body) } : {}),

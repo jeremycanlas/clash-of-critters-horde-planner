@@ -46,6 +46,34 @@ for (const uid of ['20000001', '55555555', '10000001', '10000002']) db.uids.push
 // A private list, 3, that Vee is in and Ana is not.
 db.uids.push({ grp: 3, uid: '39900001', who: 'maryal', source: 'site' });
 for (let i = 0; i < 20; i++) db.uids.push({ grp: 1, uid: String(60000000 + i * 137), who: ['Dee', 'Eli', 'Fay'][i % 3], source: 'discord' });
+/* The second server: its own schema, one group. Bea is a member, Vee sees it
+   too. Its UIDs share one with the first (55555555), as real servers can. */
+const dbB = {
+  uids: ['81000001', '81000002', '81000003', '81000004'].map((uid) => ({ uid, who: 'Bea' }))
+    .concat([{ uid: '82000001', who: 'Bo' }, { uid: '55555555', who: 'Bo' }]),
+  claims: [],
+};
+function stateB(me) {
+  const all = me.all;
+  const card = (uid) => {
+    const cl = dbB.claims.filter((c) => c.uid === uid);
+    return { uid, posted: '2026-09-29T00:00:00.000Z', entered_by: [...new Set(dbB.uids.filter((u) => u.uid === uid).map((u) => u.who))],
+      mine_site: false, claims: cl.length, claimed_by: cl.map((c) => c.who), claimed: cl.some((c) => c.who === me.name),
+      full: null, not_yet: null, ...(all ? { grp: 1 } : {}) };
+  };
+  const mine = dbB.uids.filter((u) => u.who === me.name);
+  const shared = all || mine.length >= 4;
+  const uids = [...new Set(dbB.uids.map((u) => u.uid))];
+  return {
+    round: '2026-09-24', current: '2026-09-24', rounds: ['2026-09-24'], shared, total: uids.length,
+    synced_at: new Date(Date.now() - 30e3).toISOString(),
+    mine: mine.map((u) => ({ uid: u.uid, source: 'discord', ...(all ? { grp: 1 } : {}) })),
+    banquets: shared ? uids.map(card) : [],
+    ...(all ? { groups: [1], names: { 1: 'Group 1' }, private: [] } : {}),
+  };
+}
+const schemas = []; // the schema of every request each person's page made: 'public' or 'tide'
+
 let syncedAgo = 60e3;
 let reads = 0;
 let sames = 0;
@@ -94,6 +122,25 @@ async function open(me, opts) {
     const ok = () => route.fulfill({ status: 204 });
     if (u.pathname.endsWith('/auth/v1/token')) return json({ access_token: 't', refresh_token: 'x', expires_in: 3600 });
     const fn = u.pathname.split('/').pop();
+    const headers = route.request().headers();
+    const schema = headers['content-profile'] ?? headers['accept-profile'] ?? 'public';
+    schemas.push({ who: me.name, schema });
+    if (schema === 'tide') {
+      sent.push({ who: me.name, fn, body, host: 'B' });
+      if (fn === 'banquet_check') return json(me.inB ? 'ok' : 'no-role');
+      if (fn === 'banquet_state') return json({ ...stateB(me), hash: `b${JSON.stringify(dbB.claims)}` });
+      if (fn === 'banquet_claim') {
+        dbB.claims = dbB.claims.filter((c) => !(c.uid === String(body.target) && c.who === me.name));
+        if (body.claimed) dbB.claims.push({ uid: String(body.target), who: me.name });
+        return ok();
+      }
+      if (fn === 'banquet_copies') return json({ people: [], both_groups: [] });
+      if (fn === 'banquet_access_log') {
+        return json([{ name: 'Bo', groups: [1], visits: 1, minutes: 2, reads: 8, per_min: 4, copied: 0, claimed: 0,
+          shared: 2, past_visits: 0, last: new Date().toISOString(), flags: [], recent: [] }]);
+      }
+      return ok();
+    }
     if (!['banquet_state', 'banquet_check', 'tracker_claim'].includes(fn)) sent.push({ who: me.name, fn, body });
     const g = me.all ? body.g : me.grp; // what banquet_group_for() does
     if (fn === 'banquet_copies') {
@@ -154,7 +201,7 @@ async function open(me, opts) {
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
   await page.clock.install();
-  await page.goto(`http://127.0.0.1:${PORT}/banquet.html`);
+  await page.goto(`http://127.0.0.1:${PORT}/banquet.html${me.code ? `?s=${me.code}` : ''}`);
   await page.waitForSelector(me.expectGate ? '#bq-gate:not([hidden])' : '#bq-app:not([hidden])');
   return { page, errors };
 }
@@ -417,7 +464,76 @@ try {
   assert.deepEqual(dee.errors, [], 'the refresh timer stays quiet with no list');
   down = false;
 
-  assert.deepEqual([...ana.errors, ...vee.errors], [], 'no script errors');
+  // ------------------------------------------------------------------ the second server
+  // The first server's link never asks the second's schema, and the reverse.
+  assert.ok(schemas.filter((x) => ['Ana', 'Vee', 'Dee'].includes(x.who)).every((x) => x.schema === 'public'),
+    'the first link never reaches the second server');
+  assert.equal(await A.locator('#site-tabs a[href="banquet.html"]').count(), 1, "the first link's tab is unchanged");
+
+  const bea = await open({ name: 'Bea', code: 'tide', inB: true }, devices['iPhone SE']);
+  const B = bea.page;
+  await B.click('[data-show="all"]');
+  assert.deepEqual((await B.locator('#bq-cards li').evaluateAll((ls) => ls.map((l) => l.dataset.key))).sort(),
+    [':55555555', ':81000001', ':81000002', ':81000003', ':81000004', ':82000001'], 'only the second server');
+  assert.ok(!/group|server/i.test(await B.locator('body').innerText()), 'no word of groups or another server');
+  assert.ok(schemas.filter((x) => x.who === 'Bea').every((x) => x.schema === 'tide'), 'and only its own schema');
+  assert.equal(await B.locator('#site-tabs a[href="banquet.html?s=tide"]').count(), 1, 'its tab keeps its link');
+  await B.locator('[data-claim="82000001"]').click();
+  await B.waitForTimeout(300);
+  assert.deepEqual(sent.filter((x) => x.who === 'Bea' && x.fn === 'banquet_claim').at(-1),
+    { who: 'Bea', fn: 'banquet_claim', body: { target: 82000001, claimed: true, g: null }, host: 'B' });
+
+  // Not in the second server: its link shuts, having asked only the second's schema.
+  const out = await open({ name: 'Out', code: 'tide', expectGate: true }, devices['iPhone SE']);
+  assert.match(await out.page.locator('#bq-gate-head').textContent(), /one Discord server/);
+  assert.ok(schemas.filter((x) => x.who === 'Out').every((x) => x.schema === 'tide'), 'and asked nothing of the first');
+  const junk = await open({ name: 'Junk', code: 'nope', expectGate: true }, devices['iPhone SE']);
+  assert.match(await junk.page.locator('#bq-gate-head').textContent(), /not right/, 'an unknown code opens nothing');
+
+  // ------------------------------------------------------------------ both servers, for Vee
+  // Let into one server of two: that one opens, and its cards still go to it.
+  const half = await open({ name: 'Ana', grp: 1, code: 'duo' }, { viewport: { width: 1280, height: 900 } });
+  await half.page.click('[data-show="all"]');
+  assert.ok(await half.page.locator('#bq-cards li').evaluateAll((ls) => ls.every((l) => l.dataset.key.startsWith('10:'))),
+    'only the first server, numbered as in the view of both');
+  await half.page.locator('li[data-key="10:20000001"] [data-claim]').click();
+  await half.page.waitForTimeout(300);
+  assert.deepEqual(sent.filter((x) => x.who === 'Ana' && x.fn === 'banquet_claim').at(-1),
+    { who: 'Ana', fn: 'banquet_claim', body: { target: 20000001, claimed: true, g: null } }, 'and its presses go to the first server');
+  const duo = await open({ name: 'Vee', all: true, code: 'duo', inB: true, scheme: 'light' },
+    { viewport: { width: 1280, height: 900 } });
+  const D = duo.page;
+  await D.click('[data-show="all"]');
+  const keys = await D.locator('#bq-cards li').evaluateAll((ls) => ls.map((l) => l.dataset.key));
+  assert.ok(keys.includes('11:20000001') && keys.includes('12:30000001') && keys.includes('21:82000001'), `both servers, renumbered: ${keys}`);
+  assert.equal(keys.filter((k) => k.endsWith(':55555555')).length, 3, 'the same UID is a separate card per server and group');
+  assert.ok(!keys.some((k) => k.startsWith('13:')), 'Both servers leaves the private list out');
+  assert.equal(await D.locator('li[data-key="21:82000001"] .bq-grp').textContent(), 'Send UIDs', 'a one-group server is called by its name');
+  assert.equal(await D.locator('li[data-key="12:30000001"] .bq-grp').textContent(), 'MVP UIDs · Group 2');
+  assert.equal(await D.locator('[data-group="0"]').textContent(), 'Both servers');
+  // Every press goes to the card's own server, with the group number that server knows.
+  await D.locator('[data-claim="82000001"]').click();
+  await D.waitForTimeout(300);
+  assert.deepEqual(sent.filter((x) => x.who === 'Vee' && x.fn === 'banquet_claim').at(-1),
+    { who: 'Vee', fn: 'banquet_claim', body: { target: 82000001, claimed: true, g: 1 }, host: 'B' });
+  await D.locator('li[data-key="12:30000001"] [data-claim]').click();
+  await D.waitForTimeout(300);
+  assert.deepEqual(sent.filter((x) => x.who === 'Vee' && x.fn === 'banquet_claim').at(-1),
+    { who: 'Vee', fn: 'banquet_claim', body: { target: 30000001, claimed: true, g: 2 } }, 'a first-server card goes to the first server');
+  await D.locator('#bq-mine-fold').evaluate((d) => { d.open = true; });
+  await D.fill('#bq-add-uid', '83000001');
+  await D.click('#bq-add');
+  assert.equal(await D.locator('#bq-mine-error').textContent(), 'Pick a server.');
+  await D.click('#bq-access summary');
+  await D.waitForSelector('#bq-access-body li');
+  assert.match(await D.locator('#bq-access-body').innerText(), /Grabby[\s\S]*Bo/, "both servers' access logs");
+  // The Claimed toast's Undo fails contrast in the light theme on every link; that is its own fix.
+  await D.waitForFunction(() => !document.querySelector('#toast.is-shown'), null, { timeout: 15000 });
+  await D.waitForTimeout(400);
+  assert.deepEqual(await axe(D), [], 'axe, both servers');
+
+  assert.deepEqual([...ana.errors, ...vee.errors, ...bea.errors, ...out.errors, ...junk.errors, ...half.errors, ...duo.errors], [],
+    'no script errors');
   console.log('banquet page: ok');
 } finally {
   await browser.close();

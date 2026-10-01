@@ -39,11 +39,12 @@ const unflag = (flag) => { try { localStorage.removeItem(flag); } catch { /* pri
 const nav = document.getElementById('site-tabs');
 const here = location.pathname.split('/').pop() || 'index.html';
 
-export function showPrivateTab(href = 'tracker.html') {
+// `query` keeps a banquet link's server code, so its tab goes back to the same list.
+export function showPrivateTab(href = 'tracker.html', query = '') {
   const p = PRIVATE.find((x) => x.href === href);
-  if (!nav || !p || nav.querySelector(`[href="${href}"]`)) return;
+  if (!nav || !p || nav.querySelector(`[href^="${href}"]`)) return;
   nav.insertAdjacentHTML('beforeend', `
-    <a class="sitetabs__tab sitetabs__tab--private" href="${href}"${here === href ? ' aria-current="page"' : ''}>
+    <a class="sitetabs__tab sitetabs__tab--private" href="${href}${query}"${here === href ? ' aria-current="page"' : ''}>
       <span class="sitetabs__long">${p.name}</span>
     </a>`);
 }
