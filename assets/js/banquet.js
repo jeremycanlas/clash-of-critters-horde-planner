@@ -8,17 +8,50 @@
  * this page shows whatever banquet_state() hands it. A group member's answer
  * carries no group at all, so the group controls below only ever appear for
  * someone who sees both.
+ *
+ * ## Servers
+ *
+ * Each Discord server is its own Supabase project, so nothing in one database,
+ * no query, no bug, no role, can reach the other's UIDs. The code on the
+ * page's link picks which (`?s=…`); no code is the server this page has always
+ * served, and behaves exactly as it did. One more code is both at once, for
+ * whoever each database separately lets in: it signs into each, renumbers each
+ * server's groups after its place (10s, 20s) so no two collide, and sends every
+ * request to the database the card it is about came from.
  */
 
-import { rest, signIn, signOut, signedIn, readCallback, isConfigured } from './supabase.js';
+import { site, connect } from './supabase.js';
 import { applyPrefs } from './prefs.js';
 import { showPrivateTab } from './site-nav.js';
 import { $, $$, esc, copyText, toast } from './ui.js';
 
 applyPrefs();
 
+/* The publishable key is an address, not a secret: see supabase.js. A blank
+   one leaves that server's link saying it is not connected. */
+const SERVERS = {
+  '': { name: 'MVP UIDs', db: site },
+  tide: { name: 'Send UIDs', db: connect({ url: '', anonKey: '' }, '.tide') },
+};
+const BOTH = 'duo';
+const code = new URLSearchParams(location.search).get('s') ?? '';
+const dbs = (code === BOTH ? Object.values(SERVERS) : [SERVERS[code]].filter(Boolean))
+  .map((s, i, all) => ({ ...s, base: all.length > 1 ? (i + 1) * 10 : 0, state: null }));
+const combined = dbs.length > 1;
+// Where a group's requests go, and the group number that database knows it by.
+const dbOf = (g) => (combined && g ? dbs[Math.floor(g / 10) - 1] : dbs[0]);
+const local = (g) => (combined && g ? g % 10 || null : g);
+function call(fn, body) {
+  const routed = 'g' in body ? { ...body, g: local(body.g) } : body;
+  return dbOf(body.g).db.rest(`/rpc/${fn}`, { method: 'POST', body: routed, auth: true });
+}
+// What this browser keeps, kept per link, so two servers never mix their seen or last copied.
+const K = code ? `.${code}` : '';
+
+// The site's nav knows the one server only.
 const FLAG = 'coc.banquet.member';
 const setMember = (on) => {
+  if (!dbs.some((d) => d.db === site)) return;
   try { if (on) localStorage.setItem(FLAG, '1'); else localStorage.removeItem(FLAG); } catch { /* private mode */ }
 };
 
@@ -31,9 +64,9 @@ let find = '';
 let group = 0; // for those who see both: 0 is both, 1 or 2 is the page as that group sees it
 /* Screenshot mode, for those who see both groups: the View as bar goes, so a
    capture "As Group 1" is exactly what a member sees. Kept per browser. */
-const SHOT = 'coc.banquet.shot';
+const SHOT = `coc.banquet.shot${K}`;
 let shot = false;
-const VIEW = 'coc.banquet.view'; // which group it is viewed as, so a reload in screenshot mode keeps it
+const VIEW = `coc.banquet.view${K}`; // which group it is viewed as, so a reload in screenshot mode keeps it
 try {
   shot = localStorage.getItem(SHOT) === '1';
   group = Number(localStorage.getItem(VIEW)) || 0;
@@ -49,7 +82,7 @@ let reached = Date.now(); // the last time a refresh got an answer
    shown, per round and per browser; a banquet you have not been shown, have
    not claimed and is not full is new. The first visit sees everything as
    seen, so it does not open on a wall of "new". */
-const SEEN = 'coc.banquet.seen.v1';
+const SEEN = `coc.banquet.seen.v1${K}`;
 let seen = null; // Set of "grp:uid", for state.round
 const latest = []; // this visit's changes, newest first
 const TITLE = document.title;
@@ -124,30 +157,44 @@ const WHY = {
   'signed-out': ['This page is private', 'Sign in with Discord to see it.'],
 };
 
-async function check() {
-  const got = await rest('/rpc/banquet_check', { method: 'POST', body: {}, auth: true });
+async function check(d) {
+  const got = await d.db.rest('/rpc/banquet_check', { method: 'POST', body: {}, auth: true });
   if (!got.ok) return got.why;
   return got.data;
 }
 
+let signInTo = dbs[0]; // the database the sign-in button is for
 async function start() {
-  const back = readCallback();
-  if (!isConfigured()) return gate('Not connected', 'This copy of the site has no database.', false);
-  if (!signedIn()) {
-    return gate('This page is private', back === 'failed'
+  const back = dbs.map((d) => d.db.readCallback());
+  if (!dbs.length) return gate('This link is not right', 'Check the link you were given.', false);
+  if (!dbs.every((d) => d.db.isConfigured())) return gate('Not connected', 'This copy of the site has no database.', false);
+  const out = dbs.find((d) => !d.db.signedIn());
+  if (out) {
+    signInTo = out;
+    if (combined) $('#bq-signin').textContent = `Sign in for ${out.name}`;
+    return gate('This page is private', back.includes('failed')
       ? 'Discord did not sign you in. Try again.'
-      : 'Sign in with Discord to see it. Only members of one Discord server with the right role can open it.', true);
+      : combined ? `Sign in with Discord once for each server. Next: ${out.name}.`
+        : 'Sign in with Discord to see it. Only members of one Discord server with the right role can open it.', true);
   }
   $('#bq-signout').hidden = false;
   status('Checking your role with Discord…');
-  const got = await check();
-  if (got !== 'ok') {
-    if (got !== 'discord-down') setMember(false);
+  const said = await Promise.all(dbs.map(check));
+  const ours = said[dbs.findIndex((d) => d.db === site)];
+  if (ours && ours !== 'discord-down') setMember(ours === 'ok');
+  // Both servers: whichever let you in opens, and the other says why not.
+  const shut = said.map((got, i) => [got, dbs[i]]).filter(([got]) => got !== 'ok');
+  if (shut.length === dbs.length) {
+    const [got, d] = shut[0];
+    signInTo = d;
     const [head, text] = WHY[got] ?? ['Could not check your access', got];
-    return gate(head, text, got === 'signed-out' || !WHY[got]);
+    return gate(combined ? `${d.name}: ${head}` : head, text, got === 'signed-out' || !WHY[got]);
   }
-  setMember(true);
-  showPrivateTab('banquet.html');
+  for (const [got, d] of shut) {
+    dbs.splice(dbs.indexOf(d), 1);
+    toast(`${d.name}: ${(WHY[got] ?? [got])[0]}`, 'info');
+  }
+  showPrivateTab('banquet.html', code ? `?s=${code}` : ''); // a known code: dbs is empty otherwise
   await load();
 
   /* Everyone else's claims and marks, every 15 seconds while the tab is in
@@ -165,8 +212,8 @@ async function start() {
 
   // Keeps the database's yes fresh, and notices a role taken away.
   setInterval(async () => {
-    const again = await check();
-    if (again === 'no-role') location.reload();
+    const again = await Promise.all(dbs.map(check));
+    if (again.includes('no-role')) location.reload();
   }, 10 * 60 * 1000);
 }
 
@@ -181,18 +228,60 @@ function gate(head, text, canSignIn) {
 
 // ------------------------------------------------------------------ data
 
+/* One server's answer in the view of both, with its groups renumbered after
+   its place. A member's answer names no group, so it is that server's base,
+   and a server with one group is called by the server's name alone. */
+function lift(d) {
+  const s = d.state;
+  const up = (g) => d.base + (g ?? 0);
+  const own = s.groups ?? [0];
+  return {
+    ...s,
+    mine: s.mine.map((m) => ({ ...m, grp: up(m.grp) })),
+    banquets: s.banquets.map((b) => ({ ...b, grp: up(b.grp) })),
+    groups: own.map(up),
+    names: Object.fromEntries(own.map((g) => [up(g), own.length === 1 ? d.name : `${d.name} · ${s.names?.[g] ?? `Group ${g}`}`])),
+    private: (s.private ?? []).map(up),
+  };
+}
+
+// Both servers as one answer. Both count the same gold rushes, so rounds line up.
+function merge(parts) {
+  const synced = parts.map((p) => p.synced_at).filter(Boolean).sort();
+  return {
+    round: parts[0].round,
+    current: parts[0].current,
+    rounds: [...new Set(parts.flatMap((p) => p.rounds))].sort().reverse(),
+    // ponytail: open if any server is; a locked one shows nothing, with no "add N more" for it.
+    shared: parts.some((p) => p.shared),
+    total: parts.reduce((n, p) => n + p.total, 0),
+    mine: parts.flatMap((p) => p.mine),
+    banquets: parts.flatMap((p) => p.banquets),
+    groups: parts.flatMap((p) => p.groups),
+    names: Object.assign({}, ...parts.map((p) => p.names)),
+    private: parts.flatMap((p) => p.private),
+    synced_at: synced[0] ?? null,
+  };
+}
+
 /* `quiet` is the timer's: a failed refresh keeps what is on screen, where a
    failed load someone asked for says so. */
 async function load(round = null, quiet = false) {
   /* A refresh sends the fingerprint of what it holds; an unchanged list comes
      back as a few bytes saying so, rather than the whole list again. */
-  const known = quiet && state && (round ?? state.current) === state.round ? state.hash : null;
-  const got = await rest('/rpc/banquet_state', { method: 'POST', body: { r: round, known }, auth: true });
-  if (!got.ok) return quiet ? undefined : gate('Could not load the banquets', got.why, true);
+  const same = quiet && state && (round ?? state.current) === state.round;
+  const got = await Promise.all(dbs.map((d) => d.db.rest('/rpc/banquet_state',
+    { method: 'POST', body: { r: round, known: same ? d.state?.hash ?? null : null }, auth: true })));
+  const bad = got.find((x) => !x.ok);
+  if (bad) return quiet ? undefined : gate('Could not load the banquets', bad.why, true);
   reached = Date.now();
-  const changed = !got.data.same;
+  const changed = got.some((x) => !x.data.same);
   const before = state;
-  state = changed ? got.data : { ...state, synced_at: got.data.synced_at };
+  dbs.forEach((d, i) => {
+    const a = got[i].data;
+    d.state = a.same ? { ...d.state, synced_at: a.synced_at } : a;
+  });
+  state = combined ? merge(dbs.map(lift)) : dbs[0].state;
   if (!seen || before?.round !== state.round) loadSeen(state.round, state.banquets);
   // Just unlocked: the list is new to you all at once, which is the same as none of it.
   else if (!before.shared && state.shared) markSeen(...state.banquets.map(keyOf));
@@ -209,7 +298,18 @@ async function load(round = null, quiet = false) {
 // A copy is the one sign of taking the site can see. Not waited on: it must never slow the copy.
 function noteCopy(key) {
   const [g, uid] = key.split(':');
-  rest('/rpc/banquet_note_copy', { method: 'POST', body: { target: Number(uid), g: g ? Number(g) : null }, auth: true });
+  call('banquet_note_copy', { target: Number(uid), g: g ? Number(g) : null });
+}
+
+/* The access log and possible copies, from each server that lets you see them,
+   with their groups renumbered as lift() does. One server: its answer as is. */
+async function fromEach(fn, body, renumber) {
+  const got = await Promise.all(dbs.filter((d) => d.state?.groups).map(async (d) => {
+    const x = await d.db.rest(`/rpc/${fn}`, { method: 'POST', body, auth: true });
+    return x.ok && combined ? { ok: true, data: renumber(x.data, (g) => d.base + g) } : x;
+  }));
+  const bad = got.find((x) => !x.ok);
+  return bad ?? { ok: true, data: got.map((x) => x.data) };
 }
 
 const FLAGS = {
@@ -219,9 +319,10 @@ const FLAGS = {
 };
 
 async function loadAccess() {
-  const got = await rest('/rpc/banquet_access_log', { method: 'POST', body: { days: 7 }, auth: true });
+  const got = await fromEach('banquet_access_log', { days: 7 }, (people, up) => people.map((p) => ({
+    ...p, groups: p.groups.map(up), recent: p.recent.map((v) => ({ ...v, groups: v.groups.map(up) })) })));
   if (!got.ok) { $('#bq-access-body').textContent = got.why; return; }
-  const people = got.data;
+  const people = got.data.flat();
   const flagged = people.filter((p) => p.flags.length).length;
   $('#bq-access-n').textContent = `(${people.length} people${flagged ? `, ${flagged} flagged` : ''})`;
   const day = (iso) => new Date(iso).toLocaleString(undefined, { weekday: 'short', hour: 'numeric', minute: '2-digit' });
@@ -240,9 +341,13 @@ $('#bq-access').addEventListener('toggle', () => { if ($('#bq-access').open) loa
 // ------------------------------------------------------------------ possible copies
 
 async function loadCopies() {
-  const got = await rest('/rpc/banquet_copies', { method: 'POST', body: { r: state.round }, auth: true });
+  const got = await fromEach('banquet_copies', { r: state.round }, (c, up) => ({
+    people: c.people.map((p) => ({ ...p, grp: up(p.grp), items: p.items.map((i) => ({ ...i, first_grp: i.first_grp && up(i.first_grp) })) })),
+    both_groups: c.both_groups.map((b) => ({ ...b, groups: Object.fromEntries(Object.entries(b.groups).map(([g, n]) => [up(Number(g)), n])) })),
+  }));
   if (!got.ok) return;
-  const { people, both_groups: both } = got.data;
+  const people = got.data.flatMap((c) => c.people);
+  const both = got.data.flatMap((c) => c.both_groups);
   const n = people.length + both.length;
   $('#bq-copies-n').textContent = n ? `(${n})` : '(none)';
   const whenBy = (by, g, at) => `${esc(by)}, ${esc(nameOf(g))}, ${time(at)}`;
@@ -303,7 +408,7 @@ function render() {
   const pick = $('#bq-add-grp');
   pick.hidden = !state.groups || !!group;
   if (state.groups && !pick.options.length) {
-    pick.innerHTML = `<option value="">Group…</option>${state.groups.map((g) => `<option value="${g}">${esc(nameOf(g))}</option>`).join('')}`;
+    pick.innerHTML = `<option value="">${combined ? 'Server…' : 'Group…'}</option>${state.groups.map((g) => `<option value="${g}">${esc(nameOf(g))}</option>`).join('')}`;
   }
 
   const open = past || state.shared;
@@ -318,7 +423,7 @@ function render() {
   const groups = $('#bq-groups');
   if (state.groups && !groups.children.length) {
     groups.innerHTML = [0, ...state.groups].map((g) => `<button class="segmented__btn" type="button" data-group="${g}"
-      aria-pressed="${g === group}">${!g ? 'Both groups' : isPrivate(g) ? esc(nameOf(g)) : `As ${esc(nameOf(g))}`}</button>`).join('');
+      aria-pressed="${g === group}">${!g ? (combined ? 'Both servers' : 'Both groups') : isPrivate(g) ? esc(nameOf(g)) : `As ${esc(nameOf(g))}`}</button>`).join('');
   }
   $('#bq-view-note').textContent = !group ? ''
     : isPrivate(group) ? `${nameOf(group)}: only the people added to it can see it. Anything you add or press is kept here.`
@@ -362,7 +467,7 @@ const found = (b) => !find || b.uid.includes(find)
 
 /* The last UID you copied, so the card you are checking in the game stays
    easy to find as the list reorders and refreshes. Kept per browser. */
-const LAST = 'coc.banquet.lastcopied';
+const LAST = `coc.banquet.lastcopied${K}`;
 let lastCopied = null; // "grp:uid"
 try { lastCopied = localStorage.getItem(LAST); } catch { /* this visit only */ }
 function setLastCopied(k) {
@@ -427,9 +532,9 @@ $('#bq-mine').addEventListener('submit', async (e) => {
   err.hidden = true;
   if (!/^[0-9]{8}$/.test(uid)) { err.textContent = 'A UID is 8 digits.'; err.hidden = false; return; }
   const g = state.groups ? group || Number($('#bq-add-grp').value) || null : null;
-  if (state.groups && !g) { err.textContent = 'Pick a group.'; err.hidden = false; return; }
+  if (state.groups && !g) { err.textContent = combined ? 'Pick a server.' : 'Pick a group.'; err.hidden = false; return; }
   $('#bq-add').disabled = true;
-  const got = await rest('/rpc/banquet_add', { method: 'POST', body: { target: Number(uid), g }, auth: true });
+  const got = await call('banquet_add', { target: Number(uid), g });
   $('#bq-add').disabled = false;
   if (!got.ok) { err.textContent = got.why; err.hidden = false; return; }
   $('#bq-add-uid').value = '';
@@ -447,8 +552,8 @@ async function saveEdit(li) {
   const next = input.value.trim();
   if (!/^[0-9]{8}$/.test(next)) { err.textContent = 'A UID is 8 digits.'; err.hidden = false; return; }
   li.querySelector('[data-save]').disabled = true;
-  const got = await rest('/rpc/banquet_edit', { method: 'POST',
-    body: { target: Number(li.dataset.uid), replacement: Number(next), g: li.dataset.grp ? Number(li.dataset.grp) : null }, auth: true });
+  const got = await call('banquet_edit',
+    { target: Number(li.dataset.uid), replacement: Number(next), g: li.dataset.grp ? Number(li.dataset.grp) : null });
   li.querySelector('[data-save]').disabled = false;
   if (!got.ok) { err.textContent = got.why; err.hidden = false; return; }
   const g = li.dataset.grp ?? '';
@@ -485,7 +590,7 @@ $('#bq-my').addEventListener('click', async (e) => {
   const remove = e.target.closest('[data-remove]');
   if (!remove) return;
   remove.disabled = true;
-  const got = await rest('/rpc/banquet_remove', { method: 'POST', body: { target: Number(remove.dataset.remove), g: grpOf(remove) }, auth: true });
+  const got = await call('banquet_remove', { target: Number(remove.dataset.remove), g: grpOf(remove) });
   if (!got.ok) { remove.disabled = false; remove.textContent = got.why; return; }
   load();
 });
@@ -556,8 +661,8 @@ $('#bq-cards').addEventListener('click', async (e) => {
   const g = grpOf(btn);
   markSeen(btn.closest('li').dataset.key); // claimed or marked: seen, whatever Undo does next
   const got = claim
-    ? await rest('/rpc/banquet_claim', { method: 'POST', body: { target, claimed: on, g }, auth: true })
-    : await rest('/rpc/banquet_mark', { method: 'POST', body: { target, state: on ? mark.dataset.mark : null, g }, auth: true });
+    ? await call('banquet_claim', { target, claimed: on, g })
+    : await call('banquet_mark', { target, state: on ? mark.dataset.mark : null, g });
   if (!got.ok) { btn.disabled = false; btn.textContent = got.why; btn.removeAttribute('aria-label'); return; }
   /* Claiming takes the card out of Ready at once, so a thumb on the wrong
      card gets a way back that does not mean finding it in another tab. */
@@ -565,7 +670,7 @@ $('#bq-cards').addEventListener('click', async (e) => {
     toast(`Claimed ${target}`, 'info', {
       label: 'Undo',
       fn: async () => {
-        await rest('/rpc/banquet_claim', { method: 'POST', body: { target, claimed: false, g }, auth: true });
+        await call('banquet_claim', { target, claimed: false, g });
         load(state.round);
       },
     });
@@ -618,7 +723,8 @@ document.addEventListener('click', async (e) => {
   setTimeout(() => { btn.classList.remove('is-copied', 'is-failed'); delete btn.dataset.label; }, 1200);
 });
 
-$('#bq-signin').addEventListener('click', () => signIn());
-$('#bq-signout').addEventListener('click', () => { signOut(); setMember(false); location.reload(); });
+// Back to this address, code and all; with no code it is the address it always was.
+$('#bq-signin').addEventListener('click', () => signInTo.db.signIn(`${location.origin}${location.pathname}${location.search}`));
+$('#bq-signout').addEventListener('click', () => { for (const d of dbs) d.db.signOut(); setMember(false); location.reload(); });
 
 start();

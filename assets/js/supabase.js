@@ -61,84 +61,364 @@ export const CONFIG = {
  */
 const FRESH_FOR = 3 * 60 * 1000;
 const CACHE_KEY = 'coc.community.cache.v1';
+const SESSION_KEY = 'coc.community.v1';
+// Which database a sign-in that left for Discord belongs to, for the way back.
+const PENDING_KEY = 'coc.signin.for';
 
 /**
- * False in a fork, or before the maintainer has filled CONFIG in.
+ * One database: its own sign-in, its own session, its own cache.
  *
- * Deliberately loose about the key's shape: Supabase issues both the legacy
- * `eyJ…` JWT and the newer `sb_publishable_…` form, and a self-hosted project
- * is not on supabase.co at all. Anything that looks like a host and a key of
- * plausible length is treated as configured — a wrong one fails at the first
- * request with a message, which is a better place to find out than a silent
- * "not connected" that looks identical to having filled in nothing.
- */
-export function isConfigured() {
-  return /^https:\/\/[^/\s]+\.[^/\s]+/.test(CONFIG.url) && CONFIG.anonKey.trim().length >= 20;
-}
-
-/**
- * One PostgREST call.
+ * The site talks to one database, CONFIG, and every page uses the functions
+ * exported at the bottom, which are connect(CONFIG). The banquet page can also
+ * reach other databases, each a separate Supabase project for a separate
+ * Discord server; nothing here lets one instance see another's session, so a
+ * request only ever carries the sign-in of the database it goes to.
  *
- * @param {string} path e.g. `/formation_cards?select=*&order=submitted_at.desc`
- * @param {{method?: string, body?: object, headers?: object, cache?: boolean,
- *          signal?: AbortSignal}} [opts]
- *   `cache` marks a request as repeatable within a tab. Only GETs are cached.
- * @returns {Promise<{ok: true, data: any, total: number|null}
- *                 | {ok: false, why: string, status: number}>}
+ * `suffix` keeps each instance's session and cache apart in this browser. The
+ * default instance has none, so its keys are the ones it always had.
  */
-export async function rest(path, opts = {}) {
-  const { method = 'GET', body, headers = {}, cache = false, auth = false, signal } = opts;
+export function connect(config, suffix = '') {
+  const sessionKey = SESSION_KEY + suffix;
+  const cacheKey = CACHE_KEY + suffix;
 
-  if (!isConfigured()) {
-    return { ok: false, why: 'This copy of Horde Drafter is not connected to a community list.', status: 0 };
+  /**
+   * False in a fork, or before the maintainer has filled CONFIG in.
+   *
+   * Deliberately loose about the key's shape: Supabase issues both the legacy
+   * `eyJ…` JWT and the newer `sb_publishable_…` form, and a self-hosted project
+   * is not on supabase.co at all. Anything that looks like a host and a key of
+   * plausible length is treated as configured — a wrong one fails at the first
+   * request with a message, which is a better place to find out than a silent
+   * "not connected" that looks identical to having filled in nothing.
+   */
+  function isConfigured() {
+    return /^https:\/\/[^/\s]+\.[^/\s]+/.test(config.url) && config.anonKey.trim().length >= 20;
   }
 
-  if (method === 'GET' && cache) {
-    const held = readCache(path);
-    if (held) return { ok: true, data: held.data, total: held.total };
+  /**
+   * One PostgREST call.
+   *
+   * @param {string} path e.g. `/formation_cards?select=*&order=submitted_at.desc`
+   * @param {{method?: string, body?: object, headers?: object, cache?: boolean,
+   *          signal?: AbortSignal}} [opts]
+   *   `cache` marks a request as repeatable within a tab. Only GETs are cached.
+   * @returns {Promise<{ok: true, data: any, total: number|null}
+   *                 | {ok: false, why: string, status: number}>}
+   */
+  async function rest(path, opts = {}) {
+    const { method = 'GET', body, headers = {}, cache = false, auth = false, signal } = opts;
+
+    if (!isConfigured()) {
+      return { ok: false, why: 'This copy of Horde Drafter is not connected to a community list.', status: 0 };
+    }
+
+    if (method === 'GET' && cache) {
+      const held = readCache(path);
+      if (held) return { ok: true, data: held.data, total: held.total };
+    }
+
+    // Anything that writes goes out as the signed-in person, so the policies in
+    // 001_community.sql can see an auth.uid() to check against.
+    let bearer = config.anonKey;
+    if (auth) {
+      const got = await token();
+      if (!got.ok) return { ok: false, why: got.why, status: 401 };
+      bearer = got.jwt;
+    }
+
+    let res;
+    try {
+      res = await fetch(`${config.url}/rest/v1${path}`, {
+        method,
+        signal,
+        headers: {
+          apikey: config.anonKey,
+          authorization: `Bearer ${bearer}`,
+          accept: 'application/json',
+          ...(body ? { 'content-type': 'application/json' } : {}),
+          ...headers,
+        },
+        ...(body ? { body: JSON.stringify(body) } : {}),
+      });
+    } catch (err) {
+      // Abort is the caller changing its mind, not a failure worth wording.
+      if (err?.name === 'AbortError') return { ok: false, why: '', status: 0 };
+      return { ok: false, why: 'Could not reach the community list.', status: 0 };
+    }
+
+    if (!res.ok) return { ok: false, why: await reasonFor(res, method), status: res.status };
+
+    let data = null;
+    if (res.status !== 204) {
+      try { data = await res.json(); } catch { data = null; }
+    }
+
+    // `Prefer: count=exact` answers in Content-Range as `0-19/431`.
+    const total = countOf(res.headers.get('content-range'));
+
+    if (method === 'GET' && cache) writeCache(path, { data, total });
+    return { ok: true, data, total };
   }
 
-  // Anything that writes goes out as the signed-in person, so the policies in
-  // 001_community.sql can see an auth.uid() to check against.
-  let bearer = CONFIG.anonKey;
-  if (auth) {
-    const got = await token();
-    if (!got.ok) return { ok: false, why: got.why, status: 401 };
-    bearer = got.jwt;
+  // ---------------------------------------------------------------- who you are
+
+  /**
+   * Signing in, and why it looks like this.
+   *
+   * Discord rather than an account of our own: the people this tool is for are
+   * already on Discord, where formations get posted and where every
+   * feature request in the changelog came from, and a password nobody wanted to
+   * invent is a password we would then have to keep.
+   *
+   * A note on scope, because the obvious thing does not work. Supabase's Discord
+   * provider hard-codes `email identify` and *appends* anything passed as
+   * `scopes` rather than replacing it — asking for `scopes=identify` produces
+   * `scope=email+identify+identify` and changes nothing. There is no way from
+   * here to stop Discord returning an email address, so Supabase stores one in
+   * `auth.users`. This app never reads it, never shows it, and never copies it
+   * into a formation row; the only thing that leaves `auth.users` is the display
+   * name, put there by derive_formation(). The README says exactly this rather
+   * than claiming an address is never collected, because it is.
+   *
+   * It is lazy on purpose. Nothing in here runs until somebody presses Post —
+   * browsing the gallery signs you into nothing and asks you for nothing.
+   */
+
+  /** The access token, in memory only. Short-lived, and refreshed from the store. */
+  let live = { jwt: '', until: 0 };
+
+  function session() {
+    try { return JSON.parse(localStorage.getItem(sessionKey) ?? 'null'); } catch { return null; }
   }
 
-  let res;
-  try {
-    res = await fetch(`${CONFIG.url}/rest/v1${path}`, {
-      method,
-      signal,
-      headers: {
-        apikey: CONFIG.anonKey,
-        authorization: `Bearer ${bearer}`,
-        accept: 'application/json',
-        ...(body ? { 'content-type': 'application/json' } : {}),
-        ...headers,
-      },
-      ...(body ? { body: JSON.stringify(body) } : {}),
+  function keepSession(next) {
+    try { localStorage.setItem(sessionKey, JSON.stringify(next)); } catch { /* private mode */ }
+  }
+
+  /** True when there is something to refresh from. Does not prove it still works. */
+  const signedIn = () => !!session()?.refresh_token;
+
+  /** @returns {{uid: string, name: string, avatar: string|null}|null} */
+  function whoAmI() {
+    const held = session();
+    return held?.uid ? { uid: held.uid, name: held.name || 'Someone', avatar: held.avatar ?? null } : null;
+  }
+
+  function remember(payload) {
+    if (!payload?.refresh_token) return;
+    live = {
+      jwt: payload.access_token ?? '',
+      // A minute of slack, so a request never leaves with a token that expires
+      // while it is in flight.
+      until: Date.now() + Math.max(0, (Number(payload.expires_in) || 3600) - 60) * 1000,
+    };
+    keepSession({
+      refresh_token: payload.refresh_token,
+      uid: payload.user?.id ?? session()?.uid ?? '',
+      name: payload.user ? nameOf(payload.user) : session()?.name ?? '',
+      avatar: payload.user?.user_metadata?.avatar_url ?? session()?.avatar ?? null,
     });
-  } catch (err) {
-    // Abort is the caller changing its mind, not a failure worth wording.
-    if (err?.name === 'AbortError') return { ok: false, why: '', status: 0 };
-    return { ok: false, why: 'Could not reach the community list.', status: 0 };
   }
 
-  if (!res.ok) return { ok: false, why: await reasonFor(res, method), status: res.status };
-
-  let data = null;
-  if (res.status !== 204) {
-    try { data = await res.json(); } catch { data = null; }
+  /**
+   * Leaves for Discord and does not come back — the browser navigates away, and
+   * the answer arrives as a fragment on `returnTo`, which readCallback() picks up.
+   *
+   * `returnTo` defaults to this page's address with neither its fragment nor its
+   * query, so you land back where you were rather than somewhere central.
+   *
+   * Dropping the query is not tidiness. Supabase checks this against the
+   * project's allowed redirect URLs, matched as a glob over the whole string —
+   * so every `?something` that can appear in the address is another shape the
+   * allow-list has to cover, and a miss does not fail loudly: it silently returns
+   * the visitor to the Site URL instead, which on a phone pointed at a dev server
+   * means being thrown to the production site mid-sign-in. Nothing here reads its
+   * own query string, so there is nothing to preserve and one less way to be
+   * wrong.
+   *
+   * A new deployment, or a new address you develop against, still needs adding to
+   * that list — origin and port included, since both are part of the match.
+   */
+  function signIn(returnTo = `${location.origin}${location.pathname}`) {
+    if (!isConfigured()) return;
+    // No `scopes` param: Supabase appends to its own defaults rather than
+    // replacing them, so passing `identify` only ever produced a duplicate.
+    const url = `${config.url}/auth/v1/authorize`
+      + `?provider=discord`
+      + `&redirect_to=${encodeURIComponent(returnTo)}`;
+    try { sessionStorage.setItem(PENDING_KEY, sessionKey); } catch { /* one database on the page: nothing to tell apart */ }
+    location.href = url;
   }
 
-  // `Prefer: count=exact` answers in Content-Range as `0-19/431`.
-  const total = countOf(res.headers.get('content-range'));
+  /**
+   * Takes the session out of the URL on the way back from Discord.
+   *
+   * Must run before anything else reads `location.hash`. On the drafter that hash
+   * is the share-link format, and an `#access_token=…` left lying in it would sit
+   * in the address bar looking like a formation and get copied into a share link
+   * by somebody who trusted the address bar.
+   *
+   * @returns {'signed-in'|'failed'|null} null when this was an ordinary page load
+   */
+  function readCallback() {
+    const hash = location.hash.slice(1);
+    if (!hash || !/(^|&)(access_token|error|error_description)=/.test(hash)) return null;
+    // Another database's sign-in, on a page that talks to two: that one reads it.
+    let pending = null;
+    try { pending = sessionStorage.getItem(PENDING_KEY); } catch { /* none */ }
+    if (pending && pending !== sessionKey) return null;
+    try { sessionStorage.removeItem(PENDING_KEY); } catch { /* nothing to drop */ }
 
-  if (method === 'GET' && cache) writeCache(path, { data, total });
-  return { ok: true, data, total };
+    const got = new URLSearchParams(hash);
+    const clean = () => history.replaceState(null, '', location.pathname + location.search);
+
+    if (got.get('error') || !got.get('access_token')) { clean(); return 'failed'; }
+
+    remember({
+      access_token: got.get('access_token'),
+      refresh_token: got.get('refresh_token'),
+      expires_in: got.get('expires_in'),
+    });
+    clean();
+
+    // The fragment carries no profile, so the name is fetched once, here, rather
+    // than on every later request.
+    refreshProfile();
+    return 'signed-in';
+  }
+
+  async function refreshProfile() {
+    const got = await token();
+    if (!got.ok) return;
+    try {
+      const res = await fetch(`${config.url}/auth/v1/user`, {
+        headers: { apikey: config.anonKey, authorization: `Bearer ${got.jwt}` },
+      });
+      if (!res.ok) return;
+      const user = await res.json();
+      const held = session() ?? {};
+      keepSession({
+        ...held,
+        uid: user?.id ?? held.uid ?? '',
+        name: nameOf(user),
+        avatar: user?.user_metadata?.avatar_url ?? null,
+      });
+    } catch { /* a missing display name is not worth interrupting anyone over */ }
+  }
+
+  /**
+   * A usable access token, refreshing it if the one in memory has gone stale.
+   * @returns {Promise<{ok: true, jwt: string} | {ok: false, why: string}>}
+   */
+  /* One refresh at a time: the nav's Players check and a page's own call can both
+     find the token stale on load, and a refresh token spent twice can be refused,
+     which would sign the visitor out. */
+  let refreshing = null;
+  function token() {
+    if (live.jwt && Date.now() < live.until) return Promise.resolve({ ok: true, jwt: live.jwt });
+    refreshing ??= refresh().finally(() => { refreshing = null; });
+    return refreshing;
+  }
+
+  async function refresh() {
+
+    const held = session();
+    if (!held?.refresh_token) return { ok: false, why: 'You are not signed in.' };
+
+    let res;
+    try {
+      res = await fetch(`${config.url}/auth/v1/token?grant_type=refresh_token`, {
+        method: 'POST',
+        headers: { apikey: config.anonKey, 'content-type': 'application/json' },
+        body: JSON.stringify({ refresh_token: held.refresh_token }),
+      });
+    } catch {
+      return { ok: false, why: 'Could not reach the community list.' };
+    }
+
+    if (!res.ok) {
+      // A refused refresh is a session that has ended, not a transient failure —
+      // holding onto it would make every later attempt fail the same way.
+      signOut();
+      return { ok: false, why: 'Your sign-in has expired. Press Post again to sign in.' };
+    }
+
+    const payload = await res.json().catch(() => null);
+    if (!payload?.access_token) return { ok: false, why: 'The sign-in service sent something unreadable.' };
+    remember(payload);
+    return { ok: true, jwt: payload.access_token };
+  }
+
+  /**
+   * Forgets the session here, and ends it on the server too.
+   *
+   * The local half was all this used to do, and it was not enough. What is kept
+   * in `localStorage` is a *refresh token*, and localStorage does not expire, so a
+   * browser somebody else opens later could post, delete and vote as whoever last
+   * signed in. Dropping the token locally leaves the session alive on the server,
+   * along with the IP recorded against it; only the logout endpoint ends it.
+   *
+   * The session behind it is now time-boxed as well -- 30 days, or 7 days unused,
+   * enforced by `expire-stale-sessions` in supabase/migrations/008. That bounds
+   * the damage; it does not replace this. Thirty days is a long time to be able to
+   * post as somebody else, and a sign-out is the only thing that ends it now.
+   *
+   * `scope=local` rather than the default `global`: signing out of a borrowed
+   * laptop should not sign you out on your phone.
+   *
+   * Local state is cleared first and unconditionally. A logout that cannot reach
+   * the network must still sign you out of the browser in front of you —
+   * refusing to would be exactly backwards, since the person asking is most
+   * likely the one at a machine they do not own.
+   *
+   * Not awaited by callers, and it takes its own copy of the token before
+   * clearing, because after this returns there is nothing left to authenticate
+   * with.
+   */
+  function signOut() {
+    const jwt = live.jwt;
+    live = { jwt: '', until: 0 };
+    try { localStorage.removeItem(sessionKey); } catch { /* nothing to drop */ }
+
+    if (!jwt || !isConfigured()) return;
+    fetch(`${config.url}/auth/v1/logout?scope=local`, {
+      method: 'POST',
+      headers: { apikey: config.anonKey, authorization: `Bearer ${jwt}` },
+      // The tab may be closing; this asks the browser to send it anyway.
+      keepalive: true,
+    }).catch(() => { /* signed out here regardless — see above */ });
+  }
+
+  // ---------------------------------------------------------------- cache
+
+  /**
+   * Per tab, not per browser. A community list is somebody else's data and it
+   * changes; keeping it past the tab would mean opening the page tomorrow to
+   * yesterday's ranking with no way to tell.
+   */
+  function readCache(path) {
+    try {
+      const all = JSON.parse(sessionStorage.getItem(cacheKey) ?? '{}');
+      const held = all[path];
+      if (!held || Date.now() - held.at > FRESH_FOR) return null;
+      return held;
+    } catch { return null; }
+  }
+
+  function writeCache(path, value) {
+    try {
+      const all = JSON.parse(sessionStorage.getItem(cacheKey) ?? '{}');
+      all[path] = { ...value, at: Date.now() };
+      sessionStorage.setItem(cacheKey, JSON.stringify(all));
+    } catch { /* private mode, or full - the fetch just repeats */ }
+  }
+
+  /** Drops the cache, so the next read is live. For a Retry button. */
+  function forgetCache() {
+    try { sessionStorage.removeItem(cacheKey); } catch { /* nothing to drop */ }
+  }
+
+  return { config, isConfigured, rest, signedIn, whoAmI, signIn, readCallback, token, signOut, forgetCache };
 }
 
 /**
@@ -203,262 +483,15 @@ function countOf(contentRange) {
   return Number.isInteger(n) ? n : null;
 }
 
-// ---------------------------------------------------------------- who you are
-
-/**
- * Signing in, and why it looks like this.
- *
- * Discord rather than an account of our own: the people this tool is for are
- * already on Discord, where formations get posted and where every
- * feature request in the changelog came from, and a password nobody wanted to
- * invent is a password we would then have to keep.
- *
- * A note on scope, because the obvious thing does not work. Supabase's Discord
- * provider hard-codes `email identify` and *appends* anything passed as
- * `scopes` rather than replacing it — asking for `scopes=identify` produces
- * `scope=email+identify+identify` and changes nothing. There is no way from
- * here to stop Discord returning an email address, so Supabase stores one in
- * `auth.users`. This app never reads it, never shows it, and never copies it
- * into a formation row; the only thing that leaves `auth.users` is the display
- * name, put there by derive_formation(). The README says exactly this rather
- * than claiming an address is never collected, because it is.
- *
- * It is lazy on purpose. Nothing in here runs until somebody presses Post —
- * browsing the gallery signs you into nothing and asks you for nothing.
- */
-
-const SESSION_KEY = 'coc.community.v1';
-
-/** The access token, in memory only. Short-lived, and refreshed from the store. */
-let live = { jwt: '', until: 0 };
-
-function session() {
-  try { return JSON.parse(localStorage.getItem(SESSION_KEY) ?? 'null'); } catch { return null; }
-}
-
-function keepSession(next) {
-  try { localStorage.setItem(SESSION_KEY, JSON.stringify(next)); } catch { /* private mode */ }
-}
-
-/** True when there is something to refresh from. Does not prove it still works. */
-export const signedIn = () => !!session()?.refresh_token;
-
-/** @returns {{uid: string, name: string, avatar: string|null}|null} */
-export function whoAmI() {
-  const held = session();
-  return held?.uid ? { uid: held.uid, name: held.name || 'Someone', avatar: held.avatar ?? null } : null;
-}
-
 /** Discord's own words for who somebody is, in the order they are worth showing. */
 function nameOf(user) {
   const m = user?.user_metadata ?? {};
   return m.custom_claims?.global_name || m.full_name || m.name || m.user_name || 'Someone';
 }
 
-function remember(payload) {
-  if (!payload?.refresh_token) return;
-  live = {
-    jwt: payload.access_token ?? '',
-    // A minute of slack, so a request never leaves with a token that expires
-    // while it is in flight.
-    until: Date.now() + Math.max(0, (Number(payload.expires_in) || 3600) - 60) * 1000,
-  };
-  keepSession({
-    refresh_token: payload.refresh_token,
-    uid: payload.user?.id ?? session()?.uid ?? '',
-    name: payload.user ? nameOf(payload.user) : session()?.name ?? '',
-    avatar: payload.user?.user_metadata?.avatar_url ?? session()?.avatar ?? null,
-  });
-}
+// ---------------------------------------------------------------- the site's database
 
-/**
- * Leaves for Discord and does not come back — the browser navigates away, and
- * the answer arrives as a fragment on `returnTo`, which readCallback() picks up.
- *
- * `returnTo` defaults to this page's address with neither its fragment nor its
- * query, so you land back where you were rather than somewhere central.
- *
- * Dropping the query is not tidiness. Supabase checks this against the
- * project's allowed redirect URLs, matched as a glob over the whole string —
- * so every `?something` that can appear in the address is another shape the
- * allow-list has to cover, and a miss does not fail loudly: it silently returns
- * the visitor to the Site URL instead, which on a phone pointed at a dev server
- * means being thrown to the production site mid-sign-in. Nothing here reads its
- * own query string, so there is nothing to preserve and one less way to be
- * wrong.
- *
- * A new deployment, or a new address you develop against, still needs adding to
- * that list — origin and port included, since both are part of the match.
- */
-export function signIn(returnTo = `${location.origin}${location.pathname}`) {
-  if (!isConfigured()) return;
-  // No `scopes` param: Supabase appends to its own defaults rather than
-  // replacing them, so passing `identify` only ever produced a duplicate.
-  const url = `${CONFIG.url}/auth/v1/authorize`
-    + `?provider=discord`
-    + `&redirect_to=${encodeURIComponent(returnTo)}`;
-  location.href = url;
-}
-
-/**
- * Takes the session out of the URL on the way back from Discord.
- *
- * Must run before anything else reads `location.hash`. On the drafter that hash
- * is the share-link format, and an `#access_token=…` left lying in it would sit
- * in the address bar looking like a formation and get copied into a share link
- * by somebody who trusted the address bar.
- *
- * @returns {'signed-in'|'failed'|null} null when this was an ordinary page load
- */
-export function readCallback() {
-  const hash = location.hash.slice(1);
-  if (!hash || !/(^|&)(access_token|error|error_description)=/.test(hash)) return null;
-
-  const got = new URLSearchParams(hash);
-  const clean = () => history.replaceState(null, '', location.pathname + location.search);
-
-  if (got.get('error') || !got.get('access_token')) { clean(); return 'failed'; }
-
-  remember({
-    access_token: got.get('access_token'),
-    refresh_token: got.get('refresh_token'),
-    expires_in: got.get('expires_in'),
-  });
-  clean();
-
-  // The fragment carries no profile, so the name is fetched once, here, rather
-  // than on every later request.
-  refreshProfile();
-  return 'signed-in';
-}
-
-async function refreshProfile() {
-  const got = await token();
-  if (!got.ok) return;
-  try {
-    const res = await fetch(`${CONFIG.url}/auth/v1/user`, {
-      headers: { apikey: CONFIG.anonKey, authorization: `Bearer ${got.jwt}` },
-    });
-    if (!res.ok) return;
-    const user = await res.json();
-    const held = session() ?? {};
-    keepSession({
-      ...held,
-      uid: user?.id ?? held.uid ?? '',
-      name: nameOf(user),
-      avatar: user?.user_metadata?.avatar_url ?? null,
-    });
-  } catch { /* a missing display name is not worth interrupting anyone over */ }
-}
-
-/**
- * A usable access token, refreshing it if the one in memory has gone stale.
- * @returns {Promise<{ok: true, jwt: string} | {ok: false, why: string}>}
- */
-/* One refresh at a time: the nav's Players check and a page's own call can both
-   find the token stale on load, and a refresh token spent twice can be refused,
-   which would sign the visitor out. */
-let refreshing = null;
-export function token() {
-  if (live.jwt && Date.now() < live.until) return Promise.resolve({ ok: true, jwt: live.jwt });
-  refreshing ??= refresh().finally(() => { refreshing = null; });
-  return refreshing;
-}
-
-async function refresh() {
-
-  const held = session();
-  if (!held?.refresh_token) return { ok: false, why: 'You are not signed in.' };
-
-  let res;
-  try {
-    res = await fetch(`${CONFIG.url}/auth/v1/token?grant_type=refresh_token`, {
-      method: 'POST',
-      headers: { apikey: CONFIG.anonKey, 'content-type': 'application/json' },
-      body: JSON.stringify({ refresh_token: held.refresh_token }),
-    });
-  } catch {
-    return { ok: false, why: 'Could not reach the community list.' };
-  }
-
-  if (!res.ok) {
-    // A refused refresh is a session that has ended, not a transient failure —
-    // holding onto it would make every later attempt fail the same way.
-    signOut();
-    return { ok: false, why: 'Your sign-in has expired. Press Post again to sign in.' };
-  }
-
-  const payload = await res.json().catch(() => null);
-  if (!payload?.access_token) return { ok: false, why: 'The sign-in service sent something unreadable.' };
-  remember(payload);
-  return { ok: true, jwt: payload.access_token };
-}
-
-/**
- * Forgets the session here, and ends it on the server too.
- *
- * The local half was all this used to do, and it was not enough. What is kept
- * in `localStorage` is a *refresh token*, and localStorage does not expire, so a
- * browser somebody else opens later could post, delete and vote as whoever last
- * signed in. Dropping the token locally leaves the session alive on the server,
- * along with the IP recorded against it; only the logout endpoint ends it.
- *
- * The session behind it is now time-boxed as well -- 30 days, or 7 days unused,
- * enforced by `expire-stale-sessions` in supabase/migrations/008. That bounds
- * the damage; it does not replace this. Thirty days is a long time to be able to
- * post as somebody else, and a sign-out is the only thing that ends it now.
- *
- * `scope=local` rather than the default `global`: signing out of a borrowed
- * laptop should not sign you out on your phone.
- *
- * Local state is cleared first and unconditionally. A logout that cannot reach
- * the network must still sign you out of the browser in front of you —
- * refusing to would be exactly backwards, since the person asking is most
- * likely the one at a machine they do not own.
- *
- * Not awaited by callers, and it takes its own copy of the token before
- * clearing, because after this returns there is nothing left to authenticate
- * with.
- */
-export function signOut() {
-  const jwt = live.jwt;
-  live = { jwt: '', until: 0 };
-  try { localStorage.removeItem(SESSION_KEY); } catch { /* nothing to drop */ }
-
-  if (!jwt || !isConfigured()) return;
-  fetch(`${CONFIG.url}/auth/v1/logout?scope=local`, {
-    method: 'POST',
-    headers: { apikey: CONFIG.anonKey, authorization: `Bearer ${jwt}` },
-    // The tab may be closing; this asks the browser to send it anyway.
-    keepalive: true,
-  }).catch(() => { /* signed out here regardless — see above */ });
-}
-
-// ---------------------------------------------------------------- cache
-
-/**
- * Per tab, not per browser. A community list is somebody else's data and it
- * changes; keeping it past the tab would mean opening the page tomorrow to
- * yesterday's ranking with no way to tell.
- */
-function readCache(path) {
-  try {
-    const all = JSON.parse(sessionStorage.getItem(CACHE_KEY) ?? '{}');
-    const held = all[path];
-    if (!held || Date.now() - held.at > FRESH_FOR) return null;
-    return held;
-  } catch { return null; }
-}
-
-function writeCache(path, value) {
-  try {
-    const all = JSON.parse(sessionStorage.getItem(CACHE_KEY) ?? '{}');
-    all[path] = { ...value, at: Date.now() };
-    sessionStorage.setItem(CACHE_KEY, JSON.stringify(all));
-  } catch { /* private mode, or full - the fetch just repeats */ }
-}
-
-/** Drops the cache, so the next read is live. For a Retry button. */
-export function forgetCache() {
-  try { sessionStorage.removeItem(CACHE_KEY); } catch { /* nothing to drop */ }
-}
+export const site = connect(CONFIG);
+export const {
+  isConfigured, rest, signedIn, whoAmI, signIn, readCallback, token, signOut, forgetCache,
+} = site;
