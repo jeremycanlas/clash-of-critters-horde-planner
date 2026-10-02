@@ -15,7 +15,7 @@ begin;
 do $$
 declare t text;
 begin
-  foreach t in array array['banquet_settings', 'banquet_groups', 'banquet_members', 'banquet_uids', 'banquet_claims', 'banquet_marks'] loop
+  foreach t in array array['banquet_settings', 'banquet_groups', 'banquet_members', 'banquet_uids', 'banquet_claims', 'banquet_marks', 'banquet_events'] loop
     if to_regclass('public.' || t) is not null then execute format('lock table public.%I in access exclusive mode', t); end if;
   end loop;
 end $$;
@@ -35,9 +35,10 @@ end $$;
 \i supabase/migrations/027_banquet_edit.sql
 \i supabase/migrations/028_banquet_add_no_limit.sql
 \i supabase/migrations/029_banquet_viewer_ids.sql
+\i supabase/migrations/031_banquet_statuses.sql
 
 -- Real entries would skew the counts. Gone for this transaction only.
-delete from public.banquet_claims; delete from public.banquet_marks; delete from public.banquet_uids; delete from public.banquet_access;
+delete from public.banquet_claims; delete from public.banquet_marks; delete from public.banquet_uids; delete from public.banquet_access; delete from public.banquet_events;
 delete from public.banquet_group_members; delete from public.banquet_groups; delete from public.banquet_members;
 insert into public.banquet_groups (grp, role_id, channel_id, synced_at) values
   (1, 'r1', 'c1', now() - interval '2 minutes'), (2, 'r2', 'c2', now() - interval '9 minutes');
@@ -159,7 +160,49 @@ begin
   perform public.banquet_claim(20000003, true);
   assert not (public.banquet_state(null, h) ? 'same'), 'a claim changes it';
   perform public.banquet_claim(20000003, false);
-  assert public.banquet_state(null, h) ? 'same', 'and taking it back restores it';
+  -- The log keeps the claim and the take-back, so the list is not the one before.
+  h := public.banquet_state() ->> 'hash';
+  assert public.banquet_state(null, h) ? 'same', 'and once read, it is the same again';
+end $$;
+
+-- ---------------------------------------------------------------- four statuses, and the log
+do $$
+declare s jsonb; c jsonb; e jsonb;
+begin
+  -- 10000002: nobody has looked, so no mark at all: Needs a look.
+  c := pg_temp.card(public.banquet_state(), '10000002');
+  assert c -> 'open' = 'null' and c -> 'not_yet' = 'null' and c -> 'full' = 'null', 'unmarked: needs a look';
+
+  -- Seen with no icon, then claimed: a claim is a gift seen, so it is open.
+  perform public.banquet_mark(10000002, 'not-yet');
+  assert pg_temp.card(public.banquet_state(), '10000002') -> 'not_yet' ->> 'by' = 'zz_a', 'not logged in';
+  perform public.banquet_claim(10000002, true);
+  c := pg_temp.card(public.banquet_state(), '10000002');
+  assert c -> 'not_yet' = 'null' and c -> 'open' ->> 'by' = 'zz_a', 'claimed: claimable, not waiting';
+
+  -- A claim never reopens a full one.
+  perform public.banquet_claim(20000002, true);
+  c := pg_temp.card(public.banquet_state(), '20000002');
+  assert c ->> 'full' = 'zz_a' and c ->> 'full_at' is not null and c -> 'open' = 'null', 'full stays full';
+
+  -- Open set by hand, then cleared.
+  perform public.banquet_mark(10000003, 'open');
+  assert pg_temp.card(public.banquet_state(), '10000003') -> 'open' ->> 'by' = 'zz_a', 'gift seen';
+  perform public.banquet_mark(10000003, null);
+  assert pg_temp.card(public.banquet_state(), '10000003') -> 'open' = 'null', 'and cleared';
+
+  -- Every press, and every post, newest first.
+  s := public.banquet_state();
+  e := s -> 'events';
+  assert e -> 0 ->> 'kind' = 'clear' and e -> 0 ->> 'uid' = '10000003' and e -> 0 ->> 'by' = 'zz_a', 'the clear is newest';
+  assert (select count(*) from jsonb_array_elements(e) x where x ->> 'kind' = 'claim' and x ->> 'uid' = '10000002') = 1, 'the claim is there';
+  assert (select count(*) from jsonb_array_elements(e) x where x ->> 'kind' = 'unclaim' and x ->> 'uid' = '20000003') = 1, 'so is a take-back';
+  assert (select count(*) from jsonb_array_elements(e) x where x ->> 'kind' = 'post' and x ->> 'uid' = '20000001' and x ->> 'by' = 'u302') = 1, 'posts from Discord, by who posted';
+  assert (select count(*) from jsonb_array_elements(e) x where x ->> 'kind' = 'claim' and x ->> 'uid' = '20000002') = 1, 'a claim on a full one still counts';
+  assert s::text not like '%grp%', 'still nothing says there are groups';
+
+  begin perform public.banquet_mark(10000003, 'gone'); raise exception 'odd state';
+  exception when raise_exception then if sqlerrm = 'odd state' then raise; end if; end;
 end $$;
 
 -- ---------------------------------------------------------------- C, the other group

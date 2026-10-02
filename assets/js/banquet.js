@@ -56,10 +56,7 @@ const setMember = (on) => {
 };
 
 let state = null;
-let show = 'ready';
-const ORDER = 'coc.banquet.order';
-let order = 'room'; // or 'new': first posted, newest first
-try { if (localStorage.getItem(ORDER) === 'new') order = 'new'; } catch { /* most room, then */ }
+let show = null; // one status's tile pressed, or null for all four
 let find = '';
 let group = 0; // for those who see both: 0 is both, 1 or 2 is the page as that group sees it
 /* Screenshot mode, for those who see both groups: the View as bar goes, so a
@@ -114,8 +111,8 @@ function diff(before, after) {
     const others = b.claims - o.claims - (b.claimed && !o.claimed ? 1 : 0) + (o.claimed && !b.claimed ? 1 : 0);
     if (others > 0) said.push(`${b.claimed_by.slice(-others).join(', ')} claimed ${b.uid}${where(b)}`);
     if (b.full && !o.full) said.push(`${b.full} marked ${b.uid}${where(b)} full`);
-    if (b.not_yet && !o.not_yet) said.push(`${b.not_yet.by}: ${b.uid}${where(b)} not open yet`);
-    if (!b.not_yet && o.not_yet && !b.full) said.push(`${b.uid}${where(b)} is open now`);
+    if (b.not_yet && !o.not_yet) said.push(`${b.not_yet.by}: ${b.uid}${where(b)} not logged in yet`);
+    if (b.open && !o.open) said.push(`${b.open.by} saw a gift on ${b.uid}${where(b)}`);
   }
   const at = Date.now();
   latest.unshift(...said.reverse().map((text) => ({ text, at })));
@@ -135,11 +132,11 @@ const span = (d) => `${utcDay(opens(d))} – ${utcDay(closes(d))}`;
 const localEnd = (d) => closes(d).toLocaleString(undefined, { weekday: 'short', hour: 'numeric', minute: '2-digit' });
 const time = (iso) => new Date(iso).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
 // "2:05 PM, 12 min ago": the clock for when, the gap for whether to go and look again.
-const ago = (iso) => {
+const since = (iso) => {
   const min = Math.max(0, Math.round((Date.now() - Date.parse(iso)) / 60000));
-  const gap = min < 1 ? 'just now' : min < 60 ? `${min} min ago` : `${Math.floor(min / 60)} h ${min % 60} min ago`;
-  return `${time(iso)}, ${gap}`;
+  return min < 1 ? 'just now' : min < 60 ? `${min} min ago` : `${Math.floor(min / 60)} h ${min % 60} min ago`;
 };
+const ago = (iso) => `${time(iso)}, ${since(iso)}`;
 // A group's name, and whether it is a private list: never part of Both groups.
 const nameOf = (g) => state?.names?.[g] ?? `Group ${g}`;
 const isPrivate = (g) => !!state?.private?.includes(g);
@@ -443,15 +440,23 @@ function renderNews(on) {
   document.title = fresh.length ? `(${fresh.length}) ${TITLE}` : TITLE;
 }
 
-const WHICH = {
-  // What you can go and claim this minute: not full, not yours already, not waiting
-  // to open. Banquets marked not yet available are under All.
-  ready: (b) => !b.full && !b.claimed && !b.not_yet,
-  // Marked not yet available: the ones to go back and check.
-  waiting: (b) => !!b.not_yet,
-  claimed: (b) => b.claimed,
-  full: (b) => !!b.full,
-  all: () => true,
+/* Four statuses, from what someone last saw in the game. A banquet opens once
+   its MVP logs in after the reset and stays open until 50 players anywhere
+   have claimed it, so a claim is a gift seen, and the site's own count is only
+   a floor. A UID nobody has looked at yet needs a look. */
+const statusOf = (b) => (b.full ? 'full' : b.not_yet ? 'notin' : b.open || b.claims ? 'claimable' : 'look');
+const SECTIONS = [
+  ['claimable', 'Claimable', 'most room first'],
+  ['look', 'Needs a look', 'nobody has checked'],
+  ['notin', 'Not logged in yet', 'longest unchecked first'],
+  ['full', 'Full', ''],
+];
+// Within a status: yours already claimed last, then fewest claims, the likeliest to have room.
+const ORDER = {
+  claimable: (a, b) => a.claimed - b.claimed || a.claims - b.claims || a.uid.localeCompare(b.uid),
+  look: (a, b) => (b.posted ?? '').localeCompare(a.posted ?? '') || a.uid.localeCompare(b.uid),
+  notin: (a, b) => a.not_yet.at.localeCompare(b.not_yet.at) || a.uid.localeCompare(b.uid),
+  full: (a, b) => a.uid.localeCompare(b.uid),
 };
 
 // The UID, or anyone named on the card: who posted it, who claimed it, who marked it.
@@ -474,41 +479,57 @@ function renderLast() {
   if (b) $('#bq-last').innerHTML = `Last copied <b>${b.uid}</b> <span aria-hidden="true">↕</span>`;
 }
 
-function renderCards(past) {
-  /* Most room: open before not-yet-open, then fewest claims first, the likeliest
-     to have room. Newest: by when it was first posted. */
-  const shown = state.banquets.filter((b) => WHICH[show](b) && (!b.grp || inView(b.grp)) && found(b))
-    .sort(order === 'new'
-      ? (a, b) => (b.posted ?? '').localeCompare(a.posted ?? '') || a.uid.localeCompare(b.uid)
-      : (a, b) => !!a.not_yet - !!b.not_yet || a.claims - b.claims || a.uid.localeCompare(b.uid));
-  const inViewList = state.banquets.filter((b) => !b.grp || inView(b.grp));
-  $('#bq-count').textContent = `${shown.length} of ${inViewList.length}`;
-  const key = (b) => `${b.grp ?? ''}:${b.uid}`;
-  const opened = new Set($$('#bq-cards details[open]').map((d) => d.closest('li').dataset.key));
-  $('#bq-cards').innerHTML = shown.map((b) => `<li data-key="${key(b)}" class="bq-card${b.full ? ' is-full' : ''}${b.not_yet ? ' is-waiting' : ''}${b.claimed ? ' is-claimed' : ''}${key(b) === lastCopied ? ' is-last-copied' : ''}">
+function card(b, past) {
+  const st = statusOf(b);
+  const k = keyOf(b);
+  const mark = (to, label, aria, pressed) => `<button type="button" class="btn btn--quiet" data-mark="${to}" data-uid="${b.uid}"${grpAttr(b.grp)}
+    aria-label="${aria}: ${b.uid}"${pressed == null ? '' : ` aria-pressed="${pressed}"`}>${label}</button>`;
+  const actions = past ? '' : st === 'full' ? mark('full', 'Not full', 'Not full', true)
+    : st === 'notin' ? mark('open', 'Open now', 'Open now', false) + mark('not-yet', 'Still not open', 'Still not open')
+    : `<button type="button" class="btn${b.claimed ? ' btn--primary' : ''}" data-claim="${b.uid}"${grpAttr(b.grp)} aria-label="I claimed ${b.uid}" aria-pressed="${b.claimed}">${b.claimed ? 'Claimed ✓' : 'I claimed'}</button>`
+      + mark('full', 'Full', 'Full', false)
+      + mark('not-yet', '<span class="bq-long">Not logged in</span><span class="bq-short">Not in</span>', 'Not logged in', false);
+  const tag = {
+    claimable: `<span class="bq-tag bq-tag--ok">${b.open ? `Gift seen ${since(b.open.at)}` : 'Gift seen'}</span>`,
+    look: '',
+    notin: '<span class="bq-tag bq-tag--wait">Not logged in</span>',
+    full: `<span class="bq-tag">Full<small> · ${esc(b.full ?? '')}</small></span>`,
+  }[st];
+  const gone = b.claims ? `<details class="bq-card__claims">
+        <summary>at least ${b.claims} of 50 gone</summary>
+        <p>${esc(b.claimed_by.join(', '))}</p>
+      </details>` : `<p class="bq-card__meta">${st === 'look' ? 'Not checked yet' : 'No claims here yet'}</p>`;
+  return `<li data-key="${k}" class="bq-card is-${st}${b.claimed ? ' is-claimed' : ''}${k === lastCopied ? ' is-last-copied' : ''}">
       <div class="bq-card__id">
         ${tagOf(b.grp)}
         <button type="button" class="tr-copy bq-uid" data-copy="${b.uid}" title="Copy UID">${b.uid}</button>
-        ${b.full ? `<span class="bq-tag">Full<small> · ${esc(b.full)}</small></span>` : ''}
-        ${b.not_yet ? '<span class="bq-tag bq-tag--wait">Not yet available</span>' : ''}
+        ${tag}
         ${isNew(b) ? '<span class="bq-tag bq-tag--new">New</span>' : ''}
-        ${key(b) === lastCopied ? '<span class="bq-tag bq-tag--last">Last copied</span>' : ''}
+        ${k === lastCopied ? '<span class="bq-tag bq-tag--last">Last copied</span>' : ''}
       </div>
-      ${b.not_yet ? `<p class="bq-card__checked">Last checked ${ago(b.not_yet.at)} by ${esc(b.not_yet.by)}</p>` : ''}
-      <div class="bq-card__row">
-      <p class="bq-card__meta">From ${esc(b.entered_by.join(', '))}${b.posted ? ` · ${time(b.posted)}` : ''}</p>
-      ${b.claims ? `<details class="bq-card__claims">
-        <summary>${b.claims} claimed</summary>
-        <p>${esc(b.claimed_by.join(', '))}</p>
-      </details>` : '<p class="bq-card__meta">No claims yet</p>'}
-      </div>
-      ${past ? '' : `<div class="bq-card__actions">
-        <button type="button" class="btn${b.claimed ? ' btn--primary' : ''}" data-claim="${b.uid}"${grpAttr(b.grp)} aria-label="I claimed ${b.uid}" aria-pressed="${b.claimed}">${b.claimed ? 'Claimed ✓' : 'I claimed'}</button>
-        <button type="button" class="btn btn--quiet" data-mark="full" data-uid="${b.uid}"${grpAttr(b.grp)} aria-label="Full: ${b.uid}" aria-pressed="${!!b.full}">${b.full ? 'Not full' : 'Full'}</button>
-        <button type="button" class="btn btn--quiet" data-mark="not-yet" data-uid="${b.uid}"${grpAttr(b.grp)} aria-label="Not yet available: ${b.uid}" aria-pressed="${!!b.not_yet}">${b.not_yet ? 'Open now' : '<span class="bq-long">Not yet available</span><span class="bq-short">Not open</span>'}</button>
-        ${b.not_yet ? `<button type="button" class="btn btn--quiet" data-mark="not-yet" data-uid="${b.uid}"${grpAttr(b.grp)} aria-label="Still not open: ${b.uid}">Still not open</button>` : ''}
+      ${st === 'notin' ? `<p class="bq-card__checked">Last checked ${ago(b.not_yet.at)} by ${esc(b.not_yet.by)}</p>` : ''}
+      ${st === 'full' ? '' : `<div class="bq-card__row">
+      <p class="bq-card__meta">From ${esc(b.entered_by.join(', '))}${b.posted ? ` · ${time(b.posted)}` : ''}${b.open ? ` · checked by ${esc(b.open.by)}` : ''}</p>
+      ${gone}
       </div>`}
-    </li>`).join('') || `<li class="muted bq-none">${inViewList.length ? 'Nothing here.' : 'No banquets shared this round yet.'}</li>`;
+      ${actions ? `<div class="bq-card__actions">${actions}</div>` : ''}
+    </li>`;
+}
+
+function renderCards(past) {
+  const inViewList = state.banquets.filter((b) => !b.grp || inView(b.grp));
+  for (const [st] of SECTIONS) $(`[data-n="${st}"]`).textContent = inViewList.filter((b) => statusOf(b) === st).length;
+  for (const x of $$('[data-show]')) x.setAttribute('aria-pressed', String(x.dataset.show === show));
+  const shown = inViewList.filter(found);
+  const opened = new Set($$('#bq-cards details[open]').map((d) => d.closest('li').dataset.key));
+  $('#bq-cards').innerHTML = SECTIONS.filter(([st]) => !show || show === st).map(([st, head, note]) => {
+    const list = shown.filter((b) => statusOf(b) === st).sort(ORDER[st]);
+    if (!list.length && !show) return '';
+    return `<section class="bq-section">
+      <h2>${head}${note && list.length > 1 ? ` <span class="muted">· ${note}</span>` : ''}</h2>
+      <ul class="bq-cards">${list.map((b) => card(b, past)).join('') || '<li class="muted bq-none">Nothing here.</li>'}</ul>
+    </section>`;
+  }).join('') || `<p class="muted bq-none">${inViewList.length ? 'Nothing matches.' : 'No banquets shared this round yet.'}</p>`;
   for (const d of $$('#bq-cards details')) d.open = opened.has(d.closest('li').dataset.key);
   renderLast();
 }
@@ -620,8 +641,7 @@ $('#bq-new-uids').addEventListener('click', (e) => {
 $('#bq-last').addEventListener('click', () => {
   let card = $(`#bq-cards li[data-key="${CSS.escape(lastCopied)}"]`);
   if (!card) { // filtered or searched out of view: show everything, then find it
-    show = 'all'; find = ''; $('#bq-find').value = '';
-    for (const x of $$('[data-show]')) x.setAttribute('aria-pressed', String(x.dataset.show === 'all'));
+    show = null; find = ''; $('#bq-find').value = '';
     renderCards(state.round !== state.current);
     card = $(`#bq-cards li[data-key="${CSS.escape(lastCopied)}"]`);
   }
@@ -657,8 +677,8 @@ $('#bq-cards').addEventListener('click', async (e) => {
     ? await call('banquet_claim', { target, claimed: on, g })
     : await call('banquet_mark', { target, state: on ? mark.dataset.mark : null, g });
   if (!got.ok) { btn.disabled = false; btn.textContent = got.why; btn.removeAttribute('aria-label'); return; }
-  /* Claiming takes the card out of Ready at once, so a thumb on the wrong
-     card gets a way back that does not mean finding it in another tab. */
+  /* Claiming moves the card to the end of Claimable at once, so a thumb on the
+     wrong card gets a way back that does not mean finding it again. */
   if (claim && on) {
     toast(`Claimed ${target}`, 'info', {
       label: 'Undo',
@@ -671,20 +691,10 @@ $('#bq-cards').addEventListener('click', async (e) => {
   load(state.round);
 });
 
-for (const b of $$('[data-order]')) {
-  b.setAttribute('aria-pressed', String(b.dataset.order === order));
-  b.addEventListener('click', () => {
-    order = b.dataset.order;
-    try { localStorage.setItem(ORDER, order); } catch { /* this visit only */ }
-    for (const x of $$('[data-order]')) x.setAttribute('aria-pressed', String(x === b));
-    renderCards(state.round !== state.current);
-  });
-}
-
+// A tile shows only its status; pressed again, all four.
 for (const b of $$('[data-show]')) {
   b.addEventListener('click', () => {
-    show = b.dataset.show;
-    for (const x of $$('[data-show]')) x.setAttribute('aria-pressed', String(x === b));
+    show = show === b.dataset.show ? null : b.dataset.show;
     renderCards(state.round !== state.current);
   });
 }

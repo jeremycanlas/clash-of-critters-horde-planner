@@ -97,7 +97,9 @@ function state(me) {
       entered_by: [...new Set(db.uids.filter((u) => u.grp === k.grp && u.uid === k.uid).map((u) => u.who))],
       mine_site: false, claims: cl.length, claimed_by: cl.map((c) => c.who), claimed: cl.some((c) => c.who === me.name),
       full: m?.state === 'full' ? m.by : null,
-      not_yet: m?.state === 'not-yet' ? { by: m.by, at: NOT_YET_AT } : null,
+      not_yet: m?.state === 'not-yet' ? { by: m.by, at: m.at ?? NOT_YET_AT } : null,
+      open: m?.state === 'open' ? { by: m.by, at: m.at } : null,
+      full_at: m?.state === 'full' ? m.at : null,
       ...(me.all ? { grp: k.grp } : {}),
     };
   };
@@ -192,9 +194,16 @@ async function open(me, opts) {
     if (fn === 'banquet_claim') {
       db.claims = db.claims.filter((c) => !(c.grp === g && c.uid === String(body.target) && c.who === me.name));
       if (body.claimed) db.claims.push({ grp: g, uid: String(body.target), who: me.name });
+      // A claim is a gift seen, as banquet_claim() marks it.
+      const m = db.marks.get(`${g}:${body.target}`);
+      if (body.claimed && (!m || m.state === 'not-yet')) db.marks.set(`${g}:${body.target}`, { state: 'open', by: me.name, at: new Date().toISOString() });
       return ok();
     }
-    if (fn === 'banquet_mark') { db.marks.set(`${g}:${body.target}`, { state: body.state, by: me.name }); return ok(); }
+    if (fn === 'banquet_mark') {
+      if (body.state) db.marks.set(`${g}:${body.target}`, { state: body.state, by: me.name, at: new Date().toISOString() });
+      else db.marks.delete(`${g}:${body.target}`);
+      return ok();
+    }
     return route.fulfill({ status: 404, body: '{}' });
   });
   const page = await ctx.newPage();
@@ -224,7 +233,7 @@ try {
   await A.fill('#bq-add-uid', '10000004');
   await A.click('#bq-add');
   await A.waitForSelector('#bq-list:not([hidden])');
-  assert.equal(await A.locator('[data-show="ready"]').getAttribute('aria-pressed'), 'true', 'Ready is where the page opens');
+  assert.equal(await A.locator('[data-show][aria-pressed="true"]').count(), 0, 'all four statuses on arrival');
   assert.equal(lastSent('Ana', 'banquet_add').g, null, 'a group member never sends a group');
   // Edit: only on UIDs added here, one step, Escape backs out.
   await A.locator('#bq-mine-fold').evaluate((d) => { d.open = true; });
@@ -245,8 +254,7 @@ try {
   await A.keyboard.press('Enter');
   await A.waitForSelector('#bq-my [data-edit="10000004"]');
 
-  await A.click('[data-show="all"]');
-  assert.equal(await A.locator('#bq-cards li').count(), 26, 'Group 1 only');
+  assert.equal(await A.locator('#bq-cards li[data-key]').count(), 26, 'Group 1 only');
   assert.ok(!/group/i.test(await A.locator('body').innerText()), 'the word "group" appears nowhere');
   assert.ok(!/30000001|\bCy\b/.test(await A.locator('#bq-app').innerText()), 'nothing of Group 2');
   assert.equal(await A.locator('#bq-view').isVisible(), false, 'no View as');
@@ -256,11 +264,11 @@ try {
   assert.ok(await A.locator('#bq-copies').isHidden(), 'nor sees the panel');
 
   await A.fill('#bq-find', '5555');
-  assert.equal(await A.locator('#bq-cards li').count(), 1, 'Find narrows to the one');
+  assert.equal(await A.locator('#bq-cards li[data-key]').count(), 1, 'Find narrows to the one');
   await A.fill('#bq-find', 'fay');
-  assert.equal(await A.locator('#bq-cards li').count(), 6, 'a name finds everything they posted');
+  assert.equal(await A.locator('#bq-cards li[data-key]').count(), 6, 'a name finds everything they posted');
   await A.fill('#bq-find', 'ELI');
-  assert.ok(await A.locator('#bq-cards li', { hasText: '60000137' }).count() === 1, 'any case, and who marked it counts');
+  assert.ok(await A.locator('#bq-cards li[data-key]', { hasText: '60000137' }).count() === 1, 'any case, and who marked it counts');
   await A.fill('#bq-find', '');
   assert.equal(await A.getByRole('button', { name: 'I claimed 55555555' }).count(), 1, 'buttons say which UID');
   // Copying a UID off a card is reported, with no group from a group member.
@@ -270,7 +278,7 @@ try {
   // The last one copied: its own colour, and a button back to it from anywhere.
   assert.equal(await A.locator('#bq-cards li.is-last-copied').getAttribute('data-key'), ':55555555', 'the copied card is marked');
   assert.match(await A.locator('#bq-last').textContent(), /Last copied 55555555/);
-  await A.click('[data-show="claimed"]');
+  await A.click('[data-show="full"]');
   await A.click('#bq-last');
   await A.waitForTimeout(600);
   assert.ok(await A.locator('#bq-cards li.is-last-copied').isVisible(), 'the button finds it even when a filter hid it');
@@ -278,41 +286,43 @@ try {
   await A.reload();
   await A.waitForSelector('#bq-list:not([hidden])');
   assert.equal(await A.locator('#bq-cards li.is-last-copied').count() + await A.locator('#bq-last:not([hidden])').count(), 2, 'kept across a reload');
-  // Newest: the last one posted comes first, and the choice is kept.
-  await A.click('[data-order="new"]');
-  assert.equal(await A.locator('#bq-cards li').first().getAttribute('data-key'), ':10000004', 'Newest puts the last posted first');
-  assert.match(await A.locator('#bq-cards li').first().locator('.bq-card__meta').first().textContent(), /From Ana · \d/, 'with its time');
-  await A.click('[data-order="room"]');
-  assert.notEqual(await A.locator('#bq-cards li').first().getAttribute('data-key'), ':10000004', 'Most room is the old order');
-  // A claim takes the card out of Ready; Undo brings it back.
-  await A.click('[data-show="ready"]');
+  // Four statuses: a UID nobody has checked needs a look; Eli's not-yet is not logged in.
+  assert.equal(await A.locator('[data-show]').count(), 4, 'Claimable, Needs a look, Not logged in, Full');
+  assert.equal(await A.locator('[data-show][aria-pressed="true"]').count(), 0, 'the last-copied button showed all four again');
+  assert.equal(await A.locator('[data-n="look"]').textContent(), '25', 'new UIDs need a look');
+  assert.equal(await A.locator('[data-n="notin"]').textContent(), '1');
+  assert.equal(await A.locator('[data-n="claimable"]').textContent(), '0');
+  // I claimed: a gift seen, so the card moves to Claimable; Undo takes the claim back.
   await A.click('[data-claim="55555555"]');
   await A.waitForSelector('#toast.is-shown');
-  await A.waitForSelector('[data-claim="55555555"]', { state: 'detached', timeout: 3000 });
-  assert.equal(await A.locator('[data-claim="55555555"]').count(), 0, 'claimed, gone from Ready');
+  await A.waitForSelector('li.is-claimable[data-key=":55555555"]');
+  assert.match(await A.locator('li[data-key=":55555555"] .bq-tag--ok').textContent(), /Gift seen just now/);
+  assert.match(await A.locator('li[data-key=":55555555"] .bq-card__claims summary').textContent(), /at least 1 of 50 gone/);
+  assert.equal(await A.locator('[data-n="claimable"]').textContent(), '1', 'and counted');
   await A.click('#toast .toast__act');
-  await A.waitForSelector('[data-claim="55555555"]');
+  await A.waitForFunction(() => document.querySelector('[data-claim="55555555"]')?.getAttribute('aria-pressed') === 'false');
   assert.equal(db.claims.filter((c) => c.who === 'Ana').length, 0, 'Undo took the claim back');
-  await A.click('[data-show="all"]');
-  assert.equal(await A.locator('.bq-card.is-waiting').count(), 1, 'a not-yet banquet stays listed');
-  assert.equal(await A.locator('[data-show]').count(), 5, 'Ready, Not open, Claimed, Full, All');
-  await A.click('[data-show="ready"]');
-  assert.equal(await A.locator('.bq-card.is-waiting').count(), 0, 'Ready leaves out the not-yet one');
-  assert.equal(await A.locator('.bq-card.is-full, .bq-card.is-claimed').count(), 0, 'and full or claimed ones');
-  await A.click('[data-show="waiting"]');
-  assert.deepEqual(await A.locator('#bq-cards li').evaluateAll((ls) => ls.map((l) => l.dataset.key)), [':60000137'], 'Not open is only the not-yet one');
-  assert.match(await A.locator('.bq-card__checked').textContent(), /Last checked/, 'with when it was last checked');
-  await A.click('[data-show="ready"]');
-  assert.ok(await A.locator('#bq-cards li').count() > 20, 'but keeps the rest');
-  assert.equal(await A.evaluate(() => document.documentElement.scrollWidth - innerWidth), 0, 'the filters fit a phone');
-  assert.ok(await A.locator('[data-show]').evaluateAll((bs) => bs.every((b) => b.getBoundingClientRect().height < 50)), 'each on one line');
+  // Not logged in, then a gift seen.
+  await A.click('[data-mark="not-yet"][data-uid="20000001"]');
+  await A.waitForSelector('li.is-notin[data-key=":20000001"]');
+  assert.match(await A.locator('li[data-key=":20000001"] .bq-card__checked').textContent(), /Last checked .* just now by Ana/);
+  await A.click('li[data-key=":20000001"] [data-mark="open"]');
+  await A.waitForSelector('li.is-claimable[data-key=":20000001"]');
+  assert.equal(lastSent('Ana', 'banquet_mark').state, 'open', 'Open now marks it open');
+  // A tile shows only its own; pressed again, all four.
+  await A.click('[data-show="notin"]');
+  assert.deepEqual(await A.locator('#bq-cards li[data-key]').evaluateAll((ls) => ls.map((l) => l.dataset.key)), [':60000137'], 'Not logged in is only the not-yet one');
+  assert.equal(await A.locator('[data-show="notin"]').getAttribute('aria-pressed'), 'true');
+  assert.match(await A.locator('.bq-card__checked').textContent(), /Last checked .* 5 min ago by Eli/, 'with when and by whom');
+  await A.click('[data-show="notin"]');
+  assert.equal(await A.locator('#bq-cards li[data-key]').count(), 26, 'and back to all');
+  assert.deepEqual(await A.locator('#bq-cards .bq-section h2').evaluateAll((hs) => hs.map((h) => h.firstChild.textContent.trim())),
+    ['Claimable', 'Needs a look', 'Not logged in yet'], 'one heading per status there is, in order');
+  assert.equal(await A.evaluate(() => document.documentElement.scrollWidth - innerWidth), 0, 'the tiles fit a phone');
   await A.setViewportSize({ width: 320, height: 640 });
-  assert.ok(await A.locator('[data-show]').evaluateAll((bs) => bs.every((b) => b.scrollWidth <= b.clientWidth + 1 && b.getBoundingClientRect().height < 50)),
-    'and on a 320px phone');
+  assert.ok(await A.locator('[data-show]').evaluateAll((bs) => bs.every((b) => b.scrollWidth <= b.clientWidth + 1)), 'each tile fits a 320px phone');
   assert.equal(await A.evaluate(() => document.documentElement.scrollWidth - innerWidth), 0, 'nothing off the side at 320px');
   await A.setViewportSize(devices['iPhone SE'].viewport);
-  await A.click('[data-show="all"]');
-  assert.match(await A.locator('.bq-card__checked').textContent(), /Last checked .* 5 min ago by Eli/);
 
   await A.mouse.wheel(0, 1400);
   await A.waitForTimeout(300);
@@ -324,9 +334,8 @@ try {
   // ------------------------------------------------------------------ Vee, both groups
   const vee = await open({ name: 'Vee', all: true, scheme: 'light' }, { viewport: { width: 1280, height: 900 } });
   const V = vee.page;
-  await V.click('[data-show="all"]');
-  assert.equal(await V.locator('#bq-cards li').count(), 28, 'both groups');
-  assert.equal(await V.locator('#bq-cards li', { hasText: '55555555' }).count(), 2, 'one card per group');
+  assert.equal(await V.locator('#bq-cards li[data-key]').count(), 28, 'both groups');
+  assert.equal(await V.locator('#bq-cards li[data-key]', { hasText: '55555555' }).count(), 2, 'one card per group');
   await V.locator('#bq-cards li[data-key="2:55555555"] .bq-uid').click();
   await V.waitForTimeout(200);
   assert.deepEqual(lastSent('Vee', 'banquet_note_copy'), { target: 55555555, g: 2 }, "a viewer's copy says which group");
@@ -348,7 +357,7 @@ try {
   assert.equal(await V.locator('li[data-key="3:39900001"]').count(), 0, 'Both groups leaves the private list out');
   await V.click('[data-group="3"]');
   assert.equal(await V.locator('[data-group="3"]').textContent(), 'Private', 'it has its own button');
-  assert.deepEqual(await V.locator('#bq-cards li').evaluateAll((ls) => ls.map((l) => l.dataset.key)), ['3:39900001'], 'and only its banquets');
+  assert.deepEqual(await V.locator('#bq-cards li[data-key]').evaluateAll((ls) => ls.map((l) => l.dataset.key)), ['3:39900001'], 'and only its banquets');
   assert.match(await V.locator('#bq-view-note').textContent(), /only the people added to it/);
   await V.fill('#bq-add-uid', '39900002');
   await V.click('#bq-add');
@@ -364,7 +373,7 @@ try {
   await V.waitForTimeout(300);
   assert.equal(lastSent('Vee', 'banquet_add').g, 2);
 
-  await V.locator('#bq-cards li', { hasText: 'Group 2' }).filter({ hasText: '55555555' }).locator('[data-mark="full"]').click();
+  await V.locator('#bq-cards li[data-key]', { hasText: 'Group 2' }).filter({ hasText: '55555555' }).locator('[data-mark="full"]').click();
   await V.waitForTimeout(300);
   assert.equal(lastSent('Vee', 'banquet_mark').g, 2, "a mark goes to the card's group");
   assert.deepEqual(await axe(V), [], 'axe, viewer, light, with a full card');
@@ -383,18 +392,16 @@ try {
   await V.click('#bq-shot');
   await V.click('#site-tabs [aria-current="page"]');
   assert.ok(await V.locator('#bq-view').isVisible(), "so does tapping the page's own tab");
-  await V.click('[data-show="all"]');
   await V.click('[data-group="1"]');
-  assert.equal(await V.locator('#bq-cards li').count(), 26, 'As Group 1: only Group 1');
+  assert.equal(await V.locator('#bq-cards li[data-key]').count(), 26, 'As Group 1: only Group 1');
   assert.equal(await V.locator('.bq-grp:visible').count(), 0, 'As Group 1: no tags');
   assert.ok(await V.locator('#bq-add-grp').isHidden(), 'As Group 1: no picker');
-  assert.equal(await V.locator('#bq-count').textContent(), '26 of 26', 'As Group 1: counts as a member would');
+  assert.equal(await V.locator('[data-n="look"]').textContent(), await V.locator('li.is-look').count().then(String), 'As Group 1: counts as a member would');
   await V.click('[data-claim="20000001"]');
   await V.waitForTimeout(300);
   assert.equal(lastSent('Vee', 'banquet_claim').g, 1);
 
   // ------------------------------------------------------------------ Ana sees Vee's work, on her own
-  await A.click('[data-show="all"]');
   await A.locator('#bq-mine-fold').evaluate((d) => { d.open = true; });
   await A.fill('#bq-add-uid', '9999');
   assert.ok(await A.locator('#bq-new').isHidden(), 'a first visit opens with nothing marked new, got ' + (await A.locator('#bq-new-uids').textContent()));
@@ -403,9 +410,9 @@ try {
   await A.clock.fastForward(16_000);
   await A.waitForTimeout(400);
   assert.ok(reads > before, 'refreshed within 15 seconds');
-  assert.equal(await A.locator('[data-claim="20000001"]').locator('xpath=..').locator('..').locator('summary').textContent(), '1 claimed',
+  assert.equal(await A.locator('[data-claim="20000001"]').locator('xpath=..').locator('..').locator('summary').textContent(), 'at least 1 of 50 gone',
     "Vee's Group 1 claim shows without a reload");
-  assert.equal(await A.locator('li', { hasText: '55555555' }).locator('.bq-tag:not(.bq-tag--last)').count(), 0, "Vee's Group 2 full does not");
+  assert.equal(await A.locator('li', { hasText: '55555555' }).locator('.bq-tag', { hasText: 'Full' }).count(), 0, "Vee's Group 2 full does not");
   // Ben's new banquet: in the strip, tagged, counted in the tab title, and in the latest line.
   assert.equal(await A.locator('#bq-new-uids [data-new]').allTextContents().then((t) => t.join()), '71234567', 'new to claim');
   assert.match(await A.title(), /^\(1\) /, 'the tab title counts it');
@@ -443,7 +450,7 @@ try {
   await A.waitForTimeout(500);
   assert.match(await A.locator('#bq-stale:not([hidden])').textContent(), /not reached the list for \d+ minutes.*connection/,
     'a page that cannot reach the list says so');
-  assert.equal(await A.locator('#bq-cards li').count() > 0, true, 'and keeps what it had');
+  assert.equal(await A.locator('#bq-cards li[data-key]').count() > 0, true, 'and keeps what it had');
   down = false;
   await A.clock.fastForward(31_000);
   await A.waitForTimeout(500);
@@ -472,8 +479,7 @@ try {
 
   const bea = await open({ name: 'Bea', code: 'tide', inB: true }, devices['iPhone SE']);
   const B = bea.page;
-  await B.click('[data-show="all"]');
-  assert.deepEqual((await B.locator('#bq-cards li').evaluateAll((ls) => ls.map((l) => l.dataset.key))).sort(),
+  assert.deepEqual((await B.locator('#bq-cards li[data-key]').evaluateAll((ls) => ls.map((l) => l.dataset.key))).sort(),
     [':55555555', ':81000001', ':81000002', ':81000003', ':81000004', ':82000001'], 'only the second server');
   assert.ok(!/group|server/i.test(await B.locator('body').innerText()), 'no word of groups or another server');
   assert.ok(schemas.filter((x) => x.who === 'Bea').every((x) => x.schema === 'tide'), 'and only its own schema');
@@ -493,8 +499,7 @@ try {
   // ------------------------------------------------------------------ both servers, for Vee
   // Let into one server of two: that one opens, and its cards still go to it.
   const half = await open({ name: 'Ana', grp: 1, code: 'duo' }, { viewport: { width: 1280, height: 900 } });
-  await half.page.click('[data-show="all"]');
-  assert.ok(await half.page.locator('#bq-cards li').evaluateAll((ls) => ls.every((l) => l.dataset.key.startsWith('10:'))),
+  assert.ok(await half.page.locator('#bq-cards li[data-key]').evaluateAll((ls) => ls.every((l) => l.dataset.key.startsWith('10:'))),
     'only the first server, numbered as in the view of both');
   await half.page.locator('li[data-key="10:20000001"] [data-claim]').click();
   await half.page.waitForTimeout(300);
@@ -503,8 +508,7 @@ try {
   const duo = await open({ name: 'Vee', all: true, code: 'duo', inB: true, scheme: 'light' },
     { viewport: { width: 1280, height: 900 } });
   const D = duo.page;
-  await D.click('[data-show="all"]');
-  const keys = await D.locator('#bq-cards li').evaluateAll((ls) => ls.map((l) => l.dataset.key));
+  const keys = await D.locator('#bq-cards li[data-key]').evaluateAll((ls) => ls.map((l) => l.dataset.key));
   assert.ok(keys.includes('11:20000001') && keys.includes('12:30000001') && keys.includes('21:82000001'), `both servers, renumbered: ${keys}`);
   assert.equal(keys.filter((k) => k.endsWith(':55555555')).length, 3, 'the same UID is a separate card per server and group');
   assert.ok(!keys.some((k) => k.startsWith('13:')), 'Both servers leaves the private list out');
