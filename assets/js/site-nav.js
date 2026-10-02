@@ -14,6 +14,7 @@ const PAGES = [
   { href: 'index.html', name: 'Drafter' },
   { href: 'community.html', name: 'Community formations', short: 'Community' },
   { href: 'changes.html', name: 'Patch notes' },
+  { href: 'skills.html', name: 'Skill data' },
   { href: 'chips.html', name: 'Chips' },
   { href: 'farm.html', name: 'Cozy Farm' },
   { href: 'contribute.html', name: 'Record a range', add: true },

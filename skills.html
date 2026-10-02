@@ -1,0 +1,594 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <!-- viewport-fit=cover, or env(safe-area-inset-*) resolves to 0 on iOS and every
+     safe-area rule in app.css silently does nothing. -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Horde Drafter: Clash of Critters skill data, Damage Factor and Arena Factor</title>
+  <meta name="description"
+    content="Every Clash of Critters Tatari skill's numbers as the game shows them: Damage Factor, Cooldown, each effect, and the Arena Factor for Gold Rush and Arena.">
+  <!-- The card a pasted link shows in Discord and every app that unfurls a URL.
+     Absolute URLs, because a scraper does not resolve relative ones. Drawn by
+     tools/og.mjs from the site's own tokens and sprites. -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Horde Drafter">
+  <meta property="og:title" content="Skill data">
+  <meta property="og:description" content="Every Tatari skill's numbers as the game shows them, with Arena Factor for Gold Rush and Arena.">
+  <meta property="og:url" content="https://jeremycanlas.github.io/clash-of-critters-horde-planner/skills.html">
+  <meta property="og:image" content="https://jeremycanlas.github.io/clash-of-critters-horde-planner/assets/img/og/skills.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Skill data, on the Horde Drafter site">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='19' font-size='20'>🐾</text></svg>">
+  <link rel="stylesheet" href="assets/css/app.css">
+  <link rel="stylesheet" href="assets/css/site-nav.css">
+  <link rel="stylesheet" href="assets/css/skills.css">
+</head>
+
+<body class="skillspage">
+
+  <header class="topbar">
+    <div class="topbar__title">
+      <h1>Skill data</h1>
+      <span class="topbar__sub">Horde&nbsp;Drafter</span>
+    </div>
+  </header>
+
+  <nav id="site-tabs" class="sitetabs" aria-label="Horde Drafter pages"></nav>
+
+  <main class="sk__main">
+    <p class="sk__lede">Each Tatari's base skill as the game's own skill panel shows it: the
+      numbers the wiki does not have. <b>Arena Factor</b> applies in Gold Rush and Arena only,
+      where a skill's damage against another Tatari is multiplied by it.</p>
+
+    <div class="sk__tools">
+      <label class="sk__search"><span class="sr-only">Search Tatari</span>
+        <input id="sk-find" class="field" type="search" placeholder="Search a Tatari or skill…" autocomplete="off">
+      </label>
+      <div id="sk-types" class="segmented" role="group" aria-label="Type">
+        <button class="segmented__btn" type="button" data-type="" aria-pressed="true">All</button>
+        <button class="segmented__btn" type="button" data-type="Fire" aria-pressed="false">Fire</button>
+        <button class="segmented__btn" type="button" data-type="Water" aria-pressed="false">Water</button>
+        <button class="segmented__btn" type="button" data-type="Grass" aria-pressed="false">Grass</button>
+        <button class="segmented__btn" type="button" data-type="Lightning" aria-pressed="false">Lightning</button>
+        <button class="segmented__btn" type="button" data-type="Rock" aria-pressed="false">Rock</button>
+      </div>
+    </div>
+    <p id="sk-none" class="muted" hidden>Nothing matches. Try another name, or All types.</p>
+
+    <!-- Written by tools/skills-page.mjs from data/skill-numbers.json. Edit there. -->
+    <!-- skills:start -->
+    <p class="sk__count" id="sk-count">19 of 242 Tatari recorded, 7 with every number.</p>
+    <ol class="sk__list" id="sk-list">
+    <li class="sk" id="cribbler" data-name="cribbler" data-type="Water" data-role="Guardian" data-tier="1">
+      <div class="sk__head">
+        <img src="data/images/tatari/cribbler.png" alt="" width="56" height="56" loading="lazy" decoding="async">
+        <div>
+          <h3 class="sk__name">Cribbler</h3>
+          <p class="sk__meta">T1 Water Guardian · <b>Claw Swing</b></p>
+        </div>
+        <span class="sk__arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
+          <small>Arena Factor</small>90%</span>
+      </div>
+      
+        
+        
+        <dl class="sk__rows"><dt>Damage Factor</dt><dd>130%</dd><dt>Cooldown</dt><dd>4.5s</dd></dl>
+    </li>
+    <li class="sk" id="clawzor" data-name="clawzor" data-type="Water" data-role="Guardian" data-tier="2">
+      <div class="sk__head">
+        <img src="data/images/tatari/clawzor.png" alt="" width="56" height="56" loading="lazy" decoding="async">
+        <div>
+          <h3 class="sk__name">Clawzor</h3>
+          <p class="sk__meta">T2 Water Guardian · <b>Shredder Swing</b></p>
+        </div>
+        <span class="sk__arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
+          <small>Arena Factor</small>90%</span>
+      </div>
+      
+        
+        
+        <dl class="sk__rows"><dt>Damage Factor</dt><dd>130%</dd><dt>Cooldown</dt><dd>4.5s</dd></dl>
+        <h4 class="sk__heading">Shredded</h4>
+        <p class="sk__text">Upon taking damage, Shredded is triggered for extra damage.</p>
+        <dl class="sk__rows"><dt>Damage Factor</dt><dd>20%</dd><dt>Max Triggers</dt><dd>8</dd><dt>Duration</dt><dd>4s</dd></dl>
+    </li>
+    <li class="sk" id="dreadclaw" data-name="dreadclaw" data-type="Water" data-role="Guardian" data-tier="3">
+      <div class="sk__head">
+        <img src="data/images/tatari/dreadclaw.png" alt="" width="56" height="56" loading="lazy" decoding="async">
+        <div>
+          <h3 class="sk__name">Dreadclaw</h3>
+          <p class="sk__meta">T3 Water Guardian · <b>Claw Storm</b></p>
+        </div>
+        <span class="sk__arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
+          <small>Arena Factor</small>90%</span>
+      </div>
+      
+        
+        
+        <dl class="sk__rows"><dt>Damage Factor</dt><dd>130%</dd><dt>Cooldown</dt><dd>4.5s</dd></dl>
+        <h4 class="sk__heading">Shredded</h4>
+        <p class="sk__text">Upon taking damage, Shredded is triggered for extra damage.</p>
+        <dl class="sk__rows"><dt>Damage Factor</dt><dd>20%</dd><dt>Max Triggers</dt><dd>8</dd><dt>Duration</dt><dd>4s</dd></dl>
+        <h4 class="sk__heading">ATK Boost</h4>
+        <p class="sk__text">ATK increases based on the target&#39;s ATK.</p>
+        <dl class="sk__rows"><dt>Boost Factor</dt><dd>15%</dd><dt>Duration</dt><dd>5s</dd></dl>
+    </li>
+    <li class="sk" id="cribking" data-name="cribking" data-type="Water" data-role="Guardian" data-tier="4">
+      <div class="sk__head">
+        <img src="data/images/tatari/cribking.png" alt="" width="56" height="56" loading="lazy" decoding="async">
+        <div>
+          <h3 class="sk__name">Cribking</h3>
+          <p class="sk__meta">T4 Water Guardian · <b>Hydro Claw</b></p>
+        </div>
+        <span class="sk__arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
+          <small>Arena Factor</small>90%</span>
+      </div>
+      
+        
+        
+        <dl class="sk__rows"><dt>Damage Factor</dt><dd>130%</dd><dt>Cooldown</dt><dd>4.5s</dd></dl>
+        <h4 class="sk__heading">Shredded</h4>
+        <p class="sk__text">Upon taking damage, Shredded is triggered for extra damage.</p>
+        <dl class="sk__rows"><dt>Damage Factor</dt><dd>20%</dd><dt>Max Triggers</dt><dd>8</dd><dt>Duration</dt><dd>4s</dd></dl>
+        <h4 class="sk__heading">ATK Boost</h4>
+        <p class="sk__text">ATK increases based on the target&#39;s ATK.</p>
+        <dl class="sk__rows"><dt>Boost Factor</dt><dd>15%</dd><dt>Duration</dt><dd>5s</dd></dl>
+        <h4 class="sk__heading">Aura: Water</h4>
+        <p class="sk__text">Heals all allies continuously. The healing effect for non-Water allies is reduced by 50%. Aura: Water can be stacked, but cannot take effect in some game modes.</p>
+        <dl class="sk__rows"><dt>Base Healing Factor</dt><dd>0.5% Target HP</dd><dt>Max Healing Factor</dt><dd>2.5% Target HP</dd><dt>Healing Interval</dt><dd>4s</dd></dl>
+    </li>
+    <li class="sk" id="budboo" data-name="budboo" data-type="Grass" data-role="DPS" data-tier="1">
+      <div class="sk__head">
+        <img src="data/images/tatari/budboo.png" alt="" width="56" height="56" loading="lazy" decoding="async">
+        <div>
+          <h3 class="sk__name">Budboo</h3>
+          <p class="sk__meta">T1 Grass DPS · <b>Bud Venom</b></p>
+        </div>
+        <span class="sk__arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
+          <small>Arena Factor</small>45%</span>
+      </div>
+      
+        
+        
+        <dl class="sk__rows"><dt>Damage Factor</dt><dd>180%</dd><dt>Cooldown</dt><dd>2.5s</dd><dt>Venomous Seed Frequency</dt><dd>After Every 3 Attacks</dd><dt>Venomous Seed Damage Factor</dt><dd>100%</dd></dl>
+        <h4 class="sk__heading">Poison</h4>
+        <p class="sk__text">Takes increased damage and continuously takes damage.</p>
+        <dl class="sk__rows"><dt>Boost Factor</dt><dd>5%</dd><dt>Damage Factor</dt><dd>12%</dd><dt>Damage Interval</dt><dd>1s</dd><dt>Duration</dt><dd>5s</dd></dl>
+    </li>
+    <li class="sk" id="thornwisp" data-name="thornwisp" data-type="Grass" data-role="DPS" data-tier="3">
+      <div class="sk__head">
+        <img src="data/images/tatari/thornwisp.png" alt="" width="56" height="56" loading="lazy" decoding="async">
+        <div>
+          <h3 class="sk__name">Thornwisp</h3>
+          <p class="sk__meta">T3 Grass DPS · <b>Thorn Bite</b></p>
+        </div>
+        <span class="sk__arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
+          <small>Arena Factor</small>45%</span>
+      </div>
+      
+        
+        
+        <dl class="sk__rows"><dt>Damage Factor</dt><dd>180%</dd><dt>Cooldown</dt><dd>2.5s</dd><dt>Venomous Seed Frequency</dt><dd>After Every 3 Attacks</dd><dt>Venomous Seeds</dt><dd>3</dd><dt>Venomous Seed Damage Factor</dt><dd>100%</dd></dl>
+        <h4 class="sk__heading">Poison</h4>
+        <p class="sk__text">Takes increased damage and continuously takes damage.</p>
+        <dl class="sk__rows"><dt>Boost Factor</dt><dd>5%</dd><dt>Damage Factor</dt><dd>12%</dd><dt>Damage Interval</dt><dd>1s</dd><dt>Duration</dt><dd>5s</dd></dl>
+        <h4 class="sk__heading">Poison Zone</h4>
+        <p class="sk__text">Enemies inside the zone are inflicted with Poison. If a venomous seed misses an enemy, it will still create a Poison Zone before disappearing.</p>
+        <dl class="sk__rows"><dt>Duration</dt><dd>4s</dd></dl>
+    </li>
+    <li class="sk" id="chomperwraith" data-name="chomperwraith" data-type="Grass" data-role="DPS" data-tier="4">
+      <div class="sk__head">
+        <img src="data/images/tatari/chomperwraith.png" alt="" width="56" height="56" loading="lazy" decoding="async">
+        <div>
+          <h3 class="sk__name">Chomperwraith</h3>
+          <p class="sk__meta">T4 Grass DPS · <b>Chomp Menace</b></p>
+        </div>
+        <span class="sk__arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
+          <small>Arena Factor</small>45%</span>
+      </div>
+      
+        
+        
+        <dl class="sk__rows"><dt>Damage Factor</dt><dd>180%</dd><dt>Cooldown</dt><dd>2.5s</dd><dt>Venomous Seed Frequency</dt><dd>After Every 3 Attacks</dd><dt>Venomous Seeds</dt><dd>3</dd><dt>Venomous Seed Damage Factor</dt><dd>100%</dd></dl>
+        <h4 class="sk__heading">Poison</h4>
+        <p class="sk__text">Takes increased damage and continuously takes damage.</p>
+        <dl class="sk__rows"><dt>Boost Factor</dt><dd>5%</dd><dt>Damage Factor</dt><dd>12%</dd><dt>Damage Interval</dt><dd>1s</dd><dt>Duration</dt><dd>5s</dd></dl>
+        <h4 class="sk__heading">Poison Zone</h4>
+        <p class="sk__text">Enemies inside the zone are inflicted with Poison. If a venomous seed misses an enemy, it will still create a Poison Zone before disappearing.</p>
+        <dl class="sk__rows"><dt>Duration</dt><dd>4s</dd></dl>
+        <h4 class="sk__heading">Aura: Grass</h4>
+        <p class="sk__text">Increases Max HP for all allies. The effect for non-Grass allies is reduced by 50%. Aura: Grass can be stacked, but cannot take effect in some game modes.</p>
+        <dl class="sk__rows"><dt>Base HP Boost</dt><dd>4%</dd><dt>Max HP Boost</dt><dd>20%</dd></dl>
+    </li>
+    <li class="sk" id="droppit" data-name="droppit" data-type="Water" data-role="Support" data-tier="1">
+      <div class="sk__head">
+        <img src="data/images/tatari/droppit.png" alt="" width="56" height="56" loading="lazy" decoding="async">
+        <div>
+          <h3 class="sk__name">Droppit</h3>
+          <p class="sk__meta">T1 Water Support · <b>Cloud Mist</b></p>
+        </div>
+        <span class="sk__arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
+          <small>Arena Factor</small>60%</span>
+      </div>
+      <p class="sk__text sk__partial">Only its Arena Factor is recorded so far.</p>
+    </li>
+    <li class="sk" id="tideon" data-name="tideon" data-type="Water" data-role="Support" data-tier="3">
+      <div class="sk__head">
+        <img src="data/images/tatari/tideon.png" alt="" width="56" height="56" loading="lazy" decoding="async">
+        <div>
+          <h3 class="sk__name">Tideon</h3>
+          <p class="sk__meta">T3 Water Support · <b>Haze Hex</b></p>
+        </div>
+        <span class="sk__arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
+          <small>Arena Factor</small>60%</span>
+      </div>
+      <p class="sk__text sk__partial">Only its Arena Factor is recorded so far.</p>
+    </li>
+    <li class="sk" id="voltkit" data-name="voltkit" data-type="Lightning" data-role="Guardian" data-tier="1">
+      <div class="sk__head">
+        <img src="data/images/tatari/voltkit.png" alt="" width="56" height="56" loading="lazy" decoding="async">
+        <div>
+          <h3 class="sk__name">Voltkit</h3>
+          <p class="sk__meta">T1 Lightning Guardian · <b>Duskrush</b></p>
+        </div>
+        <span class="sk__arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
+          <small>Arena Factor</small>50%</span>
+      </div>
+      <p class="sk__text sk__partial">Only its Arena Factor is recorded so far.</p>
+    </li>
+    <li class="sk" id="voltling" data-name="voltling" data-type="Lightning" data-role="Guardian" data-tier="2">
+      <div class="sk__head">
+        <img src="data/images/tatari/voltling.png" alt="" width="56" height="56" loading="lazy" decoding="async">
+        <div>
+          <h3 class="sk__name">Voltling</h3>
+          <p class="sk__meta">T2 Lightning Guardian · <b>Eboncharge</b></p>
+        </div>
+        <span class="sk__arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
+          <small>Arena Factor</small>50%</span>
+      </div>
+      <p class="sk__text sk__partial">Only its Arena Factor is recorded so far.</p>
+    </li>
+    <li class="sk" id="voltverine" data-name="voltverine" data-type="Lightning" data-role="Guardian" data-tier="3">
+      <div class="sk__head">
+        <img src="data/images/tatari/voltverine.png" alt="" width="56" height="56" loading="lazy" decoding="async">
+        <div>
+          <h3 class="sk__name">Voltverine</h3>
+          <p class="sk__meta">T3 Lightning Guardian · <b>Phantom Storm</b></p>
+        </div>
+        <span class="sk__arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
+          <small>Arena Factor</small>50%</span>
+      </div>
+      <p class="sk__text sk__partial">Only its Arena Factor is recorded so far.</p>
+    </li>
+    <li class="sk" id="voltreaver" data-name="voltreaver" data-type="Lightning" data-role="Guardian" data-tier="4">
+      <div class="sk__head">
+        <img src="data/images/tatari/voltreaver.png" alt="" width="56" height="56" loading="lazy" decoding="async">
+        <div>
+          <h3 class="sk__name">Voltreaver</h3>
+          <p class="sk__meta">T4 Lightning Guardian · <b>Shadow Strike</b></p>
+        </div>
+        <span class="sk__arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
+          <small>Arena Factor</small>50%</span>
+      </div>
+      <p class="sk__text sk__partial">Only its Arena Factor is recorded so far.</p>
+    </li>
+    <li class="sk" id="dewgrub" data-name="dewgrub" data-type="Water" data-role="Support" data-tier="1">
+      <div class="sk__head">
+        <img src="data/images/tatari/dewgrub.png" alt="" width="56" height="56" loading="lazy" decoding="async">
+        <div>
+          <h3 class="sk__name">Dewgrub</h3>
+          <p class="sk__meta">T1 Water Support · <b>Drowsy Shot</b></p>
+        </div>
+        <span class="sk__arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
+          <small>Arena Factor</small>35%</span>
+      </div>
+      <p class="sk__text sk__partial">Only its Arena Factor is recorded so far.</p>
+    </li>
+    <li class="sk" id="waveflutter" data-name="waveflutter" data-type="Water" data-role="Support" data-tier="3">
+      <div class="sk__head">
+        <img src="data/images/tatari/waveflutter.png" alt="" width="56" height="56" loading="lazy" decoding="async">
+        <div>
+          <h3 class="sk__name">Waveflutter</h3>
+          <p class="sk__meta">T3 Water Support · <b>Somno-Shot</b></p>
+        </div>
+        <span class="sk__arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
+          <small>Arena Factor</small>35%</span>
+      </div>
+      <p class="sk__text sk__partial">Only its Arena Factor is recorded so far.</p>
+    </li>
+    <li class="sk" id="morphanessa" data-name="morphanessa" data-type="Water" data-role="Support" data-tier="4">
+      <div class="sk__head">
+        <img src="data/images/tatari/morphanessa.png" alt="" width="56" height="56" loading="lazy" decoding="async">
+        <div>
+          <h3 class="sk__name">Morphanessa</h3>
+          <p class="sk__meta">T4 Water Support · <b>Rippling Shot</b></p>
+        </div>
+        <span class="sk__arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
+          <small>Arena Factor</small>35%</span>
+      </div>
+      <p class="sk__text sk__partial">Only its Arena Factor is recorded so far.</p>
+    </li>
+    <li class="sk" id="flameow" data-name="flameow" data-type="Fire" data-role="DPS" data-tier="1">
+      <div class="sk__head">
+        <img src="data/images/tatari/flameow.png" alt="" width="56" height="56" loading="lazy" decoding="async">
+        <div>
+          <h3 class="sk__name">Flameow</h3>
+          <p class="sk__meta">T1 Fire DPS · <b>Meow Pop</b></p>
+        </div>
+        <span class="sk__arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
+          <small>Arena Factor</small>50%</span>
+      </div>
+      <p class="sk__text sk__partial">Only its Arena Factor is recorded so far.</p>
+    </li>
+    <li class="sk" id="silversear" data-name="silversear" data-type="Fire" data-role="DPS" data-tier="3">
+      <div class="sk__head">
+        <img src="data/images/tatari/silversear.png" alt="" width="56" height="56" loading="lazy" decoding="async">
+        <div>
+          <h3 class="sk__name">Silversear</h3>
+          <p class="sk__meta">T3 Fire DPS · <b>Meow Bomb</b></p>
+        </div>
+        <span class="sk__arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
+          <small>Arena Factor</small>50%</span>
+      </div>
+      <p class="sk__text sk__partial">Only its Arena Factor is recorded so far.</p>
+    </li>
+    <li class="sk" id="snapshade" data-name="snapshade" data-type="Grass" data-role="DPS" data-tier="2">
+      <div class="sk__head">
+        <img src="data/images/tatari/snapshade.png" alt="" width="56" height="56" loading="lazy" decoding="async">
+        <div>
+          <h3 class="sk__name">Snapshade</h3>
+          <p class="sk__meta">T2 Grass DPS · <b>Snap Trap</b></p>
+        </div>
+        <span class="sk__arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
+          <small>Arena Factor</small>45%</span>
+      </div>
+      <p class="sk__text sk__partial">Only its Arena Factor is recorded so far.</p>
+    </li>
+    </ol>
+    <section class="panel sk__missing">
+      <h2>Not recorded yet <span class="muted" id="sk-missing-n">223</span></h2>
+      <ul class="sk__names" id="sk-names">
+        <li data-name="zapup" data-type="Lightning" data-role="Guardian" data-tier="1"><img src="data/images/tatari/zapup.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Zapup</span></li>
+        <li data-name="zapooch" data-type="Lightning" data-role="Guardian" data-tier="2"><img src="data/images/tatari/zapooch.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Zapooch</span></li>
+        <li data-name="clucky" data-type="Grass" data-role="Healer" data-tier="1"><img src="data/images/tatari/clucky.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Clucky</span></li>
+        <li data-name="cluckeroo" data-type="Grass" data-role="Healer" data-tier="2"><img src="data/images/tatari/cluckeroo.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Cluckeroo</span></li>
+        <li data-name="cindermunk" data-type="Fire" data-role="DPS" data-tier="1"><img src="data/images/tatari/cindermunk.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Cindermunk</span></li>
+        <li data-name="embertail" data-type="Fire" data-role="DPS" data-tier="2"><img src="data/images/tatari/embertail.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Embertail</span></li>
+        <li data-name="shellshy" data-type="Water" data-role="Guardian" data-tier="1"><img src="data/images/tatari/shellshy.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Shellshy</span></li>
+        <li data-name="boldclaw" data-type="Water" data-role="Guardian" data-tier="2"><img src="data/images/tatari/boldclaw.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Boldclaw</span></li>
+        <li data-name="capywata" data-type="Water" data-role="Healer" data-tier="1"><img src="data/images/tatari/capywata.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Capywata</span></li>
+        <li data-name="capypapa" data-type="Water" data-role="Healer" data-tier="2"><img src="data/images/tatari/capypapa.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Capypapa</span></li>
+        <li data-name="sparkrow" data-type="Fire" data-role="DPS" data-tier="1"><img src="data/images/tatari/sparkrow.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Sparkrow</span></li>
+        <li data-name="scorchwing" data-type="Fire" data-role="DPS" data-tier="2"><img src="data/images/tatari/scorchwing.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Scorchwing</span></li>
+        <li data-name="solpear" data-type="Grass" data-role="Guardian" data-tier="1"><img src="data/images/tatari/solpear.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Solpear</span></li>
+        <li data-name="pearpair" data-type="Grass" data-role="Guardian" data-tier="2"><img src="data/images/tatari/pearpair.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Pearpair</span></li>
+        <li data-name="mudrump" data-type="Rock" data-role="DPS" data-tier="1"><img src="data/images/tatari/mudrump.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Mudrump</span></li>
+        <li data-name="rockhog" data-type="Rock" data-role="DPS" data-tier="2"><img src="data/images/tatari/rockhog.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Rockhog</span></li>
+        <li data-name="wobbler" data-type="Lightning" data-role="DPS" data-tier="1"><img src="data/images/tatari/wobbler.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Wobbler</span></li>
+        <li data-name="boltskipper" data-type="Lightning" data-role="DPS" data-tier="2"><img src="data/images/tatari/boltskipper.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Boltskipper</span></li>
+        <li data-name="dozy" data-type="Rock" data-role="Tank" data-tier="1"><img src="data/images/tatari/dozy.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Dozy</span></li>
+        <li data-name="snoozebo" data-type="Rock" data-role="Tank" data-tier="2"><img src="data/images/tatari/snoozebo.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Snoozebo</span></li>
+        <li data-name="frostnip" data-type="Water" data-role="DPS" data-tier="1"><img src="data/images/tatari/frostnip.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Frostnip</span></li>
+        <li data-name="frostpaw" data-type="Water" data-role="DPS" data-tier="2"><img src="data/images/tatari/frostpaw.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Frostpaw</span></li>
+        <li data-name="frostique" data-type="Water" data-role="DPS" data-tier="3"><img src="data/images/tatari/frostique.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Frostique</span></li>
+        <li data-name="frostluna" data-type="Water" data-role="DPS" data-tier="4"><img src="data/images/tatari/frostluna.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Frostluna</span></li>
+        <li data-name="pyropup" data-type="Fire" data-role="Guardian" data-tier="1"><img src="data/images/tatari/pyropup.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Pyropup</span></li>
+        <li data-name="pyrohound" data-type="Fire" data-role="Guardian" data-tier="2"><img src="data/images/tatari/pyrohound.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Pyrohound</span></li>
+        <li data-name="hellhound" data-type="Fire" data-role="Guardian" data-tier="3"><img src="data/images/tatari/hellhound.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Hellhound</span></li>
+        <li data-name="pyrodaemon" data-type="Fire" data-role="Guardian" data-tier="4"><img src="data/images/tatari/pyrodaemon.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Pyrodaemon</span></li>
+        <li data-name="frugling" data-type="Grass" data-role="DPS" data-tier="1"><img src="data/images/tatari/frugling.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Frugling</span></li>
+        <li data-name="frugatoad" data-type="Grass" data-role="DPS" data-tier="2"><img src="data/images/tatari/frugatoad.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Frugatoad</span></li>
+        <li data-name="frugagon" data-type="Grass" data-role="DPS" data-tier="3"><img src="data/images/tatari/frugagon.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Frugagon</span></li>
+        <li data-name="frugantuan" data-type="Grass" data-role="DPS" data-tier="4"><img src="data/images/tatari/frugantuan.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Frugantuan</span></li>
+        <li data-name="rubblet" data-type="Rock" data-role="Guardian" data-tier="1"><img src="data/images/tatari/rubblet.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Rubblet</span></li>
+        <li data-name="cobbledon" data-type="Rock" data-role="Guardian" data-tier="2"><img src="data/images/tatari/cobbledon.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Cobbledon</span></li>
+        <li data-name="rockzilla" data-type="Rock" data-role="Guardian" data-tier="3"><img src="data/images/tatari/rockzilla.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Rockzilla</span></li>
+        <li data-name="meteorax" data-type="Rock" data-role="Guardian" data-tier="4"><img src="data/images/tatari/meteorax.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Meteorax</span></li>
+        <li data-name="zappur" data-type="Lightning" data-role="Support" data-tier="1"><img src="data/images/tatari/zappur.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Zappur</span></li>
+        <li data-name="electroar" data-type="Lightning" data-role="Support" data-tier="2"><img src="data/images/tatari/electroar.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Electroar</span></li>
+        <li data-name="blitzmane" data-type="Lightning" data-role="Support" data-tier="3"><img src="data/images/tatari/blitzmane.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Blitzmane</span></li>
+        <li data-name="stormlion" data-type="Lightning" data-role="Support" data-tier="4"><img src="data/images/tatari/stormlion.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Stormlion</span></li>
+        <li data-name="sealing" data-type="Water" data-role="DPS" data-tier="1"><img src="data/images/tatari/sealing.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Sealing</span></li>
+        <li data-name="sealoon" data-type="Water" data-role="DPS" data-tier="2"><img src="data/images/tatari/sealoon.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Sealoon</span></li>
+        <li data-name="seaswirl" data-type="Water" data-role="DPS" data-tier="3"><img src="data/images/tatari/seaswirl.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Seaswirl</span></li>
+        <li data-name="sealord" data-type="Water" data-role="DPS" data-tier="4"><img src="data/images/tatari/sealord.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Sealord</span></li>
+        <li data-name="blueflick" data-type="Fire" data-role="DPS" data-tier="1"><img src="data/images/tatari/blueflick.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Blueflick</span></li>
+        <li data-name="ignisnap" data-type="Fire" data-role="DPS" data-tier="2"><img src="data/images/tatari/ignisnap.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Ignisnap</span></li>
+        <li data-name="azurion" data-type="Fire" data-role="DPS" data-tier="3"><img src="data/images/tatari/azurion.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Azurion</span></li>
+        <li data-name="newflamander" data-type="Fire" data-role="DPS" data-tier="4"><img src="data/images/tatari/newflamander.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Newflamander</span></li>
+        <li data-name="manteeny" data-type="Grass" data-role="Guardian" data-tier="1"><img src="data/images/tatari/manteeny.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Manteeny</span></li>
+        <li data-name="stalkerix" data-type="Grass" data-role="Guardian" data-tier="2"><img src="data/images/tatari/stalkerix.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Stalkerix</span></li>
+        <li data-name="serrabloom" data-type="Grass" data-role="Guardian" data-tier="3"><img src="data/images/tatari/serrabloom.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Serrabloom</span></li>
+        <li data-name="orchitoria" data-type="Grass" data-role="Guardian" data-tier="4"><img src="data/images/tatari/orchitoria.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Orchitoria</span></li>
+        <li data-name="gibber" data-type="Rock" data-role="Guardian" data-tier="1"><img src="data/images/tatari/gibber.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Gibber</span></li>
+        <li data-name="turtuff" data-type="Rock" data-role="Guardian" data-tier="2"><img src="data/images/tatari/turtuff.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Turtuff</span></li>
+        <li data-name="rockshell" data-type="Rock" data-role="Guardian" data-tier="3"><img src="data/images/tatari/rockshell.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Rockshell</span></li>
+        <li data-name="terraton" data-type="Rock" data-role="Guardian" data-tier="4"><img src="data/images/tatari/terraton.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Terraton</span></li>
+        <li data-name="voltfawn" data-type="Lightning" data-role="DPS" data-tier="1"><img src="data/images/tatari/voltfawn.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Voltfawn</span></li>
+        <li data-name="sparkdoe" data-type="Lightning" data-role="DPS" data-tier="2"><img src="data/images/tatari/sparkdoe.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Sparkdoe</span></li>
+        <li data-name="zapantler" data-type="Lightning" data-role="DPS" data-tier="3"><img src="data/images/tatari/zapantler.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Zapantler</span></li>
+        <li data-name="magnedart" data-type="Lightning" data-role="DPS" data-tier="4"><img src="data/images/tatari/magnedart.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Magnedart</span></li>
+        <li data-name="bubbit" data-type="Water" data-role="Support" data-tier="2"><img src="data/images/tatari/bubbit.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Bubbit</span></li>
+        <li data-name="haplysia" data-type="Water" data-role="Support" data-tier="4"><img src="data/images/tatari/haplysia.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Haplysia</span></li>
+        <li data-name="sparkit" data-type="Fire" data-role="DPS" data-tier="1"><img src="data/images/tatari/sparkit.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Sparkit</span></li>
+        <li data-name="firefox" data-type="Fire" data-role="DPS" data-tier="2"><img src="data/images/tatari/firefox.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Firefox</span></li>
+        <li data-name="flarevix" data-type="Fire" data-role="DPS" data-tier="3"><img src="data/images/tatari/flarevix.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Flarevix</span></li>
+        <li data-name="phantifox" data-type="Fire" data-role="DPS" data-tier="4"><img src="data/images/tatari/phantifox.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Phantifox</span></li>
+        <li data-name="goonbug" data-type="Grass" data-role="Specialist" data-tier="1"><img src="data/images/tatari/goonbug.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Goonbug</span></li>
+        <li data-name="capobeetle" data-type="Grass" data-role="Specialist" data-tier="2"><img src="data/images/tatari/capobeetle.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Capobeetle</span></li>
+        <li data-name="donscarab" data-type="Grass" data-role="Specialist" data-tier="3"><img src="data/images/tatari/donscarab.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Donscarab</span></li>
+        <li data-name="beetleknight" data-type="Grass" data-role="Specialist" data-tier="4"><img src="data/images/tatari/beetleknight.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Beetleknight</span></li>
+        <li data-name="punchimp" data-type="Rock" data-role="Guardian" data-tier="1"><img src="data/images/tatari/punchimp.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Punchimp</span></li>
+        <li data-name="rockfu" data-type="Rock" data-role="Guardian" data-tier="2"><img src="data/images/tatari/rockfu.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Rockfu</span></li>
+        <li data-name="rockwu" data-type="Rock" data-role="Guardian" data-tier="3"><img src="data/images/tatari/rockwu.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Rockwu</span></li>
+        <li data-name="rockong" data-type="Rock" data-role="Guardian" data-tier="4"><img src="data/images/tatari/rockong.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Rockong</span></li>
+        <li data-name="waddledo" data-type="Water" data-role="Tank" data-tier="1"><img src="data/images/tatari/waddledo.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Waddledo</span></li>
+        <li data-name="swaystroll" data-type="Water" data-role="Tank" data-tier="2"><img src="data/images/tatari/swaystroll.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Swaystroll</span></li>
+        <li data-name="stoodbeak" data-type="Water" data-role="Tank" data-tier="3"><img src="data/images/tatari/stoodbeak.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Stoodbeak</span></li>
+        <li data-name="glideflip" data-type="Water" data-role="Tank" data-tier="4"><img src="data/images/tatari/glideflip.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Glideflip</span></li>
+        <li data-name="zapuni" data-type="Lightning" data-role="DPS" data-tier="1"><img src="data/images/tatari/zapuni.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Zapuni</span></li>
+        <li data-name="surgehoof" data-type="Lightning" data-role="DPS" data-tier="2"><img src="data/images/tatari/surgehoof.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Surgehoof</span></li>
+        <li data-name="voltmare" data-type="Lightning" data-role="DPS" data-tier="3"><img src="data/images/tatari/voltmare.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Voltmare</span></li>
+        <li data-name="boltallion" data-type="Lightning" data-role="DPS" data-tier="4"><img src="data/images/tatari/boltallion.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Boltallion</span></li>
+        <li data-name="gopher" data-type="Rock" data-role="DPS" data-tier="1"><img src="data/images/tatari/gopher.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Gopher</span></li>
+        <li data-name="watchroo" data-type="Rock" data-role="DPS" data-tier="2"><img src="data/images/tatari/watchroo.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Watchroo</span></li>
+        <li data-name="bastogard" data-type="Rock" data-role="DPS" data-tier="3"><img src="data/images/tatari/bastogard.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Bastogard</span></li>
+        <li data-name="cratzar" data-type="Rock" data-role="DPS" data-tier="4"><img src="data/images/tatari/cratzar.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Cratzar</span></li>
+        <li data-name="ashlarva" data-type="Fire" data-role="Healer" data-tier="1"><img src="data/images/tatari/ashlarva.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Ashlarva</span></li>
+        <li data-name="firecoil" data-type="Fire" data-role="Healer" data-tier="2"><img src="data/images/tatari/firecoil.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Firecoil</span></li>
+        <li data-name="charflutter" data-type="Fire" data-role="Healer" data-tier="3"><img src="data/images/tatari/charflutter.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Charflutter</span></li>
+        <li data-name="chrysolaria" data-type="Fire" data-role="Healer" data-tier="4"><img src="data/images/tatari/chrysolaria.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Chrysolaria</span></li>
+        <li data-name="pandaroo" data-type="Grass" data-role="DPS" data-tier="1"><img src="data/images/tatari/pandaroo.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Pandaroo</span></li>
+        <li data-name="pandaroot" data-type="Grass" data-role="DPS" data-tier="2"><img src="data/images/tatari/pandaroot.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Pandaroot</span></li>
+        <li data-name="pandarrior" data-type="Grass" data-role="DPS" data-tier="3"><img src="data/images/tatari/pandarrior.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Pandarrior</span></li>
+        <li data-name="pandagrand" data-type="Grass" data-role="DPS" data-tier="4"><img src="data/images/tatari/pandagrand.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Pandagrand</span></li>
+        <li data-name="shrimpyro" data-type="Fire" data-role="DPS" data-tier="1"><img src="data/images/tatari/shrimpyro.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Shrimpyro</span></li>
+        <li data-name="pyroprawn" data-type="Fire" data-role="DPS" data-tier="2"><img src="data/images/tatari/pyroprawn.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Pyroprawn</span></li>
+        <li data-name="pyroclobster" data-type="Fire" data-role="DPS" data-tier="3"><img src="data/images/tatari/pyroclobster.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Pyroclobster</span></li>
+        <li data-name="pyroviathan" data-type="Fire" data-role="DPS" data-tier="4"><img src="data/images/tatari/pyroviathan.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Pyroviathan</span></li>
+        <li data-name="buddi" data-type="Grass" data-role="Healer" data-tier="1"><img src="data/images/tatari/buddi.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Buddi</span></li>
+        <li data-name="sunfleur" data-type="Grass" data-role="Healer" data-tier="2"><img src="data/images/tatari/sunfleur.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Sunfleur</span></li>
+        <li data-name="solaflora" data-type="Grass" data-role="Healer" data-tier="3"><img src="data/images/tatari/solaflora.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Solaflora</span></li>
+        <li data-name="heliabloom" data-type="Grass" data-role="Healer" data-tier="4"><img src="data/images/tatari/heliabloom.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Heliabloom</span></li>
+        <li data-name="joeyo" data-type="Rock" data-role="Guardian" data-tier="1"><img src="data/images/tatari/joeyo.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Joeyo</span></li>
+        <li data-name="puncharoo" data-type="Rock" data-role="Guardian" data-tier="2"><img src="data/images/tatari/puncharoo.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Puncharoo</span></li>
+        <li data-name="kangachamp" data-type="Rock" data-role="Guardian" data-tier="3"><img src="data/images/tatari/kangachamp.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Kangachamp</span></li>
+        <li data-name="kaiseroo" data-type="Rock" data-role="Guardian" data-tier="4"><img src="data/images/tatari/kaiseroo.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Kaiseroo</span></li>
+        <li data-name="sparkeet" data-type="Lightning" data-role="Tank" data-tier="1"><img src="data/images/tatari/sparkeet.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Sparkeet</span></li>
+        <li data-name="buzzbeak" data-type="Lightning" data-role="Tank" data-tier="2"><img src="data/images/tatari/buzzbeak.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Buzzbeak</span></li>
+        <li data-name="toucanzam" data-type="Lightning" data-role="Tank" data-tier="3"><img src="data/images/tatari/toucanzam.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Toucanzam</span></li>
+        <li data-name="technocan" data-type="Lightning" data-role="Tank" data-tier="4"><img src="data/images/tatari/technocan.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Technocan</span></li>
+        <li data-name="sackling" data-type="Grass" data-role="Tank" data-tier="1"><img src="data/images/tatari/sackling.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Sackling</span></li>
+        <li data-name="jarachnid" data-type="Grass" data-role="Tank" data-tier="2"><img src="data/images/tatari/jarachnid.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Jarachnid</span></li>
+        <li data-name="terracrawler" data-type="Grass" data-role="Tank" data-tier="3"><img src="data/images/tatari/terracrawler.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Terracrawler</span></li>
+        <li data-name="weaverfang" data-type="Grass" data-role="Tank" data-tier="4"><img src="data/images/tatari/weaverfang.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Weaverfang</span></li>
+        <li data-name="skinklet" data-type="Water" data-role="Specialist" data-tier="1"><img src="data/images/tatari/skinklet.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Skinklet</span></li>
+        <li data-name="skinkoon" data-type="Water" data-role="Specialist" data-tier="2"><img src="data/images/tatari/skinkoon.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Skinkoon</span></li>
+        <li data-name="ninjaguana" data-type="Water" data-role="Specialist" data-tier="3"><img src="data/images/tatari/ninjaguana.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Ninjaguana</span></li>
+        <li data-name="hychroma" data-type="Water" data-role="Specialist" data-tier="4"><img src="data/images/tatari/hychroma.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Hychroma</span></li>
+        <li data-name="souphog" data-type="Fire" data-role="Healer" data-tier="1"><img src="data/images/tatari/souphog.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Souphog</span></li>
+        <li data-name="grillhog" data-type="Fire" data-role="Healer" data-tier="2"><img src="data/images/tatari/grillhog.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Grillhog</span></li>
+        <li data-name="hothog" data-type="Fire" data-role="Healer" data-tier="3"><img src="data/images/tatari/hothog.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Hothog</span></li>
+        <li data-name="searhog" data-type="Fire" data-role="Healer" data-tier="4"><img src="data/images/tatari/searhog.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Searhog</span></li>
+        <li data-name="shardsnail" data-type="Rock" data-role="DPS" data-tier="1"><img src="data/images/tatari/shardsnail.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Shardsnail</span></li>
+        <li data-name="gemsnail" data-type="Rock" data-role="DPS" data-tier="2"><img src="data/images/tatari/gemsnail.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Gemsnail</span></li>
+        <li data-name="jewelsnail" data-type="Rock" data-role="DPS" data-tier="3"><img src="data/images/tatari/jewelsnail.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Jewelsnail</span></li>
+        <li data-name="crystalsnail" data-type="Rock" data-role="DPS" data-tier="4"><img src="data/images/tatari/crystalsnail.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Crystalsnail</span></li>
+        <li data-name="cheerling" data-type="Lightning" data-role="Support" data-tier="1"><img src="data/images/tatari/cheerling.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Cheerling</span></li>
+        <li data-name="cheerlet" data-type="Lightning" data-role="Support" data-tier="2"><img src="data/images/tatari/cheerlet.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Cheerlet</span></li>
+        <li data-name="cheerspring" data-type="Lightning" data-role="Support" data-tier="3"><img src="data/images/tatari/cheerspring.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Cheerspring</span></li>
+        <li data-name="cheerstella" data-type="Lightning" data-role="Support" data-tier="4"><img src="data/images/tatari/cheerstella.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Cheerstella</span></li>
+        <li data-name="cactobud" data-type="Grass" data-role="DPS" data-tier="1"><img src="data/images/tatari/cactobud.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Cactobud</span></li>
+        <li data-name="cactobloom" data-type="Grass" data-role="DPS" data-tier="2"><img src="data/images/tatari/cactobloom.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Cactobloom</span></li>
+        <li data-name="cactoczar" data-type="Grass" data-role="DPS" data-tier="3"><img src="data/images/tatari/cactoczar.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Cactoczar</span></li>
+        <li data-name="lullelly" data-type="Water" data-role="DPS" data-tier="1"><img src="data/images/tatari/lullelly.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Lullelly</span></li>
+        <li data-name="yawnelly" data-type="Water" data-role="DPS" data-tier="2"><img src="data/images/tatari/yawnelly.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Yawnelly</span></li>
+        <li data-name="souverelle" data-type="Water" data-role="DPS" data-tier="3"><img src="data/images/tatari/souverelle.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Souverelle</span></li>
+        <li data-name="somnrayna" data-type="Water" data-role="DPS" data-tier="4"><img src="data/images/tatari/somnrayna.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Somnrayna</span></li>
+        <li data-name="tindercub" data-type="Fire" data-role="Specialist" data-tier="1"><img src="data/images/tatari/tindercub.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Tindercub</span></li>
+        <li data-name="kitjitsu" data-type="Fire" data-role="Specialist" data-tier="2"><img src="data/images/tatari/kitjitsu.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Kitjitsu</span></li>
+        <li data-name="taiglow" data-type="Fire" data-role="Specialist" data-tier="3"><img src="data/images/tatari/taiglow.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Taiglow</span></li>
+        <li data-name="saberheart" data-type="Fire" data-role="Specialist" data-tier="4"><img src="data/images/tatari/saberheart.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Saberheart</span></li>
+        <li data-name="humbug" data-type="Rock" data-role="DPS" data-tier="1"><img src="data/images/tatari/humbug.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Humbug</span></li>
+        <li data-name="humbleetle" data-type="Rock" data-role="DPS" data-tier="2"><img src="data/images/tatari/humbleetle.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Humbleetle</span></li>
+        <li data-name="zenscarab" data-type="Rock" data-role="DPS" data-tier="3"><img src="data/images/tatari/zenscarab.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Zenscarab</span></li>
+        <li data-name="hierotyrus" data-type="Rock" data-role="DPS" data-tier="4"><img src="data/images/tatari/hierotyrus.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Hierotyrus</span></li>
+        <li data-name="fluffle" data-type="Lightning" data-role="DPS" data-tier="1"><img src="data/images/tatari/fluffle.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Fluffle</span></li>
+        <li data-name="nimbuzzy" data-type="Lightning" data-role="DPS" data-tier="2"><img src="data/images/tatari/nimbuzzy.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Nimbuzzy</span></li>
+        <li data-name="galewether" data-type="Lightning" data-role="DPS" data-tier="3"><img src="data/images/tatari/galewether.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Galewether</span></li>
+        <li data-name="cosmoram" data-type="Lightning" data-role="DPS" data-tier="4"><img src="data/images/tatari/cosmoram.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Cosmoram</span></li>
+        <li data-name="funglet" data-type="Grass" data-role="Support" data-tier="1"><img src="data/images/tatari/funglet.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Funglet</span></li>
+        <li data-name="trippet" data-type="Grass" data-role="Support" data-tier="2"><img src="data/images/tatari/trippet.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Trippet</span></li>
+        <li data-name="hyphoria" data-type="Grass" data-role="Support" data-tier="3"><img src="data/images/tatari/hyphoria.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Hyphoria</span></li>
+        <li data-name="ecstamira" data-type="Grass" data-role="Support" data-tier="4"><img src="data/images/tatari/ecstamira.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Ecstamira</span></li>
+        <li data-name="ripplewing" data-type="Water" data-role="Support" data-tier="2"><img src="data/images/tatari/ripplewing.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Ripplewing</span></li>
+        <li data-name="fumekit" data-type="Fire" data-role="DPS" data-tier="1"><img src="data/images/tatari/fumekit.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Fumekit</span></li>
+        <li data-name="sulfunk" data-type="Fire" data-role="DPS" data-tier="2"><img src="data/images/tatari/sulfunk.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Sulfunk</span></li>
+        <li data-name="magmusk" data-type="Fire" data-role="DPS" data-tier="3"><img src="data/images/tatari/magmusk.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Magmusk</span></li>
+        <li data-name="blastniff" data-type="Fire" data-role="DPS" data-tier="4"><img src="data/images/tatari/blastniff.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Blastniff</span></li>
+        <li data-name="taptail" data-type="Rock" data-role="DPS" data-tier="1"><img src="data/images/tatari/taptail.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Taptail</span></li>
+        <li data-name="rattlecoil" data-type="Rock" data-role="DPS" data-tier="2"><img src="data/images/tatari/rattlecoil.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Rattlecoil</span></li>
+        <li data-name="clangnaga" data-type="Rock" data-role="DPS" data-tier="3"><img src="data/images/tatari/clangnaga.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Clangnaga</span></li>
+        <li data-name="dharmadder" data-type="Rock" data-role="DPS" data-tier="4"><img src="data/images/tatari/dharmadder.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Dharmadder</span></li>
+        <li data-name="kittazap" data-type="Lightning" data-role="Guardian" data-tier="1"><img src="data/images/tatari/kittazap.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Kittazap</span></li>
+        <li data-name="nekowatt" data-type="Lightning" data-role="Guardian" data-tier="2"><img src="data/images/tatari/nekowatt.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Nekowatt</span></li>
+        <li data-name="voltazar" data-type="Lightning" data-role="Guardian" data-tier="3"><img src="data/images/tatari/voltazar.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Voltazar</span></li>
+        <li data-name="thunderpaw" data-type="Lightning" data-role="Guardian" data-tier="4"><img src="data/images/tatari/thunderpaw.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Thunderpaw</span></li>
+        <li data-name="lollama" data-type="Grass" data-role="DPS" data-tier="1"><img src="data/images/tatari/lollama.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Lollama</span></li>
+        <li data-name="slobberlama" data-type="Grass" data-role="DPS" data-tier="2"><img src="data/images/tatari/slobberlama.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Slobberlama</span></li>
+        <li data-name="ptooielama" data-type="Grass" data-role="DPS" data-tier="3"><img src="data/images/tatari/ptooielama.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Ptooielama</span></li>
+        <li data-name="blechlama" data-type="Grass" data-role="DPS" data-tier="4"><img src="data/images/tatari/blechlama.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Blechlama</span></li>
+        <li data-name="dumbopus" data-type="Water" data-role="DPS" data-tier="1"><img src="data/images/tatari/dumbopus.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Dumbopus</span></li>
+        <li data-name="dazopus" data-type="Water" data-role="DPS" data-tier="2"><img src="data/images/tatari/dazopus.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Dazopus</span></li>
+        <li data-name="fishopus" data-type="Water" data-role="DPS" data-tier="3"><img src="data/images/tatari/fishopus.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Fishopus</span></li>
+        <li data-name="lordopus" data-type="Water" data-role="DPS" data-tier="4"><img src="data/images/tatari/lordopus.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Lordopus</span></li>
+        <li data-name="nekoflare" data-type="Fire" data-role="DPS" data-tier="2"><img src="data/images/tatari/nekoflare.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Nekoflare</span></li>
+        <li data-name="cinderclaw" data-type="Fire" data-role="DPS" data-tier="4"><img src="data/images/tatari/cinderclaw.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Cinderclaw</span></li>
+        <li data-name="drilleroo" data-type="Rock" data-role="Specialist" data-tier="1"><img src="data/images/tatari/drilleroo.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Drilleroo</span></li>
+        <li data-name="cragolin" data-type="Rock" data-role="Specialist" data-tier="2"><img src="data/images/tatari/cragolin.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Cragolin</span></li>
+        <li data-name="borelord" data-type="Rock" data-role="Specialist" data-tier="3"><img src="data/images/tatari/borelord.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Borelord</span></li>
+        <li data-name="zaplet" data-type="Lightning" data-role="Specialist" data-tier="1"><img src="data/images/tatari/zaplet.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Zaplet</span></li>
+        <li data-name="synthhog" data-type="Lightning" data-role="Specialist" data-tier="2"><img src="data/images/tatari/synthhog.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Synthhog</span></li>
+        <li data-name="sonarbat" data-type="Lightning" data-role="Specialist" data-tier="3"><img src="data/images/tatari/sonarbat.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Sonarbat</span></li>
+        <li data-name="umbraveil" data-type="Lightning" data-role="Specialist" data-tier="4"><img src="data/images/tatari/umbraveil.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Umbraveil</span></li>
+        <li data-name="maskfry" data-type="Water" data-role="Support" data-tier="1"><img src="data/images/tatari/maskfry.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Maskfry</span></li>
+        <li data-name="ospisces" data-type="Water" data-role="Support" data-tier="2"><img src="data/images/tatari/ospisces.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Ospisces</span></li>
+        <li data-name="armorjaw" data-type="Water" data-role="Support" data-tier="3"><img src="data/images/tatari/armorjaw.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Armorjaw</span></li>
+        <li data-name="dagondeep" data-type="Water" data-role="Support" data-tier="4"><img src="data/images/tatari/dagondeep.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Dagondeep</span></li>
+        <li data-name="hootlet" data-type="Grass" data-role="Support" data-tier="1"><img src="data/images/tatari/hootlet.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Hootlet</span></li>
+        <li data-name="tikowl" data-type="Grass" data-role="Support" data-tier="2"><img src="data/images/tatari/tikowl.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Tikowl</span></li>
+        <li data-name="chronerva" data-type="Grass" data-role="Support" data-tier="3"><img src="data/images/tatari/chronerva.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Chronerva</span></li>
+        <li data-name="hypnostrix" data-type="Grass" data-role="Support" data-tier="4"><img src="data/images/tatari/hypnostrix.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Hypnostrix</span></li>
+        <li data-name="momopo" data-type="Rock" data-role="Tank" data-tier="1"><img src="data/images/tatari/momopo.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Momopo</span></li>
+        <li data-name="lulupo" data-type="Rock" data-role="Tank" data-tier="2"><img src="data/images/tatari/lulupo.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Lulupo</span></li>
+        <li data-name="lilypo" data-type="Rock" data-role="Tank" data-tier="3"><img src="data/images/tatari/lilypo.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Lilypo</span></li>
+        <li data-name="gemmapo" data-type="Rock" data-role="Tank" data-tier="4"><img src="data/images/tatari/gemmapo.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Gemmapo</span></li>
+        <li data-name="blowfin" data-type="Fire" data-role="Tank" data-tier="1"><img src="data/images/tatari/blowfin.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Blowfin</span></li>
+        <li data-name="puffbelly" data-type="Fire" data-role="Tank" data-tier="2"><img src="data/images/tatari/puffbelly.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Puffbelly</span></li>
+        <li data-name="chefugu" data-type="Fire" data-role="Tank" data-tier="3"><img src="data/images/tatari/chefugu.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Chefugu</span></li>
+        <li data-name="pyromaki" data-type="Fire" data-role="Tank" data-tier="4"><img src="data/images/tatari/pyromaki.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Pyromaki</span></li>
+        <li data-name="glowfly" data-type="Lightning" data-role="Healer" data-tier="1"><img src="data/images/tatari/glowfly.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Glowfly</span></li>
+        <li data-name="phosflare" data-type="Lightning" data-role="Healer" data-tier="2"><img src="data/images/tatari/phosflare.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Phosflare</span></li>
+        <li data-name="glimmerwing" data-type="Lightning" data-role="Healer" data-tier="3"><img src="data/images/tatari/glimmerwing.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Glimmerwing</span></li>
+        <li data-name="luminastra" data-type="Lightning" data-role="Healer" data-tier="4"><img src="data/images/tatari/luminastra.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Luminastra</span></li>
+        <li data-name="poakie" data-type="Fire" data-role="Guardian" data-tier="1"><img src="data/images/tatari/poakie.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Poakie</span></li>
+        <li data-name="sizzribb" data-type="Fire" data-role="Guardian" data-tier="2"><img src="data/images/tatari/sizzribb.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Sizzribb</span></li>
+        <li data-name="lickflicker" data-type="Fire" data-role="Guardian" data-tier="3"><img src="data/images/tatari/lickflicker.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Lickflicker</span></li>
+        <li data-name="ignitoad" data-type="Fire" data-role="Guardian" data-tier="4"><img src="data/images/tatari/ignitoad.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Ignitoad</span></li>
+        <li data-name="cavyzap" data-type="Lightning" data-role="DPS" data-tier="1"><img src="data/images/tatari/cavyzap.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Cavyzap</span></li>
+        <li data-name="hippiehog" data-type="Lightning" data-role="DPS" data-tier="2"><img src="data/images/tatari/hippiehog.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Hippiehog</span></li>
+        <li data-name="wheekroller" data-type="Lightning" data-role="DPS" data-tier="3"><img src="data/images/tatari/wheekroller.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Wheekroller</span></li>
+        <li data-name="gigagnash" data-type="Lightning" data-role="DPS" data-tier="4"><img src="data/images/tatari/gigagnash.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Gigagnash</span></li>
+        <li data-name="snowcub" data-type="Water" data-role="Tank" data-tier="1"><img src="data/images/tatari/snowcub.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Snowcub</span></li>
+        <li data-name="polarpaw" data-type="Water" data-role="Tank" data-tier="2"><img src="data/images/tatari/polarpaw.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Polarpaw</span></li>
+        <li data-name="blizzgrizz" data-type="Water" data-role="Tank" data-tier="3"><img src="data/images/tatari/blizzgrizz.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Blizzgrizz</span></li>
+        <li data-name="anglerbear" data-type="Water" data-role="Tank" data-tier="4"><img src="data/images/tatari/anglerbear.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Anglerbear</span></li>
+        <li data-name="ringtail" data-type="Rock" data-role="Support" data-tier="1"><img src="data/images/tatari/ringtail.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Ringtail</span></li>
+        <li data-name="rizzler" data-type="Rock" data-role="Support" data-tier="2"><img src="data/images/tatari/rizzler.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Rizzler</span></li>
+        <li data-name="zorrock" data-type="Rock" data-role="Support" data-tier="3"><img src="data/images/tatari/zorrock.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Zorrock</span></li>
+        <li data-name="phantothief" data-type="Rock" data-role="Support" data-tier="4"><img src="data/images/tatari/phantothief.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Phantothief</span></li>
+        <li data-name="dolphie" data-type="Water" data-role="Support" data-tier="1"><img src="data/images/tatari/dolphie.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Dolphie</span></li>
+        <li data-name="blubbles" data-type="Water" data-role="Support" data-tier="2"><img src="data/images/tatari/blubbles.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Blubbles</span></li>
+        <li data-name="aquariel" data-type="Water" data-role="Support" data-tier="3"><img src="data/images/tatari/aquariel.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Aquariel</span></li>
+        <li data-name="irisia" data-type="Water" data-role="Support" data-tier="4"><img src="data/images/tatari/irisia.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Irisia</span></li>
+      </ul>
+    </section>
+    <!-- skills:end -->
+  </main>
+
+  <footer class="foot">
+    <span>Fan-made, unofficial.</span>
+    <span class="muted">Read off the in-game skill panel and checked by eye. Every player sees
+      the same numbers; the roman numeral on a skill is its skill level.</span>
+  </footer>
+
+  <script type="module" src="assets/js/skills.js"></script>
+  <script type="module" src="assets/js/site-nav.js"></script>
+</body>
+
+</html>

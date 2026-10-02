@@ -58,6 +58,12 @@ const CARDS = [
     sprites: ['tikowl', 'bubbit', 'ospisces', 'frugatoad', 'pandaroot'],
   },
   {
+    name: 'skills',
+    title: 'Skill data',
+    line: "Every Tatari skill's numbers as the game shows them, with Arena Factor for Gold Rush and Arena.",
+    sprites: ['cribking', 'chomperwraith', 'voltreaver', 'tideon', 'morphanessa'],
+  },
+  {
     name: 'farm',
     title: 'Cozy Farm rewards',
     line: 'Type your score: every prize you have earned, what the next tier pays, and the glitter fruit past 1.45M.',
