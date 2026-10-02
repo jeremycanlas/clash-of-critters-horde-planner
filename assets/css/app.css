@@ -3518,10 +3518,6 @@ body.is-dragging-active {
   grid-template-rows: repeat(6, var(--fmap-cell));
   gap: 1px;
   padding: 3px;
-}
-.fmap--gr {
-  grid-template-columns: repeat(5, var(--fmap-cell));
-  grid-template-rows: repeat(5, var(--fmap-cell));
   border-radius: var(--r-sm);
   background: var(--bg);
   background-image:
@@ -3529,6 +3525,11 @@ body.is-dragging-active {
     repeating-linear-gradient(to bottom, transparent 0 var(--fmap-cell), var(--line-soft) var(--fmap-cell) var(--fmap-step));
   background-origin: content-box;
   background-clip: content-box;
+}
+/* Gold Rush's 5 x 5: the same stamp, one column and one row fewer. */
+.fmap--gr {
+  grid-template-columns: repeat(5, var(--fmap-cell));
+  grid-template-rows: repeat(5, var(--fmap-cell));
 }
 .fmap img { width: var(--fmap-cell); height: var(--fmap-cell); object-fit: contain; }
 /* The handful of Tatari with no art yet: an initial, not a broken image. */
