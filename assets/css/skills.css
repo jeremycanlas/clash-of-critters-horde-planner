@@ -18,6 +18,12 @@
 .sk__search { flex: 1 1 260px; }
 .sk__search .field { width: 100%; font-size: 16px; } /* 16px, or iOS zooms on tap */
 #sk-types { flex-wrap: wrap; }
+/* On a phone the six types wrapped to two lines and, with the toggle, pushed
+   the first card below the fold. One line that scrolls sideways instead. */
+@media (max-width: 600px) {
+  #sk-types { flex-wrap: nowrap; max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+  #sk-types .segmented__btn { flex: none; }
+}
 .sk__count { margin: 0; font-size: 13px; color: var(--text-mute); }
 
 /* One evolution line per row, T1 to T4. Four across where they fit; on a
@@ -52,7 +58,7 @@
   scroll-margin-top: var(--s4);
 }
 .sk.is-target { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 35%, transparent); }
-.sk[hidden], .sk__names li[hidden] { display: none; }
+.sk[hidden] { display: none; }
 
 .sk__head { display: flex; align-items: center; gap: var(--s2); margin-bottom: var(--s1); }
 .sk__head > img { flex: none; width: 48px; height: 48px; object-fit: contain; }
@@ -97,14 +103,11 @@
 }
 .sk__was { margin-right: 6px; font-size: 11.5px; font-weight: 500; color: var(--text-mute); }
 
-/* Not recorded: a slot, not a card. Same row, no fill, dashed edge. */
-.sk--ghost {
-  flex-direction: row; align-items: center; gap: var(--s2);
-  border-style: dashed; background: transparent;
-  font-size: 12.5px; line-height: 1.35; color: var(--text-mute);
-}
-.sk--ghost b { color: var(--text-dim); font-weight: 650; }
-.sk--ghost img { flex: none; width: 36px; height: 36px; object-fit: contain; opacity: .55; }
+/* No numbers yet: the same card, quieter. Dashed edge, no fill, so the
+   recorded ones are what the eye lands on. */
+.sk--ghost { border-style: dashed; background: transparent; }
+.sk--ghost .sk__head > img { width: 40px; height: 40px; }
+.sk--ghost .sk__name { color: var(--text-dim); }
 
 .sk__heading { margin: var(--s2) 0 0; font-size: 13px; font-weight: 700; color: var(--text); }
 .sk__text { margin: 0; font-size: 12.5px; line-height: 1.45; color: var(--text-dim); }
@@ -117,10 +120,18 @@
 .sk__rows dt { color: var(--text-dim); }
 .sk__rows dd { color: var(--text); font-weight: 650; font-variant-numeric: tabular-nums; text-align: right; }
 
-.sk__missing h2 { margin: 0 0 var(--s2); font-size: 15px; }
-.sk__names {
-  list-style: none; margin: 0; padding: 0;
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--s1) var(--s2);
+/* Horde Invasion: once per line, under its row, three levels across where
+   they fit. A plain band rather than a card, since it belongs to the row. */
+.sk__horde { margin-top: var(--s2); padding: var(--s2) var(--s3); border-radius: var(--r-md, 12px); background: var(--surface-2); }
+.sk__horde-title { margin: 0 0 var(--s1); font-size: 13px; font-weight: 700; }
+.sk__horde-title span { margin-left: 6px; font-size: 12px; font-weight: 500; color: var(--text-mute); }
+.sk__levels { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s2) var(--s3); }
+@media (max-width: 760px) { .sk__levels { grid-template-columns: none; } }
+.sk__levels li { display: flex; gap: var(--s2); align-items: baseline; }
+.sk__lv {
+  flex: none; padding: 1px 7px; border-radius: 999px; border: 1px solid var(--line);
+  font-size: 11px; font-weight: 700; color: var(--text-dim); font-variant-numeric: tabular-nums;
 }
-.sk__names li { display: flex; align-items: center; gap: var(--s1); font-size: 13px; color: var(--text-dim); }
-.sk__names img { width: 28px; height: 28px; object-fit: contain; }
+.sk__levels b { font-size: 13px; }
+.sk__levels p { margin: 2px 0 0; font-size: 12.5px; line-height: 1.45; color: var(--text-dim); }
+.sk__horde--none { margin: var(--s1) 0 0; font-size: 12px; color: var(--text-mute); }

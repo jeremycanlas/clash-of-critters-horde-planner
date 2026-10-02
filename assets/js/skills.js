@@ -11,20 +11,26 @@ applyPrefs();
 buildAnalytics();
 
 let type = '';
+let onlyNumbers = false;
 const find = $('#sk-find');
 
 function filter() {
   const q = find.value.trim().toLowerCase();
   let shown = 0;
-  for (const el of $$('#sk-list .sk, #sk-names > li')) {
-    // The name, or anything written on the card: a skill, an effect, a number.
-    const hit = (!type || el.dataset.type === type) && (!q || el.dataset.name.includes(q)
-      || el.textContent.toLowerCase().includes(q));
-    el.hidden = !hit;
-    if (hit) shown++;
+  for (const line of $$('#sk-list > .sk__line')) {
+    const keep = (!type || line.dataset.type === type) && (!onlyNumbers || 'numbers' in line.dataset);
+    // A horde skill matching keeps the whole line: it belongs to all of it.
+    const lineHit = keep && !!q && line.querySelector('.sk__horde')?.textContent.toLowerCase().includes(q);
+    let cards = 0;
+    for (const el of $$('.sk', line)) {
+      // The name, or anything written on the card: a skill, an effect, a number.
+      const hit = keep && (!q || lineHit || el.dataset.name.includes(q) || el.textContent.toLowerCase().includes(q));
+      el.hidden = !hit;
+      if (hit) cards++;
+    }
+    line.hidden = !cards;
+    shown += cards;
   }
-  // A line with every card filtered out goes too, or it leaves an empty row.
-  for (const line of $$('#sk-list > .sk__line')) line.hidden = !line.querySelector('.sk:not([hidden])');
   $('#sk-none').hidden = shown > 0;
   if (q) trackOnce('skills-searched');
 }
@@ -37,6 +43,12 @@ $('#sk-types').addEventListener('click', (e) => {
   for (const x of $$('#sk-types [data-type]')) x.setAttribute('aria-pressed', String(x === b));
   filter();
   trackOnce('skills-filtered');
+});
+$('#sk-numbers').addEventListener('click', (e) => {
+  onlyNumbers = !onlyNumbers;
+  e.currentTarget.setAttribute('aria-pressed', String(onlyNumbers));
+  filter();
+  trackOnce('skills-numbers-only');
 });
 
 // Arriving at skills.html#cribking opens on that card: the link a guide gives.
