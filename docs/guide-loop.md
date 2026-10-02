@@ -40,3 +40,6 @@ Dolphie is the only line with no Horde Invasion skills anywhere; it needs the ga
   phone already leads a newcomer: the bench says "Press Roster to pick from the 242 Tatari" and
   Roster is the highlighted button. A tour would cost space on every first visit for a path that
   is already signposted. Revisit if stats show people opening Roster and still not placing.
+- **2026-10-03**: `community.html?mode=goldrush|coop|solo` opens on that filter, for guide links.
+  Drafted the Discord guide itself in `docs/discord-guide-draft.md`: six paste-ready sections,
+  co-op live sessions included, with deep links into Community and Skill data.
