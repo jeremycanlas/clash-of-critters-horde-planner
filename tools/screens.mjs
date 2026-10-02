@@ -660,11 +660,16 @@ async function checkControls(page, where, url, noise, events) {
         // Submitting an unfinished form answers with the browser's own bubble,
         // which is a response but not a change to the page.
         invalid: !!el.form && el.matches('[type=submit], button:not([type])') && !el.form.checkValidity(),
+        // Behind a modal dialog it is not part of: nobody can reach it until
+        // the dialog closes. Modal only, so a plain dialog that covers controls
+        // by mistake is still pressed through and still caught.
+        behindModal: !!document.querySelector('dialog:modal') && !el.closest('dialog:modal'),
         changes: window.__changes,
       };
     }, id).catch(() => null);
-    // Hidden or switched off by an earlier press: not this control's fault.
-    if (!it || !it.shown || it.off) return false;
+    // Hidden, switched off or shut behind a dialog by an earlier press: not
+    // this control's fault.
+    if (!it || !it.shown || it.off || (depth > 0 && it.behindModal)) return false;
     const { label } = it;
     if (depth === 0) {
       /* Start from a closed page, and a still one. A drawer left open by an

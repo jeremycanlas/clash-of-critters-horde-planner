@@ -67,6 +67,21 @@ field, HAVE above LF.
 
 ## Changelog
 
+### 1.9.6
+
+#### Changes:
+- Gold Rush. A third button beside Solo and Co-op plans for Gold Rush and Arena, which share a 5 × 5 board with 15 deployed and no draft. The board shrinks to 5 × 5, and the level-up plan, level badges and Zobo rows go. Each Tatari brings its base kit only, so its Horde level 3, 5 and 7 skills drop out of its sheet, the effect counts and the roster's marks. The share card is the board alone, headed Gold Rush & Arena. Links and saves carry it, and anything in the sixth column or the back row moves onto the board when you switch, with Undo.
+- Alternatives, in Gold Rush: up to 15 Tatari you would consider, beside the 15 you deploy. A roster tap deploys while the board has room and adds an Alternative once it is full, and a shortlist group picks its swaps from them. Still one per evolution line, as the game allows.
+- Going to Gold Rush and back costs nothing. Each mode keeps its own formation, bench and plan included, and gives it back as you left it.
+- Skill numbers on each Tatari's sheet: Damage Factor, Cooldown and every effect's numbers, as the game's own skill panel shows them, with Arena Factor marked as Gold Rush and Arena only. The wiki has the words of a skill but none of its numbers. Seven Tatari are complete and twelve more have their Arena Factor so far; the rest say they are not recorded yet.
+- Saved formations come in two tabs, Horde and Gold Rush & Arena, and open on the one for the mode you are in. A Gold Rush save's thumbnail is 5 × 5.
+- No cap on flex groups. Four was too few for real use; the board is the limit now.
+- Filter chips wrap on a phone instead of running off the side.
+- Posting a Gold Rush formation to Community says it cannot be done yet, rather than listing it as a Horde one.
+
+#### Bug Fixes:
+- The front page linked to a pinball calculator that was never published.
+
 ### 1.9.5
 
 #### Changes:

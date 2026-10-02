@@ -129,9 +129,14 @@
     -->
     <p id="formation-status" class="formation-status" role="status" aria-live="polite" hidden></p>
 
-    <div id="mode-switch" class="segmented" role="group" aria-label="Number of players">
+    <!-- Gold Rush sits here with Solo and Co-op because to the person picking it
+       it is which game they are planning for, though in the formation it is a
+       flag over Solo (see GOLD_RUSH in rules.js). Arena uses the same board. -->
+    <div id="mode-switch" class="segmented" role="group" aria-label="Game mode">
       <button class="segmented__btn" type="button" data-mode="solo" aria-pressed="true">Solo</button>
       <button class="segmented__btn" type="button" data-mode="coop" aria-pressed="false">Co-op</button>
+      <button class="segmented__btn" type="button" data-mode="goldrush" aria-pressed="false"
+        title="Gold Rush and Arena: a 5 by 5 board, 15 deployed, no levels or bench">Gold Rush</button>
     </div>
 
     <span id="live-who" class="who-strip" hidden></span>
@@ -787,12 +792,21 @@
 
     <button id="btn-keep" class="btn btn--primary saves__keep" type="button">Save this formation</button>
 
+    <!-- Horde and Gold Rush formations are different boards for different
+       modes, so they are kept apart. The tab follows the mode you are in, so a
+       save always lands where you can see it; either can be opened by hand. -->
+    <div id="saves-tabs" class="segmented segmented--tabs saves__tabs" role="group" aria-label="Which saved formations">
+      <button class="segmented__btn" type="button" data-tab="horde" aria-pressed="true">Horde <span class="muted" data-n></span></button>
+      <button class="segmented__btn" type="button" data-tab="goldrush" aria-pressed="false">Gold Rush &amp; Arena <span class="muted" data-n></span></button>
+    </div>
+
     <p id="saves-empty" class="saves__empty">Nothing saved yet. Save a formation and
       it will be waiting here next visit. These stay in this browser, and
       <b>Clear all</b> does not touch them. Each one gets a <b>Post</b> button for
       putting it in <a href="community.html">Community formations</a>.
     </p>
 
+    <p id="saves-tab-empty" class="saves__empty" hidden>None saved for this mode yet.</p>
     <ol id="saves-list" class="saves" aria-label="Saved formations, newest first"></ol>
   </section>
 

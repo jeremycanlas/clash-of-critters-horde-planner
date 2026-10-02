@@ -1125,6 +1125,18 @@ body.is-clean .field-frame__name { pointer-events: none; border-color: transpare
 }
 
 /*
+ * Gold Rush and Arena: 5 x 5, no draft. The off-board tiles carry [hidden] from
+ * renderGrid(); everything here is what that board has no use for: the bench
+ * (what you bring is what is placed), the plan and its level badges (levels are
+ * fixed), the Zobo ground, its line and Sandbox (nothing walks in, no caps to lift).
+ */
+#grid .cell[hidden] { display: none; }
+body[data-goldrush="true"] #grid { grid-template-columns: repeat(5, 1fr); }
+body[data-goldrush="true"] :is(#chipbench, #sec-priority, #enemy, .field-frame__enemy,
+  [data-sheet="priority"], label:has(#opt-zobo), label:has(#opt-sandbox), .field-frame__base) { display: none !important; }
+body[data-goldrush="true"] #grid :is(.token__rank, .token__add) { display: none; }
+
+/*
  * Sandbox's extra ground, beyond the contact line.
  *
  * Hatched with the same stripes contribute.css uses for the same piece of
@@ -3168,6 +3180,25 @@ body.is-live-down .who-strip { opacity: .45; }
 .learn__body { font-size: 12.5px; line-height: 1.45; color: var(--text-dim); }
 .learn__body b { color: var(--text); font-weight: 650; }
 
+/* Skill numbers, laid out like the game's panel: label left, value right, one box per effect. */
+.detail dl.numbers {
+  grid-template-columns: 1fr auto; gap: 0; margin: 0;
+  border-radius: var(--r-sm); background: var(--surface-2); overflow: hidden;
+}
+.detail dl.numbers dt, .detail dl.numbers dd {
+  margin: 0; padding: 5px var(--s2);
+  border-top: 1px solid var(--line);
+  font-size: 12.5px; letter-spacing: 0; text-transform: none;
+}
+.detail dl.numbers dt:first-of-type, .detail dl.numbers dt:first-of-type + dd { border-top: 0; }
+.detail dl.numbers dt { color: var(--text-dim); font-weight: 500; }
+.detail dl.numbers dd { color: var(--text); font-weight: 650; font-variant-numeric: tabular-nums; text-align: right; }
+.numbers__heading {
+  display: flex; align-items: center; gap: var(--s2);
+  margin: var(--s3) 0 var(--s1); font-size: 12.5px; font-weight: 700; color: var(--text);
+}
+.numbers__text { margin: 0 0 var(--s1); font-size: 12px; line-height: 1.45; }
+
 .rangefig { margin: 0; }
 .rangefig img {
   display: block; width: 100%; max-width: 300px; height: auto;
@@ -3427,6 +3458,9 @@ body.is-dragging-active {
 }
 
 .saves__keep { width: 100%; }
+/* Horde | Gold Rush & Arena: full width, two equal halves, under Save. */
+.saves__tabs { display: flex; width: 100%; margin-top: var(--s2); }
+.saves__tabs .segmented__btn { flex: 1 1 0; justify-content: center; gap: 5px; }
 
 .saves__empty {
   margin: var(--s3) 0 0;
@@ -3491,6 +3525,11 @@ body.is-dragging-active {
     repeating-linear-gradient(to bottom, transparent 0 var(--fmap-cell), var(--line-soft) var(--fmap-cell) var(--fmap-step));
   background-origin: content-box;
   background-clip: content-box;
+}
+/* Gold Rush's 5 x 5: the same stamp, one column and one row fewer. */
+.fmap--gr {
+  grid-template-columns: repeat(5, var(--fmap-cell));
+  grid-template-rows: repeat(5, var(--fmap-cell));
 }
 .fmap img { width: var(--fmap-cell); height: var(--fmap-cell); object-fit: contain; }
 /* The handful of Tatari with no art yet: an initial, not a broken image. */

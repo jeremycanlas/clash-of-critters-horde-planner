@@ -1971,7 +1971,8 @@ export function renderRoster() {
    * change. This path exists to skip rebuilds that would change nothing, not to
    * skip this one.
    */
-  const sig = `${player}|${store.isCoop() ? 1 : 0}|${glitterOn.value ? 'g' : ''}|${
+  // Gold Rush too: its cards mark only what the base kit brings.
+  const sig = `${player}|${store.isCoop() ? 1 : 0}|${glitterOn.value ? 'g' : ''}|${store.isGoldRush() ? 'gr' : ''}|${
     list.map((t) => t.slug).join(',')}`;
   if (sig === lastRosterSig && host.children.length === list.length) {
     list.forEach((t, i) => applyCardState(host.children[i], t, player));

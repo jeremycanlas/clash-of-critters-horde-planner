@@ -12,6 +12,7 @@ import { state, pieceBySlug } from './data.js';
 import * as store from './store.js';
 import { artOf } from './ui.js';
 import { effectsOf, GROUP_LABELS } from './effects.js';
+import { GOLD_RUSH } from './rules.js';
 
 /** Logical width. The bitmap is SCALE times this, so text stays crisp. */
 const W = 1080;
@@ -473,8 +474,10 @@ function drawCell(ctx, colours, sprites, view, cx, cy, cell, coop) {
      * is the question a plan answers.
      */
     // Nobody levels a Zobo, and nobody owns one.
-    const target = isZobo ? null : view.topLevel(occ.slug, occ.player);
-    const seat = isZobo ? null : view.planPositionOf(occ.slug, occ.player);
+    // Nor does anybody in Gold Rush: levels are fixed there.
+    const noPlan = isZobo || view.isGoldRush?.() === true;
+    const target = noPlan ? null : view.topLevel(occ.slug, occ.player);
+    const seat = noPlan ? null : view.planPositionOf(occ.slug, occ.player);
     if (target !== null || seat !== null) {
       const label = target !== null ? `L${target}` : '';
       ctx.font = font(12, 800);
@@ -545,6 +548,12 @@ function drawCell(ctx, colours, sprites, view, cx, cy, cell, coop) {
 
 function drawField(ctx, colours, sprites, view, x, y) {
   const coop = view.isCoop();
+  /* Gold Rush draws its 5 x 5 centred in the Horde field's width, with no line:
+     nothing spawns beyond it, the other side is somebody else's team. */
+  const gr = view.isGoldRush?.() === true;
+  const cols = gr ? GOLD_RUSH.cols : view.COLS;
+  const rows = gr ? GOLD_RUSH.rows : view.ROWS;
+  const fx = x + ((view.COLS - cols) * (CELL + CELL_GAP)) / 2;
   let top = sectionLabel(ctx, colours, 'Field', x, y + 12);
 
   /*
@@ -568,32 +577,37 @@ function drawField(ctx, colours, sprites, view, x, y) {
   if (beyond) top += beyond * (CELL + CELL_GAP) + CELL_GAP;
 
   // The line Zobos come from, matching the app's own cue.
-  fill(ctx, colours.surface2, x, top, GRID_W, 22, 6);
-  ctx.font = font(11, 700);
-  ctx.fillStyle = colours.mute;
-  ctx.letterSpacing = '1.2px';
-  ctx.textAlign = 'center';
-  ctx.fillText('ZOBOS SPAWN BEYOND THIS LINE', x + GRID_W / 2, top + 15);
-  ctx.letterSpacing = '0px';
-  ctx.textAlign = 'left';
-  top += 30;
+  if (!gr) {
+    fill(ctx, colours.surface2, x, top, GRID_W, 22, 6);
+    ctx.font = font(11, 700);
+    ctx.fillStyle = colours.mute;
+    ctx.letterSpacing = '1.2px';
+    ctx.textAlign = 'center';
+    ctx.fillText('ZOBOS SPAWN BEYOND THIS LINE', x + GRID_W / 2, top + 15);
+    ctx.letterSpacing = '0px';
+    ctx.textAlign = 'left';
+    top += 30;
+  }
 
-  for (let row = 0; row < view.ROWS; row++) {
-    for (let col = 0; col < view.COLS; col++) {
+  // Indexed in the Horde field's numbering whatever is drawn: see GOLD_RUSH.
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
       drawCell(ctx, colours, sprites, view,
-        x + col * (CELL + CELL_GAP), top + row * (CELL + CELL_GAP),
+        fx + col * (CELL + CELL_GAP), top + row * (CELL + CELL_GAP),
         row * view.COLS + col, coop);
     }
   }
 
-  const bottom = top + view.ROWS * CELL + (view.ROWS - 1) * CELL_GAP;
-  ctx.font = font(11, 700);
-  ctx.fillStyle = colours.mute;
-  ctx.letterSpacing = '1.2px';
-  ctx.textAlign = 'right';
-  ctx.fillText('YOUR BASE', x + GRID_W, bottom + 16);
-  ctx.letterSpacing = '0px';
-  ctx.textAlign = 'left';
+  const bottom = top + rows * CELL + (rows - 1) * CELL_GAP;
+  if (!gr) {
+    ctx.font = font(11, 700);
+    ctx.fillStyle = colours.mute;
+    ctx.letterSpacing = '1.2px';
+    ctx.textAlign = 'right';
+    ctx.fillText('YOUR BASE', x + GRID_W, bottom + 16);
+    ctx.letterSpacing = '0px';
+    ctx.textAlign = 'left';
+  }
 
   // Both co-op lines, banded under the field so they survive a crop to just
   // the grid — the same reason they are drawn inside the frame in the app.
@@ -1066,6 +1080,9 @@ export async function drawCard({
 } = {}) {
   const colours = palette();
   const coop = view.isCoop();
+  // Gold Rush has no draft, so no plan, bench or chips: its card is the field.
+  const gr = view.isGoldRush?.() === true;
+  if (gr) full = false;
 
   /*
    * Grid-only is the narrow card: the field and nothing beside it, which is
@@ -1157,7 +1174,8 @@ export async function drawCard({
    * bottom of the picture — the one failure mode a share card cannot have.
    */
   const beyondH = (view.beyondRows ? view.beyondRows() : 0) * (CELL + CELL_GAP);
-  const fieldH = 42 + beyondH + view.ROWS * CELL + (view.ROWS - 1) * CELL_GAP + 24 + lfH + swapsH;
+  const rowsH = gr ? GOLD_RUSH.rows : view.ROWS;
+  const fieldH = 42 + beyondH + rowsH * CELL + (rowsH - 1) * CELL_GAP + (gr ? -6 : 24) + lfH + swapsH;
 
   // On both cards, so measured for both. drawEffects returns its own bottom,
   // which lets the probe run the measurement rather than duplicating the wrap.
@@ -1258,14 +1276,18 @@ export async function drawCard({
   y += 26;
   ctx.font = font(14.5);
   ctx.fillStyle = colours.dim;
-  ctx.fillText(fitText(ctx, [
+  ctx.fillText(fitText(ctx, (gr ? [
+    'Gold Rush & Arena',
+    `${GOLD_RUSH.cols} × ${GOLD_RUSH.rows} field`,
+  ] : [
     'Horde Invasion',
     view.mode().label,
     `${view.COLS} × ${view.ROWS} field`,
+  ]).concat([
     // Tatari only: a Zobo is not deployed by anybody and counts against no cap.
     `${view.allPlaced().filter((p) => p.player > 0).length} of ${
       view.fieldCap() * view.playerCount()} deployed`,
-  ].join('  ·  '), w - PAD * 2), PAD, y);
+  ]).join('  ·  '), w - PAD * 2), PAD, y);
 
   y += 18;
 

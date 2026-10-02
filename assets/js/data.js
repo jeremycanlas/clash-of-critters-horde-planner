@@ -194,7 +194,7 @@ export function matches(t, query) {
 // ---------------------------------------------------------------- boot
 
 export async function load() {
-  const [meta, roster, zobos, aliases, ranges, effectRanges, changes, bossOrder] = await Promise.all([
+  const [meta, roster, zobos, aliases, ranges, effectRanges, changes, bossOrder, skillNumbers] = await Promise.all([
     fetch('data/meta.json').then((r) => r.json()),
     fetch('data/tatari.json').then((r) => r.json()),
     // A copy without the Zobo file still drafts; it simply has no enemies to
@@ -209,9 +209,12 @@ export async function load() {
     // Hand-authored from play, like the ranges. A copy without it shows the
     // bosses exactly as it always did, with no stage numbers on them.
     fetch('data/boss-order.json').then((r) => r.json()).catch(() => ({})),
+    // Read off the game's skill panel. Without it the detail sheet just has no numbers section.
+    fetch('data/skill-numbers.json').then((r) => r.json()).catch(() => ({})),
   ]);
 
   delete aliases._readme;
+  state.skillNumbers = skillNumbers;
   state.meta = meta;
   state.aliases = aliases;
   state.ranges = ranges;

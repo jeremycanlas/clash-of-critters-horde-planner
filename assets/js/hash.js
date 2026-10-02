@@ -129,6 +129,9 @@ export function toFragment(snap) {
   // question: a link can open the Zobo rows inside a legal 15, or lift the caps
   // without them, and both have to survive being pasted.
   if (snap.zoboGround) meta.push('zg=1');
+  // Gold Rush, the same way: an older build skips it and draws the 5 x 5 as a
+  // legal Horde formation, since it is the front of the Horde field.
+  if (snap.goldRush) meta.push('gr=1');
 
   /*
    * The shortlists: `sw=12.13.14*shellshy+capywata,20*frugagon`. Cells joined by
@@ -279,6 +282,7 @@ export function fromFragment(hash) {
   let haveWants;
   let sandbox = false;
   let zoboGround = false;
+  let goldRush = false;
   let swaps;
   let flex;
   for (const field of metaPart.split('~')) {
@@ -293,6 +297,7 @@ export function fromFragment(hash) {
     else if (key === 'hw') haveWants = value.split('+').filter(Boolean);
     else if (key === 'sb') sandbox = value === '1';
     else if (key === 'zg') zoboGround = value === '1';
+    else if (key === 'gr') goldRush = value === '1';
     else if (key === 'fx') {
       flex = value.split('.').map(Number).filter(Number.isInteger);
     }
@@ -324,7 +329,7 @@ export function fromFragment(hash) {
 
   return {
     blob: {
-      mode, sandbox, zoboGround, pullRows, cells, bench, flex, swaps, plan,
+      mode, sandbox, zoboGround, goldRush, pullRows, cells, bench, flex, swaps, plan,
       name, lf, lfWants, lfMode, lines,
     },
     unknown,

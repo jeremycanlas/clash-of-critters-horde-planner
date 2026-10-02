@@ -52,6 +52,30 @@ function rangeDiagram(t) {
     </figure>`;
 }
 
+/**
+ * The base skill's numbers as the in-game skill panel shows them, box by box. Arena Factor goes
+ * last and says where it applies, because in Horde it does nothing: it multiplies a skill's damage
+ * only when the target is another Tatari.
+ */
+function skillNumbers(t) {
+  const n = state.skillNumbers?.[t.slug];
+  if (!n) {
+    return `<h3 class="detail__heading">Skill numbers</h3>
+      <p class="hint detail__pending">Not recorded from the game yet.</p>`;
+  }
+  const rows = (rs) => `<dl class="numbers">${rs.map(([label, value]) =>
+    `<dt>${esc(label)}</dt><dd>${esc(value)}</dd>`).join('')}</dl>`;
+  const sections = (n.sections ?? []).map((s) => `
+    ${s.heading ? `<h4 class="numbers__heading">${esc(s.heading)}</h4>` : ''}
+    ${s.text ? `<p class="hint numbers__text">${esc(s.text)}</p>` : ''}
+    ${rows(s.rows)}`).join('');
+  return `
+    <h3 class="detail__heading">Skill numbers${n.skill ? `: ${esc(n.skill)}` : ''}</h3>
+    ${sections || '<p class="hint detail__pending">Only its Arena Factor is recorded so far.</p>'}
+    ${n.arenaFactor ? `<h4 class="numbers__heading">Arena Factor <span class="tag">Gold Rush &amp; Arena only</span></h4>
+      ${rows([['Damage against Tatari', n.arenaFactor]])}` : ''}`;
+}
+
 export function openDetail(slug) {
   const t = state.bySlug.get(slug);
   if (!t) return;
@@ -80,8 +104,9 @@ export function openDetail(slug) {
         </div>
       </div>
 
-      ${hordeSkills(t)}
+      ${store.isGoldRush() ? '' : hordeSkills(t)}
       ${rangeDiagram(t)}
+      ${skillNumbers(t)}
 
       <dl>
         ${t.skill ? `<dt>Base skill</dt><dd>${esc(t.skill)}

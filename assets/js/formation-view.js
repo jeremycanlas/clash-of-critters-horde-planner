@@ -168,6 +168,7 @@ export function viewOf(snap) {
     players,
     playerCount: () => playerCount,
     mode: () => MODES[mode],
+    isGoldRush: () => snap?.goldRush === true,
     isCoop: () => playerCount > 1,
     benchCap: () => MODES[mode].bench,
     fieldCap: () => MODES[mode].field,
