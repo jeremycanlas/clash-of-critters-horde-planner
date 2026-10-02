@@ -41,94 +41,183 @@
   <nav id="site-tabs" class="sitetabs" aria-label="Horde Drafter pages"></nav>
 
   <main class="sk__main">
-    <p class="sk__lede">Each Tatari's base skill as the game's own skill panel shows it: the
-      numbers the wiki does not have. <b>Arena Factor</b> applies in Gold Rush and Arena only,
-      where a skill's damage against another Tatari is multiplied by it.</p>
-
     <div class="sk__tools">
       <label class="sk__search"><span class="sr-only">Search Tatari</span>
         <input id="sk-find" class="field" type="search" placeholder="Search a Tatari or skill…" autocomplete="off">
       </label>
       <div id="sk-types" class="segmented" role="group" aria-label="Type">
         <button class="segmented__btn" type="button" data-type="" aria-pressed="true">All</button>
-        <button class="segmented__btn" type="button" data-type="Fire" aria-pressed="false">Fire</button>
-        <button class="segmented__btn" type="button" data-type="Water" aria-pressed="false">Water</button>
-        <button class="segmented__btn" type="button" data-type="Grass" aria-pressed="false">Grass</button>
-        <button class="segmented__btn" type="button" data-type="Lightning" aria-pressed="false">Lightning</button>
-        <button class="segmented__btn" type="button" data-type="Rock" aria-pressed="false">Rock</button>
+        <button class="segmented__btn" type="button" data-type="Fire" aria-pressed="false"><img class="sk__ticon" src="data/images/icons/fire.png" alt="" width="18" height="18">Fire</button>
+        <button class="segmented__btn" type="button" data-type="Water" aria-pressed="false"><img class="sk__ticon" src="data/images/icons/water.png" alt="" width="18" height="18">Water</button>
+        <button class="segmented__btn" type="button" data-type="Grass" aria-pressed="false"><img class="sk__ticon" src="data/images/icons/grass.png" alt="" width="18" height="18">Grass</button>
+        <button class="segmented__btn" type="button" data-type="Lightning" aria-pressed="false"><img class="sk__ticon" src="data/images/icons/lightning.png" alt="" width="18" height="18">Lightning</button>
+        <button class="segmented__btn" type="button" data-type="Rock" aria-pressed="false"><img class="sk__ticon" src="data/images/icons/rock.png" alt="" width="18" height="18">Rock</button>
       </div>
     </div>
     <p id="sk-none" class="muted" hidden>Nothing matches. Try another name, or All types.</p>
 
     <!-- Written by tools/skills-page.mjs from data/skill-numbers.json. Edit there. -->
     <!-- skills:start -->
-    <p class="sk__count" id="sk-count">19 of 242 Tatari recorded, 7 with every number.</p>
+    <p class="sk__count" id="sk-count">19 of 242 Tatari recorded.</p>
     <ol class="sk__list" id="sk-list">
+      <li class="sk__line" aria-label="Droppit line"><ol class="sk__row" tabindex="0" aria-label="Droppit line, T1 to T4">
+    <li class="sk" id="droppit" data-name="droppit" data-type="Water" data-role="Support" data-tier="1">
+      <div class="sk__head">
+        <img src="data/images/tatari/droppit.png" alt="" width="48" height="48" loading="lazy" decoding="async">
+        <div>
+          <h3 class="sk__name">Droppit <span class="sk__tier">T1</span></h3>
+          <p class="sk__meta"><img class="sk__ticon" src="data/images/icons/water.png" alt="" width="16" height="16">Water Support · <b>Cloud Mist</b></p>
+        </div>
+      </div>
+      
+        <dl class="sk__rows sk__rows--arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
+          <dt>Arena Factor</dt><dd>60%</dd></dl>
+      <p class="sk__more">Other numbers not recorded yet</p>
+    </li>
+    <li class="sk sk--ghost" data-name="bubbit" data-type="Water" data-role="Support" data-tier="2"><img src="data/images/tatari/bubbit.png" alt="" width="36" height="36" loading="lazy" decoding="async">
+      <span><b>Bubbit</b> <span class="sk__tier">T2</span><br>Not recorded yet</span></li>
+    <li class="sk" id="tideon" data-name="tideon" data-type="Water" data-role="Support" data-tier="3">
+      <div class="sk__head">
+        <img src="data/images/tatari/tideon.png" alt="" width="48" height="48" loading="lazy" decoding="async">
+        <div>
+          <h3 class="sk__name">Tideon <span class="sk__tier">T3</span></h3>
+          <p class="sk__meta"><img class="sk__ticon" src="data/images/icons/water.png" alt="" width="16" height="16">Water Support · <b>Haze Hex</b></p>
+        </div>
+      </div>
+      
+        <dl class="sk__rows sk__rows--arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
+          <dt>Arena Factor</dt><dd>60%</dd></dl>
+      <p class="sk__more">Other numbers not recorded yet</p>
+    </li>
+    <li class="sk sk--ghost" data-name="haplysia" data-type="Water" data-role="Support" data-tier="4"><img src="data/images/tatari/haplysia.png" alt="" width="36" height="36" loading="lazy" decoding="async">
+      <span><b>Haplysia</b> <span class="sk__tier">T4</span><br>Not recorded yet</span></li>
+      </ol></li>
+      <li class="sk__line" aria-label="Voltkit line"><ol class="sk__row" tabindex="0" aria-label="Voltkit line, T1 to T4">
+    <li class="sk" id="voltkit" data-name="voltkit" data-type="Lightning" data-role="Guardian" data-tier="1">
+      <div class="sk__head">
+        <img src="data/images/tatari/voltkit.png" alt="" width="48" height="48" loading="lazy" decoding="async">
+        <div>
+          <h3 class="sk__name">Voltkit <span class="sk__tier">T1</span></h3>
+          <p class="sk__meta"><img class="sk__ticon" src="data/images/icons/lightning.png" alt="" width="16" height="16">Lightning Guardian · <b>Duskrush</b></p>
+        </div>
+      </div>
+      
+        <dl class="sk__rows sk__rows--arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
+          <dt>Arena Factor</dt><dd>50%</dd></dl>
+      <p class="sk__more">Other numbers not recorded yet</p>
+    </li>
+    <li class="sk" id="voltling" data-name="voltling" data-type="Lightning" data-role="Guardian" data-tier="2">
+      <div class="sk__head">
+        <img src="data/images/tatari/voltling.png" alt="" width="48" height="48" loading="lazy" decoding="async">
+        <div>
+          <h3 class="sk__name">Voltling <span class="sk__tier">T2</span></h3>
+          <p class="sk__meta"><img class="sk__ticon" src="data/images/icons/lightning.png" alt="" width="16" height="16">Lightning Guardian · <b>Eboncharge</b></p>
+        </div>
+      </div>
+      
+        <dl class="sk__rows sk__rows--arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
+          <dt>Arena Factor</dt><dd>50%</dd></dl>
+      <p class="sk__more">Other numbers not recorded yet</p>
+    </li>
+    <li class="sk" id="voltverine" data-name="voltverine" data-type="Lightning" data-role="Guardian" data-tier="3">
+      <div class="sk__head">
+        <img src="data/images/tatari/voltverine.png" alt="" width="48" height="48" loading="lazy" decoding="async">
+        <div>
+          <h3 class="sk__name">Voltverine <span class="sk__tier">T3</span></h3>
+          <p class="sk__meta"><img class="sk__ticon" src="data/images/icons/lightning.png" alt="" width="16" height="16">Lightning Guardian · <b>Phantom Storm</b></p>
+        </div>
+      </div>
+      
+        <dl class="sk__rows sk__rows--arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
+          <dt>Arena Factor</dt><dd>50%</dd></dl>
+      <p class="sk__more">Other numbers not recorded yet</p>
+    </li>
+    <li class="sk" id="voltreaver" data-name="voltreaver" data-type="Lightning" data-role="Guardian" data-tier="4">
+      <div class="sk__head">
+        <img src="data/images/tatari/voltreaver.png" alt="" width="48" height="48" loading="lazy" decoding="async">
+        <div>
+          <h3 class="sk__name">Voltreaver <span class="sk__tier">T4</span></h3>
+          <p class="sk__meta"><img class="sk__ticon" src="data/images/icons/lightning.png" alt="" width="16" height="16">Lightning Guardian · <b>Shadow Strike</b></p>
+        </div>
+      </div>
+      
+        <dl class="sk__rows sk__rows--arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
+          <dt>Arena Factor</dt><dd>50%</dd></dl>
+      <p class="sk__more">Other numbers not recorded yet</p>
+    </li>
+      </ol></li>
+      <li class="sk__line" aria-label="Cribbler line"><ol class="sk__row" tabindex="0" aria-label="Cribbler line, T1 to T4">
     <li class="sk" id="cribbler" data-name="cribbler" data-type="Water" data-role="Guardian" data-tier="1">
       <div class="sk__head">
-        <img src="data/images/tatari/cribbler.png" alt="" width="56" height="56" loading="lazy" decoding="async">
+        <img src="data/images/tatari/cribbler.png" alt="" width="48" height="48" loading="lazy" decoding="async">
         <div>
-          <h3 class="sk__name">Cribbler</h3>
-          <p class="sk__meta">T1 Water Guardian · <b>Claw Swing</b></p>
+          <h3 class="sk__name">Cribbler <span class="sk__tier">T1</span></h3>
+          <p class="sk__meta"><img class="sk__ticon" src="data/images/icons/water.png" alt="" width="16" height="16">Water Guardian · <b>Claw Swing</b></p>
         </div>
-        <span class="sk__arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
-          <small>Arena Factor</small>90%</span>
       </div>
       
         
         
         <dl class="sk__rows"><dt>Damage Factor</dt><dd>130%</dd><dt>Cooldown</dt><dd>4.5s</dd></dl>
+        <dl class="sk__rows sk__rows--arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
+          <dt>Arena Factor</dt><dd>90%</dd></dl>
+      
     </li>
     <li class="sk" id="clawzor" data-name="clawzor" data-type="Water" data-role="Guardian" data-tier="2">
       <div class="sk__head">
-        <img src="data/images/tatari/clawzor.png" alt="" width="56" height="56" loading="lazy" decoding="async">
+        <img src="data/images/tatari/clawzor.png" alt="" width="48" height="48" loading="lazy" decoding="async">
         <div>
-          <h3 class="sk__name">Clawzor</h3>
-          <p class="sk__meta">T2 Water Guardian · <b>Shredder Swing</b></p>
+          <h3 class="sk__name">Clawzor <span class="sk__tier">T2</span></h3>
+          <p class="sk__meta"><img class="sk__ticon" src="data/images/icons/water.png" alt="" width="16" height="16">Water Guardian · <b>Shredder Swing</b></p>
         </div>
-        <span class="sk__arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
-          <small>Arena Factor</small>90%</span>
       </div>
       
+        <details class="sk__same"><summary>Same as Cribbler: base numbers</summary>
         
         
         <dl class="sk__rows"><dt>Damage Factor</dt><dd>130%</dd><dt>Cooldown</dt><dd>4.5s</dd></dl>
-        <h4 class="sk__heading">Shredded</h4>
+        </details>
+        <h4 class="sk__heading">Shredded <span class="sk__new">New at T2</span></h4>
         <p class="sk__text">Upon taking damage, Shredded is triggered for extra damage.</p>
         <dl class="sk__rows"><dt>Damage Factor</dt><dd>20%</dd><dt>Max Triggers</dt><dd>8</dd><dt>Duration</dt><dd>4s</dd></dl>
+        <dl class="sk__rows sk__rows--arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
+          <dt>Arena Factor</dt><dd>90%</dd></dl>
+      
     </li>
     <li class="sk" id="dreadclaw" data-name="dreadclaw" data-type="Water" data-role="Guardian" data-tier="3">
       <div class="sk__head">
-        <img src="data/images/tatari/dreadclaw.png" alt="" width="56" height="56" loading="lazy" decoding="async">
+        <img src="data/images/tatari/dreadclaw.png" alt="" width="48" height="48" loading="lazy" decoding="async">
         <div>
-          <h3 class="sk__name">Dreadclaw</h3>
-          <p class="sk__meta">T3 Water Guardian · <b>Claw Storm</b></p>
+          <h3 class="sk__name">Dreadclaw <span class="sk__tier">T3</span></h3>
+          <p class="sk__meta"><img class="sk__ticon" src="data/images/icons/water.png" alt="" width="16" height="16">Water Guardian · <b>Claw Storm</b></p>
         </div>
-        <span class="sk__arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
-          <small>Arena Factor</small>90%</span>
       </div>
       
+        <details class="sk__same"><summary>Same as Clawzor: base numbers, Shredded</summary>
         
         
         <dl class="sk__rows"><dt>Damage Factor</dt><dd>130%</dd><dt>Cooldown</dt><dd>4.5s</dd></dl>
         <h4 class="sk__heading">Shredded</h4>
         <p class="sk__text">Upon taking damage, Shredded is triggered for extra damage.</p>
         <dl class="sk__rows"><dt>Damage Factor</dt><dd>20%</dd><dt>Max Triggers</dt><dd>8</dd><dt>Duration</dt><dd>4s</dd></dl>
-        <h4 class="sk__heading">ATK Boost</h4>
+        </details>
+        <h4 class="sk__heading">ATK Boost <span class="sk__new">New at T3</span></h4>
         <p class="sk__text">ATK increases based on the target&#39;s ATK.</p>
         <dl class="sk__rows"><dt>Boost Factor</dt><dd>15%</dd><dt>Duration</dt><dd>5s</dd></dl>
+        <dl class="sk__rows sk__rows--arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
+          <dt>Arena Factor</dt><dd>90%</dd></dl>
+      
     </li>
     <li class="sk" id="cribking" data-name="cribking" data-type="Water" data-role="Guardian" data-tier="4">
       <div class="sk__head">
-        <img src="data/images/tatari/cribking.png" alt="" width="56" height="56" loading="lazy" decoding="async">
+        <img src="data/images/tatari/cribking.png" alt="" width="48" height="48" loading="lazy" decoding="async">
         <div>
-          <h3 class="sk__name">Cribking</h3>
-          <p class="sk__meta">T4 Water Guardian · <b>Hydro Claw</b></p>
+          <h3 class="sk__name">Cribking <span class="sk__tier">T4</span></h3>
+          <p class="sk__meta"><img class="sk__ticon" src="data/images/icons/water.png" alt="" width="16" height="16">Water Guardian · <b>Hydro Claw</b></p>
         </div>
-        <span class="sk__arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
-          <small>Arena Factor</small>90%</span>
       </div>
       
+        <details class="sk__same"><summary>Same as Dreadclaw: base numbers, Shredded, ATK Boost</summary>
         
         
         <dl class="sk__rows"><dt>Damage Factor</dt><dd>130%</dd><dt>Cooldown</dt><dd>4.5s</dd></dl>
@@ -138,19 +227,98 @@
         <h4 class="sk__heading">ATK Boost</h4>
         <p class="sk__text">ATK increases based on the target&#39;s ATK.</p>
         <dl class="sk__rows"><dt>Boost Factor</dt><dd>15%</dd><dt>Duration</dt><dd>5s</dd></dl>
-        <h4 class="sk__heading">Aura: Water</h4>
+        </details>
+        <h4 class="sk__heading">Aura: Water <span class="sk__new">New at T4</span></h4>
         <p class="sk__text">Heals all allies continuously. The healing effect for non-Water allies is reduced by 50%. Aura: Water can be stacked, but cannot take effect in some game modes.</p>
         <dl class="sk__rows"><dt>Base Healing Factor</dt><dd>0.5% Target HP</dd><dt>Max Healing Factor</dt><dd>2.5% Target HP</dd><dt>Healing Interval</dt><dd>4s</dd></dl>
+        <dl class="sk__rows sk__rows--arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
+          <dt>Arena Factor</dt><dd>90%</dd></dl>
+      
     </li>
+      </ol></li>
+      <li class="sk__line" aria-label="Dewgrub line"><ol class="sk__row" tabindex="0" aria-label="Dewgrub line, T1 to T4">
+    <li class="sk" id="dewgrub" data-name="dewgrub" data-type="Water" data-role="Support" data-tier="1">
+      <div class="sk__head">
+        <img src="data/images/tatari/dewgrub.png" alt="" width="48" height="48" loading="lazy" decoding="async">
+        <div>
+          <h3 class="sk__name">Dewgrub <span class="sk__tier">T1</span></h3>
+          <p class="sk__meta"><img class="sk__ticon" src="data/images/icons/water.png" alt="" width="16" height="16">Water Support · <b>Drowsy Shot</b></p>
+        </div>
+      </div>
+      
+        <dl class="sk__rows sk__rows--arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
+          <dt>Arena Factor</dt><dd>35%</dd></dl>
+      <p class="sk__more">Other numbers not recorded yet</p>
+    </li>
+    <li class="sk sk--ghost" data-name="ripplewing" data-type="Water" data-role="Support" data-tier="2"><img src="data/images/tatari/ripplewing.png" alt="" width="36" height="36" loading="lazy" decoding="async">
+      <span><b>Ripplewing</b> <span class="sk__tier">T2</span><br>Not recorded yet</span></li>
+    <li class="sk" id="waveflutter" data-name="waveflutter" data-type="Water" data-role="Support" data-tier="3">
+      <div class="sk__head">
+        <img src="data/images/tatari/waveflutter.png" alt="" width="48" height="48" loading="lazy" decoding="async">
+        <div>
+          <h3 class="sk__name">Waveflutter <span class="sk__tier">T3</span></h3>
+          <p class="sk__meta"><img class="sk__ticon" src="data/images/icons/water.png" alt="" width="16" height="16">Water Support · <b>Somno-Shot</b></p>
+        </div>
+      </div>
+      
+        <dl class="sk__rows sk__rows--arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
+          <dt>Arena Factor</dt><dd>35%</dd></dl>
+      <p class="sk__more">Other numbers not recorded yet</p>
+    </li>
+    <li class="sk" id="morphanessa" data-name="morphanessa" data-type="Water" data-role="Support" data-tier="4">
+      <div class="sk__head">
+        <img src="data/images/tatari/morphanessa.png" alt="" width="48" height="48" loading="lazy" decoding="async">
+        <div>
+          <h3 class="sk__name">Morphanessa <span class="sk__tier">T4</span></h3>
+          <p class="sk__meta"><img class="sk__ticon" src="data/images/icons/water.png" alt="" width="16" height="16">Water Support · <b>Rippling Shot</b></p>
+        </div>
+      </div>
+      
+        <dl class="sk__rows sk__rows--arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
+          <dt>Arena Factor</dt><dd>35%</dd></dl>
+      <p class="sk__more">Other numbers not recorded yet</p>
+    </li>
+      </ol></li>
+      <li class="sk__line" aria-label="Flameow line"><ol class="sk__row" tabindex="0" aria-label="Flameow line, T1 to T4">
+    <li class="sk" id="flameow" data-name="flameow" data-type="Fire" data-role="DPS" data-tier="1">
+      <div class="sk__head">
+        <img src="data/images/tatari/flameow.png" alt="" width="48" height="48" loading="lazy" decoding="async">
+        <div>
+          <h3 class="sk__name">Flameow <span class="sk__tier">T1</span></h3>
+          <p class="sk__meta"><img class="sk__ticon" src="data/images/icons/fire.png" alt="" width="16" height="16">Fire DPS · <b>Meow Pop</b></p>
+        </div>
+      </div>
+      
+        <dl class="sk__rows sk__rows--arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
+          <dt>Arena Factor</dt><dd>50%</dd></dl>
+      <p class="sk__more">Other numbers not recorded yet</p>
+    </li>
+    <li class="sk sk--ghost" data-name="nekoflare" data-type="Fire" data-role="DPS" data-tier="2"><img src="data/images/tatari/nekoflare.png" alt="" width="36" height="36" loading="lazy" decoding="async">
+      <span><b>Nekoflare</b> <span class="sk__tier">T2</span><br>Not recorded yet</span></li>
+    <li class="sk" id="silversear" data-name="silversear" data-type="Fire" data-role="DPS" data-tier="3">
+      <div class="sk__head">
+        <img src="data/images/tatari/silversear.png" alt="" width="48" height="48" loading="lazy" decoding="async">
+        <div>
+          <h3 class="sk__name">Silversear <span class="sk__tier">T3</span></h3>
+          <p class="sk__meta"><img class="sk__ticon" src="data/images/icons/fire.png" alt="" width="16" height="16">Fire DPS · <b>Meow Bomb</b></p>
+        </div>
+      </div>
+      
+        <dl class="sk__rows sk__rows--arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
+          <dt>Arena Factor</dt><dd>50%</dd></dl>
+      <p class="sk__more">Other numbers not recorded yet</p>
+    </li>
+    <li class="sk sk--ghost" data-name="cinderclaw" data-type="Fire" data-role="DPS" data-tier="4"><img src="data/images/tatari/cinderclaw.png" alt="" width="36" height="36" loading="lazy" decoding="async">
+      <span><b>Cinderclaw</b> <span class="sk__tier">T4</span><br>Not recorded yet</span></li>
+      </ol></li>
+      <li class="sk__line" aria-label="Budboo line"><ol class="sk__row" tabindex="0" aria-label="Budboo line, T1 to T4">
     <li class="sk" id="budboo" data-name="budboo" data-type="Grass" data-role="DPS" data-tier="1">
       <div class="sk__head">
-        <img src="data/images/tatari/budboo.png" alt="" width="56" height="56" loading="lazy" decoding="async">
+        <img src="data/images/tatari/budboo.png" alt="" width="48" height="48" loading="lazy" decoding="async">
         <div>
-          <h3 class="sk__name">Budboo</h3>
-          <p class="sk__meta">T1 Grass DPS · <b>Bud Venom</b></p>
+          <h3 class="sk__name">Budboo <span class="sk__tier">T1</span></h3>
+          <p class="sk__meta"><img class="sk__ticon" src="data/images/icons/grass.png" alt="" width="16" height="16">Grass DPS · <b>Bud Venom</b></p>
         </div>
-        <span class="sk__arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
-          <small>Arena Factor</small>45%</span>
       </div>
       
         
@@ -159,199 +327,78 @@
         <h4 class="sk__heading">Poison</h4>
         <p class="sk__text">Takes increased damage and continuously takes damage.</p>
         <dl class="sk__rows"><dt>Boost Factor</dt><dd>5%</dd><dt>Damage Factor</dt><dd>12%</dd><dt>Damage Interval</dt><dd>1s</dd><dt>Duration</dt><dd>5s</dd></dl>
-    </li>
-    <li class="sk" id="thornwisp" data-name="thornwisp" data-type="Grass" data-role="DPS" data-tier="3">
-      <div class="sk__head">
-        <img src="data/images/tatari/thornwisp.png" alt="" width="56" height="56" loading="lazy" decoding="async">
-        <div>
-          <h3 class="sk__name">Thornwisp</h3>
-          <p class="sk__meta">T3 Grass DPS · <b>Thorn Bite</b></p>
-        </div>
-        <span class="sk__arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
-          <small>Arena Factor</small>45%</span>
-      </div>
+        <dl class="sk__rows sk__rows--arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
+          <dt>Arena Factor</dt><dd>45%</dd></dl>
       
-        
-        
-        <dl class="sk__rows"><dt>Damage Factor</dt><dd>180%</dd><dt>Cooldown</dt><dd>2.5s</dd><dt>Venomous Seed Frequency</dt><dd>After Every 3 Attacks</dd><dt>Venomous Seeds</dt><dd>3</dd><dt>Venomous Seed Damage Factor</dt><dd>100%</dd></dl>
-        <h4 class="sk__heading">Poison</h4>
-        <p class="sk__text">Takes increased damage and continuously takes damage.</p>
-        <dl class="sk__rows"><dt>Boost Factor</dt><dd>5%</dd><dt>Damage Factor</dt><dd>12%</dd><dt>Damage Interval</dt><dd>1s</dd><dt>Duration</dt><dd>5s</dd></dl>
-        <h4 class="sk__heading">Poison Zone</h4>
-        <p class="sk__text">Enemies inside the zone are inflicted with Poison. If a venomous seed misses an enemy, it will still create a Poison Zone before disappearing.</p>
-        <dl class="sk__rows"><dt>Duration</dt><dd>4s</dd></dl>
-    </li>
-    <li class="sk" id="chomperwraith" data-name="chomperwraith" data-type="Grass" data-role="DPS" data-tier="4">
-      <div class="sk__head">
-        <img src="data/images/tatari/chomperwraith.png" alt="" width="56" height="56" loading="lazy" decoding="async">
-        <div>
-          <h3 class="sk__name">Chomperwraith</h3>
-          <p class="sk__meta">T4 Grass DPS · <b>Chomp Menace</b></p>
-        </div>
-        <span class="sk__arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
-          <small>Arena Factor</small>45%</span>
-      </div>
-      
-        
-        
-        <dl class="sk__rows"><dt>Damage Factor</dt><dd>180%</dd><dt>Cooldown</dt><dd>2.5s</dd><dt>Venomous Seed Frequency</dt><dd>After Every 3 Attacks</dd><dt>Venomous Seeds</dt><dd>3</dd><dt>Venomous Seed Damage Factor</dt><dd>100%</dd></dl>
-        <h4 class="sk__heading">Poison</h4>
-        <p class="sk__text">Takes increased damage and continuously takes damage.</p>
-        <dl class="sk__rows"><dt>Boost Factor</dt><dd>5%</dd><dt>Damage Factor</dt><dd>12%</dd><dt>Damage Interval</dt><dd>1s</dd><dt>Duration</dt><dd>5s</dd></dl>
-        <h4 class="sk__heading">Poison Zone</h4>
-        <p class="sk__text">Enemies inside the zone are inflicted with Poison. If a venomous seed misses an enemy, it will still create a Poison Zone before disappearing.</p>
-        <dl class="sk__rows"><dt>Duration</dt><dd>4s</dd></dl>
-        <h4 class="sk__heading">Aura: Grass</h4>
-        <p class="sk__text">Increases Max HP for all allies. The effect for non-Grass allies is reduced by 50%. Aura: Grass can be stacked, but cannot take effect in some game modes.</p>
-        <dl class="sk__rows"><dt>Base HP Boost</dt><dd>4%</dd><dt>Max HP Boost</dt><dd>20%</dd></dl>
-    </li>
-    <li class="sk" id="droppit" data-name="droppit" data-type="Water" data-role="Support" data-tier="1">
-      <div class="sk__head">
-        <img src="data/images/tatari/droppit.png" alt="" width="56" height="56" loading="lazy" decoding="async">
-        <div>
-          <h3 class="sk__name">Droppit</h3>
-          <p class="sk__meta">T1 Water Support · <b>Cloud Mist</b></p>
-        </div>
-        <span class="sk__arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
-          <small>Arena Factor</small>60%</span>
-      </div>
-      <p class="sk__text sk__partial">Only its Arena Factor is recorded so far.</p>
-    </li>
-    <li class="sk" id="tideon" data-name="tideon" data-type="Water" data-role="Support" data-tier="3">
-      <div class="sk__head">
-        <img src="data/images/tatari/tideon.png" alt="" width="56" height="56" loading="lazy" decoding="async">
-        <div>
-          <h3 class="sk__name">Tideon</h3>
-          <p class="sk__meta">T3 Water Support · <b>Haze Hex</b></p>
-        </div>
-        <span class="sk__arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
-          <small>Arena Factor</small>60%</span>
-      </div>
-      <p class="sk__text sk__partial">Only its Arena Factor is recorded so far.</p>
-    </li>
-    <li class="sk" id="voltkit" data-name="voltkit" data-type="Lightning" data-role="Guardian" data-tier="1">
-      <div class="sk__head">
-        <img src="data/images/tatari/voltkit.png" alt="" width="56" height="56" loading="lazy" decoding="async">
-        <div>
-          <h3 class="sk__name">Voltkit</h3>
-          <p class="sk__meta">T1 Lightning Guardian · <b>Duskrush</b></p>
-        </div>
-        <span class="sk__arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
-          <small>Arena Factor</small>50%</span>
-      </div>
-      <p class="sk__text sk__partial">Only its Arena Factor is recorded so far.</p>
-    </li>
-    <li class="sk" id="voltling" data-name="voltling" data-type="Lightning" data-role="Guardian" data-tier="2">
-      <div class="sk__head">
-        <img src="data/images/tatari/voltling.png" alt="" width="56" height="56" loading="lazy" decoding="async">
-        <div>
-          <h3 class="sk__name">Voltling</h3>
-          <p class="sk__meta">T2 Lightning Guardian · <b>Eboncharge</b></p>
-        </div>
-        <span class="sk__arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
-          <small>Arena Factor</small>50%</span>
-      </div>
-      <p class="sk__text sk__partial">Only its Arena Factor is recorded so far.</p>
-    </li>
-    <li class="sk" id="voltverine" data-name="voltverine" data-type="Lightning" data-role="Guardian" data-tier="3">
-      <div class="sk__head">
-        <img src="data/images/tatari/voltverine.png" alt="" width="56" height="56" loading="lazy" decoding="async">
-        <div>
-          <h3 class="sk__name">Voltverine</h3>
-          <p class="sk__meta">T3 Lightning Guardian · <b>Phantom Storm</b></p>
-        </div>
-        <span class="sk__arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
-          <small>Arena Factor</small>50%</span>
-      </div>
-      <p class="sk__text sk__partial">Only its Arena Factor is recorded so far.</p>
-    </li>
-    <li class="sk" id="voltreaver" data-name="voltreaver" data-type="Lightning" data-role="Guardian" data-tier="4">
-      <div class="sk__head">
-        <img src="data/images/tatari/voltreaver.png" alt="" width="56" height="56" loading="lazy" decoding="async">
-        <div>
-          <h3 class="sk__name">Voltreaver</h3>
-          <p class="sk__meta">T4 Lightning Guardian · <b>Shadow Strike</b></p>
-        </div>
-        <span class="sk__arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
-          <small>Arena Factor</small>50%</span>
-      </div>
-      <p class="sk__text sk__partial">Only its Arena Factor is recorded so far.</p>
-    </li>
-    <li class="sk" id="dewgrub" data-name="dewgrub" data-type="Water" data-role="Support" data-tier="1">
-      <div class="sk__head">
-        <img src="data/images/tatari/dewgrub.png" alt="" width="56" height="56" loading="lazy" decoding="async">
-        <div>
-          <h3 class="sk__name">Dewgrub</h3>
-          <p class="sk__meta">T1 Water Support · <b>Drowsy Shot</b></p>
-        </div>
-        <span class="sk__arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
-          <small>Arena Factor</small>35%</span>
-      </div>
-      <p class="sk__text sk__partial">Only its Arena Factor is recorded so far.</p>
-    </li>
-    <li class="sk" id="waveflutter" data-name="waveflutter" data-type="Water" data-role="Support" data-tier="3">
-      <div class="sk__head">
-        <img src="data/images/tatari/waveflutter.png" alt="" width="56" height="56" loading="lazy" decoding="async">
-        <div>
-          <h3 class="sk__name">Waveflutter</h3>
-          <p class="sk__meta">T3 Water Support · <b>Somno-Shot</b></p>
-        </div>
-        <span class="sk__arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
-          <small>Arena Factor</small>35%</span>
-      </div>
-      <p class="sk__text sk__partial">Only its Arena Factor is recorded so far.</p>
-    </li>
-    <li class="sk" id="morphanessa" data-name="morphanessa" data-type="Water" data-role="Support" data-tier="4">
-      <div class="sk__head">
-        <img src="data/images/tatari/morphanessa.png" alt="" width="56" height="56" loading="lazy" decoding="async">
-        <div>
-          <h3 class="sk__name">Morphanessa</h3>
-          <p class="sk__meta">T4 Water Support · <b>Rippling Shot</b></p>
-        </div>
-        <span class="sk__arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
-          <small>Arena Factor</small>35%</span>
-      </div>
-      <p class="sk__text sk__partial">Only its Arena Factor is recorded so far.</p>
-    </li>
-    <li class="sk" id="flameow" data-name="flameow" data-type="Fire" data-role="DPS" data-tier="1">
-      <div class="sk__head">
-        <img src="data/images/tatari/flameow.png" alt="" width="56" height="56" loading="lazy" decoding="async">
-        <div>
-          <h3 class="sk__name">Flameow</h3>
-          <p class="sk__meta">T1 Fire DPS · <b>Meow Pop</b></p>
-        </div>
-        <span class="sk__arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
-          <small>Arena Factor</small>50%</span>
-      </div>
-      <p class="sk__text sk__partial">Only its Arena Factor is recorded so far.</p>
-    </li>
-    <li class="sk" id="silversear" data-name="silversear" data-type="Fire" data-role="DPS" data-tier="3">
-      <div class="sk__head">
-        <img src="data/images/tatari/silversear.png" alt="" width="56" height="56" loading="lazy" decoding="async">
-        <div>
-          <h3 class="sk__name">Silversear</h3>
-          <p class="sk__meta">T3 Fire DPS · <b>Meow Bomb</b></p>
-        </div>
-        <span class="sk__arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
-          <small>Arena Factor</small>50%</span>
-      </div>
-      <p class="sk__text sk__partial">Only its Arena Factor is recorded so far.</p>
     </li>
     <li class="sk" id="snapshade" data-name="snapshade" data-type="Grass" data-role="DPS" data-tier="2">
       <div class="sk__head">
-        <img src="data/images/tatari/snapshade.png" alt="" width="56" height="56" loading="lazy" decoding="async">
+        <img src="data/images/tatari/snapshade.png" alt="" width="48" height="48" loading="lazy" decoding="async">
         <div>
-          <h3 class="sk__name">Snapshade</h3>
-          <p class="sk__meta">T2 Grass DPS · <b>Snap Trap</b></p>
+          <h3 class="sk__name">Snapshade <span class="sk__tier">T2</span></h3>
+          <p class="sk__meta"><img class="sk__ticon" src="data/images/icons/grass.png" alt="" width="16" height="16">Grass DPS · <b>Snap Trap</b></p>
         </div>
-        <span class="sk__arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
-          <small>Arena Factor</small>45%</span>
       </div>
-      <p class="sk__text sk__partial">Only its Arena Factor is recorded so far.</p>
+      
+        <dl class="sk__rows sk__rows--arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
+          <dt>Arena Factor</dt><dd>45%</dd></dl>
+      <p class="sk__more">Other numbers not recorded yet</p>
     </li>
+    <li class="sk" id="thornwisp" data-name="thornwisp" data-type="Grass" data-role="DPS" data-tier="3">
+      <div class="sk__head">
+        <img src="data/images/tatari/thornwisp.png" alt="" width="48" height="48" loading="lazy" decoding="async">
+        <div>
+          <h3 class="sk__name">Thornwisp <span class="sk__tier">T3</span></h3>
+          <p class="sk__meta"><img class="sk__ticon" src="data/images/icons/grass.png" alt="" width="16" height="16">Grass DPS · <b>Thorn Bite</b></p>
+        </div>
+      </div>
+      
+        <details class="sk__same"><summary>Same as Budboo: Poison</summary>
+        <h4 class="sk__heading">Poison</h4>
+        <p class="sk__text">Takes increased damage and continuously takes damage.</p>
+        <dl class="sk__rows"><dt>Boost Factor</dt><dd>5%</dd><dt>Damage Factor</dt><dd>12%</dd><dt>Damage Interval</dt><dd>1s</dd><dt>Duration</dt><dd>5s</dd></dl>
+        </details>
+        
+        
+        <dl class="sk__rows"><dt>Damage Factor</dt><dd>180%</dd><dt>Cooldown</dt><dd>2.5s</dd><dt>Venomous Seed Frequency</dt><dd>After Every 3 Attacks</dd><dt>Venomous Seeds <span class="sk__new">new</span></dt><dd>3</dd><dt>Venomous Seed Damage Factor</dt><dd>100%</dd></dl>
+        <h4 class="sk__heading">Poison Zone <span class="sk__new">New at T3</span></h4>
+        <p class="sk__text">Enemies inside the zone are inflicted with Poison. If a venomous seed misses an enemy, it will still create a Poison Zone before disappearing.</p>
+        <dl class="sk__rows"><dt>Duration</dt><dd>4s</dd></dl>
+        <dl class="sk__rows sk__rows--arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
+          <dt>Arena Factor</dt><dd>45%</dd></dl>
+      
+    </li>
+    <li class="sk" id="chomperwraith" data-name="chomperwraith" data-type="Grass" data-role="DPS" data-tier="4">
+      <div class="sk__head">
+        <img src="data/images/tatari/chomperwraith.png" alt="" width="48" height="48" loading="lazy" decoding="async">
+        <div>
+          <h3 class="sk__name">Chomperwraith <span class="sk__tier">T4</span></h3>
+          <p class="sk__meta"><img class="sk__ticon" src="data/images/icons/grass.png" alt="" width="16" height="16">Grass DPS · <b>Chomp Menace</b></p>
+        </div>
+      </div>
+      
+        <details class="sk__same"><summary>Same as Thornwisp: base numbers, Poison, Poison Zone</summary>
+        
+        
+        <dl class="sk__rows"><dt>Damage Factor</dt><dd>180%</dd><dt>Cooldown</dt><dd>2.5s</dd><dt>Venomous Seed Frequency</dt><dd>After Every 3 Attacks</dd><dt>Venomous Seeds</dt><dd>3</dd><dt>Venomous Seed Damage Factor</dt><dd>100%</dd></dl>
+        <h4 class="sk__heading">Poison</h4>
+        <p class="sk__text">Takes increased damage and continuously takes damage.</p>
+        <dl class="sk__rows"><dt>Boost Factor</dt><dd>5%</dd><dt>Damage Factor</dt><dd>12%</dd><dt>Damage Interval</dt><dd>1s</dd><dt>Duration</dt><dd>5s</dd></dl>
+        <h4 class="sk__heading">Poison Zone</h4>
+        <p class="sk__text">Enemies inside the zone are inflicted with Poison. If a venomous seed misses an enemy, it will still create a Poison Zone before disappearing.</p>
+        <dl class="sk__rows"><dt>Duration</dt><dd>4s</dd></dl>
+        </details>
+        <h4 class="sk__heading">Aura: Grass <span class="sk__new">New at T4</span></h4>
+        <p class="sk__text">Increases Max HP for all allies. The effect for non-Grass allies is reduced by 50%. Aura: Grass can be stacked, but cannot take effect in some game modes.</p>
+        <dl class="sk__rows"><dt>Base HP Boost</dt><dd>4%</dd><dt>Max HP Boost</dt><dd>20%</dd></dl>
+        <dl class="sk__rows sk__rows--arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
+          <dt>Arena Factor</dt><dd>45%</dd></dl>
+      
+    </li>
+      </ol></li>
     </ol>
     <section class="panel sk__missing">
-      <h2>Not recorded yet <span class="muted" id="sk-missing-n">223</span></h2>
+      <h2>Lines not recorded yet <span class="muted" id="sk-missing-n">218 Tatari</span></h2>
       <ul class="sk__names" id="sk-names">
         <li data-name="zapup" data-type="Lightning" data-role="Guardian" data-tier="1"><img src="data/images/tatari/zapup.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Zapup</span></li>
         <li data-name="zapooch" data-type="Lightning" data-role="Guardian" data-tier="2"><img src="data/images/tatari/zapooch.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Zapooch</span></li>
@@ -413,8 +460,6 @@
         <li data-name="sparkdoe" data-type="Lightning" data-role="DPS" data-tier="2"><img src="data/images/tatari/sparkdoe.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Sparkdoe</span></li>
         <li data-name="zapantler" data-type="Lightning" data-role="DPS" data-tier="3"><img src="data/images/tatari/zapantler.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Zapantler</span></li>
         <li data-name="magnedart" data-type="Lightning" data-role="DPS" data-tier="4"><img src="data/images/tatari/magnedart.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Magnedart</span></li>
-        <li data-name="bubbit" data-type="Water" data-role="Support" data-tier="2"><img src="data/images/tatari/bubbit.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Bubbit</span></li>
-        <li data-name="haplysia" data-type="Water" data-role="Support" data-tier="4"><img src="data/images/tatari/haplysia.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Haplysia</span></li>
         <li data-name="sparkit" data-type="Fire" data-role="DPS" data-tier="1"><img src="data/images/tatari/sparkit.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Sparkit</span></li>
         <li data-name="firefox" data-type="Fire" data-role="DPS" data-tier="2"><img src="data/images/tatari/firefox.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Firefox</span></li>
         <li data-name="flarevix" data-type="Fire" data-role="DPS" data-tier="3"><img src="data/images/tatari/flarevix.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Flarevix</span></li>
@@ -506,7 +551,6 @@
         <li data-name="trippet" data-type="Grass" data-role="Support" data-tier="2"><img src="data/images/tatari/trippet.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Trippet</span></li>
         <li data-name="hyphoria" data-type="Grass" data-role="Support" data-tier="3"><img src="data/images/tatari/hyphoria.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Hyphoria</span></li>
         <li data-name="ecstamira" data-type="Grass" data-role="Support" data-tier="4"><img src="data/images/tatari/ecstamira.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Ecstamira</span></li>
-        <li data-name="ripplewing" data-type="Water" data-role="Support" data-tier="2"><img src="data/images/tatari/ripplewing.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Ripplewing</span></li>
         <li data-name="fumekit" data-type="Fire" data-role="DPS" data-tier="1"><img src="data/images/tatari/fumekit.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Fumekit</span></li>
         <li data-name="sulfunk" data-type="Fire" data-role="DPS" data-tier="2"><img src="data/images/tatari/sulfunk.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Sulfunk</span></li>
         <li data-name="magmusk" data-type="Fire" data-role="DPS" data-tier="3"><img src="data/images/tatari/magmusk.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Magmusk</span></li>
@@ -527,8 +571,6 @@
         <li data-name="dazopus" data-type="Water" data-role="DPS" data-tier="2"><img src="data/images/tatari/dazopus.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Dazopus</span></li>
         <li data-name="fishopus" data-type="Water" data-role="DPS" data-tier="3"><img src="data/images/tatari/fishopus.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Fishopus</span></li>
         <li data-name="lordopus" data-type="Water" data-role="DPS" data-tier="4"><img src="data/images/tatari/lordopus.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Lordopus</span></li>
-        <li data-name="nekoflare" data-type="Fire" data-role="DPS" data-tier="2"><img src="data/images/tatari/nekoflare.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Nekoflare</span></li>
-        <li data-name="cinderclaw" data-type="Fire" data-role="DPS" data-tier="4"><img src="data/images/tatari/cinderclaw.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Cinderclaw</span></li>
         <li data-name="drilleroo" data-type="Rock" data-role="Specialist" data-tier="1"><img src="data/images/tatari/drilleroo.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Drilleroo</span></li>
         <li data-name="cragolin" data-type="Rock" data-role="Specialist" data-tier="2"><img src="data/images/tatari/cragolin.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Cragolin</span></li>
         <li data-name="borelord" data-type="Rock" data-role="Specialist" data-tier="3"><img src="data/images/tatari/borelord.png" alt="" width="28" height="28" loading="lazy" decoding="async"><span>Borelord</span></li>

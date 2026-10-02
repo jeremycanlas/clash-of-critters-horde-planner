@@ -5,13 +5,14 @@
  */
 
 .sk__main {
+  /* A definite width: centred by auto margins in the body's flex column, it
+     would otherwise shrink-wrap its content, and a four-card row is wide. */
+  width: 100%; box-sizing: border-box;
   max-width: 1280px;
   margin: 0 auto;
   padding: var(--s5) var(--s4) var(--s6);
   display: flex; flex-direction: column; gap: var(--s4);
 }
-.sk__lede { margin: 0; max-width: 72ch; font-size: 14px; line-height: 1.55; color: var(--text-dim); }
-.sk__lede b { color: var(--text); }
 
 .sk__tools { display: flex; flex-wrap: wrap; gap: var(--s2) var(--s3); align-items: center; }
 .sk__search { flex: 1 1 260px; }
@@ -19,10 +20,29 @@
 #sk-types { flex-wrap: wrap; }
 .sk__count { margin: 0; font-size: 13px; color: var(--text-mute); }
 
-.sk__list {
+/* One evolution line per row, T1 to T4. Four across where they fit; on a
+   narrower screen the row scrolls sideways, a card at a time, so a line still
+   reads as one line rather than stacking into the next. */
+.sk__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--s3); }
+/* A sideways-scrolling row is as wide as everything in it unless told otherwise,
+   and it took the whole column, the search box included, past the screen. */
+.sk__main > *, .sk__line { min-width: 0; }
+.sk__line[hidden] { display: none; }
+.sk__row {
   list-style: none; margin: 0; padding: 0;
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--s3); align-items: start;
+}
+@media (max-width: 1100px) {
+  .sk__row {
+    grid-template-columns: none; grid-auto-flow: column;
+    grid-auto-columns: min(340px, 86%);
+    overflow-x: auto; overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory; scroll-padding-inline: 2px;
+    padding-bottom: var(--s1);
+  }
+  .sk__row > .sk { scroll-snap-align: start; }
+  .sk__row:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: var(--r-sm); }
 }
 .sk {
   display: flex; flex-direction: column; gap: var(--s1);
@@ -35,22 +55,59 @@
 .sk[hidden], .sk__names li[hidden] { display: none; }
 
 .sk__head { display: flex; align-items: center; gap: var(--s2); margin-bottom: var(--s1); }
-.sk__head img { flex: none; width: 56px; height: 56px; object-fit: contain; }
+.sk__head > img { flex: none; width: 48px; height: 48px; object-fit: contain; }
 .sk__head > div { flex: 1; min-width: 0; }
-.sk__name { margin: 0; font-size: 16px; font-weight: 700; }
+.sk__name { margin: 0; font-size: 15px; font-weight: 700; line-height: 1.25; }
+.sk__tier { font-size: 12px; font-weight: 600; color: var(--text-mute); }
 .sk__meta { margin: 2px 0 0; font-size: 12.5px; color: var(--text-dim); }
 .sk__meta b { color: var(--text); font-weight: 650; }
-.sk__arena {
-  flex: none; display: flex; flex-direction: column; align-items: flex-end;
-  padding: 4px var(--s2); border-radius: var(--r-sm);
-  background: color-mix(in srgb, var(--accent) 14%, transparent);
-  font-size: 17px; font-weight: 750; font-variant-numeric: tabular-nums; color: var(--text);
+/* Element icons, in the meta line and on the type filter. */
+.sk__ticon { width: 16px; height: 16px; object-fit: contain; vertical-align: -3px; margin-right: 4px; }
+#sk-types .sk__ticon { width: 18px; height: 18px; vertical-align: -4px; margin-right: 5px; }
+
+/* Arena Factor: the panel's last row, set apart by space and a muted label
+   rather than a colour of its own. */
+.sk__rows--arena { margin-top: var(--s2); }
+.sk__rows--arena dt small { margin-left: 4px; font-size: 11px; color: var(--text-mute); }
+.sk__more { margin: 2px 0 0; font-size: 12px; color: var(--text-mute); }
+
+/* The pyramid: what this tier adds leads, what it keeps folds away. */
+.sk__same { margin-top: var(--s1); border-radius: var(--r-sm); background: var(--surface-2); }
+.sk__same > summary {
+  /* 44px: a finger's worth, as everywhere else on the site. */
+  min-height: 44px; box-sizing: border-box; display: flex; align-items: center; gap: 6px;
+  padding: 6px var(--s2); cursor: pointer;
+  font-size: 12.5px; color: var(--text-dim);
 }
-.sk__arena small { font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-mute); }
+.sk__same > summary::-webkit-details-marker { display: none; }
+.sk__same > summary::before { content: '▸'; flex: none; transition: transform 150ms ease-out; }
+.sk__same[open] > summary::before { transform: rotate(90deg); }
+@media (prefers-reduced-motion: reduce) { .sk__same > summary::before { transition: none; } }
+.sk__same > summary:hover { color: var(--text); }
+.sk__same > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: var(--r-sm); }
+.sk__same[open] { padding-bottom: var(--s2); }
+.sk__same[open] > :not(summary) { margin-left: var(--s2); margin-right: var(--s2); }
+/* Text in the text colour: the accent yellow on a light background reads at
+   2:1. The yellow is the tag's edge and wash instead. */
+.sk__new {
+  margin-left: 4px; padding: 1px 6px; border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--accent) 70%, transparent);
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  font-size: 10.5px; font-weight: 700; color: var(--text); vertical-align: 1px;
+}
+.sk__was { margin-right: 6px; font-size: 11.5px; font-weight: 500; color: var(--text-mute); }
+
+/* Not recorded: a slot, not a card. Same row, no fill, dashed edge. */
+.sk--ghost {
+  flex-direction: row; align-items: center; gap: var(--s2);
+  border-style: dashed; background: transparent;
+  font-size: 12.5px; line-height: 1.35; color: var(--text-mute);
+}
+.sk--ghost b { color: var(--text-dim); font-weight: 650; }
+.sk--ghost img { flex: none; width: 36px; height: 36px; object-fit: contain; opacity: .55; }
 
 .sk__heading { margin: var(--s2) 0 0; font-size: 13px; font-weight: 700; color: var(--text); }
 .sk__text { margin: 0; font-size: 12.5px; line-height: 1.45; color: var(--text-dim); }
-.sk__partial { font-style: italic; }
 .sk__rows {
   display: grid; grid-template-columns: 1fr auto; margin: 0;
   border-radius: var(--r-sm); background: var(--surface-2); overflow: hidden;

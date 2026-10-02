@@ -16,13 +16,15 @@ const find = $('#sk-find');
 function filter() {
   const q = find.value.trim().toLowerCase();
   let shown = 0;
-  for (const el of $$('#sk-list > li, #sk-names > li')) {
+  for (const el of $$('#sk-list .sk, #sk-names > li')) {
     // The name, or anything written on the card: a skill, an effect, a number.
     const hit = (!type || el.dataset.type === type) && (!q || el.dataset.name.includes(q)
       || el.textContent.toLowerCase().includes(q));
     el.hidden = !hit;
     if (hit) shown++;
   }
+  // A line with every card filtered out goes too, or it leaves an empty row.
+  for (const line of $$('#sk-list > .sk__line')) line.hidden = !line.querySelector('.sk:not([hidden])');
   $('#sk-none').hidden = shown > 0;
   if (q) trackOnce('skills-searched');
 }
