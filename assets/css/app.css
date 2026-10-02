@@ -3168,6 +3168,25 @@ body.is-live-down .who-strip { opacity: .45; }
 .learn__body { font-size: 12.5px; line-height: 1.45; color: var(--text-dim); }
 .learn__body b { color: var(--text); font-weight: 650; }
 
+/* Skill numbers, laid out like the game's panel: label left, value right, one box per effect. */
+.detail dl.numbers {
+  grid-template-columns: 1fr auto; gap: 0; margin: 0;
+  border-radius: var(--r-sm); background: var(--surface-2); overflow: hidden;
+}
+.detail dl.numbers dt, .detail dl.numbers dd {
+  margin: 0; padding: 5px var(--s2);
+  border-top: 1px solid var(--line);
+  font-size: 12.5px; letter-spacing: 0; text-transform: none;
+}
+.detail dl.numbers dt:first-of-type, .detail dl.numbers dt:first-of-type + dd { border-top: 0; }
+.detail dl.numbers dt { color: var(--text-dim); font-weight: 500; }
+.detail dl.numbers dd { color: var(--text); font-weight: 650; font-variant-numeric: tabular-nums; text-align: right; }
+.numbers__heading {
+  display: flex; align-items: center; gap: var(--s2);
+  margin: var(--s3) 0 var(--s1); font-size: 12.5px; font-weight: 700; color: var(--text);
+}
+.numbers__text { margin: 0 0 var(--s1); font-size: 12px; line-height: 1.45; }
+
 .rangefig { margin: 0; }
 .rangefig img {
   display: block; width: 100%; max-width: 300px; height: auto;

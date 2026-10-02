@@ -1,0 +1,105 @@
+{
+  "_readme": [
+    "Each Tatari's base skill as the in-game skill panel shows it: the numbers the wiki does not have.",
+    "",
+    "Read off the game's own skill panel, by screenshot or screen recording, and checked by eye against",
+    "it. Values are kept exactly as the panel writes them ('130%', '4.5s', 'After Every 3 Attacks'),",
+    "because units and wording differ from row to row and a number without its unit is a guess.",
+    "",
+    "sections: the skill's own rows first (heading null), then one per effect box the panel shows,",
+    "in its order, with the box's text. arenaFactor is the panel's last box, kept apart because it",
+    "applies only in Gold Rush and Arena: a skill's base damage against another Tatari is multiplied",
+    "by it. A Tatari with only arenaFactor has not had its full panel recorded yet.",
+    "",
+    "Every player sees the same numbers; they do not change with account progress."
+  ],
+  "recorded": "2026-10-02",
+  "cribbler": {
+    "skill": "Claw Swing",
+    "arenaFactor": "90%",
+    "sections": [
+      { "heading": null, "rows": [["Damage Factor", "130%"], ["Cooldown", "4.5s"]] }
+    ]
+  },
+  "clawzor": {
+    "skill": "Shredder Swing",
+    "arenaFactor": "90%",
+    "sections": [
+      { "heading": null, "rows": [["Damage Factor", "130%"], ["Cooldown", "4.5s"]] },
+      { "heading": "Shredded", "text": "Upon taking damage, Shredded is triggered for extra damage.",
+        "rows": [["Damage Factor", "20%"], ["Max Triggers", "8"], ["Duration", "4s"]] }
+    ]
+  },
+  "dreadclaw": {
+    "skill": "Claw Storm",
+    "arenaFactor": "90%",
+    "sections": [
+      { "heading": null, "rows": [["Damage Factor", "130%"], ["Cooldown", "4.5s"]] },
+      { "heading": "Shredded", "text": "Upon taking damage, Shredded is triggered for extra damage.",
+        "rows": [["Damage Factor", "20%"], ["Max Triggers", "8"], ["Duration", "4s"]] },
+      { "heading": "ATK Boost", "text": "ATK increases based on the target's ATK.",
+        "rows": [["Boost Factor", "15%"], ["Duration", "5s"]] }
+    ]
+  },
+  "cribking": {
+    "skill": "Hydro Claw",
+    "arenaFactor": "90%",
+    "sections": [
+      { "heading": null, "rows": [["Damage Factor", "130%"], ["Cooldown", "4.5s"]] },
+      { "heading": "Shredded", "text": "Upon taking damage, Shredded is triggered for extra damage.",
+        "rows": [["Damage Factor", "20%"], ["Max Triggers", "8"], ["Duration", "4s"]] },
+      { "heading": "ATK Boost", "text": "ATK increases based on the target's ATK.",
+        "rows": [["Boost Factor", "15%"], ["Duration", "5s"]] },
+      { "heading": "Aura: Water", "text": "Heals all allies continuously. The healing effect for non-Water allies is reduced by 50%. Aura: Water can be stacked, but cannot take effect in some game modes.",
+        "rows": [["Base Healing Factor", "0.5% Target HP"], ["Max Healing Factor", "2.5% Target HP"], ["Healing Interval", "4s"]] }
+    ]
+  },
+  "budboo": {
+    "skill": "Bud Venom",
+    "arenaFactor": "45%",
+    "sections": [
+      { "heading": null, "rows": [["Damage Factor", "180%"], ["Cooldown", "2.5s"],
+        ["Venomous Seed Frequency", "After Every 3 Attacks"], ["Venomous Seed Damage Factor", "100%"]] },
+      { "heading": "Poison", "text": "Takes increased damage and continuously takes damage.",
+        "rows": [["Boost Factor", "5%"], ["Damage Factor", "12%"], ["Damage Interval", "1s"], ["Duration", "5s"]] }
+    ]
+  },
+  "snapshade": { "arenaFactor": "45%" },
+  "thornwisp": {
+    "skill": "Thorn Bite",
+    "arenaFactor": "45%",
+    "sections": [
+      { "heading": null, "rows": [["Damage Factor", "180%"], ["Cooldown", "2.5s"],
+        ["Venomous Seed Frequency", "After Every 3 Attacks"], ["Venomous Seeds", "3"], ["Venomous Seed Damage Factor", "100%"]] },
+      { "heading": "Poison", "text": "Takes increased damage and continuously takes damage.",
+        "rows": [["Boost Factor", "5%"], ["Damage Factor", "12%"], ["Damage Interval", "1s"], ["Duration", "5s"]] },
+      { "heading": "Poison Zone", "text": "Enemies inside the zone are inflicted with Poison. If a venomous seed misses an enemy, it will still create a Poison Zone before disappearing.",
+        "rows": [["Duration", "4s"]] }
+    ]
+  },
+  "chomperwraith": {
+    "skill": "Chomp Menace",
+    "arenaFactor": "45%",
+    "sections": [
+      { "heading": null, "rows": [["Damage Factor", "180%"], ["Cooldown", "2.5s"],
+        ["Venomous Seed Frequency", "After Every 3 Attacks"], ["Venomous Seeds", "3"], ["Venomous Seed Damage Factor", "100%"]] },
+      { "heading": "Poison", "text": "Takes increased damage and continuously takes damage.",
+        "rows": [["Boost Factor", "5%"], ["Damage Factor", "12%"], ["Damage Interval", "1s"], ["Duration", "5s"]] },
+      { "heading": "Poison Zone", "text": "Enemies inside the zone are inflicted with Poison. If a venomous seed misses an enemy, it will still create a Poison Zone before disappearing.",
+        "rows": [["Duration", "4s"]] },
+      { "heading": "Aura: Grass", "text": "Increases Max HP for all allies. The effect for non-Grass allies is reduced by 50%. Aura: Grass can be stacked, but cannot take effect in some game modes.",
+        "rows": [["Base HP Boost", "4%"], ["Max HP Boost", "20%"]] }
+    ]
+  },
+  "voltkit": { "arenaFactor": "50%" },
+  "voltling": { "arenaFactor": "50%" },
+  "voltverine": { "arenaFactor": "50%" },
+  "voltreaver": { "arenaFactor": "50%" },
+  "dewgrub": { "arenaFactor": "35%" },
+  "waveflutter": { "arenaFactor": "35%" },
+  "morphanessa": { "arenaFactor": "35%" },
+  "flameow": { "arenaFactor": "50%" },
+  "silversear": { "arenaFactor": "50%" },
+  "droppit": { "arenaFactor": "60%" },
+  "tideon": { "arenaFactor": "60%" }
+}
