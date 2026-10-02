@@ -458,6 +458,13 @@ export function buildGrid() {
     const clear = e.target.closest('[data-clear-bench]');
     if (clear) {
       const player = Number(clear.dataset.clearBench);
+      if (store.isGoldRush()) {
+        const n = store.unplacedBench(player).length;
+        if (!n) return;
+        store.clearUnplaced(player);
+        toast(`Cleared ${n} alternative${n === 1 ? '' : 's'}`);
+        return;
+      }
       const n = store.benchOf(player).length;
       if (!n) return;
       store.clearBench(player);
@@ -1306,6 +1313,9 @@ const capOf = (cap, sep = '/') => (Number.isFinite(cap) ? `${sep}${cap}` : '');
 
 export function renderBench() {
   const coop = store.isCoop();
+  /* Gold Rush's bench is its Alternatives: only what waits off the board is
+     drawn here anyway, and in Gold Rush that is the whole meaning of it. */
+  const gr = store.isGoldRush();
 
   benchHost.innerHTML = store.players().map((player) => {
     const bench = store.benchOf(player);
@@ -1325,7 +1335,11 @@ export function renderBench() {
         </span>`;
     }).join('');
 
-    const body = !bench.length
+    const body = gr
+      ? (waiting.length ? `<div class="bench__strip">${chips}</div>`
+        : `<p class="bench__empty">No alternatives yet. Once the board has all ${store.fieldCap()}, a Tatari you tap in
+           <b>Roster</b> comes here, or drag one off the board. A <b>shortlist</b> group picks its swaps from these.</p>`)
+      : !bench.length
       /*
        * Real copy, not an empty <p>. Both branches of the ternary that used to
        * be here produced the empty string, so the one surface where a first-time
@@ -1346,7 +1360,7 @@ export function renderBench() {
     ? `<button class="summary__label" type="button" data-player="${player}"
                      data-switch-player="${player}" aria-pressed="${active}"
                      title="Plan for P${player}">P${player} bench</button>`
-    : '<span class="summary__label">Bench</span>'}
+    : `<span class="summary__label">${gr ? 'Alternatives' : 'Bench'}</span>`}
           <!--
             "4 left", not "3/15 brought, 2/15 placed".
             ==========================================
@@ -1372,15 +1386,16 @@ export function renderBench() {
    * placed" directly above "Nothing brought yet", which is the panel
    * contradicting itself on the one screen a first-time player sees.
    */
-  bench.length === 0 ? '' : waiting.length
-    ? `<b>${waiting.length}</b> left to place` : 'all placed'}</span>
+  gr ? (waiting.length ? `<b>${waiting.length}</b> of ${store.benchCap() - store.fieldCap()}` : '')
+    : bench.length === 0 ? '' : waiting.length
+      ? `<b>${waiting.length}</b> left to place` : 'all placed'}</span>
           ${active
     ? `<button class="btn btn--tiny bench__clean" type="button" data-clean
                      title="Hide everything else so the field is all that is on screen">⛶ Just the grid</button>`
     : ''}
           <button class="btn btn--tiny btn--quiet" type="button" data-clear-bench="${player}"
-                  aria-label="Clear ${coop ? `P${player}'s bench` : 'the bench'}"
-                  ${bench.length ? '' : 'disabled'}>Clear bench</button>
+                  aria-label="Clear ${gr ? 'the alternatives' : coop ? `P${player}'s bench` : 'the bench'}"
+                  ${(gr ? waiting.length : bench.length) ? '' : 'disabled'}>${gr ? 'Clear' : 'Clear bench'}</button>
         </div>
         ${body}
       </div>`;

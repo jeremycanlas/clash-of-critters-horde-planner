@@ -1132,7 +1132,7 @@ body.is-clean .field-frame__name { pointer-events: none; border-color: transpare
  */
 #grid .cell[hidden] { display: none; }
 body[data-goldrush="true"] #grid { grid-template-columns: repeat(5, 1fr); }
-body[data-goldrush="true"] :is(#dock, #sec-priority, #enemy, .field-frame__enemy,
+body[data-goldrush="true"] :is(#chipbench, #sec-priority, #enemy, .field-frame__enemy,
   [data-sheet="priority"], label:has(#opt-zobo), label:has(#opt-sandbox), .field-frame__base) { display: none !important; }
 body[data-goldrush="true"] #grid :is(.token__rank, .token__add) { display: none; }
 

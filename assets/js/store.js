@@ -22,7 +22,7 @@ import { state, pieceBySlug } from './data.js';
 import {
   COLS, ROWS, CELLS, MAX_LEVEL, MODES, cellRow, cellCol,
   ALL_CELLS, ENEMY_FIRST, ENEMY_ROWS, ENEMY_CELLS, isEnemyCell, cellDisplayRow,
-  capsFor, cellCountFor, SANDBOX, GOLD_RUSH, inGoldRushField,
+  capsFor, cellCountFor, SANDBOX, GOLD_RUSH, inGoldRushField, goldRushCaps,
 } from './rules.js';
 import { toFragment, fromFragment } from './hash.js';
 
@@ -174,7 +174,7 @@ export const isSandbox = () => formation.sandbox === true;
  * so turning Sandbox on lifts them everywhere at once — placeBlockedReason(),
  * reconcile() and the summary all follow without knowing Sandbox exists.
  */
-export const caps = () => capsFor(formation.mode, formation.sandbox);
+export const caps = () => (formation.goldRush ? goldRushCaps() : capsFor(formation.mode, formation.sandbox));
 export const playerCount = () => caps().players;
 export const benchCap = () => caps().bench;
 export const fieldCap = () => caps().field;
@@ -834,9 +834,20 @@ export function removeFromBench(slug, player = formation.activePlayer) {
 
 export function toggleBench(slug, player = formation.activePlayer) {
   if (onBench(slug, player)) { removeFromBench(slug, player); return { ok: true }; }
-  // No bench in Gold Rush, so bringing a Tatari is putting it on the board.
-  if (formation.goldRush) return autoPlace(slug, player);
+  // Gold Rush's board comes first: a tap deploys while there is room, and once
+  // all 15 are down it adds an Alternative instead.
+  if (formation.goldRush && placedFor(player).length < fieldCap()) {
+    const placed = autoPlace(slug, player);
+    if (placed.ok) return placed;
+  }
   return addToBench(slug, player);
+}
+
+/** Gold Rush's Clear: the Alternatives go, everyone on the board stays. */
+export function clearUnplaced(player) {
+  const standing = new Set(placedFor(player).map((p) => p.slug));
+  formation.bench[player] = formation.bench[player].filter((slug) => standing.has(slug));
+  emit();
 }
 
 export function clearBench(player) {
@@ -1520,15 +1531,6 @@ function reconcile() {
    * keeps steps, never adds ones that were not valid before. Steps for a benched
    * Tatari are drawn as inactive in the plan; see renderPriority.
    */
-  /*
-   * Gold Rush has no bench to hold a Tatari that is not on the board, so what
-   * you bring is what is placed. Taken from the field once it is final, above.
-   */
-  if (formation.goldRush) {
-    const standing = new Set(formation.cells.filter((o) => o && o.player === 1).map((o) => o.slug));
-    formation.bench[1] = formation.bench[1].filter((slug) => standing.has(slug));
-  }
-
   // Only one-Tatari steps are deduplicated - see alreadyPlanned().
   const seenSingles = new Set();
   formation.plan = formation.plan.map((s) => ({

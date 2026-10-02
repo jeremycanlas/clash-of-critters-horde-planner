@@ -223,13 +223,35 @@ await group('gold rush: each mode keeps its own formation, bench and plan and al
   store.addStep([{ slug: B.slug, player: 1 }], 5, 'later');
   const horde = store.snapshot();
   store.setGoldRush(true);
-  ok('Gold Rush starts from the Horde board', store.isPlaced(A.slug, 1) && !store.onBench(B.slug, 1));
+  ok('Gold Rush starts from the Horde board, the benched one as an Alternative',
+    store.isPlaced(A.slug, 1) && store.onBench(B.slug, 1) && !store.isPlaced(B.slug, 1));
   store.place(C.slug, 0);
   const rush = store.snapshot();
   store.setGoldRush(false);
   eq('back in Horde: bench, plan and the back corner exactly as left', shapeOf(store.snapshot()), shapeOf(horde));
   store.setGoldRush(true);
   eq('back in Gold Rush: its own board as left', shapeOf(store.snapshot()), shapeOf(rush));
+});
+
+await group('gold rush: once the board is full, a tap adds an Alternative', () => {
+  reset();
+  store.setGoldRush(true);
+  const sixteen = families.slice(0, 16).map((f) => f[0]);
+  for (const t of sixteen.slice(0, 15)) store.toggleBench(t.slug);
+  eq('fifteen taps, fifteen on the board', store.placedCount(1), 15);
+  const extra = sixteen[15];
+  store.toggleBench(extra.slug);
+  ok('the sixteenth waits as an Alternative', store.onBench(extra.slug, 1) && !store.isPlaced(extra.slug, 1));
+  const kin = families.slice(0, 15).find((f) => f.length > 1);
+  if (kin) {
+    store.toggleBench(kin[1].slug);
+    ok('nothing from a line already deployed', !store.onBench(kin[1].slug, 1));
+  }
+  store.setGoldRush(false);
+  store.setGoldRush(true);
+  ok('the Alternative is still there after a trip to Horde', store.onBench(extra.slug, 1) && !store.isPlaced(extra.slug, 1));
+  store.clearUnplaced(1);
+  eq('Clear takes the Alternatives and leaves the board', [store.onBench(extra.slug, 1), store.placedCount(1)], [false, 15]);
 });
 
 await group('gold rush: effects come from the base kit only', () => {

@@ -67,6 +67,16 @@ export const MODES = {
  */
 export const SANDBOX = { label: 'Sandbox', bench: Infinity, field: ALL_CELLS };
 
+/*
+ * Gold Rush's caps. Its bench is the 15 deployed plus up to 15 Alternatives:
+ * Tatari you would consider but have not put down, which is what a shortlist
+ * group picks its candidates from. Still one per evolution line across both, as
+ * the game allows. Declared before GOLD_RUSH reads it, so it is a function.
+ */
+export const goldRushCaps = () => ({
+  label: GOLD_RUSH.label, players: 1, bench: GOLD_RUSH.field + GOLD_RUSH.alternatives, field: GOLD_RUSH.field,
+});
+
 /** The caps in force: Sandbox's when it is on, the mode's own when it is not. */
 export function capsFor(mode, sandbox = false) {
   const base = MODES[mode] ?? MODES.solo;
@@ -102,7 +112,7 @@ export const cellCol = (i) => i % COLS;
  * masked rather than renumbered, and a Gold Rush formation reads as a legal Horde
  * one in any copy of the tool that has never heard of Gold Rush.
  */
-export const GOLD_RUSH = { label: 'Gold Rush', cols: 5, rows: 5, field: 15 };
+export const GOLD_RUSH = { label: 'Gold Rush', cols: 5, rows: 5, field: 15, alternatives: 15 };
 export const inGoldRushField = (i) => i >= 0 && i < CELLS
   && cellCol(i) < GOLD_RUSH.cols && cellRow(i) < GOLD_RUSH.rows;
 
