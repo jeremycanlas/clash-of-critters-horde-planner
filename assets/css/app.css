@@ -1125,6 +1125,18 @@ body.is-clean .field-frame__name { pointer-events: none; border-color: transpare
 }
 
 /*
+ * Gold Rush and Arena: 5 x 5, no draft. The off-board tiles carry [hidden] from
+ * renderGrid(); everything here is what that board has no use for: the bench
+ * (what you bring is what is placed), the plan and its level badges (levels are
+ * fixed), the Zobo ground, its line and Sandbox (nothing walks in, no caps to lift).
+ */
+#grid .cell[hidden] { display: none; }
+body[data-goldrush="true"] #grid { grid-template-columns: repeat(5, 1fr); }
+body[data-goldrush="true"] :is(#dock, #sec-priority, #enemy, .field-frame__enemy,
+  [data-sheet="priority"], label:has(#opt-zobo), label:has(#opt-sandbox), .field-frame__base) { display: none !important; }
+body[data-goldrush="true"] #grid :is(.token__rank, .token__add) { display: none; }
+
+/*
  * Sandbox's extra ground, beyond the contact line.
  *
  * Hatched with the same stripes contribute.css uses for the same piece of

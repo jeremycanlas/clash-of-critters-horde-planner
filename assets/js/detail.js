@@ -105,7 +105,7 @@ export function openDetail(slug) {
         </div>
       </div>
 
-      ${hordeSkills(t)}
+      ${store.isGoldRush() ? '' : hordeSkills(t)}
       ${rangeDiagram(t)}
       ${skillNumbers(t)}
 

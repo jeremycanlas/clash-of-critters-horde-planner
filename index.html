@@ -129,9 +129,14 @@
     -->
     <p id="formation-status" class="formation-status" role="status" aria-live="polite" hidden></p>
 
-    <div id="mode-switch" class="segmented" role="group" aria-label="Number of players">
+    <!-- Gold Rush sits here with Solo and Co-op because to the person picking it
+       it is which game they are planning for, though in the formation it is a
+       flag over Solo (see GOLD_RUSH in rules.js). Arena uses the same board. -->
+    <div id="mode-switch" class="segmented" role="group" aria-label="Game mode">
       <button class="segmented__btn" type="button" data-mode="solo" aria-pressed="true">Solo</button>
       <button class="segmented__btn" type="button" data-mode="coop" aria-pressed="false">Co-op</button>
+      <button class="segmented__btn" type="button" data-mode="goldrush" aria-pressed="false"
+        title="Gold Rush and Arena: a 5 by 5 board, 15 deployed, no levels or bench">Gold Rush</button>
     </div>
 
     <span id="live-who" class="who-strip" hidden></span>

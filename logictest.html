@@ -26,6 +26,7 @@ import {
 } from './assets/js/hash.js';
 import { coveredFrom, coverage, hasRange } from './assets/js/range.js';
 import { parseContribution } from './assets/js/range-import.js';
+import { effectSources } from './assets/js/effects.js';
 // The pinball page is not shipped, so its module may not be here. Its groups
 // are skipped then, rather than the whole suite dying on a failed import.
 const pinball = await import('./assets/js/pinball.js').catch(() => null);
@@ -174,6 +175,57 @@ await group('share link: sandbox, zobo ground and a placed Zobo all ride along',
   eq('sandbox and zobo ground survive', [after.sandbox, after.zoboGround], [true, true]);
   ok('the Zobo comes back as a Zobo', after.cells[40]?.kind === 'zobo' && after.cells[40].slug === zoboSlug,
     JSON.stringify(after.cells[40]));
+});
+
+await group('gold rush: a 5 x 5 board, and what was off it moves on', () => {
+  reset();
+  store.place(A.slug, 5);                      // sixth column
+  store.place(B.slug, 32);                     // back row
+  store.place(C.slug, 0);
+  store.place(zoboSlug, 14);
+  store.setSandbox(true);
+  const { moved } = store.setGoldRush(true);
+  const after = store.snapshot();
+  const where = (slug) => after.cells.findIndex((o) => o?.slug === slug);
+  eq('the two off the board moved, the one on it stayed', [moved, where(C.slug)], [2, 0]);
+  ok('everyone stands on the 5 x 5', [A, B, C].every((t) => store.inGoldRushField(where(t.slug))),
+    JSON.stringify([A, B, C].map((t) => where(t.slug))));
+  ok('no Zobo on a Gold Rush board', !after.cells.some((o) => o?.kind === 'zobo'));
+  eq('solo, caps on, no Zobo ground', [after.mode, after.sandbox, after.zoboGround], ['solo', false, false]);
+  eq('the sixth column and back row are off the board', [store.cellInPlay(4), store.cellInPlay(5), store.cellInPlay(24), store.cellInPlay(30)],
+    [true, false, true, false]);
+  ok('placing off the board is refused', !store.place(D.slug, 35).ok);
+  store.toggleBench(D.slug);
+  ok('a tap places straight onto the board: no bench to hold it', store.isPlaced(D.slug, 1)
+    && store.inGoldRushField(store.cellOf(D.slug, 1)));
+  ok('Sandbox stays off in Gold Rush', (store.setSandbox(true), !store.isSandbox()));
+});
+
+await group('gold rush: rides the share link, and leaving it moves nothing', () => {
+  reset();
+  store.place(A.slug, 0);
+  store.setGoldRush(true);
+  store.place(B.slug, 18);
+  const before = store.snapshot();
+  ok('the fragment marks gold rush', /gr=1/.test(toFragment(before)));
+  reset();
+  store.applySnapshot(fromFragment('#' + toFragment(before)).blob);
+  const after = store.snapshot();
+  eq('it comes back as Gold Rush, everyone where they were', [after.goldRush, shapeOf(after)], [true, shapeOf(before)]);
+  store.setGoldRush(false);
+  eq('back to Horde with the board as it was', shapeOf(store.snapshot()).cells, shapeOf(before).cells);
+});
+
+await group('gold rush: effects come from the base kit only', () => {
+  const t = state.all.find((x) => Object.keys(x.hordeSkills ?? {}).length
+    && effectSources(x).some((e) => e.level !== null));
+  ok('a Tatari with levelled effects exists to test with', !!t);
+  if (!t) return;
+  reset();
+  store.setGoldRush(true);
+  ok('in Gold Rush, none of its effects need a level', effectSources(t).every((e) => e.level === null));
+  store.setGoldRush(false);
+  ok('in Horde, its levelled effects are back', effectSources(t).some((e) => e.level !== null));
 });
 
 await group('share link: unknown and malformed input is handled, not thrown on', () => {

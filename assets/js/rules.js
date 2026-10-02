@@ -93,6 +93,20 @@ export const cellRow = (i) => Math.floor(i / COLS);
 export const cellCol = (i) => i % COLS;
 
 /**
+ * Gold Rush, and Arena, which uses the same board: 5 × 5, 15 deployed, no draft.
+ *
+ * A flag over Solo rather than a mode of its own sizes, for the same reason the
+ * Zobo rows are numbered after the field: cell numbers are in every share link,
+ * save and community post, and `@12` has to keep meaning the tile it always has.
+ * So the 5 × 5 is the front five rows and left five columns of the Horde field,
+ * masked rather than renumbered, and a Gold Rush formation reads as a legal Horde
+ * one in any copy of the tool that has never heard of Gold Rush.
+ */
+export const GOLD_RUSH = { label: 'Gold Rush', cols: 5, rows: 5, field: 15 };
+export const inGoldRushField = (i) => i >= 0 && i < CELLS
+  && cellCol(i) < GOLD_RUSH.cols && cellRow(i) < GOLD_RUSH.rows;
+
+/**
  * Where a cell sits on screen, which for the Zobo rows is not where its index
  * suggests. Row 0 is the field's front row as always; the rows beyond the line
  * count backwards from it, so -1 is the row a Zobo reaches first and -7 the

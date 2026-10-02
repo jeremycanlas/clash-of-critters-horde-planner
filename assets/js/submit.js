@@ -56,6 +56,8 @@ export function openSubmit(save) {
   const cells = save?.data?.cells ?? [];
   const { placed, modeLabel, steps } = statsOf(save.data);
   if (!placed) { toast('Put some Tatari on the field first'); return; }
+  // The gallery knows Solo and Co-op only, and would list a 5 x 5 as Horde.
+  if (save.data?.goldRush) { toast('Gold Rush formations cannot be posted to Community yet'); return; }
 
   held = save;
   const dlg = $('#dlg-submit');

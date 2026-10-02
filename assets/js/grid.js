@@ -994,6 +994,9 @@ export function renderGrid() {
 
   for (const cell of cellEls) {
     const i = Number(cell.dataset.cell);
+    // Gold Rush's 5 x 5 is the field less its sixth column and back row; the
+    // store's own test, so the page cannot draw a tile it would refuse.
+    cell.hidden = i < store.CELLS && !store.cellInPlay(i);
     const occ = store.formation.cells[i];
     const t = occ ? pieceBySlug(occ.slug) : null;
     const isZobo = occ?.kind === 'zobo';
@@ -1075,7 +1078,8 @@ export function renderGrid() {
     // question at a glance. Step order is read from the plan panel.
     const levels = store.plannedLevels(occ.slug, occ.player);
     const target = levels.length ? levels[levels.length - 1] : null;
-    const plan = levels.length ? `planned to level ${levels.join(', then ')}` : 'no level-ups planned';
+    const plan = store.isGoldRush() ? 'level fixed in Gold Rush'
+      : levels.length ? `planned to level ${levels.join(', then ')}` : 'no level-ups planned';
     const who = store.isCoop() ? `player ${occ.player}, ` : '';
 
     // The step this one is taken at, so the field shows the plan has an order

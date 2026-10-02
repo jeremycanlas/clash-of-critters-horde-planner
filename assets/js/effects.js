@@ -115,21 +115,28 @@ export function typesInText(text) {
  * collected rather than pinned.
  */
 const sourceCache = new WeakMap();
+const baseCache = new WeakMap();
 
-/** Every effect one Tatari brings: base skill first, then each levelled skill. */
+/**
+ * Every effect one Tatari brings: base skill first, then each levelled skill.
+ * In Gold Rush only the base skill: nothing levels there, so the Horde level
+ * skills never arrive (state.goldRush, kept by store.js).
+ */
 export function effectSources(t) {
-  if (t && sourceCache.has(t)) return sourceCache.get(t);
+  const baseOnly = state.goldRush === true;
+  const cache = baseOnly ? baseCache : sourceCache;
+  if (t && cache.has(t)) return cache.get(t);
   const out = [];
   for (const type of t?.skillTypes ?? []) out.push({ type, level: null });
 
-  for (const [key, skill] of Object.entries(t?.hordeSkills ?? {})) {
+  if (!baseOnly) for (const [key, skill] of Object.entries(t?.hordeSkills ?? {})) {
     const level = Number(key.replace('level', ''));
     if (!Number.isFinite(level)) continue;
     for (const type of typesInText(skill?.text)) {
       out.push({ type, level, skillName: skill?.name ?? '' });
     }
   }
-  if (t) sourceCache.set(t, out);
+  if (t) cache.set(t, out);
   return out;
 }
 
@@ -199,9 +206,11 @@ export function sourceLabel(source) {
  * @returns {{heal: G, buff: G, debuff: G}} where G is {base: boolean, level: number|null}
  */
 const groupCache = new WeakMap();
+const baseGroupCache = new WeakMap(); // Gold Rush's: see effectSources()
 
 export function effectGroupsOf(t) {
-  if (t && groupCache.has(t)) return groupCache.get(t);
+  const cache = state.goldRush === true ? baseGroupCache : groupCache;
+  if (t && cache.has(t)) return cache.get(t);
   const out = {
     heal: { base: false, level: null },
     buff: { base: false, level: null },
@@ -213,7 +222,7 @@ export function effectGroupsOf(t) {
     if (level === null) group.base = true;
     else group.level = group.level === null ? level : Math.min(group.level, level);
   }
-  if (t) groupCache.set(t, out);
+  if (t) cache.set(t, out);
   return out;
 }
 

@@ -22,7 +22,7 @@ import { state, pieceBySlug } from './data.js';
 import {
   COLS, ROWS, CELLS, MAX_LEVEL, MODES, cellRow, cellCol,
   ALL_CELLS, ENEMY_FIRST, ENEMY_ROWS, ENEMY_CELLS, isEnemyCell, cellDisplayRow,
-  capsFor, cellCountFor, SANDBOX,
+  capsFor, cellCountFor, SANDBOX, GOLD_RUSH, inGoldRushField,
 } from './rules.js';
 import { toFragment, fromFragment } from './hash.js';
 
@@ -35,7 +35,7 @@ import { toFragment, fromFragment } from './hash.js';
 export {
   COLS, ROWS, CELLS, MAX_LEVEL, MODES, cellRow, cellCol,
   ALL_CELLS, ENEMY_FIRST, ENEMY_ROWS, ENEMY_CELLS, isEnemyCell, cellDisplayRow,
-  SANDBOX,
+  SANDBOX, GOLD_RUSH, inGoldRushField,
 };
 
 // v4: occupants gained a player, and the bench layer is new. Earlier saves have
@@ -67,6 +67,12 @@ export const formation = {
    * bring, and either is worth wanting without the other.
    */
   zoboGround: false,
+  /*
+   * Gold Rush and Arena: a 5 x 5 board, no draft. See GOLD_RUSH in rules.js. A
+   * flag over Solo like Sandbox, and exclusive with it, the Zobo ground and
+   * Co-op, none of which that board has.
+   */
+  goldRush: false,
   /*
    * How many rows past the contact line the boss pull has opened, 0 to
    * ENEMY_ROWS.
@@ -153,6 +159,8 @@ const listeners = new Set();
 export function subscribe(fn) { listeners.add(fn); return () => listeners.delete(fn); }
 function emit() {
   reconcile();
+  // For effects.js, which counts a Tatari's level skills except in Gold Rush.
+  state.goldRush = formation.goldRush;
   persist();
   for (const fn of listeners) fn();
 }
@@ -171,6 +179,7 @@ export const playerCount = () => caps().players;
 export const benchCap = () => caps().bench;
 export const fieldCap = () => caps().field;
 export const isZoboGround = () => formation.zoboGround === true;
+export const isGoldRush = () => formation.goldRush === true;
 export const pullRows = () => formation.pullRows;
 
 /*
@@ -199,6 +208,7 @@ export const cellAtRow = (row, col) => (row >= 0
  */
 export function cellInPlay(cell) {
   if (cell < 0 || cell >= ALL_CELLS) return false;
+  if (formation.goldRush) return inGoldRushField(cell);
   if (!isEnemyCell(cell)) return cell < CELLS;
   if (formation.zoboGround) return true;
   return cellDisplayRow(cell) >= -formation.pullRows;
@@ -440,6 +450,7 @@ export function setSandbox(on) {
   const nothing = { unplaced: 0, dropped: 0 };
   if (next === formation.sandbox) return nothing;
 
+  if (next && formation.goldRush) return nothing; // a 5 x 5 board has no caps to lift
   const cost = next ? nothing : sandboxExitCost();
   formation.sandbox = next;
   emit();
@@ -459,7 +470,7 @@ export function setSandbox(on) {
  */
 export function setZoboGround(on) {
   const next = !!on;
-  if (next === formation.zoboGround) return { unplaced: 0 };
+  if (next === formation.zoboGround || (next && formation.goldRush)) return { unplaced: 0 };
 
   let unplaced = 0;
   if (!next) {
@@ -468,6 +479,52 @@ export function setZoboGround(on) {
   formation.zoboGround = next;
   emit();
   return { unplaced };
+}
+
+/**
+ * Turns Gold Rush on or off.
+ *
+ * Going in makes it a Solo board with nothing past the contact line, since that
+ * is all the mode is, and moves anything standing in the sixth column or the
+ * back row onto the 5 x 5, rearmost free tile first: the board is 25 tiles and the
+ * cap 15, so there is always room for a legal formation. A Zobo has no place in
+ * it and goes. Coming out loses nothing: the 5 x 5 is inside the Horde field.
+ *
+ * @returns {{moved: number}} how many had to move to fit
+ */
+export function setGoldRush(on) {
+  const next = !!on;
+  if (next === formation.goldRush) return { moved: 0 };
+  let moved = 0;
+  if (next) {
+    formation.mode = 'solo';
+    formation.bench[2] = [];
+    formation.activePlayer = 1;
+    formation.sandbox = false;
+    formation.zoboGround = false;
+    formation.pullRows = 0;
+    const outside = [];
+    formation.cells.forEach((occ, cell) => {
+      if (!occ) return;
+      if (!inGoldRushField(cell)) {
+        formation.cells[cell] = null;
+        if (occ.player !== 0 && occ.kind !== 'zobo') outside.push(occ);
+      } else if (occ.player === 0 || occ.kind === 'zobo') {
+        formation.cells[cell] = null;
+      }
+    });
+    formation.goldRush = true;
+    for (const occ of outside) {
+      const cell = firstFreeCell();
+      if (cell === null) break;
+      formation.cells[cell] = occ;
+      moved++;
+    }
+  } else {
+    formation.goldRush = false;
+  }
+  emit();
+  return { moved };
 }
 
 export function setActivePlayer(player) {
@@ -753,6 +810,8 @@ export function removeFromBench(slug, player = formation.activePlayer) {
 
 export function toggleBench(slug, player = formation.activePlayer) {
   if (onBench(slug, player)) { removeFromBench(slug, player); return { ok: true }; }
+  // No bench in Gold Rush, so bringing a Tatari is putting it on the board.
+  if (formation.goldRush) return autoPlace(slug, player);
   return addToBench(slug, player);
 }
 
@@ -832,7 +891,7 @@ export function place(slug, cell, player = formation.activePlayer) {
  * for something you meant to do, so they are reachable by drag only.
  */
 export function firstFreeCell() {
-  for (let i = CELLS - 1; i >= 0; i--) if (!formation.cells[i]) return i;
+  for (let i = CELLS - 1; i >= 0; i--) if (!formation.cells[i] && cellInPlay(i)) return i;
   return null;
 }
 
@@ -1405,6 +1464,8 @@ function reconcile() {
   formation.cells = formation.cells.map((occ, cell) => {
     if (!occ) return null;
     if (!cellInPlay(cell)) return null;
+    // Gold Rush is Tatari against Tatari: nothing walks in from beyond a line.
+    if (formation.goldRush && (occ.player === 0 || occ.kind === 'zobo')) return null;
     /*
      * Zobos skip every check below this line. They belong to no player, sit on
      * no bench and count against no cap — the only thing that can remove one is
@@ -1435,6 +1496,15 @@ function reconcile() {
    * keeps steps, never adds ones that were not valid before. Steps for a benched
    * Tatari are drawn as inactive in the plan; see renderPriority.
    */
+  /*
+   * Gold Rush has no bench to hold a Tatari that is not on the board, so what
+   * you bring is what is placed. Taken from the field once it is final, above.
+   */
+  if (formation.goldRush) {
+    const standing = new Set(formation.cells.filter((o) => o && o.player === 1).map((o) => o.slug));
+    formation.bench[1] = formation.bench[1].filter((slug) => standing.has(slug));
+  }
+
   // Only one-Tatari steps are deduplicated - see alreadyPlanned().
   const seenSingles = new Set();
   formation.plan = formation.plan.map((s) => ({
@@ -1504,6 +1574,7 @@ export function snapshot() {
      */
     sandbox: formation.sandbox,
     zoboGround: formation.zoboGround,
+    goldRush: formation.goldRush,
     pullRows: formation.pullRows,
     cells: formation.cells.map((o) => (o ? { ...o } : null)),
     flex: [...formation.flex],
@@ -1537,7 +1608,7 @@ export function restore() {
 }
 
 /** Loads a raw state blob, letting reconcile() enforce every invariant. */
-function apply({ mode: m, sandbox, zoboGround, pullRows: rows, cells, flex, swaps,
+function apply({ mode: m, sandbox, zoboGround, goldRush, pullRows: rows, cells, flex, swaps,
                  bench, plan, name, lf, lfWants, lfMode, lines }) {
   formation.mode = MODES[m] ? m : 'solo';
   /*
@@ -1548,7 +1619,14 @@ function apply({ mode: m, sandbox, zoboGround, pullRows: rows, cells, flex, swap
    */
   formation.sandbox = sandbox === true;
   formation.zoboGround = zoboGround === true;
-  formation.pullRows = Math.max(0, Math.min(ENEMY_ROWS, Number(rows) || 0));
+  // Exclusive with all three above, whatever a hand-made link says.
+  formation.goldRush = goldRush === true;
+  if (formation.goldRush) {
+    formation.mode = 'solo';
+    formation.sandbox = false;
+    formation.zoboGround = false;
+  }
+  formation.pullRows = formation.goldRush ? 0 : Math.max(0, Math.min(ENEMY_ROWS, Number(rows) || 0));
   formation.bench = {
     1: Array.isArray(bench?.[1]) ? [...bench[1]] : [],
     2: Array.isArray(bench?.[2]) ? [...bench[2]] : [],

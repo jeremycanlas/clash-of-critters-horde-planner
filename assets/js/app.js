@@ -46,10 +46,15 @@ function renderAll() {
   renderSummary();
   renderShell();
 
+  const gr = store.isGoldRush();
   for (const btn of $$('#mode-switch .segmented__btn')) {
-    btn.setAttribute('aria-pressed', String(btn.dataset.mode === store.formation.mode));
+    btn.setAttribute('aria-pressed', String(gr
+      ? btn.dataset.mode === 'goldrush'
+      : btn.dataset.mode === store.formation.mode));
   }
   document.body.dataset.mode = store.formation.mode;
+  // The CSS hook for everything Gold Rush has no use for: bench, plan, Zobos.
+  document.body.dataset.goldrush = String(gr);
   document.body.dataset.activePlayer = String(store.formation.activePlayer);
 
   /*
@@ -611,6 +616,15 @@ function wireToolbar() {
   $('#mode-switch').addEventListener('click', (e) => {
     const btn = e.target.closest('.segmented__btn');
     if (!btn) return;
+    if (btn.dataset.mode === 'goldrush') {
+      if (store.isGoldRush()) return;
+      const before = store.snapshot();
+      const { moved } = store.setGoldRush(true);
+      toast(`Gold Rush: 5 × 5, ${store.fieldCap()} deployed${moved ? `, moved ${moved} onto the smaller board` : ''}`,
+        'info', moved ? undoTo(before) : undefined);
+      return;
+    }
+    if (store.isGoldRush()) store.setGoldRush(false);
     const { trimmed, discarded } = store.setMode(btn.dataset.mode);
     const notes = [];
     if (discarded) notes.push(`dropped P2's ${discarded} Tatari`);
