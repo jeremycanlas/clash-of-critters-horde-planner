@@ -43,3 +43,12 @@ Dolphie is the only line with no Horde Invasion skills anywhere; it needs the ga
 - **2026-10-03**: `community.html?mode=goldrush|coop|solo` opens on that filter, for guide links.
   Drafted the Discord guide itself in `docs/discord-guide-draft.md`: six paste-ready sections,
   co-op live sessions included, with deep links into Community and Skill data.
+- **2026-10-03**: Skill-number pipeline ready to run, outside the repo in `E:\caches\coc-arena`:
+  - `auto.py`: open any Tatari's skill panel in BlueStacks and it reads the whole evolution line
+    by itself over adb (taps each member icon, scrolls, grabs, OCRs with helper.py's reader).
+    About 66 taps for all 242, instead of ~15 screenshots per Tatari. Not yet run against the game:
+    the member-icon positions are measured off saved screenshots and get checked on the first line.
+  - `convert.mjs`: shapes the OCR into skill-numbers.json's format. Against the 7 hand-checked
+    Tatari, 4 match exactly and 3 are flagged (a label wrapped onto two lines); none differ
+    silently. Flagged ones get read by eye from their screenshots before they go in.
+  - Waiting on the user's go-ahead to drive BlueStacks (could sign the phone out of the game).
