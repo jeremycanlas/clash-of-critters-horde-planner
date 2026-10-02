@@ -209,7 +209,7 @@ function cardHTML(entry) {
     <li class="save" data-id="${esc(entry.id)}">
       <button class="save__main" type="button" data-load="${esc(entry.id)}"
               title="Load this formation">
-        ${mapHTML(d.cells)}
+        ${mapHTML(d.cells, { goldRush: !!d.goldRush })}
         <span class="save__body">
           <span class="save__name">${esc(entry.name)}</span>
           <span class="save__meta"><span class="save__now">On the field</span>${esc(bits.join(' · '))}</span>
@@ -223,11 +223,25 @@ function cardHTML(entry) {
     </li>`;
 }
 
+/* Which list is open: 'horde' or 'goldrush'. Follows the mode you are in until
+   you pick one, and again every time the mode changes. */
+let tab = 'horde';
+let tabMode = null;
+const tabOf = (entry) => (entry.data?.goldRush ? 'goldrush' : 'horde');
+
 function renderSaves() {
   jsonOf.clear();
+  const shown = saves.filter((s) => tabOf(s) === tab);
   $('#saves-list').classList.toggle('saves--posting', canPost);
-  $('#saves-list').innerHTML = saves.map(cardHTML).join('');
+  $('#saves-list').innerHTML = shown.map(cardHTML).join('');
+  for (const b of document.querySelectorAll('#saves-tabs [data-tab]')) {
+    b.setAttribute('aria-pressed', String(b.dataset.tab === tab));
+    const count = saves.filter((s) => tabOf(s) === b.dataset.tab).length;
+    b.querySelector('[data-n]').textContent = count ? String(count) : '';
+  }
+  // The long welcome is for nobody having saved anything; an empty tab just says so.
   $('#saves-empty').hidden = saves.length > 0;
+  $('#saves-tab-empty').hidden = !saves.length || shown.length > 0;
 
   const n = saves.length ? String(saves.length) : '';
   $('#saves-count').textContent = n;
@@ -245,6 +259,11 @@ function renderSaves() {
  * on every keystroke of the name field would flicker for nothing.
  */
 function refresh() {
+  const mode = store.isGoldRush() ? 'goldrush' : 'horde';
+  if (mode !== tabMode) {
+    tabMode = mode;
+    if (tab !== mode) { tab = mode; renderSaves(); return; } // renderSaves calls back in here
+  }
   const now = JSON.stringify(store.snapshot());
   for (const li of $('#saves-list').children) {
     const entry = saves.find((s) => s.id === li.dataset.id);
@@ -300,6 +319,13 @@ export function buildSaves(opts = {}) {
   // Two ways in: the button in the formation bar and the tab on the right edge.
   for (const b of document.querySelectorAll('.saves-handle')) b.addEventListener('click', () => setDrawer(!drawerOpen));
   $('#saves-close').addEventListener('click', () => setDrawer(false));
+
+  $('#saves-tabs').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-tab]');
+    if (!b || b.dataset.tab === tab) return;
+    tab = b.dataset.tab;
+    renderSaves();
+  });
 
   $('#saves-list').addEventListener('click', (e) => {
     const del = e.target.closest('[data-del]');

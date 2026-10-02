@@ -3458,6 +3458,9 @@ body.is-dragging-active {
 }
 
 .saves__keep { width: 100%; }
+/* Horde | Gold Rush & Arena: full width, two equal halves, under Save. */
+.saves__tabs { display: flex; width: 100%; margin-top: var(--s2); }
+.saves__tabs .segmented__btn { flex: 1 1 0; justify-content: center; gap: 5px; }
 
 .saves__empty {
   margin: var(--s3) 0 0;
@@ -3515,6 +3518,10 @@ body.is-dragging-active {
   grid-template-rows: repeat(6, var(--fmap-cell));
   gap: 1px;
   padding: 3px;
+}
+.fmap--gr {
+  grid-template-columns: repeat(5, var(--fmap-cell));
+  grid-template-rows: repeat(5, var(--fmap-cell));
   border-radius: var(--r-sm);
   background: var(--bg);
   background-image:

@@ -40,7 +40,7 @@ export function unknownSlugs(cells) {
  * @param {Array} cells a snapshot's `cells`
  * @param {{cell?: number}} [opts] tile size in px; the default is thumb-sized
  */
-export function mapHTML(cells, { cell = 13 } = {}) {
+export function mapHTML(cells, { cell = 13, goldRush = false } = {}) {
   const tiles = occupants(cells).map(({ cell: i, slug }) => {
     const place = `grid-row:${Math.floor(i / COLS) + 1};grid-column:${(i % COLS) + 1}`;
     const t = state.bySlug.get(slug);
@@ -54,7 +54,8 @@ export function mapHTML(cells, { cell = 13 } = {}) {
   }).join('');
 
   const size = cell === 13 ? '' : ` style="--fmap-cell:${cell}px"`;
-  return `<span class="fmap"${size} aria-hidden="true">${tiles}</span>`;
+  // Gold Rush's 5 x 5 is the top-left of the same numbering, so only the frame shrinks.
+  return `<span class="fmap${goldRush ? ' fmap--gr' : ''}"${size} aria-hidden="true">${tiles}</span>`;
 }
 
 /** The one-line facts under a formation's name. */
@@ -62,7 +63,7 @@ export function statsOf(snap) {
   const cells = Array.isArray(snap) ? snap : snap?.cells;
   return {
     placed: occupants(cells).length,
-    modeLabel: MODES[snap?.mode]?.label ?? 'Solo',
+    modeLabel: snap?.goldRush ? 'Gold Rush' : MODES[snap?.mode]?.label ?? 'Solo',
     steps: Array.isArray(snap?.plan) ? snap.plan.length : 0,
   };
 }

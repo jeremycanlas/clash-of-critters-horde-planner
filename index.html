@@ -792,12 +792,21 @@
 
     <button id="btn-keep" class="btn btn--primary saves__keep" type="button">Save this formation</button>
 
+    <!-- Horde and Gold Rush formations are different boards for different
+       modes, so they are kept apart. The tab follows the mode you are in, so a
+       save always lands where you can see it; either can be opened by hand. -->
+    <div id="saves-tabs" class="segmented segmented--tabs saves__tabs" role="group" aria-label="Which saved formations">
+      <button class="segmented__btn" type="button" data-tab="horde" aria-pressed="true">Horde <span class="muted" data-n></span></button>
+      <button class="segmented__btn" type="button" data-tab="goldrush" aria-pressed="false">Gold Rush &amp; Arena <span class="muted" data-n></span></button>
+    </div>
+
     <p id="saves-empty" class="saves__empty">Nothing saved yet. Save a formation and
       it will be waiting here next visit. These stay in this browser, and
       <b>Clear all</b> does not touch them. Each one gets a <b>Post</b> button for
       putting it in <a href="community.html">Community formations</a>.
     </p>
 
+    <p id="saves-tab-empty" class="saves__empty" hidden>None saved for this mode yet.</p>
     <ol id="saves-list" class="saves" aria-label="Saved formations, newest first"></ol>
   </section>
 
