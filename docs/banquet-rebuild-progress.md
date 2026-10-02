@@ -7,7 +7,7 @@ Design: screens 9–10, 2 and 5 of the banquet redesign canvas.
 |---|---|
 | 1. Four statuses with count tiles | Done |
 | 2. Your UIDs with statuses and "Copy a reminder" | Done |
-| 3. Claim run | To do |
+| 3. Claim run | Done |
 | 4. Activity log | To do |
 
 ## Decisions made while you were away
@@ -47,3 +47,15 @@ Design: screens 9–10, 2 and 5 of the banquet redesign canvas.
   Thank you!" Change the wording in `reminder()` in `assets/js/banquet.js`.
 - Statuses next to your own UIDs show only once the list is open to you (four
   UIDs posted), because that is when the page gets everyone's marks.
+
+## Part 3 notes
+
+- The run goes in this order: Claimable ones you have not claimed (most room
+  first), then Needs a look (newest first), then Not logged in ones last
+  checked an hour ago or more.
+- It skips any banquet that became full, or that you claimed from its card,
+  while the run was going.
+- On a phone the run fills the whole screen. On a PC it is a box in the
+  middle. Escape or "List" closes it.
+- Each UID is copied the moment it shows. If the browser blocks the copy, it
+  says "Tap the UID to copy it".

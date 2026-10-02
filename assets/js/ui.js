@@ -210,7 +210,8 @@ export async function copyText(text) {
   field.value = text;
   field.setAttribute('readonly', '');
   field.style.cssText = 'position:fixed;top:0;left:-9999px;opacity:0';
-  document.body.append(field);
+  // Inside an open modal dialog, since everything outside one cannot be selected.
+  (document.querySelector('dialog[open]') ?? document.body).append(field);
   field.select();
   field.setSelectionRange(0, text.length);
   let ok = false;

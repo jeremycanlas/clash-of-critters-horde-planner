@@ -116,6 +116,7 @@ const browser = await chromium.launch();
 
 async function open(me, opts) {
   const ctx = await browser.newContext({ ...opts, colorScheme: me.scheme ?? 'dark' });
+  await ctx.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: `http://127.0.0.1:${PORT}` });
   await ctx.addInitScript(() => localStorage.setItem('coc.community.v1', JSON.stringify({ refresh_token: 'x', uid: 'u', name: 'x' })));
   await ctx.route(/supabase\.co/, async (route) => {
     const u = new URL(route.request().url());
@@ -332,6 +333,41 @@ try {
   await A.click('li[data-key=":10000001"] [data-mark="open"]');
   await A.waitForSelector('#bq-remind[hidden]', { state: 'attached' });
   assert.equal(await A.locator('#bq-my li', { hasText: '10000001' }).locator('.bq-mine__st').textContent(), 'claimable');
+  // The claim run: claimable ones you have not claimed, then unchecked ones; not
+  // Eli's, checked 5 minutes ago. One at a time, copied, three answers and a skip.
+  const due = Number((await A.locator('#bq-run-start').textContent()).match(/(\d+) to go/)[1]);
+  assert.equal(due, Number(await A.locator('[data-n="claimable"]').textContent()) + Number(await A.locator('[data-n="look"]').textContent()),
+    'claimable and unchecked, not one checked within the hour');
+  await A.click('#bq-run-start');
+  await A.waitForSelector('#bq-run[open] .bq-run__uid');
+  assert.equal(await A.locator('.bq-run__uid').textContent(), '10000001', 'claimable first, fewest claims');
+  assert.equal(await A.locator('#bq-run-step').textContent(), `1 / ${due}`);
+  await A.waitForFunction(() => /Copied/.test(document.querySelector('#bq-run-copied')?.textContent));
+  await A.waitForTimeout(100);
+  assert.deepEqual(lastSent('Ana', 'banquet_note_copy'), { target: 10000001, g: null }, 'the copy is noted, as a tap would be');
+  assert.deepEqual(await axe(A), [], 'axe, claim run');
+  if (process.env.BANQUET_SHOTS) await A.screenshot({ path: `${process.env.BANQUET_SHOTS}/run-phone.png` });
+  await A.click('[data-run="gift"]');
+  await A.waitForFunction(() => document.querySelector('.bq-run__uid')?.textContent === '20000001');
+  await A.click('[data-run="skip"]');
+  await A.waitForFunction(() => document.querySelector('.bq-run__uid')?.textContent === '55555555');
+  await A.click('[data-run="skip"]');
+  await A.waitForFunction(() => document.querySelector('#bq-run-step')?.textContent.startsWith('4 /'));
+  const looked = await A.locator('.bq-run__uid').textContent();
+  assert.match(await A.locator('.bq-run__about').textContent(), /not checked yet/);
+  await A.click('[data-run="full"]');
+  await A.waitForFunction((u) => document.querySelector('.bq-run__uid')?.textContent !== u, looked);
+  const asleep = await A.locator('.bq-run__uid').textContent();
+  await A.click('[data-run="notin"]');
+  await A.waitForFunction(() => document.querySelector('#bq-run-step')?.textContent.startsWith('6 /'));
+  await A.waitForTimeout(300);
+  assert.ok(db.claims.some((c) => c.who === 'Ana' && c.uid === '10000001'), 'Gift claims it');
+  assert.equal(db.marks.get(`1:${looked}`).state, 'full', 'Portrait marks it full');
+  assert.equal(db.marks.get(`1:${asleep}`).state, 'not-yet', 'Nothing marks it not logged in');
+  assert.equal(await A.locator('#bq-run-tally').textContent(), 'So far: 1 claimed · 1 full · 1 not logged in · 2 skipped');
+  await A.click('#bq-run-close');
+  assert.ok(await A.locator('#bq-run').evaluate((d) => !d.open), 'List closes it');
+  assert.match(await A.locator('#bq-run-start').textContent(), new RegExp(`${due - 3} to go`), 'claimed, full and not logged in are off the run');
   assert.equal(await A.evaluate(() => document.documentElement.scrollWidth - innerWidth), 0, 'the tiles fit a phone');
   await A.setViewportSize({ width: 320, height: 640 });
   assert.ok(await A.locator('[data-show]').evaluateAll((bs) => bs.every((b) => b.scrollWidth <= b.clientWidth + 1)), 'each tile fits a 320px phone');

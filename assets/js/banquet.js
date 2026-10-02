@@ -544,8 +544,112 @@ function renderCards(past) {
     </section>`;
   }).join('') || `<p class="muted bq-none">${inViewList.length ? 'Nothing matches.' : 'No banquets shared this round yet.'}</p>`;
   for (const d of $$('#bq-cards details')) d.open = opened.has(d.closest('li').dataset.key);
+  const due = past ? 0 : runQueue().length;
+  $('#bq-run-start').hidden = past;
+  $('#bq-run-start').disabled = !due;
+  $('#bq-run-start').textContent = due ? `Start claim run · ${due} to go` : 'Claim run: nothing to check right now';
   renderLast();
 }
+
+// ------------------------------------------------------------------ claim run
+
+/* One UID at a time, already copied, and what the game showed for it. In
+   order: claimable ones you have not claimed, most room first; then those
+   nobody has checked; then those not logged in when last checked, once that
+   was an hour ago or more. */
+const RECHECK = 60 * 60 * 1000;
+function runQueue() {
+  const list = state.banquets.filter((b) => !b.grp || inView(b.grp));
+  const pick = (st, ok) => list.filter((b) => statusOf(b) === st && ok(b)).sort(ORDER[st]);
+  return [...pick('claimable', (b) => !b.claimed), ...pick('look', () => true),
+    ...pick('notin', (b) => Date.now() - Date.parse(b.not_yet.at) >= RECHECK)].map(keyOf);
+}
+let run = null; // { queue: ["grp:uid"], i, tally }
+const cardOf = (k) => state.banquets.find((b) => keyOf(b) === k);
+// Still worth showing: someone else may have marked it full, or you claimed it on its card, mid-run.
+const stillDue = (k) => { const b = cardOf(k); return b && !b.full && !b.claimed; };
+
+const ICON = {
+  gift: '<rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7M7.5 8a2.5 2.5 0 0 1 0-5C10 3 12 8 12 8s2-5 4.5-5a2.5 2.5 0 0 1 0 5"/>',
+  full: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+  notin: '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>',
+};
+const icon = (k) => `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+  stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[k]}</svg>`;
+
+function renderRun() {
+  const total = run.queue.length;
+  const b = run.i < total ? cardOf(run.queue[run.i]) : null;
+  const t = run.tally;
+  $('#bq-run-step').textContent = b ? `${run.i + 1} / ${total}` : 'done';
+  $('#bq-run-bar').style.width = `${total ? Math.round((Math.min(run.i, total) / total) * 100) : 100}%`;
+  $('#bq-run-tally').textContent = `So far: ${t.gift} claimed · ${t.full} full · ${t.notin} not logged in · ${t.skip} skipped`;
+  if (!b) {
+    $('#bq-run-body').innerHTML = `<section class="bq-run__card">
+        <h3>${total ? 'Run finished' : 'Nothing to check right now'}</h3>
+        <p>${total ? `You claimed ${t.gift}, spotted ${t.full} full and ${t.notin} not logged in.`
+          : 'Every banquet is claimed by you, full, or was checked less than an hour ago.'}</p>
+        <button type="button" class="btn" data-run="again">Run it again</button>
+      </section>`;
+    return;
+  }
+  const st = statusOf(b);
+  const seen = st === 'claimable' ? `gift seen ${b.open ? since(b.open.at) : ''}`
+    : st === 'notin' ? `no icon ${since(b.not_yet.at)}, by ${esc(b.not_yet.by)}` : 'not checked yet';
+  $('#bq-run-body').innerHTML = `<section class="bq-run__card" data-key="${keyOf(b)}">
+      <span id="bq-run-copied" class="bq-run__copied" role="status">Copying…</span>
+      <button type="button" class="tr-copy bq-run__uid" data-copy="${b.uid}" title="Copy UID">${b.uid}</button>
+      <span class="bq-run__about">${tagOf(b.grp)} ${b.claims ? `at least ${b.claims} of 50 gone` : 'no claims yet'} · ${seen}</span>
+    </section>
+    <p class="bq-run__ask">What did the game show?</p>
+    <div class="bq-run__answers">
+      <button type="button" class="bq-run__btn is-gift" data-run="gift">${icon('gift')}<span>Gift · I claimed it<small>Counts your claim, goes to the next</small></span></button>
+      <button type="button" class="bq-run__btn is-full" data-run="full">${icon('full')}<span>Portrait · it's full<small>Takes it off everyone's list</small></span></button>
+      <button type="button" class="bq-run__btn is-notin" data-run="notin">${icon('notin')}<span>Nothing · not logged in<small>Its poster gets a reminder to send</small></span></button>
+    </div>
+    <button type="button" class="btn btn--quiet bq-run__skip" data-run="skip">Skip for now</button>`;
+}
+
+// The next one still due, shown and copied for the game's search.
+async function nextInRun() {
+  do run.i++; while (run.i < run.queue.length && !stillDue(run.queue[run.i]));
+  renderRun();
+  const k = run.queue[run.i];
+  if (!k) return;
+  const ok = await copyText(k.split(':')[1]);
+  if (ok) { noteCopy(k); setLastCopied(k); }
+  const say = $('#bq-run-copied');
+  if (say && run.queue[run.i] === k) say.textContent = ok ? 'Copied, paste it in the game' : 'Tap the UID to copy it';
+}
+
+function startRun() {
+  run = { queue: runQueue(), i: -1, tally: { gift: 0, full: 0, notin: 0, skip: 0 } };
+  if (!$('#bq-run').open) $('#bq-run').showModal();
+  nextInRun();
+}
+
+$('#bq-run-start').addEventListener('click', startRun);
+$('#bq-run-close').addEventListener('click', () => $('#bq-run').close());
+$('#bq-run').addEventListener('close', () => { run = null; });
+$('#bq-run-body').addEventListener('click', async (e) => {
+  const btn = e.target.closest('[data-run]');
+  if (!btn || !run) return;
+  const what = btn.dataset.run;
+  if (what === 'again') return startRun();
+  const k = run.queue[run.i];
+  const b = cardOf(k);
+  run.tally[what]++;
+  markSeen(k);
+  // On to the next first: the copy has to happen while the tap still counts as one.
+  nextInRun();
+  if (what === 'skip' || !b) return;
+  const g = b.grp ?? null;
+  const target = Number(b.uid);
+  const got = what === 'gift' ? await call('banquet_claim', { target, claimed: true, g })
+    : await call('banquet_mark', { target, state: what === 'full' ? 'full' : 'not-yet', g });
+  if (!got.ok) toast(`${b.uid}: ${got.why}`, 'info');
+  load(state.round);
+});
 
 // ------------------------------------------------------------------ actions
 
@@ -738,7 +842,7 @@ document.addEventListener('click', async (e) => {
   const btn = e.target.closest('.tr-copy');
   if (!btn) return;
   const ok = await copyText(btn.dataset.copy);
-  const card = btn.closest('#bq-cards li[data-key]');
+  const card = btn.closest('#bq-cards li[data-key], .bq-run__card[data-key]');
   if (ok && card) { noteCopy(card.dataset.key); setLastCopied(card.dataset.key); }
   btn.classList.add(ok ? 'is-copied' : 'is-failed');
   btn.dataset.label = ok ? 'Copied' : 'Copy failed';
