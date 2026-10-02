@@ -35,3 +35,8 @@ Dolphie is the only line with no Horde Invasion skills anywhere; it needs the ga
   251 downloaded a card, 210 copied one, 93 copied a link, 56 used the phone share sheet. Share
   works once opened; few open it. Now, the first time a field fills (once per browser), a toast
   offers "Share". Events `share-nudged` / `share-nudge-used` show whether it helps.
+- **2026-10-03**: First-visit walkthrough: tried opening the how-to tip on first visit, reverted. On an
+  iPhone SE the field already starts below the fold (header, mode switch, patch banner), and the
+  phone already leads a newcomer: the bench says "Press Roster to pick from the 242 Tatari" and
+  Roster is the highlighted button. A tour would cost space on every first visit for a path that
+  is already signposted. Revisit if stats show people opening Roster and still not placing.
