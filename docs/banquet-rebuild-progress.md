@@ -6,7 +6,7 @@ Design: screens 9–10, 2 and 5 of the banquet redesign canvas.
 | Part | State |
 |---|---|
 | 1. Four statuses with count tiles | Done |
-| 2. Your UIDs with statuses and "Copy a reminder" | To do |
+| 2. Your UIDs with statuses and "Copy a reminder" | Done |
 | 3. Claim run | To do |
 | 4. Activity log | To do |
 
@@ -39,3 +39,11 @@ Design: screens 9–10, 2 and 5 of the banquet redesign canvas.
 - `supabase/banquet_check.sql`: ok. It runs in a transaction that is rolled
   back, so nothing is kept.
 - `tools/banquet-page-check.mjs`: ok.
+
+## Part 2 notes
+
+- The reminder copies: "Your MVP banquet has not opened yet (UID …). It opens
+  once the MVP logs in after the gold rush reset, so please log in once today.
+  Thank you!" Change the wording in `reminder()` in `assets/js/banquet.js`.
+- Statuses next to your own UIDs show only once the list is open to you (four
+  UIDs posted), because that is when the page gets everyone's marks.

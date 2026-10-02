@@ -384,13 +384,21 @@ function render() {
   // Yours: posted ones come from Discord and change there; added ones can go.
   const n = state.mine.length;
   const mineShown = state.mine.filter((m) => !m.grp || inView(m.grp));
+  // Each one's status, once the list is open to you.
+  const cards = new Map(state.banquets.map((b) => [keyOf(b), b]));
+  const statusMine = (m) => { const b = cards.get(keyOf(m)); return b && statusOf(b); };
   // Left alone while one is being edited: a refresh must not throw the edit away.
   if (!editing) $('#bq-my').innerHTML = mineShown.map((m) => `<li class="bq-mine__uid">
       ${tagOf(m.grp)}<button type="button" class="tr-copy" data-copy="${m.uid}" title="Copy UID">${m.uid}</button>
+      ${statusMine(m) ? `<span class="bq-mine__st is-${statusMine(m)}">${MINE[statusMine(m)]}</span>` : ''}
       ${m.source === 'discord' ? '<span class="bq-src">from Discord</span>'
         : past ? '' : `<button type="button" class="btn btn--quiet" data-edit="${m.uid}"${grpAttr(m.grp)} aria-label="Edit ${m.uid}">Edit</button>
           <button type="button" class="btn btn--quiet" data-remove="${m.uid}"${grpAttr(m.grp)} aria-label="Remove ${m.uid}">Remove</button>`}
     </li>`).join('') || `<li class="muted">${past ? 'None this gold rush.' : 'None yet. Post them in Discord, or add them here.'}</li>`;
+  const asleep = past ? [] : mineShown.filter((m) => statusMine(m) === 'notin').map((m) => m.uid);
+  $('#bq-remind').hidden = !asleep.length;
+  $('#bq-remind').innerHTML = asleep.length ? `${asleep.join(', ')} ${asleep.length > 1 ? "haven't" : "hasn't"} logged in since the reset.
+    <button type="button" class="btn btn--quiet" data-remind="${asleep.join(', ')}">Copy a reminder</button>` : '';
   $('#bq-mine .bq-mine__actions').hidden = past;
   $('#bq-mine-n').textContent = mineShown.length ? `(${mineShown.length})` : '';
   // Folded on arrival when there is nothing left to do in it; never while it is being used.
@@ -451,6 +459,11 @@ const SECTIONS = [
   ['notin', 'Not logged in yet', 'longest unchecked first'],
   ['full', 'Full', ''],
 ];
+// The same, as words beside your own UIDs.
+const MINE = { claimable: 'claimable', look: 'needs a look', notin: 'not logged in', full: 'full' };
+// What "Copy a reminder" copies, to send to whoever plays that MVP.
+const reminder = (uids) => `Your MVP banquet has not opened yet (UID ${uids}). `
+  + 'It opens once the MVP logs in after the gold rush reset, so please log in once today. Thank you!';
 // Within a status: yours already claimed last, then fewest claims, the likeliest to have room.
 const ORDER = {
   claimable: (a, b) => a.claimed - b.claimed || a.claims - b.claims || a.uid.localeCompare(b.uid),
@@ -607,6 +620,12 @@ $('#bq-my').addEventListener('click', async (e) => {
   const got = await call('banquet_remove', { target: Number(remove.dataset.remove), g: grpOf(remove) });
   if (!got.ok) { remove.disabled = false; remove.textContent = got.why; return; }
   load();
+});
+
+$('#bq-remind').addEventListener('click', async (e) => {
+  const b = e.target.closest('[data-remind]');
+  if (!b) return;
+  toast(await copyText(reminder(b.dataset.remind)) ? 'Reminder copied. Send it to whoever plays that MVP.' : 'Could not copy the reminder.');
 });
 
 $('#bq-shot').addEventListener('click', () => {

@@ -318,6 +318,20 @@ try {
   assert.equal(await A.locator('#bq-cards li[data-key]').count(), 26, 'and back to all');
   assert.deepEqual(await A.locator('#bq-cards .bq-section h2').evaluateAll((hs) => hs.map((h) => h.firstChild.textContent.trim())),
     ['Claimable', 'Needs a look', 'Not logged in yet'], 'one heading per status there is, in order');
+  // Your UIDs: each with its status, and a reminder to copy for one not logged in.
+  await A.locator('#bq-mine-fold').evaluate((d) => { d.open = true; });
+  assert.equal(await A.locator('#bq-my li', { hasText: '10000001' }).locator('.bq-mine__st').textContent(), 'needs a look');
+  assert.ok(await A.locator('#bq-remind').isHidden(), 'no reminder while none of hers is not logged in');
+  await A.click('[data-mark="not-yet"][data-uid="10000001"]');
+  await A.waitForSelector('#bq-remind:not([hidden])');
+  assert.equal(await A.locator('#bq-my li', { hasText: '10000001' }).locator('.bq-mine__st').textContent(), 'not logged in');
+  assert.match(await A.locator('#bq-remind').textContent(), /10000001 hasn't logged in since the reset/);
+  await A.click('#bq-remind [data-remind]');
+  await A.waitForSelector('#toast.is-shown');
+  assert.match(await A.locator('#toast').textContent(), /[Rr]eminder/);
+  await A.click('li[data-key=":10000001"] [data-mark="open"]');
+  await A.waitForSelector('#bq-remind[hidden]', { state: 'attached' });
+  assert.equal(await A.locator('#bq-my li', { hasText: '10000001' }).locator('.bq-mine__st').textContent(), 'claimable');
   assert.equal(await A.evaluate(() => document.documentElement.scrollWidth - innerWidth), 0, 'the tiles fit a phone');
   await A.setViewportSize({ width: 320, height: 640 });
   assert.ok(await A.locator('[data-show]').evaluateAll((bs) => bs.every((b) => b.scrollWidth <= b.clientWidth + 1)), 'each tile fits a 320px phone');
