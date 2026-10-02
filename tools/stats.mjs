@@ -50,8 +50,10 @@ const REGIONS = {
  */
 const FUNNEL = [
   { label: 'used', say: 'Built a formation', ofArrivals: true },
-  { label: 'formation-saved', say: 'Saved a formation in the browser' },
-  { label: 'save-kept', say: 'Exported a `.json`' },
+  // Swapped once: formation-saved is the Export button, which kept its label
+  // when the in-browser Saved list took the word Save (see app.js).
+  { label: 'save-kept', say: 'Saved a formation in the browser' },
+  { label: 'formation-saved', say: 'Exported a `.json`' },
   { label: 'card-downloaded', say: 'Downloaded a share card' },
 ];
 
@@ -61,12 +63,22 @@ const FUNNEL = [
  * (`reddit.com`, `out.reddit.com`, `m.reddit.com`) and counting them separately
  * would understate the channel that actually brings people here.
  */
+/* GoatCounter names a search engine by name ("Google"), not by host, and the
+   Reddit and Facebook apps by their package (com.reddit.frontpage), so each
+   channel matches both. */
 const CHANNELS = [
-  { say: 'a Google search', match: /(^|\.)google\./i },
-  { say: 'Reddit', match: /(^|\.)reddit\.com$/i },
-  { say: 'YouTube', match: /(^|\.)(youtube\.com|youtu\.be)$/i },
-  { say: 'Discord', match: /(^|\.)discord(app)?\.com$/i },
+  { say: 'a Google search', match: /^google$|(^|\.)google\./i },
+  { say: 'Reddit', match: /(^|\.)reddit\.com$|^com\.reddit\./i },
+  { say: 'Facebook', match: /(^|\.)facebook\.com$|^com\.facebook\./i },
+  { say: 'YouTube', match: /(^|\.)(youtube\.com|youtu\.be)$|^com\.google\.android\.youtube$/i },
+  { say: 'ChatGPT', match: /(^|\.)chatgpt\.com$/i },
+  { say: 'Discord', match: /(^|\.)discord(app)?\.com$|^com\.discord$/i },
 ];
+// Moving between the site's own pages shows up as a referrer too; it is not an arrival.
+const OWN = /(^|\.)jeremycanlas\.github\.io/i;
+/* GoatCounter with no start date answers for the last seven days only, which
+   the README then called "so far". From before the site existed is all of it. */
+const ALL_TIME = '2025-01-01';
 
 // ---------------------------------------------------------------- transport
 
@@ -168,7 +180,8 @@ export function shape({ total, hits, refs, systems }) {
   // Referrers are a share of the referred, not of everyone: GoatCounter does not
   // report direct arrivals as a referrer, so dividing by total visits would
   // silently shrink every channel by however much direct traffic there is.
-  const refRows = refs?.stats ?? [];
+  // Arrivals from another site only: not direct (no name), not the site's own pages.
+  const refRows = (refs?.stats ?? []).filter((r) => r.name && !OWN.test(String(r.name)));
   const referred = sum(refRows);
   const channels = CHANNELS.map((c) => ({
     say: c.say,
@@ -184,7 +197,8 @@ export function shape({ total, hits, refs, systems }) {
     visits,
     pageviews,
     funnel,
-    channels: channels.map((c) => ({ ...c, pct: pct(c.count, referred) })),
+    // Under 1% rounds to "0% from Discord", which reads as a finding; it is noise.
+    channels: channels.map((c) => ({ ...c, pct: pct(c.count, referred) })).filter((c) => c.pct >= 1),
     referred,
     phonePct: pct(phone, known),
     iosOfPhonePct: pct(ios, phone),
@@ -228,7 +242,8 @@ export function usageBlock(s) {
       (i === 0 ? `${c.pct}% come from ${c.say}` : `${c.pct}% from ${c.say}`));
     const last = parts.pop();
     const list = parts.length ? `${parts.join(', ')} and ${last}` : last;
-    out.push(wrap(`Of the visits that carry a referrer, ${list}. The rest arrive direct.`));
+    out.push(wrap(`Of the visitors who came from another site, ${list}. Most of the rest `
+      + 'arrive direct, from a link with no referrer such as a Discord message or a bookmark.'));
   }
 
   if (s.known > 0) {
@@ -275,7 +290,7 @@ if (process.argv[1] && import.meta.url.endsWith(process.argv[1].replace(/\\/g, '
   const check = argv.includes('--check');
   const probe = argv.includes('--probe');
   const sinceAt = argv.indexOf('--since');
-  const since = sinceAt === -1 ? '' : (argv[sinceAt + 1] ?? '');
+  const since = sinceAt === -1 ? ALL_TIME : (argv[sinceAt + 1] ?? ALL_TIME);
 
   const token = envFile('GOATCOUNTER_TOKEN');
   if (!token) {
