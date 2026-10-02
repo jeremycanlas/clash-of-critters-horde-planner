@@ -31,3 +31,7 @@ Dolphie is the only line with no Horde Invasion skills anywhere; it needs the ga
 - **2026-10-03**: Skill data page lists all 66 lines. Unrecorded Tatari get a quiet card with
   the wiki's skill text; each line's Lv 3/5/7 Horde Invasion skills sit under its row;
   search reaches them; "With numbers only" toggle; type filter swipes on phones.
+- **2026-10-03**: Share nudge. Last 30 days: 4,875 people built, 295 opened Share, and of those
+  251 downloaded a card, 210 copied one, 93 copied a link, 56 used the phone share sheet. Share
+  works once opened; few open it. Now, the first time a field fills (once per browser), a toast
+  offers "Share". Events `share-nudged` / `share-nudge-used` show whether it helps.

@@ -115,6 +115,7 @@ async function main() {
 
   store.subscribe(renderAll);
   countFirstUse();
+  nudgeShare();
 
   // A shared link wins over whatever was on screen last time.
   const hash = store.fromHash();
@@ -259,6 +260,31 @@ function countFirstUse() {
     if (!store.allPlaced().length) return;
     track('used');
     stop();
+  });
+}
+
+/**
+ * A nudge toward Share, the first time a field fills up.
+ *
+ * Nearly everyone who opens Share leaves with a picture or a link, but only
+ * about one builder in sixteen ever opens it: the button is there, the moment
+ * to press it is not obvious. A full field is that moment. Once per browser,
+ * and never for a field that was already full when the page loaded, since
+ * that person has seen this formation before.
+ */
+function nudgeShare() {
+  const KEY = 'coc.share-nudged';
+  try { if (localStorage.getItem(KEY)) return; } catch { return; /* private mode: skip rather than repeat */ }
+  let wasFull = store.allPlaced().length > 0 && store.firstFreeCell() === null;
+  const stop = store.subscribe(() => {
+    const full = store.allPlaced().length > 0 && store.firstFreeCell() === null;
+    if (full && !wasFull) {
+      stop();
+      try { localStorage.setItem(KEY, '1'); } catch { /* private mode */ }
+      toast('Field full. Share it as a picture or link?', 'ok', { label: 'Share', fn: () => { track('share-nudge-used'); openShare(); } });
+      track('share-nudged');
+    }
+    wasFull = full;
   });
 }
 
