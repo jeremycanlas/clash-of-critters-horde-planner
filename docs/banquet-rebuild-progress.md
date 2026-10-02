@@ -8,7 +8,7 @@ Design: screens 9–10, 2 and 5 of the banquet redesign canvas.
 | 1. Four statuses with count tiles | Done |
 | 2. Your UIDs with statuses and "Copy a reminder" | Done |
 | 3. Claim run | Done |
-| 4. Activity log | To do |
+| 4. Activity log | Done |
 
 ## Decisions made while you were away
 
@@ -59,3 +59,26 @@ Design: screens 9–10, 2 and 5 of the banquet redesign canvas.
   middle. Escape or "List" closes it.
 - Each UID is copied the moment it shows. If the browser blocks the copy, it
   says "Tap the UID to copy it".
+
+## Part 4 notes
+
+- The log shows every claim, take-back, mark and post this gold rush, newest
+  first, up to 50 lines. The database sends the newest 200.
+- On a phone it is a fold at the bottom, open to start with. On a screen
+  1100px or wider it is a column on the right that stays in view while you
+  scroll.
+- Lines from the last hour say "5 min"; older ones say the day and time.
+- People who see both groups get a group tag on each line, and Both groups
+  leaves the private list out of the log too.
+
+## The commit hook, while this was built
+
+- `tools/check.sh` uses port 8199. A leftover server was already on it, so
+  the suites failed at random (this is likely the "one commit in three" on
+  the status board). Every commit here ran with `COC_TEST_PORT=8299`, and all
+  suites passed.
+- The screen sweep loads GitHub's issue list on the contribute page. After
+  many runs in one hour, GitHub's limit of 60 requests an hour without a
+  login runs out and the sweep fails with 403s. It clears within the hour.
+- The worktree had no `data/tracker.local.json` (it is git-ignored), so the
+  tracker page 404'd in the sweep. It was copied over from the main checkout.

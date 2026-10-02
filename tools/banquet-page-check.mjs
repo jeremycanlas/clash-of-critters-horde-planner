@@ -41,6 +41,7 @@ const db = {
   ],
   claims: [],
   marks: new Map([['1:60000137', { state: 'not-yet', by: 'Eli' }]]),
+  events: [], // every claim and mark, as banquet_events keeps them
 };
 for (const uid of ['20000001', '55555555', '10000001', '10000002']) db.uids.push({ grp: 1, uid, who: 'Yui', source: 'discord' });
 // A private list, 3, that Vee is in and Ana is not.
@@ -108,6 +109,10 @@ function state(me) {
     synced_at: new Date(Date.now() - syncedAgo).toISOString(),
     mine: mine.map((u) => ({ uid: u.uid, source: u.source, ...(me.all ? { grp: u.grp } : {}) })),
     banquets: shared ? keys.map(card) : [],
+    events: shared ? [...db.events.filter((e) => groups.includes(e.grp)),
+      ...db.uids.filter((u) => groups.includes(u.grp)).map((u, i) => ({ grp: u.grp, uid: u.uid, kind: 'post', by: u.who, at: new Date(Date.parse('2026-09-29T00:00:00Z') + i * 60e3).toISOString() }))]
+      .sort((a, b) => b.at.localeCompare(a.at)).slice(0, 200)
+      .map(({ grp, ...e }) => ({ ...e, ...(me.all ? { grp } : {}) })) : [],
     ...(me.all ? { groups, names: { 1: 'Group 1', 2: 'Group 2', 3: 'Private' }, private: [3] } : {}),
   };
 }
@@ -195,6 +200,7 @@ async function open(me, opts) {
     if (fn === 'banquet_claim') {
       db.claims = db.claims.filter((c) => !(c.grp === g && c.uid === String(body.target) && c.who === me.name));
       if (body.claimed) db.claims.push({ grp: g, uid: String(body.target), who: me.name });
+      db.events.push({ grp: g, uid: String(body.target), kind: body.claimed ? 'claim' : 'unclaim', by: me.name, at: new Date().toISOString() });
       // A claim is a gift seen, as banquet_claim() marks it.
       const m = db.marks.get(`${g}:${body.target}`);
       if (body.claimed && (!m || m.state === 'not-yet')) db.marks.set(`${g}:${body.target}`, { state: 'open', by: me.name, at: new Date().toISOString() });
@@ -203,6 +209,7 @@ async function open(me, opts) {
     if (fn === 'banquet_mark') {
       if (body.state) db.marks.set(`${g}:${body.target}`, { state: body.state, by: me.name, at: new Date().toISOString() });
       else db.marks.delete(`${g}:${body.target}`);
+      db.events.push({ grp: g, uid: String(body.target), kind: body.state ?? 'clear', by: me.name, at: new Date().toISOString() });
       return ok();
     }
     return route.fulfill({ status: 404, body: '{}' });
@@ -368,6 +375,14 @@ try {
   await A.click('#bq-run-close');
   assert.ok(await A.locator('#bq-run').evaluate((d) => !d.open), 'List closes it');
   assert.match(await A.locator('#bq-run-start').textContent(), new RegExp(`${due - 3} to go`), 'claimed, full and not logged in are off the run');
+  // The activity log: every press, newest first, with who; and the posts.
+  assert.ok(await A.locator('#bq-activity').isVisible(), 'the activity log is on the page');
+  assert.match(await A.locator('#bq-log li').first().innerText(), new RegExp(`Ana saw no icon on ${asleep}[^]*?just now`));
+  assert.match(await A.locator('#bq-log').innerText(), new RegExp(`Ana saw a portrait on ${looked}[^]*Ana claimed 10000001`));
+  assert.match(await A.locator('#bq-log').innerText(), /Ana took back a claim on 55555555/);
+  assert.ok(await A.locator('#bq-log li', { hasText: 'posted' }).count() > 0, 'posts are there too');
+  assert.ok(await A.locator('#bq-activity').evaluate((d) => d.getBoundingClientRect().top > document.querySelector('#bq-cards').getBoundingClientRect().bottom - 1),
+    'on a phone, below the list');
   assert.equal(await A.evaluate(() => document.documentElement.scrollWidth - innerWidth), 0, 'the tiles fit a phone');
   await A.setViewportSize({ width: 320, height: 640 });
   assert.ok(await A.locator('[data-show]').evaluateAll((bs) => bs.every((b) => b.scrollWidth <= b.clientWidth + 1)), 'each tile fits a 320px phone');
@@ -402,6 +417,12 @@ try {
   assert.ok(!/Ana.*posted earlier/.test(await V.locator('#bq-copies-body').innerText()), 'the one who posted first is not');
   if (process.env.BANQUET_SHOTS) await V.locator('#bq-copies').screenshot({ path: `${process.env.BANQUET_SHOTS}/copies.png` });
   assert.equal(await V.locator('#bq-cards .bq-grp').count(), 28, 'every card says its group');
+  // A PC: the activity is a column on the right, with each line's group.
+  const [list, log] = await Promise.all(['#bq-cards', '#bq-activity'].map((x) => V.locator(x).boundingBox()));
+  assert.ok(log.x > list.x + list.width - 1 && log.y < list.y + 200, 'activity beside the list on a PC');
+  assert.ok(await V.locator('#bq-log li .bq-grp').count() > 0, 'each line says its group for someone who sees both');
+  assert.ok(!/39900001/.test(await V.locator('#bq-log').innerText()), 'Both groups leaves the private list out of the log too');
+  if (process.env.BANQUET_SHOTS) await V.screenshot({ path: `${process.env.BANQUET_SHOTS}/pc.png` });
 
   // The private list: not in Both groups, its own button, and adding there stays there.
   assert.equal(await V.locator('li[data-key="3:39900001"]').count(), 0, 'Both groups leaves the private list out');

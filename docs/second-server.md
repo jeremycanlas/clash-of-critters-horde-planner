@@ -60,3 +60,8 @@ other server too: `sh tools/setup-server.sh tide supabase/migrations/0NN_banquet
 - **What this does not guard against:** anyone with the database password sees
   both schemas, and a future hand-written function could name both. With every
   banquet migration going through the script's check, it would be refused there.
+
+031 (four statuses and the activity log) is on the banquet rebuild branch and
+applied to neither yet: apply it to `public`, then
+`sh tools/setup-server.sh tide supabase/migrations/031_banquet_statuses.sql`,
+before the page that needs it goes live.

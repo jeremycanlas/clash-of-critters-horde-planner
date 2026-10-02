@@ -248,3 +248,30 @@
   .bq-run { width: 100vw; height: 100dvh; max-width: none; max-height: none; margin: 0; border: 0; border-radius: 0; padding: var(--s3); }
 }
 @media (prefers-reduced-motion: reduce) { .bq-run__bar > div { transition: none; } }
+
+/* ---------------------------------------------------------------- activity */
+
+.bq-activity summary { cursor: pointer; list-style: none; }
+.bq-activity summary::-webkit-details-marker { display: none; }
+.bq-activity summary h2 { margin: 0; font-size: 16px; }
+.bq-activity summary h2::after { content: ' ▸'; color: var(--text-mute); font-size: 12px; }
+.bq-activity[open] summary h2::after { content: ' ▾'; }
+.bq-activity h2 .muted { font-family: var(--font-ui); font-weight: 400; font-size: 13px; }
+.bq-log { list-style: none; margin: var(--s2) 0 0; padding: 0; display: flex; flex-direction: column; font-size: 13px; }
+.bq-log li { display: flex; justify-content: space-between; align-items: baseline; gap: var(--s2); padding: 6px 0; border-bottom: 1px solid var(--line); }
+.bq-log li:last-child { border-bottom: 0; }
+.bq-log b { font-weight: 650; }
+.bq-log li > span { color: var(--text-dim); overflow-wrap: anywhere; }
+.bq-log b, .bq-log__uid { color: var(--text); }
+.bq-log__uid { font-family: var(--font-mono); font-size: 12.5px; font-weight: 600; }
+.bq-log time { color: var(--text-mute); white-space: nowrap; }
+
+/* A PC: the list in the middle, the activity in a column on the right, in view while scrolling. */
+@media (min-width: 1100px) {
+  .bq-main:has(.bq-activity:not([hidden])) { max-width: 1280px; }
+  #bq-app:not([hidden]):has(> .bq-activity:not([hidden])) {
+    display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: var(--s4); align-items: start;
+  }
+  .bq-activity { position: sticky; top: calc(var(--bq-top, 0px) + var(--s3));
+    max-height: calc(100dvh - var(--bq-top, 0px) - 2 * var(--s3)); overflow: auto; }
+}

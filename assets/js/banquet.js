@@ -230,6 +230,7 @@ function lift(d) {
     ...s,
     mine: s.mine.map((m) => ({ ...m, grp: up(m.grp) })),
     banquets: s.banquets.map((b) => ({ ...b, grp: up(b.grp) })),
+    events: (s.events ?? []).map((e) => ({ ...e, grp: up(e.grp) })),
     groups: own.map(up),
     names: Object.fromEntries(own.map((g) => [up(g), own.length === 1 ? d.name : `${d.name} · ${s.names?.[g] ?? `Group ${g}`}`])),
     private: (s.private ?? []).map(up),
@@ -248,6 +249,7 @@ function merge(parts) {
     total: parts.reduce((n, p) => n + p.total, 0),
     mine: parts.flatMap((p) => p.mine),
     banquets: parts.flatMap((p) => p.banquets),
+    events: parts.flatMap((p) => p.events).sort((a, b) => b.at.localeCompare(a.at)),
     groups: parts.flatMap((p) => p.groups),
     names: Object.assign({}, ...parts.map((p) => p.names)),
     private: parts.flatMap((p) => p.private),
@@ -428,6 +430,32 @@ function render() {
     : `What ${nameOf(group)} members see. Anything you press counts for ${nameOf(group)}.`;
   if (open) renderCards(past);
   renderNews(open && !past);
+  renderLog(open);
+}
+
+// ------------------------------------------------------------------ activity
+
+/* Every claim, mark and post this gold rush, newest first, with who and when:
+   what moved a banquet to where it is, and whether to trust it. */
+const SAID = {
+  post: 'posted', claim: 'claimed', unclaim: 'took back a claim on', open: 'saw a gift on',
+  full: 'saw a portrait on', 'not-yet': 'saw no icon on', clear: 'cleared the mark on',
+};
+// The last hour as minutes, anything older as the day and time.
+const when = (iso) => {
+  const min = Math.max(0, Math.round((Date.now() - Date.parse(iso)) / 60000));
+  return min < 1 ? 'just now' : min < 60 ? `${min} min`
+    : new Date(iso).toLocaleString(undefined, { weekday: 'short', hour: 'numeric', minute: '2-digit' });
+};
+function renderLog(on) {
+  $('#bq-activity').hidden = !on;
+  if (!on) return;
+  // ponytail: the newest 50 of the 200 the database sends; a "more" button if a round ever needs it.
+  const events = (state.events ?? []).filter((e) => !e.grp || inView(e.grp)).slice(0, 50);
+  $('#bq-log').innerHTML = events.map((e) => `<li>
+      <span>${tagOf(e.grp)}<b>${esc(e.by)}</b> ${SAID[e.kind] ?? esc(e.kind)} <span class="bq-log__uid">${e.uid}</span></span>
+      <time datetime="${e.at}">${when(e.at)}</time>
+    </li>`).join('') || '<li class="muted">Nothing yet this gold rush.</li>';
 }
 
 // ------------------------------------------------------------------ what is new
