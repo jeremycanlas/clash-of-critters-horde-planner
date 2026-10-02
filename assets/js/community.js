@@ -585,7 +585,7 @@ function factsOf(row) {
     /* The highest tier it fields, and how many of them: "T4 x3" is the fact
        somebody browsing for a build they can afford is actually looking for. */
     tierLabel: top ? `T${top} x${tiers[top]}` : '',
-    full: row.placed >= (row.mode === 'coop' ? 20 : 10),
+    full: row.placed >= ({ coop: 20, goldrush: 15 }[row.mode] ?? 10),
     plan: row.steps > 0,
     note: !!row.note?.trim(),
     /* Older than the current patch window. Not wrong, but a formation built
@@ -648,11 +648,13 @@ function ranked(list) {
  * carries what it actually is, so a junk name costs the reader nothing.
  */
 const AUTO_NAME = /^(formation\b|test\b|untitled|new formation)/i;
+const MODE_LABEL = { coop: 'Co-op', goldrush: 'Gold Rush', solo: 'Solo' };
+const modeLabel = (row) => MODE_LABEL[row.mode] ?? 'Solo';
 const titleOf = (row) => {
   const name = (row.name || '').trim();
   if (name && !AUTO_NAME.test(name)) return name;
   const f = factsOf(row);
-  return `${row.mode === 'coop' ? 'Co-op' : 'Solo'}${f.tierLabel ? `, ${f.tierLabel}` : ''}, ${row.placed} placed`;
+  return `${modeLabel(row)}${f.tierLabel ? `, ${f.tierLabel}` : ''}, ${row.placed} placed`;
 };
 
 /**
@@ -667,7 +669,7 @@ function gridCardHTML(row) {
   const lap = overlapOf(row);
   const when = fmtWhen(row.submitted_at);
   const tags = [
-    row.mode === 'coop' ? 'Co-op' : 'Solo',
+    modeLabel(row),
     f.tierLabel,
     f.plan ? `Plan ${row.steps}` : '',
     f.full ? '' : `${row.placed} placed`,
