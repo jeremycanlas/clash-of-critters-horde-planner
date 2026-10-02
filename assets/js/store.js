@@ -481,20 +481,44 @@ export function setZoboGround(on) {
   return { unplaced };
 }
 
+/*
+ * The other mode's working formation, while you are in this one.
+ *
+ * Horde and Gold Rush are different boards for different games, and going to
+ * one has no business costing you the other. Gold Rush keeps no bench, so
+ * entering it used to drop every benched Tatari and their plan steps for good,
+ * and coming back restored only the board. Now each mode's formation is put
+ * aside whole on the way out and back whole on the way in.
+ */
+const OTHER_KEY = 'coc.formation.other.v1';
+function readOther() {
+  try { return JSON.parse(localStorage.getItem(OTHER_KEY) || 'null'); } catch { return null; }
+}
+function writeOther(snap) {
+  try { localStorage.setItem(OTHER_KEY, JSON.stringify(snap)); } catch { /* private browsing: this visit only */ }
+}
+
 /**
  * Turns Gold Rush on or off.
  *
- * Going in makes it a Solo board with nothing past the contact line, since that
- * is all the mode is, and moves anything standing in the sixth column or the
- * back row onto the 5 x 5, rearmost free tile first: the board is 25 tiles and the
- * cap 15, so there is always room for a legal formation. A Zobo has no place in
- * it and goes. Coming out loses nothing: the 5 x 5 is inside the Horde field.
+ * The formation you leave is kept, and the one you had in the mode you are
+ * going to comes back exactly as you left it. The first time into Gold Rush
+ * there is none, so it starts from the Horde board: a Solo board with nothing
+ * past the contact line, anything in the sixth column or the back row moved
+ * onto the 5 x 5 (25 tiles, a cap of 15: there is always room) and any Zobo gone.
  *
- * @returns {{moved: number}} how many had to move to fit
+ * @returns {{moved: number, restored: boolean}} how many had to move to fit,
+ *   and whether this mode's own formation came back
  */
 export function setGoldRush(on) {
   const next = !!on;
-  if (next === formation.goldRush) return { moved: 0 };
+  if (next === formation.goldRush) return { moved: 0, restored: false };
+  const waiting = readOther();
+  writeOther(snapshot());
+  if (waiting && (waiting.goldRush === true) === next) {
+    apply(waiting);
+    return { moved: 0, restored: true };
+  }
   let moved = 0;
   if (next) {
     formation.mode = 'solo';
@@ -524,7 +548,7 @@ export function setGoldRush(on) {
     formation.goldRush = false;
   }
   emit();
-  return { moved };
+  return { moved, restored: false };
 }
 
 export function setActivePlayer(player) {

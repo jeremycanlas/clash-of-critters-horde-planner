@@ -87,12 +87,14 @@ const zoboSlug = [...state.zoboBySlug.keys()][0];
 
 /* A full blank formation: clearAll leaves mode, name and lines alone, which would
    leak between groups. applySnapshot with a complete blob resets everything. */
-const reset = () => store.applySnapshot({
+/* The other mode's formation is put aside in localStorage by setGoldRush(),
+   so it is cleared too, or one group's Horde board turns up in the next. */
+const reset = () => (localStorage.removeItem('coc.formation.other.v1'), store.applySnapshot({
   mode: 'solo', sandbox: false, zoboGround: false, pullRows: 0,
   cells: [], flex: [], swaps: [], bench: { 1: [], 2: [] }, plan: [],
   name: '', lines: { lf: { wants: [], note: '' }, have: { wants: [], note: '' } },
   lfMode: 'lf',
-});
+}));
 
 /*
  * The formation as the codecs are actually responsible for it.
@@ -201,7 +203,7 @@ await group('gold rush: a 5 x 5 board, and what was off it moves on', () => {
   ok('Sandbox stays off in Gold Rush', (store.setSandbox(true), !store.isSandbox()));
 });
 
-await group('gold rush: rides the share link, and leaving it moves nothing', () => {
+await group('gold rush: rides the share link', () => {
   reset();
   store.place(A.slug, 0);
   store.setGoldRush(true);
@@ -212,11 +214,26 @@ await group('gold rush: rides the share link, and leaving it moves nothing', () 
   store.applySnapshot(fromFragment('#' + toFragment(before)).blob);
   const after = store.snapshot();
   eq('it comes back as Gold Rush, everyone where they were', [after.goldRush, shapeOf(after)], [true, shapeOf(before)]);
+});
+
+await group('gold rush: each mode keeps its own formation, bench and plan and all', () => {
+  reset();
+  store.place(A.slug, 35);                     // back corner: off the Gold Rush board
+  store.addToBench(B.slug);                    // brought, not placed
+  store.addStep([{ slug: B.slug, player: 1 }], 5, 'later');
+  const horde = store.snapshot();
+  store.setGoldRush(true);
+  ok('Gold Rush starts from the Horde board', store.isPlaced(A.slug, 1) && !store.onBench(B.slug, 1));
+  store.place(C.slug, 0);
+  const rush = store.snapshot();
   store.setGoldRush(false);
-  eq('back to Horde with the board as it was', shapeOf(store.snapshot()).cells, shapeOf(before).cells);
+  eq('back in Horde: bench, plan and the back corner exactly as left', shapeOf(store.snapshot()), shapeOf(horde));
+  store.setGoldRush(true);
+  eq('back in Gold Rush: its own board as left', shapeOf(store.snapshot()), shapeOf(rush));
 });
 
 await group('gold rush: effects come from the base kit only', () => {
+  reset();                                     // Horde, so levelled effects are counted while looking
   const t = state.all.find((x) => Object.keys(x.hordeSkills ?? {}).length
     && effectSources(x).some((e) => e.level !== null));
   ok('a Tatari with levelled effects exists to test with', !!t);

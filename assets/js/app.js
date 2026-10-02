@@ -619,11 +619,13 @@ function wireToolbar() {
     if (btn.dataset.mode === 'goldrush') {
       if (store.isGoldRush()) return;
       const before = store.snapshot();
-      const { moved } = store.setGoldRush(true);
-      toast(`Gold Rush: 5 × 5, ${store.fieldCap()} deployed${moved ? `, moved ${moved} onto the smaller board` : ''}`,
+      const { moved, restored } = store.setGoldRush(true);
+      toast(restored ? 'Gold Rush: your Gold Rush board, as you left it'
+        : `Gold Rush: 5 × 5, ${store.fieldCap()} deployed${moved ? `, moved ${moved} onto the smaller board` : ''}`,
         'info', moved ? undoTo(before) : undefined);
       return;
     }
+    // Your Horde formation comes back whole: bench, plan and all.
     if (store.isGoldRush()) store.setGoldRush(false);
     const { trimmed, discarded } = store.setMode(btn.dataset.mode);
     const notes = [];
