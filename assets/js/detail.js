@@ -73,8 +73,7 @@ function skillNumbers(t) {
     <h3 class="detail__heading">Skill numbers${n.skill ? `: ${esc(n.skill)}` : ''}</h3>
     ${sections || '<p class="hint detail__pending">Only its Arena Factor is recorded so far.</p>'}
     ${n.arenaFactor ? `<h4 class="numbers__heading">Arena Factor <span class="tag">Gold Rush &amp; Arena only</span></h4>
-      ${rows([['Damage against Tatari', n.arenaFactor]])}` : ''}
-    <p class="hint detail__note">From the in-game skill panel. The same for every player.</p>`;
+      ${rows([['Damage against Tatari', n.arenaFactor]])}` : ''}`;
 }
 
 export function openDetail(slug) {
