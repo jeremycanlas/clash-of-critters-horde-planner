@@ -144,17 +144,23 @@
    on the purple white 9.2 and the level's orange 4.8 (the game's own #fd8a64
    is 3.9 there, so it is a shade lighter). */
 .sk-panel {
-  --gp-panel: #4c3794;
-  --gp-frame: #15112b;
-  --gp-inset: #2c2747;
-  --gp-ring: #65a0b2;
-  --gp-pill: #3d3566;
-  --gp-line: #57507f;
-  --gp-label: #b3acd6;
-  --gp-value: #90ff56;
-  --gp-title: #ffff84;
-  --gp-lv: #ffa580;
-  --gp-text: #fff;
+  /* The game's layout in the site's own colours, so the cards sit in both
+     themes: surfaces and lines from app.css with a faint violet cast (the
+     game's panel colour, at a whisper), titles in the site's yellow, values
+     in its green pulled toward the text colour so they hold 4.5:1 in light
+     as well as dark. */
+  --gp-violet: #7b5ce0;
+  --gp-panel: color-mix(in srgb, var(--gp-violet) 7%, var(--surface));
+  --gp-frame: color-mix(in srgb, var(--gp-violet) 22%, var(--line));
+  --gp-inset: color-mix(in srgb, var(--gp-violet) 4%, var(--bg));
+  --gp-ring: color-mix(in srgb, var(--gp-violet) 30%, var(--line));
+  --gp-pill: color-mix(in srgb, var(--gp-violet) 5%, var(--surface-2));
+  --gp-line: var(--line);
+  --gp-label: var(--text-dim);
+  --gp-value: color-mix(in srgb, var(--ok) 72%, var(--text));
+  --gp-title: var(--accent-ink-on);
+  --gp-lv: var(--accent-ink-on);
+  --gp-text: var(--text);
   display: flex; flex-direction: column; gap: var(--s3);
   padding: var(--s3);
   border: 2px solid var(--gp-frame); border-radius: var(--r-lg);
@@ -165,23 +171,20 @@
 .sk-skill {
   margin: 0; font-family: var(--font-display); font-size: 21px; font-weight: 800; line-height: 1.15; letter-spacing: 0;
   color: var(--gp-text);
-  /* The game's dark outline: hard shadows, no blur. (A text stroke reads to
-     contrast checkers as the text's own colour.) */
-  text-shadow: 2px 0 var(--gp-frame), -2px 0 var(--gp-frame), 0 2px var(--gp-frame), 0 -2px var(--gp-frame),
-    1.5px 1.5px var(--gp-frame), -1.5px 1.5px var(--gp-frame), 1.5px -1.5px var(--gp-frame), -1.5px -1.5px var(--gp-frame);
+
 }
 .sk-desc { margin: 4px 0 0; font-size: 13.5px; font-weight: 600; line-height: 1.4; color: var(--gp-text); }
 /* The icon: a square of the type's colour in a white frame, the numeral on a
    dark tab at its corner. */
 .sk-icon { position: relative; flex: none; line-height: 0; }
 .sk-icon .sk-art {
-  width: 64px; height: 64px; padding: 3px; border: 3px solid #fff; border-radius: 12px;
-  background: color-mix(in srgb, var(--type-color) 70%, var(--gp-inset));
+  width: 64px; height: 64px; padding: 3px; border: 2px solid var(--gp-frame); border-radius: 12px;
+  background: color-mix(in srgb, var(--type-color) 22%, var(--gp-inset));
 }
 .sk-numeral {
   position: absolute; left: -3px; bottom: -6px;
   min-width: 22px; padding: 3px 5px; box-sizing: border-box; border-radius: 6px;
-  background: var(--gp-frame); color: #fff; text-align: center;
+  background: var(--surface-3); color: var(--text); border: 1px solid var(--gp-frame); text-align: center;
   font-family: var(--font-display); font-size: 12px; font-weight: 800; line-height: 1;
 }
 .sk-level .sk-icon .sk-art { width: 40px; height: 40px; padding: 2px; border-width: 2px; border-radius: 9px; }
@@ -190,7 +193,7 @@
   flex: none; display: inline-flex; align-items: center; gap: 4px; margin: 0;
   font-family: var(--font-display); font-size: 15px; font-weight: 800; line-height: 1.2; color: var(--gp-lv);
 }
-.sk-lock { color: #b9d6e0; }
+.sk-lock { color: var(--text-mute); }
 
 .sk-list {
   display: flex; flex-direction: column; gap: var(--s2); min-width: 0;
@@ -222,7 +225,7 @@
 .sk-new {
   display: inline-block; margin-left: 4px; padding: 1px 7px; border-radius: 999px;
   border: 1px solid var(--gp-title); background: var(--gp-inset);
-  font-family: var(--font-ui); font-size: 11px; font-weight: 700; letter-spacing: 0; color: #fff; vertical-align: 1px;
+  font-family: var(--font-ui); font-size: 11px; font-weight: 700; letter-spacing: 0; color: var(--text); vertical-align: 1px;
 }
 .sk-was { margin-right: 6px; font-size: 11.5px; font-weight: 600; color: var(--gp-label); }
 
