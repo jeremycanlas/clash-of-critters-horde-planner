@@ -36,9 +36,7 @@ const num = (v) => { const m = /\d+(\.\d+)?/.exec(v ?? ''); return m ? Number(m[
 const skillName = (t) => numbers[t.slug]?.skill ?? (t.skill ?? '').split(':')[0];
 const skillDesc = (t) => t.skill?.includes(':') ? t.skill.slice(t.skill.indexOf(':') + 1).trim() : '';
 
-/* The skill's own rows are the box with no heading. Damage Factor and Cooldown
-   lead the panel as big numbers beside Arena Factor; the rest stay in a box. */
-const BIG = ['Damage Factor', 'Cooldown'];
+/* The skill's own rows are the box with no heading. */
 const base = (n) => n?.sections?.find((s) => !s.heading)?.rows ?? [];
 const pick = (n, label) => base(n).find(([l]) => l === label)?.[1];
 
@@ -54,10 +52,11 @@ const TAGS = [
 const tagsOf = (n) => TAGS.filter(([, , test]) => (n?.sections ?? []).some((s) =>
   test(s.heading ?? '', s.rows.map(([l]) => l).join(' ')))).map(([k]) => k);
 
-/* A row can carry what it was at the tier below ("was 120%") or be new there. */
+/* A row can carry what it was at the tier below ("was 120%") or be new there.
+   Each label and value pair is wrapped, so it can be one of the game's pills. */
 const rows = (list) => !list.length ? '' : `<dl class="sk-rows">${list.map(([label, value, mark]) =>
-  `<dt>${esc(label)}${mark === 'new' ? ' <span class="sk-new">new</span>' : ''}</dt><dd>${
-    mark && mark !== 'new' ? `<span class="sk-was">was ${esc(mark)}</span>` : ''}${esc(value)}</dd>`).join('')}</dl>`;
+  `<div class="sk-row"><dt>${esc(label)}${mark === 'new' ? ' <span class="sk-new">new</span>' : ''}</dt><dd>${
+    mark && mark !== 'new' ? `<span class="sk-was">was ${esc(mark)}</span>` : ''}${esc(value)}</dd></div>`).join('')}</dl>`;
 
 /*
  * The pyramid. Each tier of a line keeps the tier below's skill and adds to it,
@@ -75,54 +74,42 @@ function mark(s, prev) {
   });
 }
 
-const AF_NOTE = 'Gold Rush & Arena';
-function stat(label, value, was, big) {
-  return `
-          <div class="sk-stat${big ? ' sk-stat--big' : ''}">
-            <span class="sk-stat__label">${esc(label)}</span>
-            <span class="sk-stat__value">${value ? esc(value) : '–'}</span>${
-  was && was !== value ? `<span class="sk-was">was ${esc(was)}</span>` : ''}${big ? `<span class="sk-stat__note">${esc(AF_NOTE)}</span>` : ''}
-          </div>`;
-}
+/* The game's skill panel: an icon, the skill's name and what it does, then an
+   inset list of its numbers and its effect boxes. The icon is the Tatari with
+   its tier as the roman numeral the game puts on a skill's icon. */
+const ROMAN = ['', 'I', 'II', 'III', 'IV'];
+const icon = (t, size, numeral) => `<span class="sk-icon">${art(t, size)}${numeral ? `<span class="sk-numeral" aria-hidden="true">${numeral}</span>` : ''}</span>`;
+const panelHead = (ic, name, desc, h, extra = '') => `
+            <div class="sk-panel__head">${ic}
+              <div class="sk-panel__title"><${h} class="sk-skill">${esc(name)}</${h}>${desc ? `<p class="sk-desc">${esc(desc)}</p>` : ''}</div>${extra}
+            </div>`;
+const box = (title, text, body, cls = '', badge = '') => `
+              <section class="sk-box${cls}">
+                <h5 class="sk-box__title">${esc(title)}${badge}</h5>
+                ${text ? `<p class="sk-box__text">${esc(text)}</p>` : ''}${body}
+              </section>`;
+const AF_TEXT = 'Multiplies the skill\'s base damage when it hits another Tatari. Gold Rush and Arena only.';
 
-/* One tier of a line: the skill, its big numbers, then its effect boxes. */
+/* One tier of a line: the Tatari, then its skill panel. */
 function tier(t, line, i) {
   const n = numbers[t.slug];
   const below = line.slice(0, i).reverse().find((x) => numbers[x.slug]?.sections);
   const prev = n?.sections && below ? numbers[below.slug].sections : null;
-  const wasOf = (label) => prev?.find((s) => !s.heading)?.rows.find(([l]) => l === label)?.[1];
-  const desc = skillDesc(t);
-  const extra = base(n).filter(([l]) => !BIG.includes(l));
-  const boxes = (n?.sections ?? []).filter((s) => s.heading);
-  const baseBox = extra.length ? `
-          <section class="sk-box">
-            <h4 class="sk-box__title">Skill</h4>
-            ${rows(mark({ heading: null, rows: extra }, prev))}
-          </section>` : '';
+  const boxes = (n?.sections ?? []).filter((s) => s.heading).map((s) => {
+    const fresh = prev && !prev.some((p) => key(p) === key(s));
+    return box(s.heading, s.text, rows(fresh ? s.rows : mark(s, prev)), fresh ? ' sk-box--new' : '', fresh ? ` <span class="sk-new">New at T${t.tier}</span>` : '');
+  });
+  if (n?.arenaFactor) boxes.push(box('Arena Factor', AF_TEXT, rows([['Arena Factor', n.arenaFactor]]), ' sk-box--af'));
   return `
         <section class="sk-tier" id="${esc(t.slug)}" data-tier="${t.tier}" aria-label="${esc(t.name)}, tier ${t.tier}">
-          <div class="sk-hero">
-            ${art(t, 112)}
-            <div class="sk-hero__text">
-              <h3 class="sk-hero__name">${esc(t.name)}</h3>
-              <p class="sk-hero__tags"><span class="tag">${badge(t.type, '')}${esc(t.type)}</span><span class="tag">${badge(t.role, '')}${esc(t.role)}</span><span class="tag">T${t.tier} of ${line.length}</span></p>
-              <p class="sk-hero__skill">${esc(skillName(t))}</p>
-              ${desc ? `<p class="sk-hero__desc">${esc(desc)}</p>` : ''}
+          <h3 class="sk-tier__name">${esc(t.name)} <span class="sk-tier__tags"><span class="tag">${badge(t.type, '')}${esc(t.type)}</span><span class="tag">${badge(t.role, '')}${esc(t.role)}</span><span class="tag">T${t.tier} of ${line.length}</span></span></h3>
+          <div class="sk-panel">${panelHead(icon(t, 64, ROMAN[t.tier]), skillName(t), skillDesc(t), 'h4')}
+            <div class="sk-list">
+              ${n?.sections ? rows(mark({ heading: null, rows: base(n) }, prev)) : '<p class="sk-none">The rest of this skill panel is not recorded yet.</p>'}${boxes.length ? `
+              <div class="sk-boxes">${boxes.join('')}
+              </div>` : ''}
             </div>
           </div>
-          <div class="sk-stats">${stat('Arena Factor', n?.arenaFactor, null, true)}${
-  BIG.map((l) => stat(l, pick(n, l), wasOf(l))).join('')}
-          </div>
-          ${n?.sections ? `<div class="sk-boxes">${baseBox}${boxes.map((s) => {
-    const fresh = prev && !prev.some((p) => key(p) === key(s));
-    return `
-            <section class="sk-box${fresh ? ' sk-box--new' : ''}">
-              <h4 class="sk-box__title">${esc(s.heading)}${fresh ? ` <span class="sk-new">New at T${t.tier}</span>` : ''}</h4>
-              ${s.text ? `<p class="sk-box__text">${esc(s.text)}</p>` : ''}
-              ${rows(fresh ? s.rows : mark(s, prev))}
-            </section>`;
-  }).join('')}
-          </div>` : '<p class="sk-none">The rest of this skill panel is not recorded yet.</p>'}
         </section>`;
 }
 
@@ -132,26 +119,25 @@ const LEVELS = [['level3', 3], ['level5', 5], ['level7', 7]];
 function hordeRows(list) {
   if (!list?.length) return '<p class="sk-none">Numbers not recorded yet</p>';
   const groups = [];
-  for (const [label, value, box] of list) {
+  for (const [label, value, b] of list) {
     const last = groups.at(-1);
-    if (last && last.box === box) last.rows.push([label, value]);
-    else groups.push({ box, rows: [[label, value]] });
+    if (last && last.box === b) last.rows.push([label, value]);
+    else groups.push({ box: b, rows: [[label, value]] });
   }
-  return groups.map((g) => `${g.box ? `<h5 class="sk-hbox">${esc(g.box)}</h5>` : ''}${rows(g.rows)}`).join('');
+  return groups.map((g) => g.box ? box(g.box, '', rows(g.rows)) : rows(g.rows)).join('');
 }
-function horde(t) {
-  const h = t.hordeSkills;
+// The game's padlock beside a level a Tatari has not reached.
+const LOCK = '<svg class="sk-lock" viewBox="0 0 12 14" width="11" height="13" aria-hidden="true"><path d="M3 6V4a3 3 0 0 1 6 0v2" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="1" y="6" width="10" height="8" rx="2" fill="currentColor"/></svg>';
+function horde(line) {
+  const h = line[0].hordeSkills;
   if (!h) return `
           <p class="sk-none">Horde Invasion skills not recorded yet.</p>`;
   return `
           <section class="sk-horde" aria-label="Horde Invasion skills">
             <h3 class="sk-horde__title">Horde Invasion <span>the whole line learns these as it levels up</span></h3>
             <ol class="sk-levels">${LEVELS.filter(([k]) => h[k]).map(([k, lv]) => `
-              <li class="sk-level">
-                <p class="sk-level__lv learn__level">Lv ${lv}</p>
-                <h4 class="sk-level__name">${esc(h[k].name)}</h4>
-                <p class="sk-level__text">${esc(h[k].text)}</p>
-                ${hordeRows(hordeNumbers[t.family]?.[k]?.rows)}
+              <li class="sk-level sk-panel">${panelHead(icon(line.at(-1), 40), h[k].name, h[k].text, 'h4', `<p class="sk-lv">${LOCK}Lvl ${lv}</p>`)}
+                <div class="sk-list">${hordeRows(hordeNumbers[line[0].family]?.[k]?.rows)}</div>
               </li>`).join('')}
             </ol>
           </section>`;
@@ -197,7 +183,7 @@ const detail = `
             <div class="sk-switch" role="group" aria-label="Tier">${line.map((t) => `
               <button class="sk-switch__btn" type="button" data-slug="${esc(t.slug)}" aria-pressed="false">${art(t, 36)}<span class="sk-switch__text">${meta(`T${t.tier}`, t)}<span class="sk-switch__name">${esc(t.name)}</span></span></button>`).join('')}
             </div>
-          </header>${line.map((t, i) => tier(t, line, i)).join('')}${horde(line[0])}
+          </header>${line.map((t, i) => tier(t, line, i)).join('')}${horde(line)}
         </article>`).join('')}
       </div>`;
 

@@ -123,70 +123,116 @@
 .sk-switch__name { font-size: 12px; font-weight: 550; line-height: 1.2; white-space: nowrap; }
 .sk-switch__btn[aria-pressed="true"] { background: var(--surface-3); border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
 
-/* A tier: the Tatari, its big numbers, its effect boxes. */
-.sk-tier { display: flex; flex-direction: column; gap: var(--s4); scroll-margin-top: var(--s4); }
+/* A tier: the Tatari's name in the site's own style, then its skill panel. */
+.sk-tier { display: flex; flex-direction: column; gap: var(--s3); scroll-margin-top: var(--s4); }
 .sk-app:not(.is-live) .sk-tier + .sk-tier { padding-top: var(--s4); border-top: 1px solid var(--line); }
-.sk-hero { display: flex; gap: var(--s4); align-items: center; }
-.sk-hero > .sk-art { width: 112px; height: 112px; padding: 4px; border-radius: var(--r-md); }
-.sk-hero__text { min-width: 0; }
-.sk-hero__name { font-size: 22px; line-height: 1.2; }
+.sk-tier__name { margin: 0; font-size: 19px; line-height: 1.3; display: flex; flex-wrap: wrap; align-items: center; gap: var(--s1) var(--s3); }
 /* The drafter's detail-sheet tags: type, role, tier. */
-.sk-hero__tags { display: flex; flex-wrap: wrap; gap: var(--s1) var(--s2); margin: 6px 0 0; }
-.sk-hero__tags .badge { width: 15px; height: 15px; }
-.sk-hero__skill { margin: var(--s2) 0 0; font-size: 16px; font-weight: 700; }
-.sk-hero__desc { margin: 2px 0 0; font-size: 14px; line-height: 1.5; color: var(--text-dim); max-width: 60ch; }
+.sk-tier__tags { display: inline-flex; flex-wrap: wrap; gap: var(--s1) var(--s2); }
+.sk-tier__tags .tag { font-family: var(--font-ui); letter-spacing: 0; }
+.sk-tier__tags .badge { width: 15px; height: 15px; }
 
-.sk-stats { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: var(--s2); }
-.sk-stat {
-  display: flex; flex-direction: column; gap: 2px; min-width: 0;
-  padding: var(--s3); border-radius: var(--r-md); background: var(--surface-2);
+/* ---------------------------------------------------------------- the game's skill panel
+   Drawn after the panel the game opens on a skill: a flat purple card in a
+   dark frame; the icon, the skill's name in white with a dark outline and a
+   line of what it does; then an inset, darker list ringed in the game's teal,
+   with each number on its own lighter pill (label lavender on the left, value
+   lime on the right) and each effect in a lighter box under a yellow heading.
+   The same purple in both of the site's themes, as the game has one look.
+   Colours read off the screenshots; each text colour is at least 4.5:1 on the
+   fill it sits on: on a pill lime 8.7, lavender 5.1, yellow 10.5, white 11.1;
+   on the purple white 9.2 and the level's orange 4.8 (the game's own #fd8a64
+   is 3.9 there, so it is a shade lighter). */
+.sk-panel {
+  --gp-panel: #4c3794;
+  --gp-frame: #15112b;
+  --gp-inset: #2c2747;
+  --gp-ring: #65a0b2;
+  --gp-pill: #3d3566;
+  --gp-line: #57507f;
+  --gp-label: #b3acd6;
+  --gp-value: #90ff56;
+  --gp-title: #ffff84;
+  --gp-lv: #ffa580;
+  --gp-text: #fff;
+  display: flex; flex-direction: column; gap: var(--s3);
+  padding: var(--s3);
+  border: 2px solid var(--gp-frame); border-radius: var(--r-lg);
+  background: var(--gp-panel); color: var(--gp-text);
 }
-/* Labelled as the drafter's detail sheet labels its rows. */
-.sk-stat__label { font-size: 11px; font-weight: 650; letter-spacing: .06em; text-transform: uppercase; color: var(--text-mute); }
-.sk-stat__value { font-family: var(--font-mono); font-size: 22px; font-weight: 700; line-height: 1.15; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
-.sk-stat--big { background: var(--surface-3); }
-.sk-stat--big .sk-stat__value { font-size: 32px; }
-.sk-stat__note { font-size: 11.5px; color: var(--text-mute); }
-.sk-stat .sk-was { margin: 0; }
+.sk-panel__head { display: flex; align-items: flex-start; gap: var(--s3); min-width: 0; }
+.sk-panel__title { flex: 1; min-width: 0; }
+.sk-skill {
+  margin: 0; font-family: var(--font-display); font-size: 21px; font-weight: 800; line-height: 1.15; letter-spacing: 0;
+  color: var(--gp-text);
+  /* The game's dark outline: hard shadows, no blur. (A text stroke reads to
+     contrast checkers as the text's own colour.) */
+  text-shadow: 2px 0 var(--gp-frame), -2px 0 var(--gp-frame), 0 2px var(--gp-frame), 0 -2px var(--gp-frame),
+    1.5px 1.5px var(--gp-frame), -1.5px 1.5px var(--gp-frame), 1.5px -1.5px var(--gp-frame), -1.5px -1.5px var(--gp-frame);
+}
+.sk-desc { margin: 4px 0 0; font-size: 13.5px; font-weight: 600; line-height: 1.4; color: var(--gp-text); }
+/* The icon: a square of the type's colour in a white frame, the numeral on a
+   dark tab at its corner. */
+.sk-icon { position: relative; flex: none; line-height: 0; }
+.sk-icon .sk-art {
+  width: 64px; height: 64px; padding: 3px; border: 3px solid #fff; border-radius: 12px;
+  background: color-mix(in srgb, var(--type-color) 70%, var(--gp-inset));
+}
+.sk-numeral {
+  position: absolute; left: -3px; bottom: -6px;
+  min-width: 22px; padding: 3px 5px; box-sizing: border-box; border-radius: 6px;
+  background: var(--gp-frame); color: #fff; text-align: center;
+  font-family: var(--font-display); font-size: 12px; font-weight: 800; line-height: 1;
+}
+.sk-level .sk-icon .sk-art { width: 40px; height: 40px; padding: 2px; border-width: 2px; border-radius: 9px; }
+/* Horde Invasion's level, top right as the game has it. */
+.sk-lv {
+  flex: none; display: inline-flex; align-items: center; gap: 4px; margin: 0;
+  font-family: var(--font-display); font-size: 15px; font-weight: 800; line-height: 1.2; color: var(--gp-lv);
+}
+.sk-lock { color: #b9d6e0; }
 
-.sk-boxes { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: var(--s3); align-items: start; }
+.sk-list {
+  display: flex; flex-direction: column; gap: var(--s2); min-width: 0;
+  padding: var(--s2); border: 2px solid var(--gp-ring); border-radius: var(--r-md);
+  background: var(--gp-inset);
+}
+.sk-panel .sk-none { color: var(--gp-label); }
+
+/* Rows. On the list itself each is a pill; inside a box they are split by a
+   rule, as the game does. */
+.sk-rows { display: grid; gap: 4px; margin: 0; }
+.sk-row { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s2); min-width: 0; padding: 5px var(--s2); border-radius: 7px; background: var(--gp-pill); }
+.sk-rows dt, .sk-rows dd { margin: 0; font-size: 13.5px; font-weight: 700; line-height: 1.3; }
+.sk-rows dt { color: var(--gp-label); min-width: 0; }
+.sk-rows dd { color: var(--gp-value); text-align: right; font-variant-numeric: tabular-nums; }
+.sk-box .sk-rows { gap: 0; }
+.sk-box .sk-row { padding: 5px 0; border-radius: 0; background: none; border-top: 1px solid var(--gp-line); }
+
+.sk-boxes { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--s2); align-items: start; }
 .sk-box {
-  display: flex; flex-direction: column; gap: var(--s2);
-  padding: var(--s3); border: 1px solid var(--line); border-radius: var(--r-md); background: var(--surface);
+  display: flex; flex-direction: column; gap: 4px; min-width: 0;
+  padding: var(--s2) var(--s3) 4px; border: 1px solid transparent; border-radius: var(--r-sm); background: var(--gp-pill);
 }
-.sk-box--new { border-color: color-mix(in srgb, var(--accent) 60%, var(--line)); }
-.sk-box__title { margin: 0; font-size: 14px; font-weight: 700; }
-.sk-box__text { margin: 0; font-size: 13px; line-height: 1.45; color: var(--text-dim); }
-/* Text in the text colour: the accent yellow on a light background reads at
-   2:1. The yellow is the tag's edge and wash instead. */
+.sk-box:not(:has(.sk-rows)) { padding-bottom: var(--s2); }
+.sk-box--new { border-color: var(--gp-title); }
+.sk-box__title { margin: 0; font-family: var(--font-ui); font-size: 14px; font-weight: 700; letter-spacing: 0; line-height: 1.3; color: var(--gp-title); }
+.sk-box__text { margin: 0; font-size: 13px; font-weight: 600; line-height: 1.4; color: var(--gp-text); }
+/* "New at T4" and "new": the game's yellow as an edge, white text. */
 .sk-new {
   display: inline-block; margin-left: 4px; padding: 1px 7px; border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--accent) 70%, transparent);
-  background: color-mix(in srgb, var(--accent) 16%, transparent);
-  font-family: var(--font-ui); font-size: 11px; font-weight: 700; letter-spacing: 0; color: var(--text); vertical-align: 1px;
+  border: 1px solid var(--gp-title); background: var(--gp-inset);
+  font-family: var(--font-ui); font-size: 11px; font-weight: 700; letter-spacing: 0; color: #fff; vertical-align: 1px;
 }
-.sk-was { margin-right: 6px; font-size: 11.5px; font-weight: 500; color: var(--text-mute); }
-
-.sk-rows { display: grid; grid-template-columns: 1fr auto; margin: 0; border-radius: var(--r-sm); background: var(--surface-2); overflow: hidden; }
-.sk-rows dt, .sk-rows dd { margin: 0; padding: 6px var(--s2); border-top: 1px solid var(--line); font-size: 13px; }
-.sk-rows dt:first-of-type, .sk-rows dt:first-of-type + dd { border-top: 0; }
-.sk-rows dt { color: var(--text-dim); }
-.sk-rows dd { color: var(--text); font-family: var(--font-mono); font-size: 12.5px; font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; }
-.sk-rows dd .sk-was { font-family: var(--font-ui); }
+.sk-was { margin-right: 6px; font-size: 11.5px; font-weight: 600; color: var(--gp-label); }
 
 /* Horde Invasion: the line's three level-ups, under every tier. */
 .sk-horde { padding-top: var(--s4); border-top: 1px solid var(--line); }
 .sk-horde__title { margin: 0 0 var(--s3); font-size: 15px; }
 .sk-horde__title span { display: block; margin-top: 2px; font-family: var(--font-ui); font-size: 12.5px; font-weight: 500; letter-spacing: 0; color: var(--text-mute); }
-.sk-levels { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s3); }
-.sk-level { display: flex; flex-direction: column; gap: var(--s1); padding: var(--s3); border-radius: var(--r-md); background: var(--surface-2); }
-.sk-level .sk-rows { margin-top: var(--s1); background: var(--surface); }
-/* The drafter's level chip (.learn__level), in the accent's text colour so it
-   holds 4.5:1 on a light page too. */
-.sk-level__lv { align-self: flex-start; margin: 0; color: var(--accent-ink-on); }
-.sk-level__name { margin: 0; font-size: 14px; font-weight: 700; }
-.sk-level__text { margin: 0; font-size: 13px; line-height: 1.45; color: var(--text-dim); }
-.sk-hbox { margin: var(--s2) 0 0; font-size: 12px; font-weight: 700; color: var(--text-dim); }
+.sk-levels { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s3); align-items: start; }
+.sk-level .sk-skill { font-size: 17px; }
+.sk-level .sk-desc { font-size: 12.5px; }
 
 /* ---------------------------------------------------------------- rankings */
 
@@ -248,13 +294,9 @@
   .sk-switch__text { align-items: center; }
   .sk-switch__btn .sk-art { width: 44px; height: 44px; }
   .sk-switch__name { display: none; }
-  .sk-hero { gap: var(--s3); align-items: flex-start; }
-  .sk-hero > .sk-art { width: 80px; height: 80px; padding: 3px; }
-  .sk-hero__name { font-size: 19px; }
-  .sk-stats { grid-template-columns: 1fr 1fr; }
-  .sk-stat--big { grid-column: 1 / -1; flex-direction: row; flex-wrap: wrap; align-items: baseline; column-gap: var(--s3); }
-  .sk-stat--big .sk-stat__label { flex-basis: 100%; }
-  .sk-stat--big .sk-stat__value { font-size: 28px; }
+  .sk-panel { padding: var(--s2); gap: var(--s2); }
+  .sk-icon .sk-art { width: 56px; height: 56px; }
+  .sk-skill { font-size: 19px; }
   .sk-boxes, .sk-levels { grid-template-columns: minmax(0, 1fr); }
   .sk-rank { padding: var(--s3); }
   .sk-table thead th, .sk-table tbody th, .sk-table td { padding-inline: var(--s2); }
@@ -303,52 +345,51 @@
 
   .sk-app.is-live .sk-line {
     display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); grid-template-rows: auto auto; align-content: start;
-    gap: var(--s3) var(--s5); min-height: 100%; box-sizing: border-box; padding: var(--s3) var(--s4) var(--s4);
+    gap: var(--s2) var(--s5); min-height: 100%; box-sizing: border-box; padding: var(--s3) var(--s4) var(--s3);
   }
   .sk-app.is-live .sk-line__head { grid-column: 1 / -1; grid-row: 1; }
   .sk-app.is-live .sk-tier { grid-column: 1; grid-row: 2; gap: var(--s3); }
   .sk-app.is-live .sk-horde { grid-column: 2; grid-row: 2; align-self: start; padding: 0 0 0 var(--s5); border-top: 0; border-left: 1px solid var(--line); }
 
-  .sk-app.is-live .sk-hero { gap: var(--s3); }
-  .sk-app.is-live .sk-hero > .sk-art { width: 72px; height: 72px; padding: 3px; }
-  .sk-app.is-live .sk-hero__name { font-size: 19px; }
-  /* Name and tags share a line. */
-  .sk-app.is-live .sk-hero__name { display: inline; margin-right: var(--s2); vertical-align: middle; }
-  .sk-app.is-live .sk-hero__tags { display: inline-flex; margin: 0; vertical-align: middle; }
-  .sk-app.is-live .sk-hero__skill { margin-top: var(--s1); font-size: 14.5px; }
-  .sk-app.is-live .sk-hero__desc { font-size: 13px; line-height: 1.4; }
-  .sk-app.is-live .sk-stat { padding: var(--s2) var(--s3); }
-  .sk-app.is-live .sk-stat__value { font-size: 18px; }
-  .sk-app.is-live .sk-stat--big .sk-stat__value { font-size: 24px; }
-
-  .sk-app.is-live .sk-boxes { grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: var(--s2); }
-  .sk-app.is-live .sk-box { padding: var(--s2) var(--s3); gap: var(--s1); }
+  .sk-app.is-live .sk-tier__name { font-size: 17px; }
+  .sk-app.is-live .sk-tier__tags .tag { min-height: 0; padding-block: 1px; font-size: 12px; }
+  .sk-app.is-live .sk-panel { padding: var(--s2) var(--s3) var(--s3); gap: var(--s2); }
+  .sk-app.is-live .sk-skill { font-size: 19px; }
+  .sk-app.is-live .sk-desc { font-size: 12.5px; line-height: 1.35; margin-top: 2px; }
+  .sk-app.is-live .sk-icon .sk-art { width: 56px; height: 56px; }
+  .sk-app.is-live .sk-list { padding: 6px; gap: 6px; }
+  .sk-app.is-live .sk-row { padding: 3px var(--s2); }
+  .sk-app.is-live .sk-box .sk-row { padding: 3px 0; }
+  .sk-app.is-live .sk-rows dt, .sk-app.is-live .sk-rows dd { font-size: 12.5px; }
+  .sk-app.is-live .sk-box { padding: 6px var(--s2) 2px; gap: 2px; }
+  .sk-app.is-live .sk-box:not(:has(.sk-rows)) { padding-bottom: 6px; }
   .sk-app.is-live .sk-box__title { font-size: 13px; }
   .sk-app.is-live .sk-box__text { font-size: 12px; line-height: 1.35; }
-  .sk-app.is-live .sk-rows dt, .sk-app.is-live .sk-rows dd { padding: 3px var(--s2); font-size: 12px; }
 
-  .sk-app.is-live .sk-horde__title { margin-bottom: var(--s2); }
-  .sk-app.is-live .sk-levels { grid-template-columns: minmax(0, 1fr); gap: var(--s2); }
-  .sk-app.is-live .sk-level { padding: var(--s2) var(--s3); gap: 2px; }
-  .sk-app.is-live .sk-level__name { font-size: 13.5px; }
-  .sk-app.is-live .sk-level__text { font-size: 12px; line-height: 1.35; }
-  .sk-app.is-live .sk-hbox { margin-top: var(--s1); font-size: 11.5px; }
+  /* The heading and its note on one line. */
+  .sk-app.is-live .sk-horde__title { margin-bottom: 4px; }
+  .sk-app.is-live .sk-horde__title span { display: inline; margin: 0 0 0 var(--s1); }
+  .sk-app.is-live .sk-levels { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  .sk-app.is-live .sk-level { padding: 6px var(--s2); gap: 6px; }
+  .sk-app.is-live .sk-level .sk-panel__head { gap: var(--s2); }
+  .sk-app.is-live .sk-level .sk-list { padding: 4px; gap: 4px; }
+  .sk-app.is-live .sk-level .sk-row { padding-block: 2px; }
+  .sk-app.is-live .sk-level .sk-box { padding-top: 4px; gap: 0; }
+  .sk-app.is-live .sk-level .sk-skill { font-size: 16px; }
+  .sk-app.is-live .sk-level .sk-desc { font-size: 12px; }
+  .sk-app.is-live .sk-level .sk-icon .sk-art { width: 36px; height: 36px; }
+  .sk-app.is-live .sk-level .sk-skill { line-height: 1.1; }
+  .sk-app.is-live .sk-level .sk-desc { line-height: 1.3; }
+  .sk-app.is-live .sk-level .sk-lv { font-size: 14px; }
 
-  /* Tighter still: a level's "Lv 3" sits beside its name, and numbers run two
-     pairs to a line wherever a column is wide enough for both. */
-  .sk-app.is-live .sk-level { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; column-gap: var(--s2); }
-  .sk-app.is-live .sk-level > :not(.sk-level__lv):not(.sk-level__name) { grid-column: 1 / -1; }
-  .sk-app.is-live .sk-level .sk-rows,
-  .sk-app.is-live .sk-tier > .sk-boxes .sk-box:only-child .sk-rows { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto; }
-  .sk-app.is-live .sk-level .sk-rows dt:nth-of-type(2), .sk-app.is-live .sk-level .sk-rows dt:nth-of-type(2) + dd { border-top: 0; }
-  .sk-app.is-live .sk-level .sk-rows dt:nth-of-type(even) { border-left: 1px solid var(--line); }
-  .sk-app.is-live .sk-stats { gap: var(--s2); }
-  .sk-app.is-live .sk-stat { flex-direction: row; flex-wrap: wrap; align-items: baseline; column-gap: var(--s2); padding: 6px var(--s3); }
-  .sk-app.is-live .sk-stat__label { flex-basis: 100%; }
-  .sk-app.is-live .sk-stat__note { font-size: 11px; }
+  /* Tighter still: pills run two to a line wherever a column is wide enough. */
+  .sk-app.is-live .sk-list > .sk-rows { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
+  .sk-app.is-live .sk-level .sk-box .sk-rows { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); column-gap: var(--s3); }
   /* Boxes flow down two columns rather than sitting in rows, so a short box
      (ATK Boost) leaves no hole beside a long one (Aura: Water). */
-  .sk-app.is-live .sk-boxes { display: block; column-count: 2; column-gap: var(--s2); }
-  .sk-app.is-live .sk-boxes > .sk-box { break-inside: avoid; margin-bottom: var(--s2); }
-  .sk-app.is-live .sk-boxes > .sk-box:only-child { column-span: all; }
+  .sk-app.is-live .sk-tier .sk-boxes { display: block; column-count: 2; column-gap: 6px; }
+  .sk-app.is-live .sk-tier .sk-boxes > .sk-box { break-inside: avoid; margin-bottom: 6px; }
+  .sk-app.is-live .sk-tier .sk-boxes > .sk-box:last-child { margin-bottom: 0; }
+  .sk-app.is-live .sk-tier .sk-boxes > .sk-box:only-child { column-span: all; }
+}
 }
