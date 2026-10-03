@@ -395,4 +395,14 @@
   .sk-app.is-live .sk-tier .sk-boxes > .sk-box:last-child { margin-bottom: 0; }
   .sk-app.is-live .sk-tier .sk-boxes > .sk-box:only-child { column-span: all; }
 }
+
+/* The tier switcher holds still. Four equal slots that always start at the
+   same place, whatever the line is called and however many tiers it has: a
+   two-tier line fills the first two and leaves the rest empty, so T1 never
+   moves under the pointer. Desktop only; phones have their own row. */
+@media (min-width: 900px) {
+  .sk-app.is-live .sk-line__name { flex: 0 0 13rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sk-app.is-live .sk-switch { display: grid; grid-template-columns: repeat(4, 9.5rem); gap: var(--s2); flex: none; }
+  .sk-app.is-live .sk-switch__btn { min-width: 0; }
+  .sk-app.is-live .sk-switch__name { overflow: hidden; text-overflow: ellipsis; }
 }
