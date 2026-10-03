@@ -3357,5 +3357,901 @@
     ]
    }
   ]
+ },
+ "funglet": {
+  "skill": "Buzzed Ring",
+  "arenaFactor": "80%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "3%"
+     ],
+     [
+      "Ally Damage Factor",
+      "1%"
+     ],
+     [
+      "Damage Interval",
+      "1s"
+     ],
+     [
+      "Duration",
+      "4s"
+     ],
+     [
+      "Cooldown",
+      "4s"
+     ]
+    ]
+   },
+   {
+    "heading": "Spores: ATK Speed Boost",
+    "text": "Boosts ATK Speed, which affects skill execution time and cooldowns.",
+    "rows": [
+     [
+      "Boost Factor",
+      "25%"
+     ]
+    ]
+   }
+  ]
+ },
+ "trippet": {
+  "skill": "Tripping Ring",
+  "arenaFactor": "80%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "3%"
+     ],
+     [
+      "Ally Damage Factor",
+      "1%"
+     ],
+     [
+      "Damage Interval",
+      "1s"
+     ],
+     [
+      "Duration",
+      "8s"
+     ],
+     [
+      "Cooldown",
+      "4s"
+     ]
+    ]
+   },
+   {
+    "heading": "Spores: ATK Speed Boost",
+    "text": "Boosts ATK Speed, which affects skill execution time and cooldowns.",
+    "rows": [
+     [
+      "Boost Factor",
+      "25%"
+     ]
+    ]
+   }
+  ]
+ },
+ "hyphoria": {
+  "skill": "Peaking Ring",
+  "arenaFactor": "80%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "3%"
+     ],
+     [
+      "Ally Damage Factor",
+      "1%"
+     ],
+     [
+      "Damage Interval",
+      "1s"
+     ],
+     [
+      "Duration",
+      "8s"
+     ],
+     [
+      "Cooldown",
+      "4s"
+     ]
+    ]
+   },
+   {
+    "heading": "Spores: Fragile",
+    "text": "Takes increased damage.",
+    "rows": [
+     [
+      "Boost Factor",
+      "10%"
+     ]
+    ]
+   },
+   {
+    "heading": "Spores: ATK Speed Boost",
+    "text": "Boosts ATK Speed, which affects skill execution time and cooldowns.",
+    "rows": [
+     [
+      "Boost Factor",
+      "25%"
+     ]
+    ]
+   },
+   {
+    "heading": "Spores: DMG Reduction",
+    "text": "Damage taken is reduced.",
+    "rows": [
+     [
+      "Amount Reduced",
+      "15%"
+     ]
+    ]
+   }
+  ]
+ },
+ "ecstamira": {
+  "skill": "Faded Ring",
+  "arenaFactor": "80%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "3%"
+     ],
+     [
+      "Ally Damage Factor",
+      "1%"
+     ],
+     [
+      "Damage Interval",
+      "1s"
+     ],
+     [
+      "Duration",
+      "8s"
+     ],
+     [
+      "Cooldown",
+      "4s"
+     ]
+    ]
+   },
+   {
+    "heading": "Spores: Fragile",
+    "text": "Takes increased damage.",
+    "rows": [
+     [
+      "Boost Factor",
+      "10%"
+     ]
+    ]
+   },
+   {
+    "heading": "Spores: ATK Speed Boost",
+    "text": "Boosts ATK Speed, which affects skill execution time and cooldowns.",
+    "rows": [
+     [
+      "Boost Factor",
+      "25%"
+     ]
+    ]
+   },
+   {
+    "heading": "Spores: DMG Reduction",
+    "text": "Damage taken is reduced.",
+    "rows": [
+     [
+      "Amount Reduced",
+      "15%"
+     ]
+    ]
+   },
+   {
+    "heading": "Aura: Grass",
+    "text": "Increases Max HP for all allies. The effect for non-Grass allies is reduced by 50%. Aura: Grass can be stacked, but cannot take effect in some game modes.",
+    "rows": [
+     [
+      "Base HP Boost",
+      "4%"
+     ],
+     [
+      "Max HP Boost",
+      "20%"
+     ]
+    ]
+   }
+  ]
+ },
+ "taptail": {
+  "skill": "Karmic Pistol",
+  "arenaFactor": "35%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Slow Wave Damage Factor",
+      "90%"
+     ],
+     [
+      "Slow Sound Waves",
+      "4"
+     ],
+     [
+      "Slow Wave Cooldown",
+      "3s"
+     ],
+     [
+      "Rapid Wave Damage Factor",
+      "50%"
+     ],
+     [
+      "Rapid Sound Waves",
+      "8"
+     ],
+     [
+      "Rapid Wave Interval",
+      "0.25s"
+     ]
+    ]
+   }
+  ]
+ },
+ "rattlecoil": {
+  "skill": "Karmic Rifle",
+  "arenaFactor": "35%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Slow Wave Damage Factor",
+      "90%"
+     ],
+     [
+      "Slow Sound Waves",
+      "4"
+     ],
+     [
+      "Slow Wave Cooldown",
+      "3s"
+     ],
+     [
+      "Rapid Wave Damage Factor",
+      "50%"
+     ],
+     [
+      "Rapid Sound Waves",
+      "8"
+     ],
+     [
+      "Rapid Wave Interval",
+      "0.25s"
+     ]
+    ]
+   },
+   {
+    "heading": "Stun",
+    "text": "Unable to move or attack.",
+    "rows": [
+     [
+      "Stun Chance",
+      "3%"
+     ],
+     [
+      "Duration",
+      "1s"
+     ]
+    ]
+   }
+  ]
+ },
+ "clangnaga": {
+  "skill": "Karmic Cannon",
+  "arenaFactor": "35%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Slow Wave Damage Factor",
+      "90%"
+     ],
+     [
+      "Slow Sound Waves",
+      "4"
+     ],
+     [
+      "Slow Wave Cooldown",
+      "3s"
+     ],
+     [
+      "Rapid Wave Damage Factor",
+      "50%"
+     ],
+     [
+      "Rapid Wave Pierces",
+      "Unlimited"
+     ],
+     [
+      "Rapid Sound Waves",
+      "8"
+     ],
+     [
+      "Rapid Wave Interval",
+      "0.25s"
+     ]
+    ]
+   },
+   {
+    "heading": "Stun",
+    "text": "Unable to move or attack.",
+    "rows": [
+     [
+      "Stun Chance",
+      "3%"
+     ],
+     [
+      "Duration",
+      "1s"
+     ]
+    ]
+   }
+  ]
+ },
+ "dharmadder": {
+  "skill": "Karmic Barrage",
+  "arenaFactor": "35%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Slow Wave Damage Factor",
+      "90%"
+     ],
+     [
+      "Slow Sound Waves",
+      "4"
+     ],
+     [
+      "Slow Wave Cooldown",
+      "3s"
+     ],
+     [
+      "Rapid Wave Damage Factor",
+      "50%"
+     ],
+     [
+      "Rapid Wave Pierces",
+      "Unlimited"
+     ],
+     [
+      "Rapid Sound Waves",
+      "8"
+     ],
+     [
+      "Rapid Wave Interval",
+      "0.25s"
+     ]
+    ]
+   },
+   {
+    "heading": "Stun",
+    "text": "Unable to move or attack.",
+    "rows": [
+     [
+      "Stun Chance",
+      "3%"
+     ],
+     [
+      "Duration",
+      "1s"
+     ]
+    ]
+   },
+   {
+    "heading": "Aura: Rock",
+    "text": "Provides DMG Reduction for all allies. The effect for non-Rock allies is reduced by 50%. Aura: Rock can be stacked, but cannot take effect in some game modes.",
+    "rows": [
+     [
+      "Base DMG Reduction",
+      "3.5%"
+     ],
+     [
+      "Max DMG Reduction",
+      "17.5%"
+     ]
+    ]
+   }
+  ]
+ },
+ "hootlet": {
+  "skill": "Dawn Call",
+  "arenaFactor": "60%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "50%"
+     ],
+     [
+      "Cooldown",
+      "3s"
+     ]
+    ]
+   },
+   {
+    "heading": "Slowdown",
+    "text": "ATK Speed and Move Speed are reduced.",
+    "rows": [
+     [
+      "ATK SPD Reduction",
+      "5% Per Stack"
+     ],
+     [
+      "Move Speed Reduction",
+      "5% Per Stack"
+     ],
+     [
+      "Max Stacks",
+      "3"
+     ]
+    ]
+   }
+  ]
+ },
+ "tikowl": {
+  "skill": "Eventide Echo",
+  "arenaFactor": "60%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "50%"
+     ],
+     [
+      "Cooldown",
+      "3s"
+     ]
+    ]
+   },
+   {
+    "heading": "Slowdown",
+    "text": "ATK Speed and Move Speed are reduced.",
+    "rows": [
+     [
+      "ATK SPD Reduction",
+      "5% Per Stack"
+     ],
+     [
+      "Move Speed Reduction",
+      "5% Per Stack"
+     ],
+     [
+      "Max Stacks",
+      "3"
+     ]
+    ]
+   },
+   {
+    "heading": "Stun",
+    "text": "Unable to move or attack.",
+    "rows": [
+     [
+      "Duration",
+      "1s"
+     ]
+    ]
+   }
+  ]
+ },
+ "chronerva": {
+  "skill": "Midnight Chime",
+  "arenaFactor": "60%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "50%"
+     ],
+     [
+      "Cooldown",
+      "3s"
+     ]
+    ]
+   },
+   {
+    "heading": "Slowdown",
+    "text": "ATK Speed and Move Speed are reduced.",
+    "rows": [
+     [
+      "ATK SPD Reduction",
+      "5% Per Stack"
+     ],
+     [
+      "Move Speed Reduction",
+      "5% Per Stack"
+     ],
+     [
+      "Max Stacks",
+      "3"
+     ]
+    ]
+   },
+   {
+    "heading": "Stun",
+    "text": "Unable to move or attack.",
+    "rows": [
+     [
+      "Duration",
+      "1s"
+     ]
+    ]
+   }
+  ]
+ },
+ "hypnostrix": {
+  "skill": "Dies Naturalis",
+  "arenaFactor": "60%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "50%"
+     ],
+     [
+      "Cooldown",
+      "3s"
+     ]
+    ]
+   },
+   {
+    "heading": "Slowdown",
+    "text": "ATK Speed and Move Speed are reduced.",
+    "rows": [
+     [
+      "ATK SPD Reduction",
+      "5% Per Stack"
+     ],
+     [
+      "Move Speed Reduction",
+      "5% Per Stack"
+     ],
+     [
+      "Max Stacks",
+      "3"
+     ]
+    ]
+   },
+   {
+    "heading": "Stun",
+    "text": "Unable to move or attack.",
+    "rows": [
+     [
+      "Duration",
+      "1s"
+     ]
+    ]
+   },
+   {
+    "heading": "Aura: Grass",
+    "text": "Increases Max HP for all allies. The effect for non-Grass allies is reduced by 50%. Aura: Grass can be stacked, but cannot take effect in some game modes.",
+    "rows": [
+     [
+      "Base HP Boost",
+      "4%"
+     ],
+     [
+      "Max HP Boost",
+      "20%"
+     ]
+    ]
+   }
+  ]
+ },
+ "pyropup": {
+  "skill": "Pyro Pillar",
+  "arenaFactor": "70%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "140%"
+     ],
+     [
+      "Cooldown",
+      "3.5s"
+     ]
+    ]
+   }
+  ]
+ },
+ "pyrohound": {
+  "skill": "Inferno Spire",
+  "arenaFactor": "70%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "140%"
+     ],
+     [
+      "Cooldown",
+      "3.5s"
+     ]
+    ]
+   }
+  ]
+ },
+ "hellhound": {
+  "skill": "Scorching Strike",
+  "arenaFactor": "70%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "140%"
+     ],
+     [
+      "Cooldown",
+      "3.5s"
+     ]
+    ]
+   },
+   {
+    "heading": "Weak",
+    "text": "Deals reduced damage.",
+    "rows": [
+     [
+      "Amount Reduced",
+      "20%"
+     ],
+     [
+      "Duration",
+      "3s"
+     ]
+    ]
+   }
+  ]
+ },
+ "pyrodaemon": {
+  "skill": "Hell Blaze",
+  "arenaFactor": "70%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "140%"
+     ],
+     [
+      "Cooldown",
+      "3.5s"
+     ]
+    ]
+   },
+   {
+    "heading": "Weak",
+    "text": "Deals reduced damage.",
+    "rows": [
+     [
+      "Amount Reduced",
+      "20%"
+     ],
+     [
+      "Duration",
+      "3s"
+     ]
+    ]
+   },
+   {
+    "heading": "Aura: Fire",
+    "text": "Boosts ATK for all allies. The effect for non-Fire allies is reduced by 50%. Aura: Fire can be stacked, but cannot take effect in some game modes.",
+    "rows": [
+     [
+      "Base ATK Boost",
+      "2.5%"
+     ],
+     [
+      "Max ATK Boost",
+      "12.5%"
+     ]
+    ]
+   }
+  ]
+ },
+ "gibber": {
+  "skill": "Spike Spiral",
+  "arenaFactor": "60%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "70%"
+     ],
+     [
+      "Damage Count",
+      "2"
+     ],
+     [
+      "Pierces",
+      "Unlimited"
+     ],
+     [
+      "Cooldown",
+      "4.2s"
+     ]
+    ]
+   }
+  ]
+ },
+ "turtuff": {
+  "skill": "Shield Spin",
+  "arenaFactor": "60%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "70%"
+     ],
+     [
+      "Damage Count",
+      "2"
+     ],
+     [
+      "Pierces",
+      "Unlimited"
+     ],
+     [
+      "Cooldown",
+      "4.2s"
+     ]
+    ]
+   },
+   {
+    "heading": "Shell Shield",
+    "text": "A shield effect. When taking damage, shield value is consumed first. Shield value is based on the shielder's ATK.",
+    "rows": [
+     [
+      "Shield Factor",
+      "20%"
+     ],
+     [
+      "Duration",
+      "5s"
+     ]
+    ]
+   }
+  ]
+ },
+ "rockshell": {
+  "skill": "Guardian Gyro",
+  "arenaFactor": "60%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "70%"
+     ],
+     [
+      "Damage Count",
+      "2"
+     ],
+     [
+      "Pierces",
+      "Unlimited"
+     ],
+     [
+      "Cooldown",
+      "4.2s"
+     ]
+    ]
+   },
+   {
+    "heading": "Shell Shield",
+    "text": "A shield effect. When taking damage, shield value is consumed first. Shield value is based on the shielder's ATK.",
+    "rows": [
+     [
+      "Shield Factor",
+      "20%"
+     ],
+     [
+      "Duration",
+      "5s"
+     ]
+    ]
+   }
+  ]
+ },
+ "terraton": {
+  "skill": "Rock Swirl",
+  "arenaFactor": "60%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "70%"
+     ],
+     [
+      "Damage Count",
+      "2"
+     ],
+     [
+      "Pierces",
+      "Unlimited"
+     ],
+     [
+      "Cooldown",
+      "4.2s"
+     ]
+    ]
+   },
+   {
+    "heading": "Shell Shield",
+    "text": "A shield effect. When taking damage, shield value is consumed first. Shield value is based on the shielder's ATK.",
+    "rows": [
+     [
+      "Shield Factor",
+      "20%"
+     ],
+     [
+      "Duration",
+      "5s"
+     ]
+    ]
+   },
+   {
+    "heading": "Aura: Rock",
+    "text": "Provides DMG Reduction for all allies. The effect for non-Rock allies is reduced by 50%. Aura: Rock can be stacked, but cannot take effect in some game modes.",
+    "rows": [
+     [
+      "Base DMG Reduction",
+      "3.5%"
+     ],
+     [
+      "Max DMG Reduction",
+      "17.5%"
+     ]
+    ]
+   }
+  ]
  }
 }
