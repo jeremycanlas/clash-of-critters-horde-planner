@@ -52,3 +52,8 @@ Dolphie is the only line with no Horde Invasion skills anywhere; it needs the ga
     Tatari, 4 match exactly and 3 are flagged (a label wrapped onto two lines); none differ
     silently. Flagged ones get read by eye from their screenshots before they go in.
   - Waiting on the user's go-ahead to drive BlueStacks (could sign the phone out of the game).
+- **2026-10-03**: All 242 Tatari have their skill panel on the Skill data page, read off the game
+  by the adb reader walking the collection (with timing variation and breaks) and checked by eye
+  line by line. Gaps: Dagondeep's Aura: Water numbers sit below the screenshot's edge (heading
+  only); Firefox is named Flametail in the game. Glowfly's line has Arena Factor 150%, the only
+  one above 100%. Horde Invasion numbers are not on these panels; they need the Horde screen.
