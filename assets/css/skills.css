@@ -1,7 +1,11 @@
 /*
- * Skill data. Panels, fields, segmented controls and the footer come from
- * app.css. Two views: Lines (a list of evolution lines, and one line open
- * beside it with a tier switcher) and Rankings (every Tatari in one table).
+ * Skill data. Built from the drafter's own parts in app.css so the two read
+ * as one site: the formation bar (.formbar) holds the view, search and type;
+ * the list, the open line and the table are .panel frames with .panel__head
+ * headings; a Tatari is drawn as the roster card draws it (type-tinted square,
+ * tier, the game's type and role badges); what is selected takes the accent.
+ * Two views: Lines (a list of evolution lines, and one line open beside it
+ * with a tier switcher) and Rankings (every Tatari in one table).
  *
  * Without script everything shows, stacked: the list, every line with every
  * tier, then the table. skills.js adds .is-live and from then on only the
@@ -10,20 +14,23 @@
 
 .sk__main {
   width: 100%; box-sizing: border-box;
-  max-width: 1280px;
+  max-width: 1500px;
   margin: 0 auto;
-  padding: var(--s5) var(--s4) var(--s6);
+  padding: var(--s4) var(--s5) var(--s6);
   display: flex; flex-direction: column; gap: var(--s3);
 }
 .sk__main > * { min-width: 0; }
 
 /* ---------------------------------------------------------------- toolbar */
 
-.sk-tools { display: flex; flex-wrap: wrap; gap: var(--s2) var(--s3); align-items: center; }
+.sk-tools { flex-wrap: wrap; gap: var(--s2) var(--s3); }
 .sk-search { flex: 1 1 240px; }
 .sk-search .field { width: 100%; box-sizing: border-box; min-height: 44px; font-size: 16px; } /* 16px, or iOS zooms on tap */
 .sk-tools .segmented__btn, .sk-rank__tools .segmented__btn { min-height: 44px; display: inline-flex; align-items: center; }
 .sk-views .segmented__btn { font-size: 13.5px; padding-inline: var(--s4); }
+/* Lines and Rankings are places, not settings: the selected one takes the
+   accent, as the roster's Tatari / Zobos / Chips tabs do. */
+.sk-views .segmented__btn[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); box-shadow: none; }
 #sk-types { flex-wrap: wrap; }
 /* On a phone the six types are one line that scrolls sideways, not two. */
 @media (max-width: 600px) {
@@ -32,8 +39,7 @@
   .sk-views { width: 100%; box-sizing: border-box; }
   .sk-views .segmented__btn { flex: 1; justify-content: center; }
 }
-.sk-ticon { width: 16px; height: 16px; object-fit: contain; vertical-align: -3px; margin-right: 5px; }
-#sk-types .sk-ticon { width: 18px; height: 18px; vertical-align: -4px; }
+.sk-ticon { width: 18px; height: 18px; object-fit: contain; vertical-align: -4px; margin-right: 5px; }
 .sk-count { margin: 0; font-size: 13px; line-height: 1.5; color: var(--text-mute); max-width: 80ch; }
 .sk-empty { margin: 0; padding: var(--s4); border: 1px dashed var(--line); border-radius: var(--r-md); color: var(--text-dim); font-size: 14px; }
 .sk-none { margin: 0; font-size: 12.5px; color: var(--text-mute); }
@@ -42,6 +48,16 @@
 .sk-app { display: flex; flex-direction: column; gap: var(--s5); }
 .sk-app.is-live[data-view="lines"] .sk-rank,
 .sk-app.is-live[data-view="rank"] .sk-lines { display: none; }
+
+/* A Tatari's picture, everywhere on the page: the roster card's square of its
+   type's colour. */
+.sk-art {
+  flex: none; object-fit: contain; box-sizing: border-box; padding: 2px;
+  border-radius: var(--r-sm); background: color-mix(in srgb, var(--type-color) 13%, transparent);
+}
+/* The roster card's meta row: tier, type badge, role badge. */
+.sk-meta { display: inline-flex; align-items: center; gap: 3px; flex: none; }
+.sk-meta .card__tier { font-size: 10.5px; line-height: 1; }
 
 /* ---------------------------------------------------------------- lines */
 
@@ -52,28 +68,30 @@
 .sk-index {
   position: sticky; top: var(--s3);
   max-height: calc(100dvh - 2 * var(--s3)); overflow-y: auto; overscroll-behavior: contain;
-  border: 1px solid var(--line); border-radius: var(--r-lg); background: var(--surface);
+  padding: 0 var(--s2) var(--s2);
 }
-.sk-index__list { list-style: none; margin: 0; padding: var(--s1); }
+/* The heading stays put while the list scrolls under it. */
+.sk-index > .panel__head {
+  position: sticky; top: 0; z-index: 1;
+  margin: 0; padding: var(--s4) var(--s2) var(--s2);
+  background: var(--surface);
+}
+.sk-index__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
 .sk-index__item[hidden] { display: none; }
 .sk-pick {
   display: flex; align-items: center; gap: var(--s3);
-  min-height: 56px; padding: var(--s1) var(--s3) var(--s1) var(--s2);
-  border-radius: var(--r-md);
+  min-height: 56px; padding: var(--s1) var(--s3) var(--s1) var(--s1);
+  border: 1px solid transparent; border-radius: var(--r-md);
   color: var(--text); text-decoration: none;
-  transition: background-color 120ms var(--ease-out);
+  transition: background-color 120ms var(--ease-out), border-color 120ms var(--ease-out);
 }
-.sk-pick:hover { background: var(--surface-2); }
+.sk-pick:hover { background: var(--surface-2); border-color: color-mix(in srgb, var(--type-color) 55%, var(--line)); }
 .sk-pick:focus-visible { outline-offset: -2px; }
-.sk-pick[aria-current="true"] { background: var(--surface-3); box-shadow: inset 3px 0 0 var(--type-color); }
-.sk-pick .sk-art {
-  flex: none; width: 40px; height: 40px; object-fit: contain;
-  border-radius: 50%; background: color-mix(in srgb, var(--type-color) 16%, var(--surface-2));
-}
-.sk-pick__text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.sk-pick[aria-current="true"] { background: var(--surface-3); border-color: var(--accent); }
+.sk-pick .sk-art { width: 44px; height: 44px; }
+.sk-pick__text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
 .sk-pick__name { font-weight: 650; font-size: 14.5px; line-height: 1.3; }
-.sk-pick__sub { font-size: 12px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.sk-pick__sub .sk-ticon { width: 14px; height: 14px; margin-right: 4px; }
+.sk-pick__sub { display: flex; align-items: center; gap: 6px; font-size: 12px; line-height: 1.2; color: var(--text-dim); white-space: nowrap; overflow: hidden; }
 .sk-pick__af { flex: none; font-family: var(--font-mono); font-size: 13px; font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; }
 
 /* One line, open. */
@@ -81,46 +99,40 @@
 .sk-line {
   display: flex; flex-direction: column; gap: var(--s4);
   padding: var(--s4) var(--s5) var(--s5);
-  border: 1px solid var(--line); border-top: 4px solid var(--type-color);
-  border-radius: var(--r-lg); background: var(--surface);
   scroll-margin-top: var(--s3);
 }
 .sk-app.is-live .sk-line:not(.is-on),
 .sk-app.is-live .sk-tier:not(.is-on) { display: none; }
 
-.sk-line__head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2) var(--s4); }
-.sk-line__name { margin: 0; flex: 1 1 auto; font-family: var(--font-display); font-size: 24px; font-weight: 700; line-height: 1.2; }
+.sk-line__head { margin: 0; gap: var(--s2) var(--s4); }
+.sk-line__name { flex: 1 1 auto; }
 .sk-back { display: none; }
-.sk-switch { display: none; flex-wrap: wrap; gap: var(--s1); }
+.sk-switch { display: none; flex-wrap: wrap; gap: var(--s2); }
 .sk-app.is-live .sk-switch { display: flex; }
+/* The tiers as small roster cards. */
 .sk-switch__btn {
   display: inline-flex; align-items: center; gap: var(--s2);
-  min-height: 44px; padding: 2px var(--s3) 2px var(--s1);
-  border: 1px solid var(--line); border-radius: 999px; background: var(--bg);
-  color: var(--text-dim); font: inherit; font-size: 13px; cursor: pointer;
-  transition: background-color 120ms var(--ease-out), border-color 120ms var(--ease-out), color 120ms var(--ease-out);
+  min-height: 44px; padding: 3px var(--s3) 3px 3px;
+  border: 1px solid var(--line-soft); border-radius: var(--r-md); background: var(--surface-2);
+  color: var(--text); font: inherit; text-align: left; cursor: pointer;
+  transition: background-color 120ms var(--ease-out), border-color 120ms var(--ease-out);
 }
-.sk-switch__btn:hover { color: var(--text); border-color: var(--text-mute); }
-.sk-switch__btn .sk-art { width: 32px; height: 32px; object-fit: contain; }
-.sk-switch__btn b { color: var(--text); }
-.sk-switch__btn[aria-pressed="true"] { background: var(--surface-3); border-color: var(--type-color); color: var(--text); }
+.sk-switch__btn:hover { background: var(--surface-3); border-color: color-mix(in srgb, var(--type-color) 55%, var(--line)); }
+.sk-switch__btn .sk-art { width: 36px; height: 36px; }
+.sk-switch__text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.sk-switch__name { font-size: 12px; font-weight: 550; line-height: 1.2; white-space: nowrap; }
+.sk-switch__btn[aria-pressed="true"] { background: var(--surface-3); border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
 
 /* A tier: the Tatari, its big numbers, its effect boxes. */
 .sk-tier { display: flex; flex-direction: column; gap: var(--s4); scroll-margin-top: var(--s4); }
 .sk-app:not(.is-live) .sk-tier + .sk-tier { padding-top: var(--s4); border-top: 1px solid var(--line); }
 .sk-hero { display: flex; gap: var(--s4); align-items: center; }
-.sk-hero > .sk-art {
-  flex: none; width: 112px; height: 112px; object-fit: contain;
-  border-radius: 50%; background: color-mix(in srgb, var(--type-color) 16%, var(--surface-2));
-}
+.sk-hero > .sk-art { width: 112px; height: 112px; padding: 4px; border-radius: var(--r-md); }
 .sk-hero__text { min-width: 0; }
-.sk-hero__name { margin: 0; font-family: var(--font-display); font-size: 22px; font-weight: 700; line-height: 1.2; }
-.sk-tierpill {
-  display: inline-block; margin-left: 4px; padding: 1px 8px; border-radius: 999px;
-  border: 1px solid var(--line); background: var(--surface-2);
-  font-family: var(--font-mono); font-size: 12px; font-weight: 600; color: var(--text-dim); vertical-align: 3px;
-}
-.sk-hero__meta { margin: 2px 0 0; font-size: 13px; color: var(--text-dim); }
+.sk-hero__name { font-size: 22px; line-height: 1.2; }
+/* The drafter's detail-sheet tags: type, role, tier. */
+.sk-hero__tags { display: flex; flex-wrap: wrap; gap: var(--s1) var(--s2); margin: 6px 0 0; }
+.sk-hero__tags .badge { width: 15px; height: 15px; }
 .sk-hero__skill { margin: var(--s2) 0 0; font-size: 16px; font-weight: 700; }
 .sk-hero__desc { margin: 2px 0 0; font-size: 14px; line-height: 1.5; color: var(--text-dim); max-width: 60ch; }
 
@@ -129,7 +141,8 @@
   display: flex; flex-direction: column; gap: 2px; min-width: 0;
   padding: var(--s3); border-radius: var(--r-md); background: var(--surface-2);
 }
-.sk-stat__label { font-size: 12px; font-weight: 600; color: var(--text-dim); }
+/* Labelled as the drafter's detail sheet labels its rows. */
+.sk-stat__label { font-size: 11px; font-weight: 650; letter-spacing: .06em; text-transform: uppercase; color: var(--text-mute); }
 .sk-stat__value { font-family: var(--font-mono); font-size: 22px; font-weight: 700; line-height: 1.15; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 .sk-stat--big { background: var(--surface-3); }
 .sk-stat--big .sk-stat__value { font-size: 32px; }
@@ -150,7 +163,7 @@
   display: inline-block; margin-left: 4px; padding: 1px 7px; border-radius: 999px;
   border: 1px solid color-mix(in srgb, var(--accent) 70%, transparent);
   background: color-mix(in srgb, var(--accent) 16%, transparent);
-  font-size: 11px; font-weight: 700; color: var(--text); vertical-align: 1px;
+  font-family: var(--font-ui); font-size: 11px; font-weight: 700; letter-spacing: 0; color: var(--text); vertical-align: 1px;
 }
 .sk-was { margin-right: 6px; font-size: 11.5px; font-weight: 500; color: var(--text-mute); }
 
@@ -163,31 +176,31 @@
 
 /* Horde Invasion: the line's three level-ups, under every tier. */
 .sk-horde { padding-top: var(--s4); border-top: 1px solid var(--line); }
-.sk-horde__title { margin: 0 0 var(--s3); font-family: var(--font-display); font-size: 18px; font-weight: 700; }
-.sk-horde__title span { display: block; font-family: var(--font-ui); font-size: 12.5px; font-weight: 500; color: var(--text-mute); }
+.sk-horde__title { margin: 0 0 var(--s3); font-size: 15px; }
+.sk-horde__title span { display: block; margin-top: 2px; font-family: var(--font-ui); font-size: 12.5px; font-weight: 500; letter-spacing: 0; color: var(--text-mute); }
 .sk-levels { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s3); }
 .sk-level { display: flex; flex-direction: column; gap: var(--s1); padding: var(--s3); border-radius: var(--r-md); background: var(--surface-2); }
 .sk-level .sk-rows { margin-top: var(--s1); background: var(--surface); }
-.sk-level__lv {
-  align-self: flex-start; margin: 0; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface);
-  font-family: var(--font-mono); font-size: 11.5px; font-weight: 700; color: var(--text-dim);
-}
+/* The drafter's level chip (.learn__level), in the accent's text colour so it
+   holds 4.5:1 on a light page too. */
+.sk-level__lv { align-self: flex-start; margin: 0; color: var(--accent-ink-on); }
 .sk-level__name { margin: 0; font-size: 14px; font-weight: 700; }
 .sk-level__text { margin: 0; font-size: 13px; line-height: 1.45; color: var(--text-dim); }
 .sk-hbox { margin: var(--s2) 0 0; font-size: 12px; font-weight: 700; color: var(--text-dim); }
 
 /* ---------------------------------------------------------------- rankings */
 
-.sk-rank { display: flex; flex-direction: column; gap: var(--s3); max-width: 880px; }
-.sk-rank__tools { display: flex; flex-wrap: wrap; gap: var(--s2) var(--s3); }
-.sk-table { width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid var(--line); border-radius: var(--r-lg); background: var(--surface); }
+.sk-rank { display: flex; flex-direction: column; gap: var(--s3); max-width: 880px; box-sizing: border-box; }
+.sk-rank > .panel__head { margin: 0; }
+.sk-rank__tools { gap: var(--s2) var(--s3); min-width: 0; max-width: 100%; }
+.sk-table { width: 100%; border-collapse: separate; border-spacing: 0; }
 .sk-table thead th {
   position: sticky; top: 0; z-index: 1;
   padding: 0 var(--s3); background: var(--surface-2); border-bottom: 1px solid var(--line);
   font-size: 12.5px; font-weight: 650; color: var(--text-dim); text-align: left;
 }
-.sk-table thead th:first-child { border-top-left-radius: var(--r-lg); }
-.sk-table thead th:last-child { border-top-right-radius: var(--r-lg); }
+.sk-table thead th:first-child { border-top-left-radius: var(--r-sm); }
+.sk-table thead th:last-child { border-top-right-radius: var(--r-sm); }
 .sk-table tbody tr[hidden] { display: none; }
 .sk-table tbody th, .sk-table td { padding: var(--s1) var(--s3); border-top: 1px solid var(--line); text-align: left; font-weight: 400; }
 .sk-table tbody tr:first-child > * { border-top: 0; }
@@ -205,13 +218,12 @@
 [aria-sort="ascending"] > .sk-sort::after { content: '↑'; color: var(--text); }
 .sk-who { display: flex; align-items: center; gap: var(--s3); min-height: 44px; color: var(--text); text-decoration: none; }
 .sk-who:hover .sk-who__name { text-decoration: underline; }
-.sk-who .sk-art { flex: none; width: 36px; height: 36px; object-fit: contain; }
-.sk-who > span { display: flex; flex-direction: column; min-width: 0; }
+.sk-who .sk-art { width: 40px; height: 40px; }
+.sk-who > span { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .sk-who__name { font-weight: 650; font-size: 14px; }
-.sk-who__sub { font-size: 12px; color: var(--text-dim); }
-.sk-who__sub .sk-ticon { width: 14px; height: 14px; margin-right: 3px; }
+.sk-who__sub { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 6px; font-size: 12px; color: var(--text-dim); }
 .sk-tag {
-  display: inline-block; margin-left: 2px; padding: 0 6px; border-radius: 999px;
+  display: inline-block; padding: 0 6px; border-radius: 999px;
   border: 1px solid var(--line); background: var(--surface-2); font-size: 11px; color: var(--text-dim);
 }
 
@@ -221,42 +233,43 @@
    a line opens it in its place with a way back, and the browser's Back works
    too. Boxes stack, no sideways swiping. */
 @media (max-width: 899px) {
+  .sk__main { padding: var(--s3) var(--s3) var(--s5); }
   .sk-lines { grid-template-columns: minmax(0, 1fr); }
   .sk-index { position: static; max-height: none; overflow: visible; }
   .sk-app.is-live[data-pane="list"] .sk-detail,
   .sk-app.is-live[data-pane="line"] .sk-index { display: none; }
-  .sk-app.is-live .sk-back {
-    display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 var(--s3) 0 var(--s2);
-    border: 1px solid var(--line); border-radius: 999px; background: var(--bg);
-    color: var(--text); font: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer;
-  }
+  .sk-app.is-live .sk-back { display: inline-flex; gap: 6px; min-height: 44px; padding-left: var(--s2); }
   .sk-back::before { content: '‹'; font-size: 20px; line-height: 1; }
   .sk-line { padding: var(--s3) var(--s3) var(--s4); gap: var(--s3); }
   .sk-line__head { gap: var(--s2) var(--s3); }
-  .sk-line__name { font-size: 20px; }
   .sk-switch { flex-basis: 100%; flex-wrap: nowrap; }
-  .sk-switch__btn { flex: 1 1 0; min-width: 0; justify-content: center; padding: 2px var(--s1); }
+  /* Standing up, like the roster's cards: picture over tier and badges. */
+  .sk-switch__btn { flex: 1 1 0; min-width: 0; flex-direction: column; gap: 3px; padding: 4px; }
+  .sk-switch__text { align-items: center; }
+  .sk-switch__btn .sk-art { width: 44px; height: 44px; }
   .sk-switch__name { display: none; }
   .sk-hero { gap: var(--s3); align-items: flex-start; }
-  .sk-hero > .sk-art { width: 80px; height: 80px; }
+  .sk-hero > .sk-art { width: 80px; height: 80px; padding: 3px; }
   .sk-hero__name { font-size: 19px; }
   .sk-stats { grid-template-columns: 1fr 1fr; }
   .sk-stat--big { grid-column: 1 / -1; flex-direction: row; flex-wrap: wrap; align-items: baseline; column-gap: var(--s3); }
   .sk-stat--big .sk-stat__label { flex-basis: 100%; }
   .sk-stat--big .sk-stat__value { font-size: 28px; }
   .sk-boxes, .sk-levels { grid-template-columns: minmax(0, 1fr); }
+  .sk-rank { padding: var(--s3); }
   .sk-table thead th, .sk-table tbody th, .sk-table td { padding-inline: var(--s2); }
   .sk-long { display: none; }
   .sk-short { display: inline; }
   .sk-table td.sk-num { font-size: 12.5px; }
   .sk-who { gap: var(--s2); }
-  .sk-who .sk-art { width: 32px; height: 32px; }
+  .sk-who .sk-art { width: 34px; height: 34px; }
 }
 /* A 320px phone: every pixel of padding counts for the table to fit. */
 @media (max-width: 400px) {
+  .sk-rank { padding-inline: var(--s1); }
   .sk-table thead th, .sk-table tbody th, .sk-table td { padding-inline: var(--s1); }
   .sk-table thead th:first-child, .sk-table tbody th { padding-left: var(--s2); }
-  .sk-who .sk-art { width: 28px; height: 28px; }
+  .sk-who .sk-art { width: 30px; height: 30px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .sk-pick, .sk-switch__btn { transition: none; }
@@ -274,29 +287,34 @@
   html:has(body.skillspage .sk-app.is-live) { overflow: clip; }
   body.skillspage:has(.sk-app.is-live) { height: 100dvh; overflow: clip; display: flex; flex-direction: column; }
   body.skillspage:has(.sk-app.is-live) > * { flex: none; }
-  body.skillspage:has(.sk-app.is-live) > .sk__main { flex: 1 1 auto; min-height: 0; max-width: 1480px; padding-block: var(--s3) var(--s2); gap: var(--s2); }
+  body.skillspage:has(.sk-app.is-live) > .sk__main { flex: 1 1 auto; min-height: 0; padding-block: var(--s2); gap: var(--s2); }
   body.skillspage:has(.sk-app.is-live) .foot { padding-block: 6px; font-size: 11px; }
   body.skillspage:has(.sk-app.is-live) .foot__avatar { width: 22px; height: 22px; }
+  body.skillspage:has(.sk-app.is-live) .formbar { padding-block: 6px; }
   .sk-app.is-live { flex: 1 1 auto; min-height: 0; }
   body.skillspage:has(.sk-app.is-live) .sk-count { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: none; }
   .sk-app.is-live[data-view="lines"] .sk-lines { height: 100%; min-height: 0; align-items: stretch; grid-template-columns: 270px minmax(0, 1fr); gap: var(--s3); }
-  .sk-app.is-live .sk-index { position: static; height: 100%; max-height: none; }
-  .sk-app.is-live .sk-pick { padding-block: 5px; }
-  .sk-app.is-live .sk-detail { height: 100%; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
-  .sk-app.is-live[data-view="rank"] .sk-rank { height: 100%; min-height: 0; overflow-y: auto; max-width: none; }
+  .sk-app.is-live .sk-index { position: static; height: 100%; max-height: none; box-sizing: border-box; }
+  .sk-app.is-live .sk-index > .panel__head { padding-top: var(--s3); }
+  .sk-app.is-live .sk-pick { padding-block: 3px; min-height: 52px; }
+  .sk-app.is-live .sk-detail { height: 100%; min-height: 0; overflow-y: auto; overscroll-behavior: contain; border-radius: var(--r-lg); }
+  .sk-app.is-live[data-view="rank"] .sk-rank { height: 100%; min-height: 0; overflow-y: auto; max-width: none; padding-top: 0; }
+  .sk-app.is-live[data-view="rank"] .sk-rank > .panel__head { position: sticky; top: 0; z-index: 2; padding-top: var(--s3); background: var(--surface); }
 
   .sk-app.is-live .sk-line {
     display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); grid-template-rows: auto auto; align-content: start;
     gap: var(--s3) var(--s5); min-height: 100%; box-sizing: border-box; padding: var(--s3) var(--s4) var(--s4);
   }
   .sk-app.is-live .sk-line__head { grid-column: 1 / -1; grid-row: 1; }
-  .sk-app.is-live .sk-line__name { font-size: 20px; }
   .sk-app.is-live .sk-tier { grid-column: 1; grid-row: 2; gap: var(--s3); }
   .sk-app.is-live .sk-horde { grid-column: 2; grid-row: 2; align-self: start; padding: 0 0 0 var(--s5); border-top: 0; border-left: 1px solid var(--line); }
 
   .sk-app.is-live .sk-hero { gap: var(--s3); }
-  .sk-app.is-live .sk-hero > .sk-art { width: 72px; height: 72px; }
+  .sk-app.is-live .sk-hero > .sk-art { width: 72px; height: 72px; padding: 3px; }
   .sk-app.is-live .sk-hero__name { font-size: 19px; }
+  /* Name and tags share a line. */
+  .sk-app.is-live .sk-hero__name { display: inline; margin-right: var(--s2); vertical-align: middle; }
+  .sk-app.is-live .sk-hero__tags { display: inline-flex; margin: 0; vertical-align: middle; }
   .sk-app.is-live .sk-hero__skill { margin-top: var(--s1); font-size: 14.5px; }
   .sk-app.is-live .sk-hero__desc { font-size: 13px; line-height: 1.4; }
   .sk-app.is-live .sk-stat { padding: var(--s2) var(--s3); }
@@ -309,7 +327,7 @@
   .sk-app.is-live .sk-box__text { font-size: 12px; line-height: 1.35; }
   .sk-app.is-live .sk-rows dt, .sk-app.is-live .sk-rows dd { padding: 3px var(--s2); font-size: 12px; }
 
-  .sk-app.is-live .sk-horde__title { margin-bottom: var(--s2); font-size: 16px; }
+  .sk-app.is-live .sk-horde__title { margin-bottom: var(--s2); }
   .sk-app.is-live .sk-levels { grid-template-columns: minmax(0, 1fr); gap: var(--s2); }
   .sk-app.is-live .sk-level { padding: var(--s2) var(--s3); gap: 2px; }
   .sk-app.is-live .sk-level__name { font-size: 13.5px; }
@@ -326,7 +344,7 @@
   .sk-app.is-live .sk-level .sk-rows dt:nth-of-type(even) { border-left: 1px solid var(--line); }
   .sk-app.is-live .sk-stats { gap: var(--s2); }
   .sk-app.is-live .sk-stat { flex-direction: row; flex-wrap: wrap; align-items: baseline; column-gap: var(--s2); padding: 6px var(--s3); }
-  .sk-app.is-live .sk-stat__label { flex-basis: 100%; font-size: 11.5px; }
+  .sk-app.is-live .sk-stat__label { flex-basis: 100%; }
   .sk-app.is-live .sk-stat__note { font-size: 11px; }
   /* Boxes flow down two columns rather than sitting in rows, so a short box
      (ATK Boost) leaves no hole beside a long one (Aura: Water). */

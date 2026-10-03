@@ -140,6 +140,10 @@ function filter() {
     if (!tr.hidden) rows++;
   }
   $('#sk-none').hidden = (app.dataset.view === 'rank' ? rows : lines) > 0;
+  // The panel heads' counts, "12 of 66" while a filter is on, as the roster's does.
+  const all = (n, of) => (n === of ? String(of) : `${n} of ${of}`);
+  $('#sk-lines-n').textContent = all(lines, $$('#sk-list > li').length);
+  $('#sk-rank-n').textContent = all(rows, tbody.rows.length);
 }
 find.addEventListener('input', () => { filter(); if (find.value.trim()) trackOnce('skills-searched'); });
 

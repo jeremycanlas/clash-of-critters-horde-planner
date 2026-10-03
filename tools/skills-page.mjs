@@ -25,7 +25,11 @@ const numbers = JSON.parse(readFileSync('data/skill-numbers.json', 'utf8'));
 const hordeNumbers = (() => { try { return JSON.parse(readFileSync('data/horde-numbers.json', 'utf8')); } catch { return {}; } })();
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const typeIcon = (type, size = 16) => `<img class="sk-ticon" src="data/images/icons/${esc(type.toLowerCase())}.png" alt="" width="${size}" height="${size}">`;
+/* The drafter's own badges (app.css .badge): the game's type disc and role plate. */
+// alt is empty where the name is written beside it anyway.
+const badge = (name, alt = name) => `<span class="badge" title="${esc(name)}"><img class="icon__art" src="data/images/icons/${esc(name.toLowerCase().replace(/[^a-z0-9]+/g, '-'))}.png" alt="${esc(alt)}" width="17" height="17"></span>`;
+// The roster card's meta row: tier, then type and role.
+const meta = (tierText, t, roleAlt = t.role) => `<span class="sk-meta"><span class="card__tier">${tierText}</span>${badge(t.type)}${badge(t.role, roleAlt)}</span>`;
 const art = (t, size) => `<img class="sk-art" src="${esc(t.image)}" alt="" width="${size}" height="${size}" loading="lazy" decoding="async">`;
 // The first number in a panel value, for sorting: "130%" 130, "4s After Dance Ends" 4.
 const num = (v) => { const m = /\d+(\.\d+)?/.exec(v ?? ''); return m ? Number(m[0]) : null; };
@@ -100,8 +104,8 @@ function tier(t, line, i) {
           <div class="sk-hero">
             ${art(t, 112)}
             <div class="sk-hero__text">
-              <h3 class="sk-hero__name">${esc(t.name)} <span class="sk-tierpill">T${t.tier}</span></h3>
-              <p class="sk-hero__meta">${typeIcon(t.type)}${esc(t.type)} · ${esc(t.role)}</p>
+              <h3 class="sk-hero__name">${esc(t.name)}</h3>
+              <p class="sk-hero__tags"><span class="tag">${badge(t.type, '')}${esc(t.type)}</span><span class="tag">${badge(t.role, '')}${esc(t.role)}</span><span class="tag">T${t.tier} of ${line.length}</span></p>
               <p class="sk-hero__skill">${esc(skillName(t))}</p>
               ${desc ? `<p class="sk-hero__desc">${esc(desc)}</p>` : ''}
             </div>
@@ -144,7 +148,7 @@ function horde(t) {
             <h3 class="sk-horde__title">Horde Invasion <span>the whole line learns these as it levels up</span></h3>
             <ol class="sk-levels">${LEVELS.filter(([k]) => h[k]).map(([k, lv]) => `
               <li class="sk-level">
-                <p class="sk-level__lv">Lv ${lv}</p>
+                <p class="sk-level__lv learn__level">Lv ${lv}</p>
                 <h4 class="sk-level__name">${esc(h[k].name)}</h4>
                 <p class="sk-level__text">${esc(h[k].text)}</p>
                 ${hordeRows(hordeNumbers[t.family]?.[k]?.rows)}
@@ -165,7 +169,8 @@ const lineQ = (line) => [...new Set(line.flatMap((t) => [t.name, skillName(t),
 const hordeDone = ordered.filter((l) => hordeNumbers[l[0].family]).length;
 
 const index = `
-      <nav class="sk-index" aria-label="Evolution lines">
+      <nav class="sk-index panel" aria-label="Evolution lines">
+        <div class="panel__head"><h2>Lines <span class="muted" id="sk-lines-n">${ordered.length}</span></h2></div>
         <ol class="sk-index__list" id="sk-list">${ordered.map((line) => {
   const top = line.at(-1);
   return `
@@ -174,7 +179,7 @@ const index = `
               ${art(top, 40)}
               <span class="sk-pick__text">
                 <span class="sk-pick__name">${esc(line[0].family)}</span>
-                <span class="sk-pick__sub">${typeIcon(top.type, 14)}${esc(top.role)} · T1–T${top.tier}</span>
+                <span class="sk-pick__sub">${meta(`T1–T${top.tier}`, top, '')}${esc(top.role)}</span>
               </span>
               <span class="sk-pick__af"><span class="sr-only">Arena Factor </span>${esc(lineAF(line) ?? '–')}</span>
             </a>
@@ -185,12 +190,12 @@ const index = `
 
 const detail = `
       <div class="sk-detail" id="sk-detail">${ordered.map((line) => `
-        <article class="sk-line" id="line-${line[0].familyId}" data-type="${esc(line.at(-1).type)}">
-          <header class="sk-line__head">
-            <button class="sk-back" type="button" data-back>All lines</button>
+        <article class="sk-line panel" id="line-${line[0].familyId}" data-type="${esc(line.at(-1).type)}">
+          <header class="sk-line__head panel__head">
+            <button class="sk-back btn" type="button" data-back>All lines</button>
             <h2 class="sk-line__name">${esc(line[0].family)} line</h2>
             <div class="sk-switch" role="group" aria-label="Tier">${line.map((t) => `
-              <button class="sk-switch__btn" type="button" data-slug="${esc(t.slug)}" aria-pressed="false">${art(t, 32)}<span><b>T${t.tier}</b> <span class="sk-switch__name">${esc(t.name)}</span></span></button>`).join('')}
+              <button class="sk-switch__btn" type="button" data-slug="${esc(t.slug)}" aria-pressed="false">${art(t, 36)}<span class="sk-switch__text">${meta(`T${t.tier}`, t)}<span class="sk-switch__name">${esc(t.name)}</span></span></button>`).join('')}
             </div>
           </header>${line.map((t, i) => tier(t, line, i)).join('')}${horde(line[0])}
         </article>`).join('')}
@@ -203,8 +208,9 @@ const ranked = [...roster].sort((a, b) => (num(numbers[b.slug]?.arenaFactor) ?? 
 const sortBtn = (k, label, short, on) => `<th scope="col" class="sk-num"${on ? ' aria-sort="descending"' : ''}><button class="sk-sort" type="button" data-sort="${k}" aria-label="${label}"><span class="sk-long">${label}</span><span class="sk-short">${short}</span></button></th>`;
 const tagLabel = Object.fromEntries(TAGS.map(([k, l]) => [k, l]));
 const rankings = `
-      <section class="sk-rank" id="sk-rank" aria-label="Rankings">
-        <div class="sk-rank__tools">
+      <section class="sk-rank panel" id="sk-rank" aria-label="Rankings">
+        <div class="panel__head"><h2>Rankings <span class="muted" id="sk-rank-n">${roster.length}</span></h2>
+        <div class="sk-rank__tools panel__tools">
           <div class="segmented" role="group" aria-label="Tier" id="sk-tiers">
             <button class="segmented__btn" type="button" data-tier="" aria-pressed="true">Any tier</button>${[1, 2, 3, 4].map((n) => `
             <button class="segmented__btn" type="button" data-tier="${n}" aria-pressed="false">T${n}</button>`).join('')}
@@ -213,6 +219,7 @@ const rankings = `
             <button class="segmented__btn" type="button" data-tag="" aria-pressed="true">Any effect</button>${TAGS.map(([k, l]) => `
             <button class="segmented__btn" type="button" data-tag="${k}" aria-pressed="false">${l}</button>`).join('')}
           </div>
+        </div>
         </div>
         <table class="sk-table">
           <caption class="sr-only">Every Tatari's skill numbers, sortable</caption>
@@ -223,7 +230,7 @@ const rankings = `
   const v = (x) => num(x) ?? '';
   return `
             <tr data-type="${esc(t.type)}" data-tier="${t.tier}" data-tags="${tags.join(' ')}" data-q="${esc([t.name, skillName(t), ...(n?.sections ?? []).map((s) => s.heading ?? '')].join(' ').toLowerCase())}" data-af="${v(n?.arenaFactor)}" data-dmg="${v(pick(n, 'Damage Factor'))}" data-cd="${v(pick(n, 'Cooldown'))}">
-              <th scope="row"><a class="sk-who" href="#${esc(t.slug)}">${art(t, 36)}<span><span class="sk-who__name">${esc(t.name)}</span><span class="sk-who__sub">${typeIcon(t.type, 14)}T${t.tier} · ${esc(skillName(t))}${tags.map((k) => ` <span class="sk-tag">${tagLabel[k]}</span>`).join('')}</span></span></a></th>
+              <th scope="row"><a class="sk-who" href="#${esc(t.slug)}">${art(t, 36)}<span><span class="sk-who__name">${esc(t.name)}</span><span class="sk-who__sub">${meta(`T${t.tier}`, t)}${esc(skillName(t))}${tags.map((k) => ` <span class="sk-tag">${tagLabel[k]}</span>`).join('')}</span></span></a></th>
               <td class="sk-num">${esc(n?.arenaFactor ?? '–')}</td><td class="sk-num">${esc(pick(n, 'Damage Factor') ?? '–')}</td><td class="sk-num">${esc(pick(n, 'Cooldown') ?? '–')}</td>
             </tr>`;
 }).join('')}
