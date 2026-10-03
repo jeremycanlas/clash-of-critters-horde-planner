@@ -440,22 +440,6 @@
      "Bane"
     ],
     [
-     "Boost Factor",
-     "5%"
-    ],
-    [
-     "Damage Factor",
-     "12%"
-    ],
-    [
-     "Duration",
-     "5s"
-    ],
-    [
-     "Damage Interval",
-     "1s"
-    ],
-    [
      "Bane Damage Factor",
      "5%",
      "Bane"
@@ -1734,7 +1718,8 @@
     ],
     [
      "IVidxmum Cooldown",
-     "12s"
+     "12s",
+     "Stun"
     ],
     [
      "Effect Duration Increase",
@@ -3372,10 +3357,6 @@
      "Paralysis"
     ],
     [
-     "Lightning Lance",
-     "3"
-    ],
-    [
      "Bind",
      "Unable to move.",
      "Paralysis"
@@ -3718,22 +3699,6 @@
      "Paralysis"
     ],
     [
-     "Paralysis Damage",
-     "15%"
-    ],
-    [
-     "Duration",
-     "5s"
-    ],
-    [
-     "Damage Interval",
-     "1.5s"
-    ],
-    [
-     "Bind",
-     "Unable to move."
-    ],
-    [
      "Duration",
      "8s",
      "Glow"
@@ -3744,24 +3709,19 @@
      "Glow"
     ],
     [
-     "Duration",
-     "8s"
-    ],
-    [
-     "Max Stacks",
-     "3 Stacks"
-    ],
-    [
      "Healing Factor",
-     "2.5% of Target HP"
+     "2.5% of Target HP",
+     "Glow"
     ],
     [
      "Healing Interval",
-     "4s"
+     "4s",
+     "Glow"
     ],
     [
      "Knockback Distance",
-     "Tiles: 0.75"
+     "Tiles: 0.75",
+     "Glow"
     ]
    ]
   },
@@ -3802,19 +3762,8 @@
     ],
     [
      "mifiitaDcua Paralysis Damage Factor",
-     "15%"
-    ],
-    [
-     "Duration",
-     "5s"
-    ],
-    [
-     "Damage Interval",
-     "1.5s"
-    ],
-    [
-     "Bind",
-     "Unable to move."
+     "15%",
+     "Paralysis"
     ],
     [
      "Duration",
@@ -3828,7 +3777,8 @@
     ],
     [
      "dAflitan vamageintervai",
-     "1.55"
+     "1.55",
+     "Glow"
     ],
     [
      "Bind",
@@ -3874,28 +3824,9 @@
      "Glow"
     ],
     [
-     "Duration",
-     "8s"
-    ],
-    [
-     "Max Stacks",
-     "3 Stacks"
-    ],
-    [
-     "Healing Factor",
-     "2.5% of Target HP"
-    ],
-    [
-     "Healing Interval",
-     "4s"
-    ],
-    [
-     "Knockback Distance",
-     "Tiles: 0.75"
-    ],
-    [
      "Bind",
-     "Unable to move."
+     "Unable to move.",
+     "Glow"
     ]
    ]
   }
@@ -4201,11 +4132,8 @@
     ],
     [
      "Vamage Factor",
-     "45U%T"
-    ],
-    [
-     "Extra Damage",
-     "500%"
+     "45U%T",
+     "Burn"
     ],
     [
      "Duration",
@@ -4262,12 +4190,9 @@
      "Returns:ATK Boost"
     ],
     [
-     "Return Healing",
-     "20%"
-    ],
-    [
      "Max Steal Stacks",
-     "3 Stacks"
+     "3 Stacks",
+     "Returns:ATK Boost"
     ],
     [
      "Each Duration",
