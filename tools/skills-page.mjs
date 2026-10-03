@@ -55,7 +55,8 @@ const tagsOf = (n) => TAGS.filter(([, , test]) => (n?.sections ?? []).some((s) =
 /* A row can carry what it was at the tier below ("was 120%") or be new there.
    Each label and value pair is wrapped, so it can be one of the game's pills. */
 const rows = (list) => !list.length ? '' : `<dl class="sk-rows">${list.map(([label, value, mark]) =>
-  `<div class="sk-row"><dt>${esc(label)}${mark === 'new' ? ' <span class="sk-new">new</span>' : ''}</dt><dd>${
+  // A row too long to share its line with another takes the whole width.
+  `<div class="sk-row${String(label).length + String(value).length + (mark && mark !== 'new' ? String(mark).length + 4 : 0) > 30 ? ' sk-row--wide' : ''}"><dt>${esc(label)}${mark === 'new' ? ' <span class="sk-new">new</span>' : ''}</dt><dd>${
     mark && mark !== 'new' ? `<span class="sk-was">was ${esc(mark)}</span>` : ''}${esc(value)}</dd></div>`).join('')}</dl>`;
 
 /*
