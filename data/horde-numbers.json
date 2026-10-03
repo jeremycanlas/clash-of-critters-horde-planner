@@ -1,0 +1,4893 @@
+{
+ "Cribbler": {
+  "level3": {
+   "name": "Claw-covery",
+   "rows": [
+    [
+     "Min Trigger Interval",
+     "3s"
+    ],
+    [
+     "Max Trigger Interval",
+     "7s"
+    ],
+    [
+     "Healing Factor",
+     "12%"
+    ],
+    [
+     "Max Shield Factor",
+     "24%",
+     "Shield"
+    ],
+    [
+     "Duration",
+     "5.5s",
+     "Shield"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "Crab Knock",
+   "rows": [
+    [
+     "Damage Factor",
+     "200%"
+    ],
+    [
+     "Knockback Chance",
+     "60%",
+     "Knockback"
+    ],
+    [
+     "Knockback Distance",
+     "Tiles: 0.2",
+     "Knockback"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Crab Claw",
+   "rows": [
+    [
+     "Damage Factor",
+     "400%"
+    ],
+    [
+     "Minimum Cooldown",
+     "10s"
+    ],
+    [
+     "Maximum Cooldown",
+     "14s"
+    ],
+    [
+     "Damage Interval",
+     "0.25s"
+    ]
+   ]
+  }
+ },
+ "Voltkit": {
+  "level3": {
+   "name": "Phantom Hit",
+   "rows": [
+    [
+     "Damage Factor",
+     "140%"
+    ],
+    [
+     "Trigger Chance",
+     "55%"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "Target Lock",
+   "rows": [
+    [
+     "Damage Factor",
+     "100%"
+    ],
+    [
+     "Trigger Interval",
+     "2s"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Bolt Slash",
+   "rows": [
+    [
+     "Damage Factor",
+     "600%"
+    ],
+    [
+     "Minimum Cooldown",
+     "8s"
+    ],
+    [
+     "Maximum Cooldown",
+     "12s"
+    ]
+   ]
+  }
+ },
+ "Punchimp": {
+  "level3": {
+   "name": "Hit Me!",
+   "rows": [
+    [
+     "Damage Factor",
+     "150%"
+    ],
+    [
+     "Min Trigger Interval",
+     "7s"
+    ],
+    [
+     "Max Trigger Interval",
+     "9s"
+    ],
+    [
+     "Inherited HP",
+     "24%"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "Barricade",
+   "rows": [
+    [
+     "Trigger Chance",
+     "50%"
+    ],
+    [
+     "Amount Reduced",
+     "40%",
+     "Barricade: DMG Reduction"
+    ],
+    [
+     "Duration",
+     "3s",
+     "Barricade: DMG Reduction"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Staff Cyclone",
+   "rows": [
+    [
+     "Damage Factor",
+     "180%"
+    ],
+    [
+     "Minimum Cooldown",
+     "12s"
+    ],
+    [
+     "Maximum Cooldown",
+     "16s"
+    ],
+    [
+     "Damage Interval",
+     "0.5s"
+    ],
+    [
+     "Max Duration",
+     "8s"
+    ]
+   ]
+  }
+ },
+ "Droppit": {
+  "level3": {
+   "name": "Sleep Mist",
+   "rows": [
+    [
+     "Damage Factor",
+     "220%"
+    ],
+    [
+     "Minimum Cooldown",
+     "3s"
+    ],
+    [
+     "Maximum Cooldown",
+     "6s"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "Boom Mist",
+   "rows": [
+    [
+     "Damage Factor",
+     "100%"
+    ],
+    [
+     "Trigger Chance",
+     "20%"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Sea Fog",
+   "rows": [
+    [
+     "Minimum Cooldown",
+     "16s"
+    ],
+    [
+     "Maximum Cooldown",
+     "20s"
+    ],
+    [
+     "Duration",
+     "6s"
+    ],
+    [
+     "BoostFactor",
+     "30%",
+     "Super Fragile"
+    ]
+   ]
+  }
+ },
+ "Humbug": {
+  "level3": {
+   "name": "Boom Ball",
+   "rows": [
+    [
+     "Damage Factor",
+     "125%"
+    ],
+    [
+     "Trigger Chance",
+     "20%"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "Bounce Ball",
+   "rows": [
+    [
+     "Minimum Cooldown",
+     "7s"
+    ],
+    [
+     "Maximum Cooldown",
+     "11s"
+    ],
+    [
+     "Launch Quantity",
+     "3"
+    ],
+    [
+     "Launch Interval",
+     "1.25s"
+    ],
+    [
+     "Each Duration",
+     "5s"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Spin Ball",
+   "rows": [
+    [
+     "Minimum Cooldown",
+     "16s"
+    ],
+    [
+     "Maximum Cooldown",
+     "20s"
+    ],
+    [
+     "Damage Interval",
+     "0.5s"
+    ],
+    [
+     "1st Hit Vortex Duration",
+     "2s"
+    ],
+    [
+     "2nd Hit Vortex Duration",
+     "3s"
+    ],
+    [
+     "3rd HitVortex Duration",
+     "4s"
+    ]
+   ]
+  }
+ },
+ "Cheerling": {
+  "level3": {
+   "name": "RhythmicPierce",
+   "rows": [
+    [
+     "Damage Factor",
+     "100%"
+    ],
+    [
+     "Min Trigger Interval",
+     "3s"
+    ],
+    [
+     "Max Trigger Interval",
+     "5s"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "Just Dance",
+   "rows": [
+    [
+     "Min Trigger Interval",
+     "18s"
+    ],
+    [
+     "Max Trigger Interval",
+     "22s"
+    ],
+    [
+     "Duration",
+     "1.5s",
+     "Invincibility"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Zap Chord",
+   "rows": [
+    [
+     "Damage Factor",
+     "150%"
+    ],
+    [
+     "Min Trigger Interval",
+     "13s"
+    ],
+    [
+     "Max Trigger Interval",
+     "17s"
+    ],
+    [
+     "Damage Interval",
+     "1s"
+    ],
+    [
+     "Damage Count",
+     "3 Time(s)"
+    ],
+    [
+     "Slow Chance",
+     "30%",
+     "Slow"
+    ],
+    [
+     "Duration",
+     "3s",
+     "Slow"
+    ],
+    [
+     "Amount Reduced",
+     "30%",
+     "Slow"
+    ],
+    [
+     "Bind Chance",
+     "20%",
+     "Bind"
+    ],
+    [
+     "Duration",
+     "0.75s",
+     "Bind"
+    ],
+    [
+     "Stun Chance",
+     "10%",
+     "Stun"
+    ],
+    [
+     "Duration",
+     "1s",
+     "Stun"
+    ]
+   ]
+  }
+ },
+ "Budboo": {
+  "level3": {
+   "name": "Bitter Bane",
+   "rows": [
+    [
+     "Boost Factor",
+     "5%",
+     "Poison"
+    ],
+    [
+     "Damage Factor",
+     "12%",
+     "Poison"
+    ],
+    [
+     "Duration",
+     "5s",
+     "Poison"
+    ],
+    [
+     "Damage Interval",
+     "1s",
+     "Poison"
+    ],
+    [
+     "Bane Trigger Chance",
+     "40%",
+     "Bane"
+    ],
+    [
+     "AoE Damage Chance",
+     "40%",
+     "Bane"
+    ],
+    [
+     "AoE Damage Factor",
+     "100%",
+     "Bane"
+    ],
+    [
+     "Boost Factor",
+     "5%"
+    ],
+    [
+     "Damage Factor",
+     "12%"
+    ],
+    [
+     "Duration",
+     "5s"
+    ],
+    [
+     "Damage Interval",
+     "1s"
+    ],
+    [
+     "Bane Damage Factor",
+     "5%",
+     "Bane"
+    ],
+    [
+     "Damage Interval",
+     "1s",
+     "Bane"
+    ],
+    [
+     "Max Stacks",
+     "100 Stacks",
+     "Bane"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "Shade Spray",
+   "rows": [
+    [
+     "Damage Factor",
+     "60%"
+    ],
+    [
+     "Min Trigger Interval",
+     "8s"
+    ],
+    [
+     "Max Trigger Interval",
+     "14s"
+    ],
+    [
+     "Launch Interval",
+     "0.5s"
+    ],
+    [
+     "Launch Quantity",
+     "5"
+    ],
+    [
+     "Bane Damage Factor",
+     "5%",
+     "Bane"
+    ],
+    [
+     "Damage Interval",
+     "1s",
+     "Bane"
+    ],
+    [
+     "Max Stacks",
+     "100 Stacks",
+     "Bane"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Shadow Bloom",
+   "rows": [
+    [
+     "Minimum Cooldown",
+     "14s"
+    ],
+    [
+     "Maximum Cooldown",
+     "20s"
+    ],
+    [
+     "Bane Damage Factor",
+     "5%",
+     "Bane"
+    ],
+    [
+     "Damage Interval",
+     "1s",
+     "Bane"
+    ],
+    [
+     "Max Stacks",
+     "100 Stacks",
+     "Bane"
+    ]
+   ]
+  }
+ },
+ "Dewgrub": {
+  "level3": {
+   "name": "Aqua Flutter",
+   "rows": [
+    [
+     "Damage Factor",
+     "45%"
+    ],
+    [
+     "Trigger Chance",
+     "12%"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "Resonant Flutter",
+   "rows": [
+    [
+     "Min Trigger Interval",
+     "9s"
+    ],
+    [
+     "Max Trigger Interval",
+     "13s"
+    ],
+    [
+     "Butterfly Damage Factor",
+     "300%",
+     "Attacks May Launch Extra Butterfly"
+    ],
+    [
+     "Trigger Chance",
+     "30%",
+     "Attacks May Launch Extra Butterfly"
+    ],
+    [
+     "Effect Duration",
+     "3.5s",
+     "Attacks May Launch Extra Butterfly"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Torrential Flutter",
+   "rows": [
+    [
+     "Damage Factor",
+     "18%"
+    ],
+    [
+     "Minimum Cooldown",
+     "16s"
+    ],
+    [
+     "Maximum Cooldown",
+     "20s"
+    ],
+    [
+     "Sleep Chance",
+     "12%"
+    ]
+   ]
+  }
+ },
+ "Flameow": {
+  "level3": {
+   "name": "Cat Contempt",
+   "rows": [
+    [
+     "Trigger Interval",
+     "6 Per Target"
+    ],
+    [
+     "Duration",
+     "3s",
+     "Weak"
+    ],
+    [
+     "Amount Reduced",
+     "20%",
+     "Weak"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "Sweeping Jewel",
+   "rows": [
+    [
+     "Damage Factor",
+     "50%"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "More Jewels",
+   "rows": [
+    [
+     "Damage Factor",
+     "20%"
+    ],
+    [
+     "Distance Needed for",
+     "Every 2 Tiles Flown"
+    ],
+    [
+     "Expansion Limit",
+     "2 Time(s)"
+    ],
+    [
+     "Damage Factor",
+     "40% Each Time"
+    ],
+    [
+     "Damage Interval",
+     "1s"
+    ],
+    [
+     "Damage Count",
+     "5 Time(s)"
+    ],
+    [
+     "Minimum Cooldown",
+     "12s"
+    ],
+    [
+     "Maximum Cooldown",
+     "16s"
+    ],
+    [
+     "Continuous Damage",
+     "50%"
+    ]
+   ]
+  }
+ },
+ "Poakie": {
+  "level3": {
+   "name": "Toadie Teleport",
+   "rows": [
+    [
+     "Duration",
+     "5s",
+     "DMG Boost"
+    ],
+    [
+     "Boost Factor",
+     "20%",
+     "DMG Boost"
+    ],
+    [
+     "Duration",
+     "5s",
+     "ATK Boost"
+    ],
+    [
+     "ATK Boost",
+     "15%",
+     "ATK Boost"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "Croaker Chant",
+   "rows": [
+    [
+     "Minimum Cooldown",
+     "14s↓"
+    ],
+    [
+     "Area Duration",
+     "4s"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Oil Onsen",
+   "rows": [
+    [
+     "Minimum Cooldown",
+     "14s"
+    ],
+    [
+     "Maximum Cooldown",
+     "20s"
+    ],
+    [
+     "Ignition Damage Factor",
+     "50%"
+    ],
+    [
+     "Extra Damage",
+     "450%"
+    ],
+    [
+     "Amount Reduced",
+     "30%",
+     "Slow"
+    ],
+    [
+     "Burn Damage Factor",
+     "20%",
+     "Burn"
+    ],
+    [
+     "Duration",
+     "5s",
+     "Burn"
+    ],
+    [
+     "Damage Interval",
+     "1s",
+     "Burn"
+    ]
+   ]
+  }
+ },
+ "Joeyo": {
+  "level3": {
+   "name": "Combo!",
+   "rows": [
+    [
+     "Damage Factor",
+     "390%"
+    ],
+    [
+     "Trigger Chance",
+     "80%"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "Counterpunch!",
+   "rows": [
+    [
+     "Damage Factor",
+     "280%"
+    ],
+    [
+     "Invincibility Chance",
+     "45%",
+     "Invincibility"
+    ],
+    [
+     "Duration",
+     "2.5s",
+     "Invincibility"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Super Launch!",
+   "rows": [
+    [
+     "Damage Factor",
+     "525%"
+    ],
+    [
+     "Damage Count",
+     "7 Time(s)"
+    ],
+    [
+     "Minimum Cooldown",
+     "12s"
+    ],
+    [
+     "Maximum Cooldown",
+     "18s"
+    ],
+    [
+     "Damage Interval",
+     "0.25s"
+    ]
+   ]
+  }
+ },
+ "Fumekit": {
+  "level3": {
+   "name": "Ember Pop",
+   "rows": [
+    [
+     "Damage Factor",
+     "450%"
+    ],
+    [
+     "Trigger Chance",
+     "40%"
+    ],
+    [
+     "Burn Damage Factor",
+     "20%",
+     "Burn"
+    ],
+    [
+     "Duration",
+     "5s",
+     "Burn"
+    ],
+    [
+     "Damage Interval",
+     "1s",
+     "Burn"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "FerventFumes",
+   "rows": [
+    [
+     "Fumes:ATK&DEF Boost Chance",
+     "30%",
+     "Fumes: ATK & DEF Boost"
+    ],
+    [
+     "Duration",
+     "5s",
+     "Fumes: ATK & DEF Boost"
+    ],
+    [
+     "ATK Boost",
+     "25%",
+     "Fumes: ATK & DEF Boost"
+    ],
+    [
+     "DEF Boost",
+     "25%",
+     "Fumes: ATK & DEF Boost"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "FireworkFrenzy",
+   "rows": [
+    [
+     "Damage Factor",
+     "80%"
+    ],
+    [
+     "Minimum Cooldown",
+     "18s"
+    ],
+    [
+     "Maximum Cooldown",
+     "22s"
+    ]
+   ]
+  }
+ },
+ "Ashlarva": {
+  "level3": {
+   "name": "FluffFlame",
+   "rows": [
+    [
+     "Damage Factor",
+     "240%"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "FlutterFlame",
+   "rows": [
+    [
+     "Damage Factor",
+     "16%"
+    ],
+    [
+     "Minimum Cooldown",
+     "7s"
+    ],
+    [
+     "Maximum Cooldown",
+     "9s"
+    ],
+    [
+     "AoE Duration",
+     "5s"
+    ],
+    [
+     "Effect Interval",
+     "1.25s"
+    ],
+    [
+     "Boost Factor",
+     "10%",
+     "Flutterflame: Fragile"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Wing Embrace",
+   "rows": [
+    [
+     "ATK Boost",
+     "9%",
+     "Wing Embrace: All Stats UP"
+    ],
+    [
+     "DEF Boost",
+     "9%",
+     "Wing Embrace: All Stats UP"
+    ],
+    [
+     "HP Boost",
+     "9%",
+     "Wing Embrace: All Stats UP"
+    ]
+   ]
+  }
+ },
+ "Maskfry": {
+  "level3": {
+   "name": "Seeping Gaze",
+   "rows": [
+    [
+     "Damage Factor",
+     "225%"
+    ],
+    [
+     "Min Trigger Interval",
+     "2s"
+    ],
+    [
+     "Max Trigger Interval",
+     "4s"
+    ],
+    [
+     "Duration",
+     "3s",
+     "Slow"
+    ],
+    [
+     "Amount Reduced",
+     "30%",
+     "Slow"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "Primordial Boon",
+   "rows": [
+    [
+     "Min Trigger Interval",
+     "6s"
+    ],
+    [
+     "Max Trigger Interval",
+     "12s"
+    ],
+    [
+     "Shield Factor",
+     "40% HP",
+     "Shield"
+    ],
+    [
+     "Healing Factor",
+     "50%",
+     "Shield"
+    ],
+    [
+     "Duration",
+     "6s",
+     "Shield"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Abyssal Maw",
+   "rows": [
+    [
+     "Damage Factor",
+     "390%"
+    ],
+    [
+     "Minimum Cooldown",
+     "12s"
+    ],
+    [
+     "Maximum Cooldown",
+     "24s"
+    ],
+    [
+     "Duration",
+     "2s",
+     "Slow"
+    ],
+    [
+     "Amount Reduced",
+     "50%",
+     "Slow"
+    ],
+    [
+     "Duration",
+     "2s",
+     "Stun"
+    ],
+    [
+     "Duration",
+     "6s",
+     "Tidesurge: Fragile"
+    ],
+    [
+     "Boost Factor",
+     "20%",
+     "Tidesurge: Fragile"
+    ]
+   ]
+  }
+ },
+ "Funglet": {
+  "level3": {
+   "name": "Weakening Spores",
+   "rows": [
+    [
+     "Damage Factor",
+     "300%"
+    ],
+    [
+     "Minimum Cooldown",
+     "3s"
+    ],
+    [
+     "Maximum Cooldown",
+     "6s"
+    ],
+    [
+     "Fragile Trigger Chance",
+     "20%",
+     "Fragile"
+    ],
+    [
+     "Duration",
+     "3s",
+     "Fragile"
+    ],
+    [
+     "Boost Factor",
+     "20%",
+     "Fragile"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "Exploding Spores",
+   "rows": [
+    [
+     "Damage Factor",
+     "150%"
+    ],
+    [
+     "Trigger Interval",
+     "3s"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Longevity Spores",
+   "rows": [
+    [
+     "Minimum Cooldown",
+     "20s"
+    ],
+    [
+     "Maximum Cooldown",
+     "24s"
+    ],
+    [
+     "Damage Interval",
+     "1s"
+    ],
+    [
+     "Ally Damage Factor",
+     "1%"
+    ],
+    [
+     "Enemy Damage Factor",
+     "2%"
+    ],
+    [
+     "ATK Speed Boost",
+     "15%"
+    ]
+   ]
+  }
+ },
+ "Taptail": {
+  "level3": {
+   "name": "Karmic Sharing",
+   "rows": [
+    [
+     "Trigger Chance",
+     "40%个"
+    ],
+    [
+     "ATK Speed Boost",
+     "50%"
+    ],
+    [
+     "Duration",
+     "4s"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "Karmic Ricochet",
+   "rows": [
+    [
+     "Damage Factor",
+     "20%"
+    ],
+    [
+     "Min Trigger Interval",
+     "12s"
+    ],
+    [
+     "Max Trigger Interval",
+     "16s"
+    ],
+    [
+     "Launch Quantity",
+     "3"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Karmic Gains",
+   "rows": [
+    [
+     "Damage Factor",
+     "45%"
+    ],
+    [
+     "Minimum Cooldown",
+     "12s"
+    ],
+    [
+     "Maximum Cooldown",
+     "16s"
+    ],
+    [
+     "Launch Interval",
+     "0.25s"
+    ]
+   ]
+  }
+ },
+ "Pyropup": {
+  "level3": {
+   "name": "Fire Serpent",
+   "rows": [
+    [
+     "Damage Factor",
+     "240%"
+    ],
+    [
+     "Trigger Chance",
+     "60%"
+    ],
+    [
+     "Extensions",
+     "6 Time(s)"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "Flame Halo",
+   "rows": [
+    [
+     "Damage Factor",
+     "85%"
+    ],
+    [
+     "Min Trigger Interval",
+     "7s"
+    ],
+    [
+     "MaxTrigger Interval",
+     "11s"
+    ],
+    [
+     "Damage Interval",
+     "0.5s"
+    ],
+    [
+     "Each Duration",
+     "2.5s"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Hellflame",
+   "rows": [
+    [
+     "Damage Factor",
+     "120%"
+    ],
+    [
+     "Trigger Interval",
+     "0.5s"
+    ]
+   ]
+  }
+ },
+ "Buddi": {
+  "level3": {
+   "name": "Warm Aura",
+   "rows": [
+    [
+     "Min Trigger Interval",
+     "12s↓"
+    ],
+    [
+     "Duration",
+     "4s",
+     "Shield"
+    ],
+    [
+     "Shield Factor",
+     "4%",
+     "Shield"
+    ],
+    [
+     "Max Stacks",
+     "2 Stacks",
+     "Shield"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "Tint Shades",
+   "rows": [
+    [
+     "Damage Factor",
+     "210%"
+    ],
+    [
+     "Trigger Chance",
+     "25%"
+    ],
+    [
+     "Each Duration",
+     "1s",
+     "Stun"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Dazzling Dance",
+   "rows": [
+    [
+     "Minimum Cooldown",
+     "24s"
+    ],
+    [
+     "Maximum Cooldown",
+     "32s"
+    ],
+    [
+     "Duration",
+     "1.75s",
+     "Stun"
+    ],
+    [
+     "Duration",
+     "3s",
+     "Sunshine: ATK Boost"
+    ],
+    [
+     "ATK Boost",
+     "15%",
+     "Sunshine: ATK Boost"
+    ]
+   ]
+  }
+ },
+ "Sackling": {
+  "level3": {
+   "name": "Liquid Shield",
+   "rows": [
+    [
+     "Damage Factor",
+     "350%"
+    ],
+    [
+     "Trigger Chance",
+     "45%"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "Spider Web",
+   "rows": [
+    [
+     "Damage Factor",
+     "240%"
+    ],
+    [
+     "Minimum Cooldown",
+     "6s"
+    ],
+    [
+     "Maximum Cooldown",
+     "10s"
+    ],
+    [
+     "Bind Chance",
+     "45%",
+     "Spider Web: Bind"
+    ],
+    [
+     "Duration",
+     "2s",
+     "Spider Web: Bind"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Spider Lair",
+   "rows": [
+    [
+     "Damage Factor",
+     "240%"
+    ],
+    [
+     "Min Trigger Interval",
+     "1s"
+    ],
+    [
+     "Max Trigger Interval",
+     "4s"
+    ],
+    [
+     "Inherited HP",
+     "8%"
+    ]
+   ]
+  }
+ },
+ "Zappur": {
+  "level3": {
+   "name": "Static Shock",
+   "rows": [
+    [
+     "Damage Factor",
+     "15%"
+    ],
+    [
+     "Trigger Chance",
+     "70%"
+    ],
+    [
+     "ParalysisDamage Factor",
+     "15%",
+     "Paralysis"
+    ],
+    [
+     "Duration",
+     "5s",
+     "Paralysis"
+    ],
+    [
+     "Damage Interval",
+     "1.5s",
+     "Paralysis"
+    ],
+    [
+     "Bind",
+     "Unable to move.",
+     "Paralysis"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "Arc Charge",
+   "rows": [
+    [
+     "Damage Factor",
+     "300%"
+    ],
+    [
+     "Trigger Chance",
+     "40%"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Light Burst",
+   "rows": [
+    [
+     "Damage Factor",
+     "350%"
+    ],
+    [
+     "Minimum Cooldown",
+     "14s"
+    ],
+    [
+     "Maximum Cooldown",
+     "18s"
+    ],
+    [
+     "Knockback Chance",
+     "40%",
+     "Knockback"
+    ],
+    [
+     "Knockback Distance",
+     "Tiles: 4",
+     "Knockback"
+    ]
+   ]
+  }
+ },
+ "Blueflick": {
+  "level3": {
+   "name": "Rapid Fire",
+   "rows": [
+    [
+     "Damage Factor",
+     "230%"
+    ],
+    [
+     "Trigger Chance",
+     "40%"
+    ],
+    [
+     "Fire Orb Quantity",
+     "3"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "Fire Trigger",
+   "rows": [
+    [
+     "Damage Factor",
+     "96%"
+    ],
+    [
+     "Trigger Chance",
+     "36%"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Blazing Path",
+   "rows": [
+    [
+     "Damage Factor",
+     "270%"
+    ],
+    [
+     "Minimum Cooldown",
+     "10s"
+    ],
+    [
+     "Maximum Cooldown",
+     "15s"
+    ],
+    [
+     "Burn Chance",
+     "40%",
+     "Burn"
+    ],
+    [
+     "Duration",
+     "5s",
+     "Burn"
+    ],
+    [
+     "Damage Interval",
+     "1s",
+     "Burn"
+    ]
+   ]
+  }
+ },
+ "Hootlet": {
+  "level3": {
+   "name": "Timed Therapy",
+   "rows": [
+    [
+     "Healing Factor",
+     "75%"
+    ],
+    [
+     "Min Trigger Interval",
+     "10s"
+    ],
+    [
+     "Max Trigger Interval",
+     "14s"
+    ],
+    [
+     "Enhanced Heal",
+     "After Every 4 Heals"
+    ],
+    [
+     "Bonus Heal Count",
+     "3 Time(s)"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "Winged Rewind",
+   "rows": [
+    [
+     "Min Trigger Interval",
+     "14s↓"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Circle of Life",
+   "rows": [
+    [
+     "Minimum Cooldown",
+     "20s"
+    ],
+    [
+     "Maximum Cooldown",
+     "24s"
+    ],
+    [
+     "Summon Interval",
+     "4s"
+    ],
+    [
+     "Ally Damage Factor",
+     "130%"
+    ]
+   ]
+  }
+ },
+ "Gibber": {
+  "level3": {
+   "name": "Quake",
+   "rows": [
+    [
+     "Damage Factor",
+     "350%"
+    ],
+    [
+     "Min Trigger Interval",
+     "4s"
+    ],
+    [
+     "Max Trigger Interval",
+     "8s"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "Shell Bounce",
+   "rows": [
+    [
+     "Damage Factor",
+     "45%"
+    ],
+    [
+     "Duration",
+     "5s",
+     "Shell Shield"
+    ],
+    [
+     "Shield Factor",
+     "20%",
+     "Shell Shield"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Shell Burst",
+   "rows": [
+    [
+     "Damage Factor",
+     "420%"
+    ],
+    [
+     "Minimum Cooldown",
+     "10s"
+    ],
+    [
+     "Maximum Cooldown",
+     "14s"
+    ],
+    [
+     "One-Way Damage Count",
+     "3 Time(s)"
+    ]
+   ]
+  }
+ },
+ "Dolphie": {
+  "level3": {
+   "name": "Rainbow Blessing",
+   "rows": [
+    [
+     "Min Trigger Interval",
+     "4s"
+    ],
+    [
+     "Max Trigger Interval",
+     "6s"
+    ],
+    [
+     "Duration",
+     "3s",
+     "Rainsong: HP Boost"
+    ],
+    [
+     "Boost Factor",
+     "4%",
+     "Rainsong: HP Boost"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "Bubbly Burst",
+   "rows": [
+    [
+     "Minimum Cooldown",
+     "6s"
+    ],
+    [
+     "Maximum Cooldown",
+     "10s"
+    ],
+    [
+     "Damage Factor",
+     "25%"
+    ],
+    [
+     "Pierces",
+     "99"
+    ],
+    [
+     "Duration",
+     "4s",
+     "Bubblesong: Fragile"
+    ],
+    [
+     "BoostFactor",
+     "4%",
+     "Bubblesong: Fragile"
+    ],
+    [
+     "Max Stacks",
+     "4 Stacks",
+     "Bubblesong: Fragile"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Cascading Waves",
+   "rows": [
+    [
+     "Damage Factor",
+     "150%"
+    ],
+    [
+     "Damage Factor Increase",
+     "50% Per Amp"
+    ],
+    [
+     "Healing Factor",
+     "20%"
+    ],
+    [
+     "Healing Factor Increase",
+     "10% Per Amp"
+    ],
+    [
+     "Minimum Cooldown",
+     "8s"
+    ],
+    [
+     "Maximum Cooldown",
+     "12s"
+    ],
+    [
+     "Maximum Amps",
+     "2 Time(s)"
+    ],
+    [
+     "Extend Distance",
+     "2 Tiles Per Amp"
+    ],
+    [
+     "Duration",
+     "0.5s",
+     "Stun"
+    ],
+    [
+     "IVidxmum Cooldown",
+     "12s"
+    ],
+    [
+     "Effect Duration Increase",
+     "0.5s Per Amp",
+     "Stun"
+    ],
+    [
+     "Duration",
+     "5s",
+     "Wavesong: ATK & DEF Boost"
+    ],
+    [
+     "Boost Factor",
+     "15%",
+     "Wavesong: ATK & DEF Boost"
+    ],
+    [
+     "Boost Factor Increase",
+     "5% Per Amp",
+     "Wavesong: ATK & DEF Boost"
+    ]
+   ]
+  }
+ },
+ "Frostnip": {
+  "level3": {
+   "name": "Ice Burst",
+   "rows": [
+    [
+     "Damage Factor",
+     "180%"
+    ],
+    [
+     "Trigger Chance",
+     "30%"
+    ],
+    [
+     "Freeze Chance",
+     "45%",
+     "Freeze"
+    ],
+    [
+     "Duration",
+     "1.5s",
+     "Freeze"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "lce Scatter",
+   "rows": [
+    [
+     "Damage Factor",
+     "135%"
+    ],
+    [
+     "Icicle Quantity",
+     "5"
+    ],
+    [
+     "Min Trigger Interval",
+     "6s"
+    ],
+    [
+     "Max Trigger Interval",
+     "10s"
+    ],
+    [
+     "Amount Reduced",
+     "30%",
+     "Slow"
+    ],
+    [
+     "Duration",
+     "3s",
+     "Slow"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Frost Path",
+   "rows": [
+    [
+     "Damage Factor",
+     "420%"
+    ],
+    [
+     "Minimum Cooldown",
+     "11s"
+    ],
+    [
+     "Maximum Cooldown",
+     "15s"
+    ],
+    [
+     "Freeze Chance",
+     "45%",
+     "Freeze"
+    ],
+    [
+     "Duration",
+     "1.5s",
+     "Freeze"
+    ]
+   ]
+  }
+ },
+ "Frugling": {
+  "level3": {
+   "name": "Bomb Chain",
+   "rows": [
+    [
+     "Damage Factor",
+     "220%"
+    ],
+    [
+     "Trigger Chance",
+     "40%"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "Quick Slice",
+   "rows": [
+    [
+     "Damage Factor",
+     "50%"
+    ],
+    [
+     "Trigger Chance",
+     "20%"
+    ],
+    [
+     "Damage Interval",
+     "1.5s"
+    ],
+    [
+     "Duration",
+     "6s"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Fruit Rain",
+   "rows": [
+    [
+     "Damage Factor",
+     "60%"
+    ],
+    [
+     "Minimum Cooldown",
+     "10s"
+    ],
+    [
+     "Maximum Cooldown",
+     "18s"
+    ],
+    [
+     "Damage Interval",
+     "0.125s"
+    ],
+    [
+     "Duration",
+     "3s"
+    ]
+   ]
+  }
+ },
+ "Sparkeet": {
+  "level3": {
+   "name": "Lightning Fast",
+   "rows": [
+    [
+     "Damage Factor",
+     "150%"
+    ],
+    [
+     "Min Trigger Interval",
+     "1s"
+    ],
+    [
+     "Max Trigger Interval",
+     "3s"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "Orbs Away",
+   "rows": [
+    [
+     "Damage Factor",
+     "300%"
+    ],
+    [
+     "Orb Quantity",
+     "3"
+    ],
+    [
+     "Min Trigger Interval",
+     "3s"
+    ],
+    [
+     "Max Trigger Interval",
+     "6s"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Full Charge",
+   "rows": [
+    [
+     "Minimum Cooldown",
+     "15s"
+    ],
+    [
+     "Maximum Cooldown",
+     "30s"
+    ],
+    [
+     "Duration",
+     "10s",
+     "Charged: ATK Boost"
+    ],
+    [
+     "ATK Boost",
+     "25%",
+     "Charged: ATK Boost"
+    ],
+    [
+     "Duration",
+     "10s",
+     "Charged: DMG Reduction"
+    ],
+    [
+     "Amount Reduced",
+     "10%",
+     "Charged: DMG Reduction"
+    ]
+   ]
+  }
+ },
+ "Souphog": {
+  "level3": {
+   "name": "Second Helping",
+   "rows": [
+    [
+     "Damage Factor",
+     "180%"
+    ],
+    [
+     "Trigger Chance",
+     "20%"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "FreeSnacks",
+   "rows": [
+    [
+     "Min Trigger Interval",
+     "6s"
+    ],
+    [
+     "Max Trigger Interval",
+     "10s"
+    ],
+    [
+     "Healing Factor",
+     "12%"
+    ],
+    [
+     "Duration",
+     "5s",
+     "Snack Shield"
+    ],
+    [
+     "Shield Factor",
+     "8%",
+     "Snack Shield"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Food Fight!",
+   "rows": [
+    [
+     "Damage Factor",
+     "105%"
+    ],
+    [
+     "Minimum Cooldown",
+     "12s"
+    ],
+    [
+     "Maximum Cooldown",
+     "20s"
+    ],
+    [
+     "Food Quantity",
+     "5 Each Wave"
+    ],
+    [
+     "Food Waves",
+     "9 Time(s)"
+    ],
+    [
+     "Food Wave Interval",
+     "0.5s"
+    ],
+    [
+     "Healing Factor",
+     "3%"
+    ],
+    [
+     "Duration",
+     "3s",
+     "Stun"
+    ],
+    [
+     "Duration",
+     "5s",
+     "ATK Boost"
+    ],
+    [
+     "ATK Boost",
+     "15%",
+     "ATK Boost"
+    ]
+   ]
+  }
+ },
+ "Pandaroo": {
+  "level3": {
+   "name": "Panda Power",
+   "rows": [
+    [
+     "Damage Factor",
+     "50%"
+    ],
+    [
+     "Trigger Chance",
+     "40%"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "Mead Toss",
+   "rows": [
+    [
+     "Minimum Cooldown",
+     "7s"
+    ],
+    [
+     "Maximum Cooldown",
+     "9s"
+    ],
+    [
+     "Duration",
+     "8s",
+     "Mead: ATK Boost & ATK Speed Boost"
+    ],
+    [
+     "ATK Boost",
+     "25%",
+     "Mead: ATK Boost & ATK Speed Boost"
+    ],
+    [
+     "ATK Speed Boost",
+     "25%",
+     "Mead: ATK Boost & ATK Speed Boost"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Bambattle",
+   "rows": [
+    [
+     "Minimum Cooldown",
+     "16s"
+    ],
+    [
+     "Maximum Cooldown",
+     "20s"
+    ],
+    [
+     "Generate Count",
+     "24 Time(s)"
+    ],
+    [
+     "Minimum Duration",
+     "2s"
+    ],
+    [
+     "Max Duration",
+     "8s"
+    ],
+    [
+     "Boost Factor",
+     "20%",
+     "DMG Boost"
+    ],
+    [
+     "Amount Reduced",
+     "20%",
+     "DMG Reduction"
+    ]
+   ]
+  }
+ },
+ "Lollama": {
+  "level3": {
+   "name": "Bushy Boost",
+   "rows": [
+    [
+     "Min Trigger Interval",
+     "6s"
+    ],
+    [
+     "Max Trigger Interval",
+     "10s"
+    ],
+    [
+     "Duration",
+     "5s",
+     "DMG Boost"
+    ],
+    [
+     "Boost Factor",
+     "20%",
+     "DMG Boost"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "Sticky Spit",
+   "rows": [
+    [
+     "Damage Factor",
+     "240%"
+    ],
+    [
+     "Minimum Cooldown",
+     "8s"
+    ],
+    [
+     "Maximum Cooldown",
+     "12s"
+    ],
+    [
+     "Duration",
+     "3s",
+     "Strong Slow Zone"
+    ],
+    [
+     "Amount Reduced",
+     "30%",
+     "Strong Slow Zone"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Precision Guidance",
+   "rows": [
+    [
+     "Damage Factor",
+     "140%"
+    ],
+    [
+     "Launch Interval",
+     "0.5s"
+    ]
+   ]
+  }
+ },
+ "Gopher": {
+  "level3": {
+   "name": "Smoke Bomb",
+   "rows": [
+    [
+     "Damage Factor",
+     "70%"
+    ],
+    [
+     "Trigger Chance",
+     "60%"
+    ],
+    [
+     "Amount Reduced",
+     "20%",
+     "Weak"
+    ],
+    [
+     "Duration",
+     "3s",
+     "Weak"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "Escape Route",
+   "rows": [
+    [
+     "Damage Factor",
+     "300%"
+    ],
+    [
+     "Damage Interval",
+     "2s↑"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Gopher Group",
+   "rows": [
+    [
+     "Damage Factor",
+     "55%"
+    ],
+    [
+     "Summon Interval",
+     "4s"
+    ],
+    [
+     "Summon Duration",
+     "16s"
+    ]
+   ]
+  }
+ },
+ "Lullelly": {
+  "level3": {
+   "name": "Splash Shot",
+   "rows": [
+    [
+     "Damage Factor",
+     "280%"
+    ],
+    [
+     "Water Orb Quantity",
+     "3个"
+    ],
+    [
+     "Trigger Chance",
+     "55%"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "Bubble Bop",
+   "rows": [
+    [
+     "Damage Factor",
+     "140%"
+    ],
+    [
+     "Minimum Cooldown",
+     "8s"
+    ],
+    [
+     "Maximum Cooldown",
+     "12s"
+    ],
+    [
+     "Stun Chance",
+     "35%",
+     "Stun"
+    ],
+    [
+     "Duration",
+     "2s",
+     "Stun"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Jellypal",
+   "rows": [
+    [
+     "Damage Factor",
+     "160%"
+    ],
+    [
+     "Min Trigger Interval",
+     "7s"
+    ],
+    [
+     "Max Trigger Interval",
+     "11s"
+    ],
+    [
+     "Jellypal Duration",
+     "13s"
+    ],
+    [
+     "Max Jellypals",
+     "3"
+    ]
+   ]
+  }
+ },
+ "Kittazap": {
+  "level3": {
+   "name": "Got Gold?",
+   "rows": [
+    [
+     "Trigger Chance",
+     "20%"
+    ],
+    [
+     "Energy Gain Limit",
+     "300"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "Golden Charity",
+   "rows": [
+    [
+     "Min Trigger Interval",
+     "8s"
+    ],
+    [
+     "MaxTrigger Interval",
+     "12s"
+    ],
+    [
+     "Duration",
+     "5s",
+     "ATKBoost"
+    ],
+    [
+     "ATK Boost",
+     "15%",
+     "ATKBoost"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Rain of Riches",
+   "rows": [
+    [
+     "Damage Factor",
+     "100%"
+    ],
+    [
+     "Minimum Cooldown",
+     "16s"
+    ],
+    [
+     "Maximum Cooldown",
+     "20s"
+    ],
+    [
+     "Energy Gain Chance",
+     "30%"
+    ],
+    [
+     "Energy Gained Each Time",
+     "25"
+    ],
+    [
+     "Energy Gain Limit",
+     "400"
+    ],
+    [
+     "Duration",
+     "1s",
+     "Stun"
+    ]
+   ]
+  }
+ },
+ "Goonbug": {
+  "level3": {
+   "name": "Vital Fumes",
+   "rows": [
+    [
+     "Trigger Chance",
+     "100%"
+    ],
+    [
+     "Duration",
+     "7s",
+     "Exhaust: DMG Boost"
+    ],
+    [
+     "BoostFactor",
+     "20%",
+     "Exhaust: DMG Boost"
+    ],
+    [
+     "Duration",
+     "7s",
+     "Exhaust: ATK Boost"
+    ],
+    [
+     "ATK Boost",
+     "15%",
+     "Exhaust: ATK Boost"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "Airborne Ops",
+   "rows": [
+    [
+     "Damage Factor",
+     "450%"
+    ],
+    [
+     "Trigger Chance",
+     "100%"
+    ],
+    [
+     "Damage Interval",
+     "0.5s"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Chain Charge",
+   "rows": [
+    [
+     "Min Trigger Interval",
+     "3s"
+    ],
+    [
+     "MaxTrigger Interval",
+     "5s"
+    ]
+   ]
+  }
+ },
+ "Cactobud": {
+  "level3": {
+   "name": "Prickly Pace",
+   "rows": [
+    [
+     "Min Trigger Interval",
+     "10s"
+    ],
+    [
+     "Max Trigger Interval",
+     "14s"
+    ],
+    [
+     "ATK Speed Boost",
+     "100%"
+    ],
+    [
+     "Duration",
+     "5s"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "Spiny Fans",
+   "rows": [
+    [
+     "Damage Factor",
+     "175%"
+    ],
+    [
+     "Thorns",
+     "5"
+    ],
+    [
+     "Minimum Cooldown",
+     "8s"
+    ],
+    [
+     "Maximum Cooldown",
+     "12s"
+    ],
+    [
+     "Damage Count",
+     "3 Time(s)"
+    ],
+    [
+     "Damage Interval",
+     "1s"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Prickly Pal",
+   "rows": [
+    [
+     "Damage Factor",
+     "60%"
+    ],
+    [
+     "Min Trigger Interval",
+     "14s"
+    ],
+    [
+     "MaxTrigger Interval",
+     "18s"
+    ],
+    [
+     "Summon Duration",
+     "8.5s"
+    ]
+   ]
+  }
+ },
+ "Waddledo": {
+  "level3": {
+   "name": "lce Strike",
+   "rows": [
+    [
+     "Damage Factor",
+     "200%"
+    ],
+    [
+     "Trigger Chance",
+     "50%"
+    ],
+    [
+     "Launch Quantity",
+     "6"
+    ],
+    [
+     "Launch Interval",
+     "0.25s"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "Shield Gift",
+   "rows": [
+    [
+     "lce Shield Chance",
+     "70%",
+     "Ice Shield"
+    ],
+    [
+     "Duration",
+     "5s",
+     "Ice Shield"
+    ],
+    [
+     "Shield Factor",
+     "10%个",
+     "Ice Shield"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Ice Show",
+   "rows": [
+    [
+     "Damage Factor",
+     "240%"
+    ],
+    [
+     "Minimum Cooldown",
+     "15s"
+    ],
+    [
+     "Maximum Cooldown",
+     "19s"
+    ],
+    [
+     "Ice Sculpture HP",
+     "10%"
+    ],
+    [
+     "Ice Sculpture Duration",
+     "5s"
+    ]
+   ]
+  }
+ },
+ "Shrimpyro": {
+  "level3": {
+   "name": "Scattered Jabs",
+   "rows": [
+    [
+     "Damage Factor",
+     "140%"
+    ],
+    [
+     "Projectile Quantity",
+     "3"
+    ],
+    [
+     "Trigger Chance",
+     "35%"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "Blasting Jabs",
+   "rows": [
+    [
+     "Damage Factor",
+     "65%"
+    ],
+    [
+     "Trigger Chance",
+     "20%"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Piercing Jabs",
+   "rows": [
+    [
+     "Damage Factor",
+     "140%"
+    ],
+    [
+     "Projectile Quantity",
+     "5 Each Wave"
+    ],
+    [
+     "Successive Launch",
+     "6 Time(s)"
+    ],
+    [
+     "Minimum Cooldown",
+     "15s"
+    ],
+    [
+     "Maximum Cooldown",
+     "25s"
+    ]
+   ]
+  }
+ },
+ "Fluffle": {
+  "level3": {
+   "name": "Flash Bolt",
+   "rows": [
+    [
+     "Damage Factor",
+     "255%"
+    ],
+    [
+     "Minimum Cooldown",
+     "2s"
+    ],
+    [
+     "Maximum Cooldown",
+     "5s"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "Cloud Crash",
+   "rows": [
+    [
+     "Trigger Chance",
+     "30%"
+    ],
+    [
+     "Cloud Attack Interval",
+     "1.5s"
+    ],
+    [
+     "Cloud Damage Factor",
+     "200%"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Grim Skies",
+   "rows": [
+    [
+     "Damage Factor",
+     "135%"
+    ],
+    [
+     "Min Trigger Interval",
+     "12s"
+    ],
+    [
+     "Max Trigger Interval",
+     "16s"
+    ],
+    [
+     "Cloud Attack Interval",
+     "2s"
+    ],
+    [
+     "Dark Cloud Damage Factor",
+     "220%"
+    ]
+   ]
+  }
+ },
+ "Drilleroo": {
+  "level3": {
+   "name": "Shredding Stab",
+   "rows": [
+    [
+     "Damage Factor",
+     "350%"
+    ],
+    [
+     "Trigger Chance",
+     "45%"
+    ],
+    [
+     "Duration",
+     "3.5s",
+     "DEF Down"
+    ],
+    [
+     "Amount Reduced",
+     "20%",
+     "DEF Down"
+    ],
+    [
+     "Duration",
+     "3.5s",
+     "DEF Boost"
+    ],
+    [
+     "DEF Boost",
+     "5% Per Enemy",
+     "DEF Boost"
+    ],
+    [
+     "Max Stacks",
+     "5 Stacks",
+     "DEF Boost"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "Crowd Crusher",
+   "rows": [
+    [
+     "Min Trigger Interval",
+     "6s"
+    ],
+    [
+     "Max Trigger Interval",
+     "10s"
+    ],
+    [
+     "Enemies Counted",
+     "10 Max"
+    ],
+    [
+     "BaseShield Value",
+     "7% HP",
+     "Sunder Shield"
+    ],
+    [
+     "BonusShield Value",
+     "1% Per Enemy",
+     "Sunder Shield"
+    ],
+    [
+     "Duration",
+     "4s",
+     "Sunder Shield"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Where To?",
+   "rows": [
+    [
+     "Damage Factor",
+     "250%"
+    ],
+    [
+     "Healing Factor",
+     "40%"
+    ],
+    [
+     "Skill Lost Duration",
+     "8s Initially"
+    ],
+    [
+     "Skill Lost Duration",
+     "8s Each Time After"
+    ],
+    [
+     "Obtain Interval",
+     "4s",
+     "Prepared"
+    ],
+    [
+     "Healthy HP Threshold",
+     "10%",
+     "Danger"
+    ]
+   ]
+  }
+ },
+ "Clucky": {
+  "level3": {
+   "name": "Seed Trigger",
+   "rows": [
+    [
+     "Damage Factor",
+     "250%"
+    ],
+    [
+     "Damaging Seed Chance",
+     "30%"
+    ],
+    [
+     "Healing Seed Chance",
+     "30%"
+    ],
+    [
+     "Healing Factor",
+     "20%"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "Chain Heal",
+   "rows": [
+    [
+     "Healing Factor",
+     "7%"
+    ],
+    [
+     "Minimum Healing Interval",
+     "1s"
+    ],
+    [
+     "Maximum Healing Interval",
+     "1s"
+    ],
+    [
+     "Healthy HP Threshold",
+     "70%"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Seedscatter",
+   "rows": [
+    [
+     "Damage Factor",
+     "250%"
+    ],
+    [
+     "Minimum Cooldown",
+     "11s"
+    ],
+    [
+     "Maximum Cooldown",
+     "15s"
+    ],
+    [
+     "Seed Quantity",
+     "16"
+    ],
+    [
+     "Seed Interval",
+     "0.08s"
+    ],
+    [
+     "Healing Factor",
+     "20%"
+    ]
+   ]
+  }
+ },
+ "Zapup": {
+  "level3": {
+   "name": "Forked Bolt",
+   "rows": [
+    [
+     "Damage Factor",
+     "65%"
+    ],
+    [
+     "Trigger Chance",
+     "15%"
+    ],
+    [
+     "Damage Count",
+     "4 Time(s)"
+    ],
+    [
+     "Damage Interval",
+     "0.25s"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "Canine Pal",
+   "rows": [
+    [
+     "Damage Factor",
+     "35%"
+    ],
+    [
+     "Min Trigger Interval",
+     "6s"
+    ],
+    [
+     "Max Trigger Interval",
+     "11s"
+    ],
+    [
+     "Damage Interval",
+     "0.5s"
+    ],
+    [
+     "Duration",
+     "3s"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Gigavolt",
+   "rows": [
+    [
+     "Damage Factor",
+     "60%"
+    ],
+    [
+     "Minimum Cooldown",
+     "11s"
+    ],
+    [
+     "Maximum Cooldown",
+     "17s"
+    ],
+    [
+     "Damage Interval",
+     "0.5s"
+    ],
+    [
+     "Duration",
+     "4s"
+    ]
+   ]
+  }
+ },
+ "Dozy": {
+  "level3": {
+   "name": "Extra Spikes",
+   "rows": [
+    [
+     "Damage Factor",
+     "100%"
+    ],
+    [
+     "Thorns",
+     "3"
+    ],
+    [
+     "Trigger Chance",
+     "30%"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "Spike Shot",
+   "rows": [
+    [
+     "Damage Factor",
+     "130%"
+    ],
+    [
+     "Minimum Cooldown",
+     "7s"
+    ],
+    [
+     "Maximum Cooldown",
+     "11s"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Spike Vest",
+   "rows": [
+    [
+     "Damage Factor",
+     "200%"
+    ],
+    [
+     "Thorns",
+     "5"
+    ],
+    [
+     "Enemies Required",
+     "5"
+    ],
+    [
+     "Min Trigger Interval",
+     "3s"
+    ],
+    [
+     "Max Trigger Interval",
+     "6s"
+    ],
+    [
+     "Amount Reduced",
+     "35%",
+     "DMG Reduction"
+    ]
+   ]
+  }
+ },
+ "Capywata": {
+  "level3": {
+   "name": "Peeler",
+   "rows": [
+    [
+     "Healing Factor",
+     "35%"
+    ],
+    [
+     "Trigger Chance",
+     "40%"
+    ],
+    [
+     "Healthy HP Threshold",
+     "50%"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "Jumbo Orange",
+   "rows": [
+    [
+     "Healing Factor",
+     "45%"
+    ],
+    [
+     "Minimum Cooldown",
+     "6s"
+    ],
+    [
+     "Maximum Cooldown",
+     "8s"
+    ],
+    [
+     "Duration",
+     "5s",
+     "Orange: DMG Boost"
+    ],
+    [
+     "Boost Factor",
+     "20%",
+     "Orange: DMG Boost"
+    ],
+    [
+     "Duration",
+     "5s",
+     "Orange: ATK Boost"
+    ],
+    [
+     "ATK Boost",
+     "15%",
+     "Orange: ATK Boost"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Quick Orange",
+   "rows": [
+    [
+     "Damage Factor",
+     "150%"
+    ],
+    [
+     "Min Trigger Interval",
+     "1s"
+    ],
+    [
+     "Max Trigger Interval",
+     "1s"
+    ]
+   ]
+  }
+ },
+ "Solpear": {
+  "level3": {
+   "name": "Pear Shield",
+   "rows": [
+    [
+     "Pear Shield Chance",
+     "40%",
+     "Pear Shield"
+    ],
+    [
+     "Duration",
+     "5s",
+     "Pear Shield"
+    ],
+    [
+     "Shield Factor",
+     "8%",
+     "Pear Shield"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "Extra Pears",
+   "rows": [
+    [
+     "Damage Factor",
+     "400%"
+    ],
+    [
+     "Trigger Chance",
+     "50%"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Pear Rain",
+   "rows": [
+    [
+     "Damage Factor",
+     "500%"
+    ],
+    [
+     "Minimum Cooldown",
+     "10s"
+    ],
+    [
+     "Maximum Cooldown",
+     "14s"
+    ],
+    [
+     "Drop Interval",
+     "0.25s"
+    ],
+    [
+     "Drop Quantity",
+     "12"
+    ]
+   ]
+  }
+ },
+ "Wobbler": {
+  "level3": {
+   "name": "Critical Orb",
+   "rows": [
+    [
+     "Damage Factor",
+     "180%"
+    ],
+    [
+     "Minimum Cooldown",
+     "6s"
+    ],
+    [
+     "Maximum Cooldown",
+     "10s"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "Recharge",
+   "rows": [
+    [
+     "Skill Uses",
+     "2 Time(s)"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Electric Net",
+   "rows": [
+    [
+     "Damage Factor",
+     "110%"
+    ],
+    [
+     "Minimum Cooldown",
+     "10s"
+    ],
+    [
+     "Maximum Cooldown",
+     "16s"
+    ],
+    [
+     "Damage Interval",
+     "1s"
+    ],
+    [
+     "Duration",
+     "4s"
+    ],
+    [
+     "Bind Chance",
+     "30%",
+     "Bind"
+    ],
+    [
+     "Each Duration",
+     "0.75s",
+     "Bind"
+    ]
+   ]
+  }
+ },
+ "Zaplet": {
+  "level3": {
+   "name": "Resonant Echoes",
+   "rows": [
+    [
+     "Boost Factor",
+     "10%",
+     "Small DMG Boost"
+    ],
+    [
+     "Boost Factor",
+     "20%",
+     "Large DMG Boost"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "Bat Swarm",
+   "rows": [
+    [
+     "Damage Factor",
+     "50%"
+    ],
+    [
+     "Minimum Cooldown",
+     "10s"
+    ],
+    [
+     "Maximum Cooldown",
+     "14s"
+    ],
+    [
+     "Healing Factor",
+     "12%"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Radar Rage",
+   "rows": [
+    [
+     "Damage Factor",
+     "50%"
+    ],
+    [
+     "Max Targets",
+     "4"
+    ],
+    [
+     "Damage Interval",
+     "1s"
+    ],
+    [
+     "Duration",
+     "8s"
+    ],
+    [
+     "Minimum Cooldown",
+     "16s"
+    ],
+    [
+     "Maximum Cooldown",
+     "20s"
+    ]
+   ]
+  }
+ },
+ "Voltfawn": {
+  "level3": {
+   "name": "ScatterBolt",
+   "rows": [
+    [
+     "Damage Factor",
+     "200%"
+    ],
+    [
+     "Trigger Chance",
+     "45%"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "Bolt Trigger",
+   "rows": [
+    [
+     "Damage Factor",
+     "70%"
+    ],
+    [
+     "Trigger Chance",
+     "20%"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "BoltCleaver",
+   "rows": [
+    [
+     "Damage Factor",
+     "255%"
+    ],
+    [
+     "Lightning Lance Quantity",
+     "3"
+    ],
+    [
+     "Minimum Cooldown",
+     "9s"
+    ],
+    [
+     "Maximum Cooldown",
+     "14s"
+    ],
+    [
+     "Paralysis Chance",
+     "45%",
+     "Paralysis"
+    ],
+    [
+     "Paralysis Damage Factor",
+     "15%",
+     "Paralysis"
+    ],
+    [
+     "Duration",
+     "5s",
+     "Paralysis"
+    ],
+    [
+     "Damage Interval",
+     "1.5s",
+     "Paralysis"
+    ],
+    [
+     "Lightning Lance",
+     "3"
+    ],
+    [
+     "Bind",
+     "Unable to move.",
+     "Paralysis"
+    ]
+   ]
+  }
+ },
+ "Manteeny": {
+  "level3": {
+   "name": "Petal Blades",
+   "rows": [
+    [
+     "Damage Factor",
+     "220%"
+    ],
+    [
+     "Petal Blade",
+     "2"
+    ],
+    [
+     "Trigger Chance",
+     "40%"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "Heal Blades",
+   "rows": [
+    [
+     "BladeDamage Factor",
+     "170%"
+    ],
+    [
+     "Trigger Chance",
+     "40%"
+    ],
+    [
+     "Healing Interval",
+     "4s"
+    ],
+    [
+     "Healing Factor",
+     "30%"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Wild Slashes",
+   "rows": [
+    [
+     "Damage Factor",
+     "80%"
+    ],
+    [
+     "Damage Count",
+     "14 Time(s)"
+    ],
+    [
+     "Minimum Cooldown",
+     "11s"
+    ],
+    [
+     "Maximum Cooldown",
+     "15s"
+    ],
+    [
+     "Damage Interval",
+     "0.25s"
+    ],
+    [
+     "Healing Factor",
+     "10%"
+    ],
+    [
+     "Duration",
+     "3s",
+     "Stun"
+    ]
+   ]
+  }
+ },
+ "Zapuni": {
+  "level3": {
+   "name": "Jolt Trigger",
+   "rows": [
+    [
+     "Damage Factor",
+     "80%"
+    ],
+    [
+     "Trigger Chance",
+     "40%"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "Bolt Chain",
+   "rows": [
+    [
+     "Damage Factor",
+     "100%"
+    ],
+    [
+     "Damage Interval",
+     "1s"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Volt Horn",
+   "rows": [
+    [
+     "Damage Factor",
+     "150%"
+    ],
+    [
+     "Minimum Cooldown",
+     "12s"
+    ],
+    [
+     "Maximum Cooldown",
+     "16s"
+    ],
+    [
+     "Damage Interval",
+     "0.5s"
+    ],
+    [
+     "Duration",
+     "6s"
+    ]
+   ]
+  }
+ },
+ "Sparkit": {
+  "level3": {
+   "name": "Foxflame",
+   "rows": [
+    [
+     "Damage Factor",
+     "180%"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "Scatterflame",
+   "rows": [
+    [
+     "Damage Factor",
+     "160%"
+    ],
+    [
+     "Fire Orb Quantity",
+     "3"
+    ],
+    [
+     "Trigger Chance",
+     "25%"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Flame Sprout",
+   "rows": [
+    [
+     "Damage Factor",
+     "80%"
+    ],
+    [
+     "Projectile Quantity",
+     "12"
+    ],
+    [
+     "Min Trigger Interval",
+     "3s"
+    ],
+    [
+     "Max Trigger Interval",
+     "5s"
+    ]
+   ]
+  }
+ },
+ "Rubblet": {
+  "level3": {
+   "name": "Azure Shield",
+   "rows": [
+    [
+     "Azure Shield Chance",
+     "40%",
+     "Azure Shield"
+    ],
+    [
+     "Duration",
+     "8s",
+     "Azure Shield"
+    ],
+    [
+     "Shield Factor",
+     "9%",
+     "Azure Shield"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "Heat Sweep",
+   "rows": [
+    [
+     "Damage Factor",
+     "420%"
+    ],
+    [
+     "Minimum Cooldown",
+     "9s"
+    ],
+    [
+     "Maximum Cooldown",
+     "13s"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Fault Line",
+   "rows": [
+    [
+     "Damage Factor",
+     "280%"
+    ],
+    [
+     "Trigger Chance",
+     "100%"
+    ],
+    [
+     "Stun Chance",
+     "32%",
+     "Stun"
+    ],
+    [
+     "Duration",
+     "1s",
+     "Stun"
+    ]
+   ]
+  }
+ },
+ "Sealing": {
+  "level3": {
+   "name": "HitPractice",
+   "rows": [
+    [
+     "Damage Factor",
+     "11%"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "Pressure Orb",
+   "rows": [
+    [
+     "Damage Factor",
+     "120%"
+    ],
+    [
+     "Minimum Cooldown",
+     "8s"
+    ],
+    [
+     "Maximum Cooldown",
+     "10s"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Wave Blast",
+   "rows": [
+    [
+     "Damage Factor",
+     "180%"
+    ],
+    [
+     "Min Trigger Interval",
+     "11s"
+    ],
+    [
+     "Max Trigger Interval",
+     "15s"
+    ],
+    [
+     "Knockback Chance",
+     "70%",
+     "Knockback"
+    ],
+    [
+     "Knockback Distance",
+     "Tiles: 0.5",
+     "Knockback"
+    ],
+    [
+     "KnockbackDistance",
+     "Tiles: 0.5",
+     "Knockback"
+    ]
+   ]
+  }
+ },
+ "Glowfly": {
+  "level3": {
+   "name": "Luminous Bolt",
+   "rows": [
+    [
+     "Damage Factor",
+     "10%"
+    ],
+    [
+     "Min Trigger Interval",
+     "6s"
+    ],
+    [
+     "Max Trigger Interval",
+     "12s"
+    ],
+    [
+     "Paralysis Damage Factor",
+     "15%",
+     "Paralysis"
+    ],
+    [
+     "Duration",
+     "5s",
+     "Paralysis"
+    ],
+    [
+     "Damage Interval",
+     "1.5s",
+     "Paralysis"
+    ],
+    [
+     "Bind",
+     "Unable to move.",
+     "Paralysis"
+    ],
+    [
+     "Paralysis Damage",
+     "15%"
+    ],
+    [
+     "Duration",
+     "5s"
+    ],
+    [
+     "Damage Interval",
+     "1.5s"
+    ],
+    [
+     "Bind",
+     "Unable to move."
+    ],
+    [
+     "Duration",
+     "8s",
+     "Glow"
+    ],
+    [
+     "Max Stacks",
+     "3 Stacks",
+     "Glow"
+    ],
+    [
+     "Duration",
+     "8s"
+    ],
+    [
+     "Max Stacks",
+     "3 Stacks"
+    ],
+    [
+     "Healing Factor",
+     "2.5% of Target HP"
+    ],
+    [
+     "Healing Interval",
+     "4s"
+    ],
+    [
+     "Knockback Distance",
+     "Tiles: 0.75"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "Fulgur Fusion",
+   "rows": [
+    [
+     "Damage Factor",
+     "50%"
+    ],
+    [
+     "Min Trigger Interval",
+     "6s"
+    ],
+    [
+     "Max Trigger Interval",
+     "12s"
+    ],
+    [
+     "Paralysis Damage Factor",
+     "15%",
+     "Paralysis"
+    ],
+    [
+     "Duration",
+     "5s",
+     "Paralysis"
+    ],
+    [
+     "Damage Interval",
+     "1.5s",
+     "Paralysis"
+    ],
+    [
+     "Bind",
+     "Unable to move.",
+     "Paralysis"
+    ],
+    [
+     "mifiitaDcua Paralysis Damage Factor",
+     "15%"
+    ],
+    [
+     "Duration",
+     "5s"
+    ],
+    [
+     "Damage Interval",
+     "1.5s"
+    ],
+    [
+     "Bind",
+     "Unable to move."
+    ],
+    [
+     "Duration",
+     "8s",
+     "Glow"
+    ],
+    [
+     "Max Stacks",
+     "3 Stacks",
+     "Glow"
+    ],
+    [
+     "dAflitan vamageintervai",
+     "1.55"
+    ],
+    [
+     "Bind",
+     "Unable to move.",
+     "Glow"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Radiant Glow",
+   "rows": [
+    [
+     "Min Trigger Interval",
+     "6s"
+    ],
+    [
+     "Max Trigger Interval",
+     "12s"
+    ],
+    [
+     "Duration",
+     "8s",
+     "Glow"
+    ],
+    [
+     "Max Stacks",
+     "3 Stacks",
+     "Glow"
+    ],
+    [
+     "Healing Factor",
+     "2.5% of Target HP",
+     "Glow"
+    ],
+    [
+     "Healing Interval",
+     "4s",
+     "Glow"
+    ],
+    [
+     "Knockback Distance",
+     "Tiles: 0.75",
+     "Glow"
+    ],
+    [
+     "Duration",
+     "8s"
+    ],
+    [
+     "Max Stacks",
+     "3 Stacks"
+    ],
+    [
+     "Healing Factor",
+     "2.5% of Target HP"
+    ],
+    [
+     "Healing Interval",
+     "4s"
+    ],
+    [
+     "Knockback Distance",
+     "Tiles: 0.75"
+    ],
+    [
+     "Bind",
+     "Unable to move."
+    ]
+   ]
+  }
+ },
+ "Skinklet": {
+  "level3": {
+   "name": "Vortex Sap",
+   "rows": [
+    [
+     "Damage Factor",
+     "120%"
+    ],
+    [
+     "Trigger Chance",
+     "45%"
+    ],
+    [
+     "Damage Interval",
+     "0.5s"
+    ],
+    [
+     "Duration",
+     "2.75s"
+    ],
+    [
+     "Duration",
+     "3s",
+     "Slow"
+    ],
+    [
+     "Amount Reduced",
+     "30%",
+     "Slow"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "Tidal Gap",
+   "rows": [
+    [
+     "Damage Factor",
+     "100%"
+    ],
+    [
+     "Min Trigger Interval",
+     "6s"
+    ],
+    [
+     "Max Trigger Interval",
+     "10s"
+    ],
+    [
+     "Damage Interval",
+     "0.5s"
+    ],
+    [
+     "Duration",
+     "2.75s"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Technique: Veil",
+   "rows": [
+    [
+     "Minimum Cooldown",
+     "12s"
+    ],
+    [
+     "Maximum Cooldown",
+     "18s"
+    ],
+    [
+     "Damage Interval",
+     "0.5s"
+    ],
+    [
+     "Min Spout Duration",
+     "1.5s"
+    ],
+    [
+     "Max Spout Duration",
+     "3.5s"
+    ],
+    [
+     "Maximum Summons",
+     "8"
+    ],
+    [
+     "Summon Duration",
+     "8s"
+    ]
+   ]
+  }
+ },
+ "Shardsnail": {
+  "level3": {
+   "name": "Gem Cluster",
+   "rows": [
+    [
+     "Damage Factor",
+     "150%"
+    ],
+    [
+     "Inherited HP",
+     "18%"
+    ],
+    [
+     "Summon Duration",
+     "13s"
+    ],
+    [
+     "Min Trigger Interval",
+     "4s"
+    ],
+    [
+     "Max Trigger Interval",
+     "6s"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "Gem Burst",
+   "rows": [
+    [
+     "Damage Factor",
+     "140%"
+    ],
+    [
+     "Minimum Cooldown",
+     "8s"
+    ],
+    [
+     "Maximum Cooldown",
+     "12s"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Gem Resonance",
+   "rows": [
+    [
+     "Damage Factor",
+     "180%"
+    ],
+    [
+     "Minimum Cooldown",
+     "12s"
+    ],
+    [
+     "Maximum Cooldown",
+     "16s"
+    ],
+    [
+     "Crystallized Chance",
+     "20%",
+     "Crystallized"
+    ],
+    [
+     "Duration",
+     "2s",
+     "Crystallized"
+    ]
+   ]
+  }
+ },
+ "Dumbopus": {
+  "level3": {
+   "name": "Ink Splatter",
+   "rows": [
+    [
+     "Damage Factor",
+     "200%"
+    ],
+    [
+     "Trigger Chance",
+     "55%"
+    ],
+    [
+     "Blind Chance",
+     "40%",
+     "Blind"
+    ],
+    [
+     "Duration",
+     "3s",
+     "Blind"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "Force Field",
+   "rows": [
+    [
+     "Min Trigger Interval",
+     "20s"
+    ],
+    [
+     "Max Trigger Interval",
+     "28s"
+    ],
+    [
+     "Amount Reduced",
+     "20%",
+     "DMG Reduction"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Octo-Nuke",
+   "rows": [
+    [
+     "Damage Factor",
+     "390%"
+    ],
+    [
+     "Minimum Cooldown",
+     "12s"
+    ],
+    [
+     "Maximum Cooldown",
+     "20s"
+    ],
+    [
+     "Extra Damage Factor",
+     "1150%"
+    ]
+   ]
+  }
+ },
+ "Blowfin": {
+  "level3": {
+   "name": "Ramen Stand",
+   "rows": [
+    [
+     "Healing Factor",
+     "50%"
+    ],
+    [
+     "Ramen Trigger Chance",
+     "40%"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "Yakitori Grill",
+   "rows": [
+    [
+     "Damage Factor",
+     "200%"
+    ],
+    [
+     "Healing Factor",
+     "20%"
+    ],
+    [
+     "Min Trigger Interval",
+     "1s"
+    ],
+    [
+     "Max Trigger",
+     "5s"
+    ],
+    [
+     "Trigger Interval Reduction",
+     "0.5s"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Warship Roll",
+   "rows": [
+    [
+     "Damage Factor",
+     "450%"
+    ],
+    [
+     "Minimum Cooldown",
+     "15s"
+    ],
+    [
+     "Maximum Cooldown",
+     "21s"
+    ],
+    [
+     "Extra Damage Factor",
+     "500%"
+    ],
+    [
+     "Burn Damage Factor",
+     "20%",
+     "Burn"
+    ],
+    [
+     "Duration",
+     "5s",
+     "Burn"
+    ],
+    [
+     "Damage Interval",
+     "1s",
+     "Burn"
+    ],
+    [
+     "Vamage Factor",
+     "45U%T"
+    ],
+    [
+     "Extra Damage",
+     "500%"
+    ],
+    [
+     "Duration",
+     "2s",
+     "Stun"
+    ]
+   ]
+  }
+ },
+ "Ringtail": {
+  "level3": {
+   "name": "Con Man's Code",
+   "rows": [
+    [
+     "Min Trigger Interval",
+     "12s"
+    ],
+    [
+     "Max Trigger Interval",
+     "18s"
+    ],
+    [
+     "Steal Targets",
+     "3"
+    ],
+    [
+     "HP Reduced",
+     "10%"
+    ],
+    [
+     "Steal Duration",
+     "5s"
+    ],
+    [
+     "Return Healing Factor",
+     "20%"
+    ],
+    [
+     "ATK Stolen",
+     "5%"
+    ],
+    [
+     "MaxSteal Stacks",
+     "3 Stacks"
+    ],
+    [
+     "Each Duration",
+     "8s",
+     "Returns:ATK Boost"
+    ],
+    [
+     "ATK Boost",
+     "15%",
+     "Returns:ATK Boost"
+    ],
+    [
+     "Return Healing",
+     "20%"
+    ],
+    [
+     "Max Steal Stacks",
+     "3 Stacks"
+    ],
+    [
+     "Each Duration",
+     "8s",
+     "Returns: ATK Boost"
+    ],
+    [
+     "ATK Boost",
+     "15%",
+     "Returns: ATK Boost"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "Make It Rain",
+   "rows": [
+    [
+     "Min Trigger Interval",
+     "16s"
+    ],
+    [
+     "Max Trigger Interval",
+     "24s"
+    ],
+    [
+     "Gold Coin Duration",
+     "15s"
+    ],
+    [
+     "Each Duration",
+     "8s",
+     "Ka-Ching: DMG Boost"
+    ],
+    [
+     "Boost Factor",
+     "20%",
+     "Ka-Ching: DMG Boost"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Cannon Ace",
+   "rows": [
+    [
+     "Min Trigger Interval",
+     "16s"
+    ],
+    [
+     "Max Trigger Interval",
+     "24s"
+    ],
+    [
+     "Damage Factor",
+     "500%"
+    ],
+    [
+     "Damage Factor Increase",
+     "150%/s."
+    ],
+    [
+     "Max Charge Duration",
+     "5s"
+    ],
+    [
+     "Follow-Up Damage Factor",
+     "1500%"
+    ],
+    [
+     "Duration",
+     "2.5s",
+     "Hugs: Stun"
+    ]
+   ]
+  }
+ },
+ "Shellshy": {
+  "level3": {
+   "name": "Bubble Line",
+   "rows": [
+    [
+     "Damage Factor",
+     "300%"
+    ],
+    [
+     "Trigger Chance",
+     "50%"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "Bubble Shield",
+   "rows": [
+    [
+     "Min Trigger Interval",
+     "3s"
+    ],
+    [
+     "Max Trigger Interval",
+     "7s"
+    ],
+    [
+     "Healing Factor",
+     "12%"
+    ],
+    [
+     "Max Shield Factor",
+     "24%",
+     "Shield"
+    ],
+    [
+     "Duration",
+     "5.5s",
+     "Shield"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Super Bubble",
+   "rows": [
+    [
+     "Damage Factor",
+     "400%"
+    ],
+    [
+     "Minimum Cooldown",
+     "8s"
+    ],
+    [
+     "Maximum Cooldown",
+     "12s"
+    ],
+    [
+     "Amount Reduced",
+     "30%",
+     "Slow"
+    ],
+    [
+     "Duration",
+     "3s",
+     "Slow"
+    ]
+   ]
+  }
+ },
+ "Tindercub": {
+  "level3": {
+   "name": "Flame Shroud",
+   "rows": [
+    [
+     "Burn Chance",
+     "70%",
+     "Burn"
+    ],
+    [
+     "Burn Damage Factor",
+     "20%",
+     "Burn"
+    ],
+    [
+     "Duration",
+     "5s",
+     "Burn"
+    ],
+    [
+     "Damage Interval",
+     "1s",
+     "Burn"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "Blaze Burst",
+   "rows": [
+    [
+     "Damage Factor",
+     "230%"
+    ],
+    [
+     "Trigger Chance",
+     "60%"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Flame Fists",
+   "rows": [
+    [
+     "Damage Factor",
+     "580%"
+    ],
+    [
+     "Minimum Cooldown",
+     "6s个"
+    ],
+    [
+     "Maximum Cooldown",
+     "9s个"
+    ]
+   ]
+  }
+ },
+ "Momopo": {
+  "level3": {
+   "name": "Pounding Hearts",
+   "rows": [
+    [
+     "Damage Factor",
+     "400%"
+    ],
+    [
+     "Min Trigger Interval",
+     "4s"
+    ],
+    [
+     "Max Trigger Interval",
+     "6s"
+    ],
+    [
+     "Duration",
+     "1.5s",
+     "Stun"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "Pink Protection",
+   "rows": [
+    [
+     "Min Trigger Interval",
+     "9s个"
+    ],
+    [
+     "Max Trigger Interval",
+     "15s个"
+    ],
+    [
+     "Base Prevention Count",
+     "4 Time(s)",
+     "Strike Shield"
+    ],
+    [
+     "Extra Preventions",
+     "1 Per Evolution",
+     "Strike Shield"
+    ],
+    [
+     "Duration",
+     "5s",
+     "Strike Shield"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Lovely Barrier",
+   "rows": [
+    [
+     "Minimum Cooldown",
+     "16s"
+    ],
+    [
+     "Maximum Cooldown",
+     "24s"
+    ],
+    [
+     "Base Intercept Count",
+     "15"
+    ],
+    [
+     "Extra Interceptions",
+     "2 Per Evolution"
+    ],
+    [
+     "Barrier Duration",
+     "9s"
+    ]
+   ]
+  }
+ },
+ "Snowcub": {
+  "level3": {
+   "name": "Always Cola",
+   "rows": [
+    [
+     "Damage Factor",
+     "350%"
+    ],
+    [
+     "Total Trigger Chance",
+     "30%"
+    ],
+    [
+     "Max Colas",
+     "6"
+    ],
+    [
+     "Healing Factor",
+     "20%"
+    ],
+    [
+     "Duration",
+     "5s",
+     "Cola: DMG Boost"
+    ],
+    [
+     "Boost Factor",
+     "20%",
+     "Cola: DMG Boost"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "Make it Swarm",
+   "rows": [
+    [
+     "Damage Factor",
+     "100%"
+    ],
+    [
+     "Minimum Cooldown",
+     "10s"
+    ],
+    [
+     "Maximum Cooldown",
+     "16s"
+    ],
+    [
+     "Marlin Damage Factor",
+     "200%"
+    ],
+    [
+     "Marlin Damage Factor",
+     "300%"
+    ],
+    [
+     "Final Damage Factor",
+     "200%"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Together is Better",
+   "rows": [
+    [
+     "Damage Factor",
+     "350%"
+    ],
+    [
+     "Minimum Cooldown",
+     "15s"
+    ],
+    [
+     "Maximum Cooldown",
+     "25s"
+    ],
+    [
+     "Summon Duration",
+     "8s"
+    ],
+    [
+     "ATK Boost",
+     "12%",
+     "Cola: ATK & DEF Boost"
+    ],
+    [
+     "DEF Boost",
+     "12%",
+     "Cola: ATK & DEF Boost"
+    ]
+   ]
+  }
+ },
+ "Cavyzap": {
+  "level3": {
+   "name": "Cavy Cage",
+   "rows": [
+    [
+     "Damage Factor",
+     "60%"
+    ],
+    [
+     "Trigger Chance",
+     "50%"
+    ],
+    [
+     "Damage Interval",
+     "1s"
+    ],
+    [
+     "Max Control",
+     "2 Each Time"
+    ],
+    [
+     "Electricage Duration",
+     "10s"
+    ],
+    [
+     "Max Electricages",
+     "3"
+    ],
+    [
+     "Amount Reduced",
+     "20%",
+     "Slow"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "Full Tilt!",
+   "rows": [
+    [
+     "Damage Factor",
+     "60%"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Electric Circuit",
+   "rows": [
+    [
+     "Damage Factor",
+     "60%"
+    ],
+    [
+     "Min Trigger Interval",
+     "13s"
+    ],
+    [
+     "Max Trigger Interval",
+     "19s"
+    ],
+    [
+     "Damage Interval",
+     "0.5s"
+    ],
+    [
+     "Duration",
+     "1.5s"
+    ]
+   ]
+  }
+ },
+ "Cindermunk": {
+  "level3": {
+   "name": "Pinecone Bomb",
+   "rows": [
+    [
+     "Damage Factor",
+     "350%"
+    ],
+    [
+     "Trigger Chance",
+     "50%"
+    ],
+    [
+     "Stun Chance",
+     "40%",
+     "Stun"
+    ],
+    [
+     "Duration",
+     "1s",
+     "Stun"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "Fluff Ranger",
+   "rows": [
+    [
+     "Damage Factor",
+     "190%"
+    ],
+    [
+     "Min Trigger Interval",
+     "7s"
+    ],
+    [
+     "Max Trigger Interval",
+     "11s"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Hold Steady",
+   "rows": [
+    [
+     "Damage Factor",
+     "300%"
+    ],
+    [
+     "Minimum Cooldown",
+     "8s"
+    ],
+    [
+     "Maximum Cooldown",
+     "14s"
+    ]
+   ]
+  }
+ },
+ "Sparkrow": {
+  "level3": {
+   "name": "Ember Pop Il",
+   "rows": [
+    [
+     "Damage Factor",
+     "20%"
+    ],
+    [
+     "Burn Chance",
+     "25%",
+     "Burn"
+    ],
+    [
+     "Burn Damage Factor",
+     "20%",
+     "Burn"
+    ],
+    [
+     "Duration",
+     "5s",
+     "Burn"
+    ],
+    [
+     "Damage Interval",
+     "1s",
+     "Burn"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "Scatterflame",
+   "rows": [
+    [
+     "Damage Factor",
+     "60%"
+    ],
+    [
+     "Fire Orb Quantity",
+     "5"
+    ],
+    [
+     "Trigger Chance",
+     "25%"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Fire Barrage",
+   "rows": [
+    [
+     "Damage Factor",
+     "45%"
+    ],
+    [
+     "Fire Orb Quantity",
+     "11"
+    ],
+    [
+     "Minimum Cooldown",
+     "11s"
+    ],
+    [
+     "Maximum Cooldown",
+     "16s"
+    ],
+    [
+     "Damage Count",
+     "5 Time(s)"
+    ],
+    [
+     "Damage Interval",
+     "0.5s"
+    ]
+   ]
+  }
+ },
+ "Mudrump": {
+  "level3": {
+   "name": "Dried Mud",
+   "rows": [
+    [
+     "Trigger Chance",
+     "30%"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "Mud Madness",
+   "rows": [
+    [
+     "Damage Factor",
+     "250%"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Mud Fest",
+   "rows": [
+    [
+     "Damage Factor",
+     "55%"
+    ],
+    [
+     "Minimum Cooldown",
+     "12s"
+    ],
+    [
+     "Maximum Cooldown",
+     "18s"
+    ],
+    [
+     "Launch Quantity",
+     "40"
+    ],
+    [
+     "Mud Ball Interval",
+     "0.08s"
+    ]
+   ]
+  }
+ }
+}

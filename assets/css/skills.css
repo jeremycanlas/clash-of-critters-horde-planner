@@ -261,3 +261,76 @@
 @media (prefers-reduced-motion: reduce) {
   .sk-pick, .sk-switch__btn { transition: none; }
 }
+
+/* ---------------------------------------------------------------- one screen
+   On a computer the page is a dashboard: the window's height and no more. The
+   list and the open line scroll inside themselves, and the open line is laid
+   out in two columns (the skill and its boxes beside the Horde Invasion
+   skills), tight enough that a T4 with every box fits a 768px-tall laptop
+   without scrolling. Only once the script is running: without it the page is
+   the long, stacked document search engines read. */
+@media (min-width: 900px) and (min-height: 600px) {
+  /* clip, not hidden: a hidden box can still be scrolled by script, and the #slug jump did. */
+  html:has(body.skillspage .sk-app.is-live) { overflow: clip; }
+  body.skillspage:has(.sk-app.is-live) { height: 100dvh; overflow: clip; display: flex; flex-direction: column; }
+  body.skillspage:has(.sk-app.is-live) > * { flex: none; }
+  body.skillspage:has(.sk-app.is-live) > .sk__main { flex: 1 1 auto; min-height: 0; max-width: 1480px; padding-block: var(--s3) var(--s2); gap: var(--s2); }
+  body.skillspage:has(.sk-app.is-live) .foot { padding-block: 6px; font-size: 11px; }
+  body.skillspage:has(.sk-app.is-live) .foot__avatar { width: 22px; height: 22px; }
+  .sk-app.is-live { flex: 1 1 auto; min-height: 0; }
+  body.skillspage:has(.sk-app.is-live) .sk-count { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: none; }
+  .sk-app.is-live[data-view="lines"] .sk-lines { height: 100%; min-height: 0; align-items: stretch; grid-template-columns: 270px minmax(0, 1fr); gap: var(--s3); }
+  .sk-app.is-live .sk-index { position: static; height: 100%; max-height: none; }
+  .sk-app.is-live .sk-pick { padding-block: 5px; }
+  .sk-app.is-live .sk-detail { height: 100%; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+  .sk-app.is-live[data-view="rank"] .sk-rank { height: 100%; min-height: 0; overflow-y: auto; max-width: none; }
+
+  .sk-app.is-live .sk-line {
+    display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); grid-template-rows: auto auto; align-content: start;
+    gap: var(--s3) var(--s5); min-height: 100%; box-sizing: border-box; padding: var(--s3) var(--s4) var(--s4);
+  }
+  .sk-app.is-live .sk-line__head { grid-column: 1 / -1; grid-row: 1; }
+  .sk-app.is-live .sk-line__name { font-size: 20px; }
+  .sk-app.is-live .sk-tier { grid-column: 1; grid-row: 2; gap: var(--s3); }
+  .sk-app.is-live .sk-horde { grid-column: 2; grid-row: 2; align-self: start; padding: 0 0 0 var(--s5); border-top: 0; border-left: 1px solid var(--line); }
+
+  .sk-app.is-live .sk-hero { gap: var(--s3); }
+  .sk-app.is-live .sk-hero > .sk-art { width: 72px; height: 72px; }
+  .sk-app.is-live .sk-hero__name { font-size: 19px; }
+  .sk-app.is-live .sk-hero__skill { margin-top: var(--s1); font-size: 14.5px; }
+  .sk-app.is-live .sk-hero__desc { font-size: 13px; line-height: 1.4; }
+  .sk-app.is-live .sk-stat { padding: var(--s2) var(--s3); }
+  .sk-app.is-live .sk-stat__value { font-size: 18px; }
+  .sk-app.is-live .sk-stat--big .sk-stat__value { font-size: 24px; }
+
+  .sk-app.is-live .sk-boxes { grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: var(--s2); }
+  .sk-app.is-live .sk-box { padding: var(--s2) var(--s3); gap: var(--s1); }
+  .sk-app.is-live .sk-box__title { font-size: 13px; }
+  .sk-app.is-live .sk-box__text { font-size: 12px; line-height: 1.35; }
+  .sk-app.is-live .sk-rows dt, .sk-app.is-live .sk-rows dd { padding: 3px var(--s2); font-size: 12px; }
+
+  .sk-app.is-live .sk-horde__title { margin-bottom: var(--s2); font-size: 16px; }
+  .sk-app.is-live .sk-levels { grid-template-columns: minmax(0, 1fr); gap: var(--s2); }
+  .sk-app.is-live .sk-level { padding: var(--s2) var(--s3); gap: 2px; }
+  .sk-app.is-live .sk-level__name { font-size: 13.5px; }
+  .sk-app.is-live .sk-level__text { font-size: 12px; line-height: 1.35; }
+  .sk-app.is-live .sk-hbox { margin-top: var(--s1); font-size: 11.5px; }
+
+  /* Tighter still: a level's "Lv 3" sits beside its name, and numbers run two
+     pairs to a line wherever a column is wide enough for both. */
+  .sk-app.is-live .sk-level { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; column-gap: var(--s2); }
+  .sk-app.is-live .sk-level > :not(.sk-level__lv):not(.sk-level__name) { grid-column: 1 / -1; }
+  .sk-app.is-live .sk-level .sk-rows,
+  .sk-app.is-live .sk-tier > .sk-boxes .sk-box:only-child .sk-rows { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto; }
+  .sk-app.is-live .sk-level .sk-rows dt:nth-of-type(2), .sk-app.is-live .sk-level .sk-rows dt:nth-of-type(2) + dd { border-top: 0; }
+  .sk-app.is-live .sk-level .sk-rows dt:nth-of-type(even) { border-left: 1px solid var(--line); }
+  .sk-app.is-live .sk-stats { gap: var(--s2); }
+  .sk-app.is-live .sk-stat { flex-direction: row; flex-wrap: wrap; align-items: baseline; column-gap: var(--s2); padding: 6px var(--s3); }
+  .sk-app.is-live .sk-stat__label { flex-basis: 100%; font-size: 11.5px; }
+  .sk-app.is-live .sk-stat__note { font-size: 11px; }
+  /* Boxes flow down two columns rather than sitting in rows, so a short box
+     (ATK Boost) leaves no hole beside a long one (Aura: Water). */
+  .sk-app.is-live .sk-boxes { display: block; column-count: 2; column-gap: var(--s2); }
+  .sk-app.is-live .sk-boxes > .sk-box { break-inside: avoid; margin-bottom: var(--s2); }
+  .sk-app.is-live .sk-boxes > .sk-box:only-child { column-span: all; }
+}

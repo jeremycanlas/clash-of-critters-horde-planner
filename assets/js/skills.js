@@ -55,11 +55,17 @@ function open(slug) {
     const top = pick.getBoundingClientRect().top - list.getBoundingClientRect().top + list.scrollTop;
     if (top < list.scrollTop || top + pick.offsetHeight > list.scrollTop + list.clientHeight) list.scrollTop = top - list.clientHeight / 3;
   }
+  // One-screen layout (skills.css): the page itself never scrolls, but the
+  // browser's own jump to #slug scrolls it anyway. Put it back, and start the
+  // line at its top.
+  if (oneScreen.matches) { scrollTo(0, 0); $('#sk-detail').scrollTop = 0; }
   current = slug;
   app.dataset.pane = 'line';
   setView('lines');
   return true;
 }
+
+const oneScreen = matchMedia('(min-width: 900px) and (min-height: 600px)');
 
 /* From the address. No hash: the list, and on a wide screen the first line
    beside it, so the right-hand side is never empty. */
@@ -75,6 +81,7 @@ function route() {
 
 /* Bring the open line's top into view if the page has scrolled past it. */
 const toLine = () => {
+  if (oneScreen.matches) { scrollTo(0, 0); return; }
   const line = $('.sk-line.is-on');
   if (line && (!wide.matches || line.getBoundingClientRect().top < 0)) line.scrollIntoView({ block: 'start' });
 };
@@ -173,3 +180,8 @@ route();
 // Arriving on skills.html#cribking, the browser jumped to the tier itself; the
 // line's name and tier switcher sit above it.
 if (location.hash.length > 1 && current) toLine();
+
+// The browser jumps to #slug after the page loads, which is after this script
+// ran; in the one-screen layout undo that jump once it has happened.
+if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+addEventListener('load', () => { if (oneScreen.matches) requestAnimationFrame(() => { scrollTo(0, 0); $('#sk-detail').scrollTop = 0; }); });
