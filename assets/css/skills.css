@@ -396,13 +396,30 @@
   .sk-app.is-live .sk-tier .sk-boxes > .sk-box:only-child { column-span: all; }
 }
 
-/* The tier switcher holds still. Four equal slots that always start at the
-   same place, whatever the line is called and however many tiers it has: a
-   two-tier line fills the first two and leaves the rest empty, so T1 never
-   moves under the pointer. Desktop only; phones have their own row. */
+/* The tier switcher sits above the skill card and is exactly as wide as it, so
+   its edges line up with the card; the tiers share that width evenly (four for
+   most lines, two wider ones for a T1-T2 line), so there is no gap and T1 is
+   always at the card's left edge. The line's name sits on the line above. The
+   Horde column starts at the top beside both. Desktop only. */
 @media (min-width: 900px) {
-  .sk-app.is-live .sk-line__name { flex: 0 0 13rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .sk-app.is-live .sk-switch { display: grid; grid-template-columns: repeat(4, 9.5rem); gap: var(--s2); flex: none; }
+  .sk-app.is-live .sk-line__head { grid-column: 1; grid-row: 1; display: flex; flex-direction: column; align-items: stretch; gap: var(--s2); padding: 0; }
+  .sk-app.is-live .sk-line__name { flex: none; font-size: 15px; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sk-app.is-live .sk-switch { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: var(--s2); width: 100%; }
   .sk-app.is-live .sk-switch__btn { min-width: 0; }
   .sk-app.is-live .sk-switch__name { overflow: hidden; text-overflow: ellipsis; }
+  .sk-app.is-live .sk-horde { grid-row: 1 / span 2; }
+  /* The Horde column spans both rows; any extra height it brings goes to the
+     second row, so the switcher stays snug against the card below it. */
+  .sk-app.is-live .sk-line { grid-template-rows: min-content 1fr; row-gap: var(--s2); }
+  .sk-app.is-live .sk-line__head { gap: 6px; }
+  .sk-app.is-live .sk-switch__btn { min-height: 44px; padding-block: 2px; }
+  .sk-app.is-live .sk-switch__btn .sk-art { width: 34px; height: 34px; }
+  .sk-app.is-live .sk-tier { gap: var(--s2); }
+  .sk-app.is-live .sk-tier .sk-list { padding: 6px; gap: 6px; }
+  .sk-app.is-live .sk-tier .sk-box__text { font-size: 12px; line-height: 1.32; }
+  .sk-app.is-live .sk-tier__head { margin-block: -2px; }
+  .sk-app.is-live .sk-tier .sk-icon .sk-art { width: 50px; height: 50px; }
+  .sk-app.is-live .sk-tier .sk-skill { font-size: 18px; }
+  .sk-app.is-live .sk-tier .sk-panel { gap: 6px; padding-top: 6px; padding-bottom: var(--s2); }
+  .sk-app.is-live .sk-line { padding-top: var(--s2); }
 }
