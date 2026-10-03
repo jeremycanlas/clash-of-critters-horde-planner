@@ -9,6 +9,7 @@
 
 import { rest, signedIn } from './supabase.js';
 import { track } from './analytics.js';
+import { theme as storedTheme, setTheme } from './prefs.js';
 
 const PAGES = [
   { href: 'index.html', name: 'Drafter' },
@@ -98,4 +99,53 @@ for (const menu of document.querySelectorAll('details.formmenu')) {
     if (e.target.closest('button.formmenu__item')) menu.open = false;
   });
   menu.addEventListener('change', () => { menu.open = false; });
+}
+
+/* ---------------------------------------------------------------- header
+   Every page's header carries the same two things on the right: the credit
+   with its tip jar, and one light/dark switch. Added here because this script
+   is on every page, so a new page gets both for free. The switch writes the
+   same stored preference the drafter's settings use, so a choice made on one
+   tab is the theme on all of them. */
+
+const topbar = document.querySelector('.topbar');
+if (topbar) {
+  if (!topbar.querySelector('.byline')) {
+    topbar.insertAdjacentHTML('beforeend', `
+    <span class="byline" title="Created by jacc6475 on Discord">
+      <img class="byline__avatar" src="assets/img/jacc6475.jpg" width="26" height="26" alt="" decoding="async">
+      <span class="byline__text">by <b>jacc6475</b></span>
+      <a class="byline__tip" href="https://ko-fi.com/jacc6475" target="_blank" rel="noopener"
+         title="Horde Drafter is free and always will be. This is just a tip jar."
+         aria-label="Say thanks: tip jar on Ko-fi">
+        <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" focusable="false">
+          <path fill="currentColor" d="M2 21h18v-2H2v2ZM20 8h-2V5H4v8a4 4 0 0 0 4 4h6a4 4 0 0 0 3.9-3.1A3 3 0 0 0 20 8Zm-2 4.9V10h1a1 1 0 0 1 0 2 3 3 0 0 1-1 .9Z"/>
+        </svg>
+        <span class="byline__tip-text">Say thanks</span>
+      </a>
+    </span>`);
+  }
+  const byline = topbar.querySelector('.byline');
+  byline.insertAdjacentHTML('afterend', `
+    <button class="btn btn--quiet themetoggle" type="button" id="theme-toggle"></button>`);
+  const btn = topbar.querySelector('#theme-toggle');
+  const sys = matchMedia('(prefers-color-scheme: light)');
+  // What is on screen now: the stored choice, or the system's when there is none.
+  const showing = () => { const t = storedTheme(); return t === 'system' ? (sys.matches ? 'light' : 'dark') : t; };
+  const MOON = '<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z"/>';
+  const SUN = '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>';
+  const render = () => {
+    const next = showing() === 'dark' ? 'light' : 'dark';
+    btn.setAttribute('aria-label', `Switch to ${next} mode`);
+    btn.title = `Switch to ${next} mode`;
+    btn.innerHTML = `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">${next === 'light' ? SUN : MOON}</svg>`;
+    // Keep the drafter's own System/Light/Dark switch, if this page has it, in step.
+    for (const b of document.querySelectorAll('[data-theme-choice]')) b.setAttribute('aria-pressed', String(b.dataset.themeChoice === storedTheme()));
+  };
+  btn.addEventListener('click', () => { setTheme(showing() === 'dark' ? 'light' : 'dark'); render(); track('theme-toggled'); });
+  // Another tab changed it: follow along without a reload.
+  addEventListener('storage', (e) => { if (e.key === 'coc.theme') { setTheme(storedTheme()); render(); } });
+  sys.addEventListener('change', render);
+  document.getElementById('theme-switch')?.addEventListener('click', () => setTimeout(render));
+  render();
 }
