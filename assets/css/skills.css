@@ -348,7 +348,7 @@
 
   .sk-app.is-live .sk-line {
     display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); grid-template-rows: auto auto; align-content: start;
-    gap: var(--s2) var(--s5); min-height: 100%; box-sizing: border-box; padding: var(--s3) var(--s4) var(--s3);
+    gap: var(--s2) var(--s5); min-height: 100%; flex: none; /* grows with a long Horde column instead of being squeezed to the panel's height */ box-sizing: border-box; padding: var(--s3) var(--s4) var(--s3);
   }
   .sk-app.is-live .sk-line__head { grid-column: 1 / -1; grid-row: 1; }
   .sk-app.is-live .sk-tier { grid-column: 1; grid-row: 2; gap: var(--s3); }
