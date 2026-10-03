@@ -65,6 +65,8 @@ function card(t, n, below) {
         </details>` : '';
   const sections = folded + shown.map((s) => section(s, prev, t.tier)).join('');
   const skill = n.skill ?? (t.skill ? t.skill.split(':')[0] : '');
+  // The wiki's words for what the skill does: the panel's own blurb is cut off in the game.
+  const desc = t.skill?.includes(':') ? t.skill.slice(t.skill.indexOf(':') + 1).trim() : '';
   /* Last, as the game's panel has it, and in the same table as everything
      else: one tinted box per card made every card shout the same thing. */
   const arena = n.arenaFactor ? `
@@ -79,6 +81,7 @@ function card(t, n, below) {
           <p class="sk__meta">${typeIcon(t.type)}${esc(t.type)} ${esc(t.role)}${skill ? ` · <b>${esc(skill)}</b>` : ''}</p>
         </div>
       </div>
+      ${desc ? `<p class="sk__text sk__desc">${esc(desc)}</p>` : ''}
       ${sections}${arena}
       ${sections ? '' : '<p class="sk__more">Other numbers not recorded yet</p>'}
     </li>`;

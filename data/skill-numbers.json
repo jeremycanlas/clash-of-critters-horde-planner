@@ -876,10 +876,100 @@
   ]
  },
  "droppit": {
-  "arenaFactor": "60%"
+  "skill": "Cloud Mist",
+  "arenaFactor": "60%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "15%"
+     ],
+     [
+      "Damage Interval",
+      "1s"
+     ],
+     [
+      "Duration",
+      "5s"
+     ],
+     [
+      "Cooldown",
+      "7.5s"
+     ]
+    ]
+   },
+   {
+    "heading": "Slow",
+    "text": "Move Speed is reduced.",
+    "rows": [
+     [
+      "Amount Reduced",
+      "30%"
+     ],
+     [
+      "Duration",
+      "3s"
+     ]
+    ]
+   }
+  ]
  },
  "tideon": {
-  "arenaFactor": "60%"
+  "skill": "Haze Hex",
+  "arenaFactor": "60%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "15%"
+     ],
+     [
+      "Damage Interval",
+      "1s"
+     ],
+     [
+      "Duration",
+      "5s"
+     ],
+     [
+      "Cooldown",
+      "7.5s"
+     ]
+    ]
+   },
+   {
+    "heading": "Slow",
+    "text": "Move Speed is reduced.",
+    "rows": [
+     [
+      "Amount Reduced",
+      "30%"
+     ],
+     [
+      "Duration",
+      "3s"
+     ]
+    ]
+   },
+   {
+    "heading": "Fragile",
+    "text": "Takes increased damage.",
+    "rows": [
+     [
+      "Boost Factor",
+      "20%"
+     ],
+     [
+      "Duration",
+      "3s"
+     ]
+    ]
+   }
+  ]
  },
  "ripplewing": {
   "skill": "Sleepy Shot",
@@ -1141,6 +1231,1125 @@
      [
       "Max Expansions",
       "3"
+     ]
+    ]
+   },
+   {
+    "heading": "Aura: Fire",
+    "text": "Boosts ATK for all allies. The effect for non-Fire allies is reduced by 50%. Aura: Fire can be stacked, but cannot take effect in some game modes.",
+    "rows": [
+     [
+      "Base ATK Boost",
+      "2.5%"
+     ],
+     [
+      "Max ATK Boost",
+      "12.5%"
+     ]
+    ]
+   }
+  ]
+ },
+ "bubbit": {
+  "skill": "Fog Sap",
+  "arenaFactor": "60%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "15%"
+     ],
+     [
+      "Damage Interval",
+      "1s"
+     ],
+     [
+      "Duration",
+      "5s"
+     ],
+     [
+      "Cooldown",
+      "7.5s"
+     ]
+    ]
+   },
+   {
+    "heading": "Slow",
+    "text": "Move Speed is reduced.",
+    "rows": [
+     [
+      "Amount Reduced",
+      "30%"
+     ],
+     [
+      "Duration",
+      "3s"
+     ]
+    ]
+   },
+   {
+    "heading": "Fragile",
+    "text": "Takes increased damage.",
+    "rows": [
+     [
+      "Boost Factor",
+      "20%"
+     ],
+     [
+      "Duration",
+      "3s"
+     ]
+    ]
+   }
+  ]
+ },
+ "haplysia": {
+  "skill": "Fragility Cloud",
+  "arenaFactor": "60%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "15%"
+     ],
+     [
+      "Damage Interval",
+      "1s"
+     ],
+     [
+      "Duration",
+      "5s"
+     ],
+     [
+      "Cooldown",
+      "7.5s"
+     ]
+    ]
+   },
+   {
+    "heading": "Slow",
+    "text": "Move Speed is reduced.",
+    "rows": [
+     [
+      "Amount Reduced",
+      "30%"
+     ],
+     [
+      "Duration",
+      "3s"
+     ]
+    ]
+   },
+   {
+    "heading": "Fragile",
+    "text": "Takes increased damage.",
+    "rows": [
+     [
+      "Boost Factor",
+      "20%"
+     ],
+     [
+      "Duration",
+      "3s"
+     ]
+    ]
+   },
+   {
+    "heading": "Aura: Water",
+    "text": "Heals all allies continuously. The healing effect for non-Water allies is reduced by 50%. Aura: Water can be stacked, but cannot take effect in some game modes.",
+    "rows": [
+     [
+      "Base Healing Factor",
+      "0.5% Target HP"
+     ],
+     [
+      "Max Healing Factor",
+      "2.5% Target HP"
+     ],
+     [
+      "Healing Interval",
+      "4s"
+     ]
+    ]
+   }
+  ]
+ },
+ "poakie": {
+  "skill": "Sizzle Bubble",
+  "arenaFactor": "50%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "100%"
+     ],
+     [
+      "Cooldown",
+      "3s"
+     ],
+     [
+      "Continuous Fire Frequency",
+      "After Every 3 Attacks"
+     ],
+     [
+      "Continuous Fire Damage Factor",
+      "22%"
+     ],
+     [
+      "Continuous Fire Damage Interval",
+      "0.5s"
+     ],
+     [
+      "Continuous Fire Duration",
+      "4s"
+     ]
+    ]
+   },
+   {
+    "heading": "Burn",
+    "text": "Continuously takes damage.",
+    "rows": [
+     [
+      "Damage Factor",
+      "20%"
+     ],
+     [
+      "Damage Interval",
+      "1s"
+     ],
+     [
+      "Duration",
+      "5s"
+     ]
+    ]
+   }
+  ]
+ },
+ "sizzribb": {
+  "skill": "Ribbity Drip",
+  "arenaFactor": "50%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "100%"
+     ],
+     [
+      "Cooldown",
+      "3s"
+     ],
+     [
+      "Continuous Fire Frequency",
+      "After Every 3 Attacks"
+     ],
+     [
+      "Continuous Fire Damage Factor",
+      "22%"
+     ],
+     [
+      "Continuous Fire Damage Interval",
+      "0.5s"
+     ],
+     [
+      "Continuous Fire Duration",
+      "4s"
+     ],
+     [
+      "Fixed Follow-Up Damage Factor",
+      "20%"
+     ],
+     [
+      "Extra Follow-Up Damage Factor",
+      "20% Per Second of Burn Consumed"
+     ]
+    ]
+   },
+   {
+    "heading": "Burn",
+    "text": "Continuously takes damage.",
+    "rows": [
+     [
+      "Damage Factor",
+      "20%"
+     ],
+     [
+      "Damage Interval",
+      "1s"
+     ],
+     [
+      "Duration",
+      "5s"
+     ]
+    ]
+   }
+  ]
+ },
+ "lickflicker": {
+  "skill": "Lick and Whip",
+  "arenaFactor": "50%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "100%"
+     ],
+     [
+      "Cooldown",
+      "3s"
+     ],
+     [
+      "Continuous Fire Frequency",
+      "After Every 3 Attacks"
+     ],
+     [
+      "Continuous Fire Damage Factor",
+      "22%"
+     ],
+     [
+      "Continuous Fire Damage Interval",
+      "0.5s"
+     ],
+     [
+      "Continuous Fire Duration",
+      "4s"
+     ],
+     [
+      "Fixed Follow-Up Damage Factor",
+      "20%"
+     ],
+     [
+      "Extra Follow-Up Damage Factor",
+      "20% Per Second of Burn Consumed"
+     ]
+    ]
+   },
+   {
+    "heading": "Burn",
+    "text": "Continuously takes damage.",
+    "rows": [
+     [
+      "Damage Factor",
+      "20%"
+     ],
+     [
+      "Damage Interval",
+      "1s"
+     ],
+     [
+      "Duration",
+      "5s"
+     ]
+    ]
+   }
+  ]
+ },
+ "ignitoad": {
+  "skill": "Firesurge Cloud",
+  "arenaFactor": "50%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "100%"
+     ],
+     [
+      "Cooldown",
+      "3s"
+     ],
+     [
+      "Continuous Fire Frequency",
+      "After Every 3 Attacks"
+     ],
+     [
+      "Continuous Fire Damage Factor",
+      "22%"
+     ],
+     [
+      "Continuous Fire Damage Interval",
+      "0.5s"
+     ],
+     [
+      "Continuous Fire Duration",
+      "4s"
+     ],
+     [
+      "Fixed Follow-Up Damage Factor",
+      "20%"
+     ],
+     [
+      "Extra Follow-Up Damage Factor",
+      "20% Per Second of Burn Consumed"
+     ]
+    ]
+   },
+   {
+    "heading": "Burn",
+    "text": "Continuously takes damage.",
+    "rows": [
+     [
+      "Damage Factor",
+      "20%"
+     ],
+     [
+      "Damage Interval",
+      "1s"
+     ],
+     [
+      "Duration",
+      "5s"
+     ]
+    ]
+   },
+   {
+    "heading": "Aura: Fire",
+    "text": "Boosts ATK for all allies. The effect for non-Fire allies is reduced by 50%. Aura: Fire can be stacked, but cannot take effect in some game modes.",
+    "rows": [
+     [
+      "Base ATK Boost",
+      "2.5%"
+     ],
+     [
+      "Max ATK Boost",
+      "12.5%"
+     ]
+    ]
+   }
+  ]
+ },
+ "humbug": {
+  "skill": "Dung Sling",
+  "arenaFactor": "50%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "80%"
+     ],
+     [
+      "Damage Interval",
+      "3s"
+     ],
+     [
+      "Linger Duration",
+      "9s"
+     ],
+     [
+      "Max Dung Balls",
+      "1"
+     ],
+     [
+      "Cooldown",
+      "4.5s"
+     ]
+    ]
+   }
+  ]
+ },
+ "humbleetle": {
+  "skill": "Double Dung",
+  "arenaFactor": "50%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "80%"
+     ],
+     [
+      "Damage Interval",
+      "3s"
+     ],
+     [
+      "Linger Duration",
+      "10s"
+     ],
+     [
+      "Max Dung Balls",
+      "2"
+     ],
+     [
+      "Cooldown",
+      "4.5s"
+     ]
+    ]
+   },
+   {
+    "heading": "Slow",
+    "text": "Move Speed is reduced.",
+    "rows": [
+     [
+      "Amount Reduced",
+      "30%"
+     ],
+     [
+      "Duration",
+      "3s"
+     ]
+    ]
+   }
+  ]
+ },
+ "zenscarab": {
+  "skill": "Dung Blitz",
+  "arenaFactor": "50%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "80%"
+     ],
+     [
+      "Damage Interval",
+      "3s"
+     ],
+     [
+      "Linger Duration",
+      "12s"
+     ],
+     [
+      "Max Dung Balls",
+      "3"
+     ],
+     [
+      "Cooldown",
+      "4.5s"
+     ]
+    ]
+   },
+   {
+    "heading": "Slow",
+    "text": "Move Speed is reduced.",
+    "rows": [
+     [
+      "Amount Reduced",
+      "30%"
+     ],
+     [
+      "Duration",
+      "3s"
+     ]
+    ]
+   }
+  ]
+ },
+ "hierotyrus": {
+  "skill": "Dung Express",
+  "arenaFactor": "50%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "80%"
+     ],
+     [
+      "Damage Interval",
+      "3s"
+     ],
+     [
+      "Linger Duration",
+      "12s"
+     ],
+     [
+      "Max Dung Balls",
+      "3"
+     ],
+     [
+      "Cooldown",
+      "4.5s"
+     ]
+    ]
+   },
+   {
+    "heading": "Slow",
+    "text": "Move Speed is reduced.",
+    "rows": [
+     [
+      "Amount Reduced",
+      "30%"
+     ],
+     [
+      "Duration",
+      "3s"
+     ]
+    ]
+   },
+   {
+    "heading": "Aura: Rock",
+    "text": "Provides DMG Reduction for all allies. The effect for non-Rock allies is reduced by 50%. Aura: Rock can be stacked, but cannot take effect in some game modes.",
+    "rows": [
+     [
+      "Base DMG Reduction",
+      "3.5%"
+     ],
+     [
+      "Max DMG Reduction",
+      "17.5%"
+     ]
+    ]
+   }
+  ]
+ },
+ "joeyo": {
+  "skill": "Jab Flurry",
+  "arenaFactor": "70%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "210%"
+     ],
+     [
+      "Cooldown",
+      "4s"
+     ]
+    ]
+   }
+  ]
+ },
+ "puncharoo": {
+  "skill": "Knockabout",
+  "arenaFactor": "70%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "210%"
+     ],
+     [
+      "Max Charge Stacks",
+      "3"
+     ],
+     [
+      "Charge Damage Factor",
+      "80% Per Stack"
+     ],
+     [
+      "Cooldown",
+      "4s"
+     ]
+    ]
+   },
+   {
+    "heading": "Fragile",
+    "text": "Takes increased damage.",
+    "rows": [
+     [
+      "Boost Factor",
+      "20%"
+     ],
+     [
+      "Duration",
+      "3s"
+     ]
+    ]
+   }
+  ]
+ },
+ "kangachamp": {
+  "skill": "Thumpquake",
+  "arenaFactor": "70%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "210%"
+     ],
+     [
+      "Max Charge Stacks",
+      "3"
+     ],
+     [
+      "Charge Damage Factor",
+      "80% Per Stack"
+     ],
+     [
+      "Instant Full Charge",
+      "Every 5 Attacks"
+     ],
+     [
+      "Cooldown",
+      "4s"
+     ]
+    ]
+   },
+   {
+    "heading": "Fragile",
+    "text": "Takes increased damage.",
+    "rows": [
+     [
+      "Boost Factor",
+      "20%"
+     ],
+     [
+      "Duration",
+      "3s"
+     ]
+    ]
+   }
+  ]
+ },
+ "kaiseroo": {
+  "skill": "Pulverpunch",
+  "arenaFactor": "70%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "210%"
+     ],
+     [
+      "Max Charge Stacks",
+      "3"
+     ],
+     [
+      "Charge Damage Factor",
+      "80% Per Stack"
+     ],
+     [
+      "Instant Full Charge",
+      "Every 5 Attacks"
+     ],
+     [
+      "Cooldown",
+      "4s"
+     ]
+    ]
+   },
+   {
+    "heading": "Fragile",
+    "text": "Takes increased damage.",
+    "rows": [
+     [
+      "Boost Factor",
+      "20%"
+     ],
+     [
+      "Duration",
+      "3s"
+     ]
+    ]
+   },
+   {
+    "heading": "Aura: Rock",
+    "text": "Provides DMG Reduction for all allies. The effect for non-Rock allies is reduced by 50%. Aura: Rock can be stacked, but cannot take effect in some game modes.",
+    "rows": [
+     [
+      "Base DMG Reduction",
+      "3.5%"
+     ],
+     [
+      "Max DMG Reduction",
+      "17.5%"
+     ]
+    ]
+   }
+  ]
+ },
+ "cheerling": {
+  "skill": "Bunny Dance",
+  "arenaFactor": "20%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "15%"
+     ],
+     [
+      "Damage Interval",
+      "1.5s"
+     ],
+     [
+      "Healing Factor",
+      "3%"
+     ],
+     [
+      "Healing Interval",
+      "1.5s"
+     ],
+     [
+      "Cooldown",
+      "4s After Dance Ends"
+     ]
+    ]
+   },
+   {
+    "heading": "Support: ATK & DEF Boost",
+    "text": "ATK and DEF are increased based on the caster's ATK and DEF.",
+    "rows": [
+     [
+      "Boost Factor",
+      "15%"
+     ]
+    ]
+   }
+  ]
+ },
+ "cheerlet": {
+  "skill": "Cheerleader",
+  "arenaFactor": "20%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "15%"
+     ],
+     [
+      "Damage Interval",
+      "1.5s"
+     ],
+     [
+      "Healing Factor",
+      "3%"
+     ],
+     [
+      "Healing Interval",
+      "1.5s"
+     ],
+     [
+      "Cooldown",
+      "4s After Dance Ends"
+     ]
+    ]
+   },
+   {
+    "heading": "Support: ATK & DEF Boost",
+    "text": "ATK and DEF are increased based on the caster's ATK and DEF.",
+    "rows": [
+     [
+      "Boost Factor",
+      "15%"
+     ]
+    ]
+   },
+   {
+    "heading": "Danger",
+    "text": "After taking damage, HP will drop below 10%.",
+    "rows": []
+   },
+   {
+    "heading": "Invincibility",
+    "text": "Immune to damage and control effects.",
+    "rows": [
+     [
+      "Duration",
+      "3s"
+     ]
+    ]
+   }
+  ]
+ },
+ "cheerspring": {
+  "skill": "Zap Dance",
+  "arenaFactor": "20%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "15%"
+     ],
+     [
+      "Damage Interval",
+      "1.5s"
+     ],
+     [
+      "Healing Factor",
+      "3%"
+     ],
+     [
+      "Healing Interval",
+      "1.5s"
+     ],
+     [
+      "Cooldown",
+      "4s After Dance Ends"
+     ],
+     [
+      "Rapid Healing Factor",
+      "3% of Target HP"
+     ],
+     [
+      "Rapid Healing Interval",
+      "0.5s"
+     ],
+     [
+      "Rapid Healing Duration",
+      "3s"
+     ]
+    ]
+   },
+   {
+    "heading": "Support: ATK & DEF Boost",
+    "text": "ATK and DEF are increased based on the caster's ATK and DEF.",
+    "rows": [
+     [
+      "Boost Factor",
+      "15%"
+     ]
+    ]
+   },
+   {
+    "heading": "Danger",
+    "text": "After taking damage, HP will drop below 10%.",
+    "rows": []
+   },
+   {
+    "heading": "Invincibility",
+    "text": "Immune to damage and control effects.",
+    "rows": [
+     [
+      "Duration",
+      "3s"
+     ]
+    ]
+   }
+  ]
+ },
+ "cheerstella": {
+  "skill": "Bolt Blessed",
+  "arenaFactor": "20%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "15%"
+     ],
+     [
+      "Damage Interval",
+      "1.5s"
+     ],
+     [
+      "Healing Factor",
+      "3%"
+     ],
+     [
+      "Healing Interval",
+      "1.5s"
+     ],
+     [
+      "Cooldown",
+      "4s After Dance Ends"
+     ],
+     [
+      "Rapid Healing Factor",
+      "3% of Target HP"
+     ],
+     [
+      "Rapid Healing Interval",
+      "0.5s"
+     ],
+     [
+      "Rapid Healing Duration",
+      "3s"
+     ]
+    ]
+   },
+   {
+    "heading": "Support: ATK & DEF Boost",
+    "text": "ATK and DEF are increased based on the caster's ATK and DEF.",
+    "rows": [
+     [
+      "Boost Factor",
+      "15%"
+     ]
+    ]
+   },
+   {
+    "heading": "Danger",
+    "text": "After taking damage, HP will drop below 10%.",
+    "rows": []
+   },
+   {
+    "heading": "Invincibility",
+    "text": "Immune to damage and control effects.",
+    "rows": [
+     [
+      "Duration",
+      "3s"
+     ]
+    ]
+   },
+   {
+    "heading": "Aura: Lightning",
+    "text": "Boosts ATK Speed for all allies. The effect for non-Lightning allies is reduced by 50%. Aura: Lightning can be stacked, but cannot take effect in some game modes.",
+    "rows": [
+     [
+      "Base ATK Speed Boost",
+      "4%"
+     ],
+     [
+      "Max ATK Speed Boost",
+      "20%"
+     ]
+    ]
+   }
+  ]
+ },
+ "fumekit": {
+  "skill": "Stinky Fumes",
+  "arenaFactor": "45%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Fume Damage",
+      "1"
+     ],
+     [
+      "Fume Damage Interval",
+      "1s"
+     ],
+     [
+      "Ignition Frequency",
+      "Every 3 Attacks"
+     ],
+     [
+      "Ignition Damage Factor",
+      "160%"
+     ],
+     [
+      "Cooldown",
+      "3.5s"
+     ]
+    ]
+   }
+  ]
+ },
+ "sulfunk": {
+  "skill": "Flammable Fumes",
+  "arenaFactor": "45%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Fume Damage",
+      "1"
+     ],
+     [
+      "Fume Damage Interval",
+      "1s"
+     ],
+     [
+      "Fume Spread Interval",
+      "6s"
+     ],
+     [
+      "Ignition Frequency",
+      "Every 3 Attacks"
+     ],
+     [
+      "Ignition Damage Factor",
+      "160%"
+     ],
+     [
+      "Cooldown",
+      "3.5s"
+     ]
+    ]
+   }
+  ]
+ },
+ "magmusk": {
+  "skill": "Explosive Fumes",
+  "arenaFactor": "45%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Fume Damage",
+      "1"
+     ],
+     [
+      "Fume Damage Interval",
+      "1s"
+     ],
+     [
+      "Fume Spread Interval",
+      "4s"
+     ],
+     [
+      "Ignition Frequency",
+      "Every 3 Attacks"
+     ],
+     [
+      "Ignition Damage Factor",
+      "160%"
+     ],
+     [
+      "Cooldown",
+      "3.5s"
+     ]
+    ]
+   }
+  ]
+ },
+ "blastniff": {
+  "skill": "Exquisite Fumes",
+  "arenaFactor": "45%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Fume Damage",
+      "1"
+     ],
+     [
+      "Fume Damage Interval",
+      "1s"
+     ],
+     [
+      "Fume Spread Interval",
+      "4s"
+     ],
+     [
+      "Ignition Frequency",
+      "Every 3 Attacks"
+     ],
+     [
+      "Ignition Damage Factor",
+      "160%"
+     ],
+     [
+      "Cooldown",
+      "3.5s"
      ]
     ]
    },
