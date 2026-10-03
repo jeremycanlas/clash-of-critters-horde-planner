@@ -157,7 +157,8 @@ const hordeDone = ordered.filter((l) => hordeNumbers[l[0].family]).length;
 
 const index = `
       <nav class="sk-index panel" aria-label="Evolution lines">
-        <div class="panel__head"><h2>Lines <span class="muted" id="sk-lines-n">${ordered.length}</span></h2></div>
+        <div class="panel__head"><h2>Lines <span class="muted" id="sk-lines-n">${ordered.length}</span></h2>
+          <span class="sk-index__key" title="In Gold Rush and Arena, a skill's damage against another Tatari is multiplied by its Arena Factor">% = Arena Factor</span></div>
         <ol class="sk-index__list" id="sk-list">${ordered.map((line) => {
   const top = line.at(-1);
   return `
@@ -168,7 +169,7 @@ const index = `
                 <span class="sk-pick__name">${esc(line[0].family)}</span>
                 <span class="sk-pick__sub">${meta(`T1–T${top.tier}`, top, '')}${esc(top.role)}</span>
               </span>
-              <span class="sk-pick__af"><span class="sr-only">Arena Factor </span>${esc(lineAF(line) ?? '–')}</span>
+              <span class="sk-pick__af" title="Arena Factor: in Gold Rush and Arena, this line's skill damage against another Tatari is multiplied by this"><span class="sk-pick__aflabel">Arena</span>${esc(lineAF(line) ?? '–')}</span>
             </a>
           </li>`;
 }).join('')}

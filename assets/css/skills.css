@@ -93,6 +93,11 @@
 .sk-pick__name { font-weight: 650; font-size: 14.5px; line-height: 1.3; }
 .sk-pick__sub { display: flex; align-items: center; gap: 6px; font-size: 12px; line-height: 1.2; color: var(--text-dim); white-space: nowrap; overflow: hidden; }
 .sk-pick__af { flex: none; font-family: var(--font-mono); font-size: 13px; font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; }
+/* What the number is, on the number itself and once in the list's header:
+   "25%" alone read as nothing in particular. */
+.sk-pick__af { display: flex; flex-direction: column; align-items: flex-end; line-height: 1.15; }
+.sk-pick__aflabel { font-family: var(--font-ui); font-size: 10px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--text-mute); }
+.sk-index__key { margin-left: auto; font-size: 11.5px; color: var(--text-mute); white-space: nowrap; }
 
 /* One line, open. */
 .sk-detail { display: flex; flex-direction: column; gap: var(--s4); min-width: 0; }
