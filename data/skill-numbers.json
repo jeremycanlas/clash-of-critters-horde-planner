@@ -2368,5 +2368,994 @@
     ]
    }
   ]
+ },
+ "zaplet": {
+  "skill": "Echo Electro",
+  "arenaFactor": "100%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Cooldown",
+      "6s"
+     ]
+    ]
+   },
+   {
+    "heading": "Scouted",
+    "text": "Becomes marked and damage taken is recorded. When the effect expires, takes follow-up damage proportionate to the damage recorded.",
+    "rows": [
+     [
+      "Expiration DMG Factor",
+      "15%"
+     ],
+     [
+      "Max Damage Factor",
+      "300%"
+     ],
+     [
+      "Duration",
+      "3.5s"
+     ]
+    ]
+   }
+  ]
+ },
+ "synthhog": {
+  "skill": "Wave Rave",
+  "arenaFactor": "100%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Cooldown",
+      "6s"
+     ]
+    ]
+   },
+   {
+    "heading": "Scouted",
+    "text": "Becomes marked and damage taken is recorded. When the effect expires, takes follow-up damage proportionate to the damage recorded.",
+    "rows": [
+     [
+      "Expiration DMG Factor",
+      "15%"
+     ],
+     [
+      "Max Damage Factor",
+      "300%"
+     ],
+     [
+      "Duration",
+      "3.5s"
+     ]
+    ]
+   },
+   {
+    "heading": "Bat: Fragile",
+    "text": "Takes increased damage.",
+    "rows": [
+     [
+      "Boost Factor",
+      "15%"
+     ],
+     [
+      "Duration",
+      "5s"
+     ]
+    ]
+   }
+  ]
+ },
+ "sonarbat": {
+  "skill": "Sonar Power",
+  "arenaFactor": "100%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Cooldown",
+      "6s"
+     ]
+    ]
+   },
+   {
+    "heading": "Perfectly Scouted",
+    "text": "Becomes marked and damage taken is recorded. When the effect expires, takes follow-up damage proportionate to the damage recorded.",
+    "rows": [
+     [
+      "Expiration DMG Factor",
+      "20%"
+     ],
+     [
+      "Max Damage Factor",
+      "300%"
+     ],
+     [
+      "Duration",
+      "3.5s"
+     ]
+    ]
+   },
+   {
+    "heading": "Bat: Fragile",
+    "text": "Takes increased damage.",
+    "rows": [
+     [
+      "Boost Factor",
+      "15%"
+     ],
+     [
+      "Duration",
+      "5s"
+     ]
+    ]
+   }
+  ]
+ },
+ "rubblet": {
+  "skill": "Azure Flare",
+  "arenaFactor": "60%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "210%"
+     ],
+     [
+      "Cooldown",
+      "3.6s"
+     ]
+    ]
+   }
+  ]
+ },
+ "cobbledon": {
+  "skill": "Cobalt Flame",
+  "arenaFactor": "60%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "210%"
+     ],
+     [
+      "Cooldown",
+      "3.6s"
+     ]
+    ]
+   }
+  ]
+ },
+ "rockzilla": {
+  "skill": "Atomic Ray",
+  "arenaFactor": "60%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "210%"
+     ],
+     [
+      "Power Beam Frequency",
+      "Every 3 Attacks"
+     ],
+     [
+      "Cooldown",
+      "3.6s"
+     ]
+    ]
+   }
+  ]
+ },
+ "meteorax": {
+  "skill": "Blaze Beam",
+  "arenaFactor": "60%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "210%"
+     ],
+     [
+      "Power Beam Frequency",
+      "Every 3 Attacks"
+     ],
+     [
+      "Cooldown",
+      "3.6s"
+     ]
+    ]
+   },
+   {
+    "heading": "Aura: Rock",
+    "text": "Provides DMG Reduction for all allies. The effect for non-Rock allies is reduced by 50%. Aura: Rock can be stacked, but cannot take effect in some game modes.",
+    "rows": [
+     [
+      "Base DMG Reduction",
+      "3.5%"
+     ],
+     [
+      "Max DMG Reduction",
+      "17.5%"
+     ]
+    ]
+   }
+  ]
+ },
+ "voltfawn": {
+  "skill": "Stun Spear",
+  "arenaFactor": "50%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "80%"
+     ],
+     [
+      "Pierces",
+      "2"
+     ],
+     [
+      "Cooldown",
+      "4s"
+     ]
+    ]
+   },
+   {
+    "heading": "Paralysis",
+    "text": "Continuously takes damage while briefly under the effect of Bind.",
+    "rows": [
+     [
+      "Damage Factor",
+      "15%"
+     ],
+     [
+      "Effect Interval",
+      "1.5s"
+     ],
+     [
+      "Duration",
+      "5s"
+     ],
+     [
+      "Bind",
+      "Unable to move."
+     ],
+     [
+      "Brief Bind Duration",
+      "0.2s"
+     ]
+    ]
+   }
+  ]
+ },
+ "sparkdoe": {
+  "skill": "Bolt Spire",
+  "arenaFactor": "50%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "80%"
+     ],
+     [
+      "Pierces",
+      "3"
+     ],
+     [
+      "Cooldown",
+      "4s"
+     ]
+    ]
+   },
+   {
+    "heading": "Paralysis",
+    "text": "Continuously takes damage while briefly under the effect of Bind.",
+    "rows": [
+     [
+      "Damage Factor",
+      "15%"
+     ],
+     [
+      "Effect Interval",
+      "1.5s"
+     ],
+     [
+      "Duration",
+      "5s"
+     ],
+     [
+      "Bind",
+      "Unable to move."
+     ],
+     [
+      "Brief Bind Duration",
+      "0.2s"
+     ]
+    ]
+   }
+  ]
+ },
+ "zapantler": {
+  "skill": "Volt Storm",
+  "arenaFactor": "50%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "80%"
+     ],
+     [
+      "Pierces",
+      "3"
+     ],
+     [
+      "Unlimited Pierce Frequency",
+      "Every 4 Attacks"
+     ],
+     [
+      "Cooldown",
+      "4s"
+     ]
+    ]
+   },
+   {
+    "heading": "Paralysis",
+    "text": "Continuously takes damage while briefly under the effect of Bind.",
+    "rows": [
+     [
+      "Damage Factor",
+      "15%"
+     ],
+     [
+      "Effect Interval",
+      "1.5s"
+     ],
+     [
+      "Duration",
+      "5s"
+     ],
+     [
+      "Bind",
+      "Unable to move."
+     ],
+     [
+      "Brief Bind Duration",
+      "0.2s"
+     ]
+    ]
+   }
+  ]
+ },
+ "magnedart": {
+  "skill": "Super Bolt",
+  "arenaFactor": "50%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "80%"
+     ],
+     [
+      "Pierces",
+      "3"
+     ],
+     [
+      "Unlimited Pierce Frequency",
+      "Every 4 Attacks"
+     ],
+     [
+      "Cooldown",
+      "4s"
+     ]
+    ]
+   },
+   {
+    "heading": "Paralysis",
+    "text": "Continuously takes damage while briefly under the effect of Bind.",
+    "rows": [
+     [
+      "Damage Factor",
+      "15%"
+     ],
+     [
+      "Effect Interval",
+      "1.5s"
+     ],
+     [
+      "Duration",
+      "5s"
+     ],
+     [
+      "Bind",
+      "Unable to move."
+     ],
+     [
+      "Brief Bind Duration",
+      "0.2s"
+     ]
+    ]
+   },
+   {
+    "heading": "Aura: Lightning",
+    "text": "Boosts ATK Speed for all allies. The effect for non-Lightning allies is reduced by 50%. Aura: Lightning can be stacked, but cannot take effect in some game modes.",
+    "rows": [
+     [
+      "Base ATK Speed Boost",
+      "4%"
+     ],
+     [
+      "Max ATK Speed Boost",
+      "20%"
+     ]
+    ]
+   }
+  ]
+ },
+ "ashlarva": {
+  "skill": "Puffy Blaze",
+  "arenaFactor": "50%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "120%"
+     ],
+     [
+      "Healing Factor",
+      "20%"
+     ],
+     [
+      "Cooldown",
+      "4s"
+     ],
+     [
+      "Cooldown (No Enemies Nearby)",
+      "8s"
+     ]
+    ]
+   }
+  ]
+ },
+ "firecoil": {
+  "skill": "Sizzling Flame",
+  "arenaFactor": "50%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "120%"
+     ],
+     [
+      "Healing Factor",
+      "20%"
+     ],
+     [
+      "Cooldown",
+      "4s"
+     ],
+     [
+      "Cooldown (No Enemies Nearby)",
+      "8s"
+     ]
+    ]
+   },
+   {
+    "heading": "Flutter: ATK Boost",
+    "text": "ATK increases based on the caster's ATK.",
+    "rows": [
+     [
+      "Boost Factor",
+      "15%"
+     ],
+     [
+      "Duration",
+      "5s"
+     ]
+    ]
+   }
+  ]
+ },
+ "charflutter": {
+  "skill": "Gusty Flare",
+  "arenaFactor": "50%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "120%"
+     ],
+     [
+      "Healing Factor",
+      "20%"
+     ],
+     [
+      "Cooldown",
+      "4s"
+     ],
+     [
+      "Cooldown (No Enemies Nearby)",
+      "8s"
+     ]
+    ]
+   },
+   {
+    "heading": "Flutter: ATK Boost",
+    "text": "ATK increases based on the caster's ATK.",
+    "rows": [
+     [
+      "Boost Factor",
+      "15%"
+     ],
+     [
+      "Duration",
+      "5s"
+     ]
+    ]
+   }
+  ]
+ },
+ "chrysolaria": {
+  "skill": "Solara Flash",
+  "arenaFactor": "50%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "120%"
+     ],
+     [
+      "Healing Factor",
+      "20%"
+     ],
+     [
+      "Cooldown",
+      "4s"
+     ],
+     [
+      "Cooldown (No Enemies Nearby)",
+      "8s"
+     ]
+    ]
+   },
+   {
+    "heading": "Flutter: ATK Boost",
+    "text": "ATK increases based on the caster's ATK.",
+    "rows": [
+     [
+      "Boost Factor",
+      "15%"
+     ],
+     [
+      "Duration",
+      "5s"
+     ]
+    ]
+   },
+   {
+    "heading": "Aura: Fire",
+    "text": "Boosts ATK for all allies. The effect for non-Fire allies is reduced by 50%. Aura: Fire can be stacked, but cannot take effect in some game modes.",
+    "rows": [
+     [
+      "Base ATK Boost",
+      "2.5%"
+     ],
+     [
+      "Max ATK Boost",
+      "12.5%"
+     ]
+    ]
+   }
+  ]
+ },
+ "zapuni": {
+  "skill": "Zap Wave",
+  "arenaFactor": "45%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "80%"
+     ],
+     [
+      "Splash Targets",
+      "4"
+     ],
+     [
+      "Splash Damage Factor",
+      "50%"
+     ],
+     [
+      "Cooldown",
+      "3.7s"
+     ]
+    ]
+   }
+  ]
+ },
+ "surgehoof": {
+  "skill": "Surge Swell",
+  "arenaFactor": "45%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "80%"
+     ],
+     [
+      "Splash Targets",
+      "4"
+     ],
+     [
+      "Splashes vs. Water Enemies",
+      "4"
+     ],
+     [
+      "Splash Damage Factor",
+      "50%"
+     ],
+     [
+      "Cooldown",
+      "3.7s"
+     ]
+    ]
+   }
+  ]
+ },
+ "voltmare": {
+  "skill": "Volt Beam",
+  "arenaFactor": "45%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "80%"
+     ],
+     [
+      "Splash Targets",
+      "4"
+     ],
+     [
+      "Splashes vs. Water Enemies",
+      "4"
+     ],
+     [
+      "Splash Damage Factor",
+      "50%"
+     ],
+     [
+      "Follow-Up Damage Factor",
+      "20%"
+     ],
+     [
+      "Extra Follow-Up Damage Factor",
+      "20%/reduced target"
+     ],
+     [
+      "Cooldown",
+      "3.7s"
+     ]
+    ]
+   }
+  ]
+ },
+ "boltallion": {
+  "skill": "Tidal Shock",
+  "arenaFactor": "45%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "80%"
+     ],
+     [
+      "Splash Targets",
+      "4"
+     ],
+     [
+      "Splashes vs. Water Enemies",
+      "4"
+     ],
+     [
+      "Splash Damage Factor",
+      "50%"
+     ],
+     [
+      "Follow-Up Damage Factor",
+      "20%"
+     ],
+     [
+      "Extra Follow-Up Damage Factor",
+      "20%/reduced target"
+     ],
+     [
+      "Cooldown",
+      "3.7s"
+     ]
+    ]
+   },
+   {
+    "heading": "Aura: Lightning",
+    "text": "Boosts ATK Speed for all allies. The effect for non-Lightning allies is reduced by 50%. Aura: Lightning can be stacked, but cannot take effect in some game modes.",
+    "rows": [
+     [
+      "Base ATK Speed Boost",
+      "4%"
+     ],
+     [
+      "Max ATK Speed Boost",
+      "20%"
+     ]
+    ]
+   }
+  ]
+ },
+ "maskfry": {
+  "skill": "Dagon's Wave",
+  "arenaFactor": "30%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "200%"
+     ],
+     [
+      "Cooldown",
+      "5s"
+     ]
+    ]
+   },
+   {
+    "heading": "Pull",
+    "text": "Forcibly dragged over a certain distance. Cannot take effect on Tatari and certain Zobos.",
+    "rows": []
+   }
+  ]
+ },
+ "ospisces": {
+  "skill": "Dagon's Tide",
+  "arenaFactor": "30%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "200%"
+     ],
+     [
+      "Cooldown",
+      "5s"
+     ]
+    ]
+   },
+   {
+    "heading": "Pull",
+    "text": "Forcibly dragged over a certain distance. Cannot take effect on Tatari and certain Zobos.",
+    "rows": []
+   },
+   {
+    "heading": "Tidesurge: Weak",
+    "text": "Deals reduced damage.",
+    "rows": [
+     [
+      "Amount Reduced",
+      "10%"
+     ],
+     [
+      "Duration",
+      "10s"
+     ],
+     [
+      "Max Stacks",
+      "3 Stacks"
+     ]
+    ]
+   }
+  ]
+ },
+ "armorjaw": {
+  "skill": "Dagon's Surge",
+  "arenaFactor": "30%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "200%"
+     ],
+     [
+      "Cooldown",
+      "5s"
+     ]
+    ]
+   },
+   {
+    "heading": "Pull",
+    "text": "Forcibly dragged over a certain distance. Cannot take effect on Tatari and certain Zobos.",
+    "rows": []
+   },
+   {
+    "heading": "Stun",
+    "text": "Unable to move or attack.",
+    "rows": [
+     [
+      "Duration",
+      "2s"
+     ]
+    ]
+   },
+   {
+    "heading": "Tidesurge: Weak",
+    "text": "Deals reduced damage.",
+    "rows": [
+     [
+      "Amount Reduced",
+      "10%"
+     ],
+     [
+      "Duration",
+      "10s"
+     ],
+     [
+      "Max Stacks",
+      "3 Stacks"
+     ]
+    ]
+   }
+  ]
+ },
+ "sparkit": {
+  "skill": "Fire Orb",
+  "arenaFactor": "35%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "130%"
+     ],
+     [
+      "Cooldown",
+      "2.2s"
+     ]
+    ]
+   }
+  ]
+ },
+ "firefox": {
+  "skill": "Fizzle Flare",
+  "arenaFactor": "35%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "130%"
+     ],
+     [
+      "Explosions",
+      "8"
+     ],
+     [
+      "Explosion Damage Factor",
+      "10%"
+     ],
+     [
+      "Cooldown",
+      "2.2s"
+     ]
+    ]
+   }
+  ]
+ },
+ "flarevix": {
+  "skill": "Flame Bloom",
+  "arenaFactor": "35%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "130%"
+     ],
+     [
+      "Blooms",
+      "16"
+     ],
+     [
+      "Bloom Damage Factor",
+      "10%"
+     ],
+     [
+      "Cooldown",
+      "2.2s"
+     ]
+    ]
+   }
+  ]
+ },
+ "phantifox": {
+  "skill": "Flower Flame",
+  "arenaFactor": "35%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "130%"
+     ],
+     [
+      "Blooms",
+      "16"
+     ],
+     [
+      "Bloom Damage Factor",
+      "10%"
+     ],
+     [
+      "Cooldown",
+      "2.2s"
+     ]
+    ]
+   },
+   {
+    "heading": "Aura: Fire",
+    "text": "Boosts ATK for all allies. The effect for non-Fire allies is reduced by 50%. Aura: Fire can be stacked, but cannot take effect in some game modes.",
+    "rows": [
+     [
+      "Base ATK Boost",
+      "2.5%"
+     ],
+     [
+      "Max ATK Boost",
+      "12.5%"
+     ]
+    ]
+   }
+  ]
  }
 }
