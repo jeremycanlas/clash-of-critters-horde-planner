@@ -59,7 +59,7 @@
 
     <!-- Written by tools/skills-page.mjs from data/skill-numbers.json. Edit there. -->
     <!-- skills:start -->
-    <p class="sk__count" id="sk-count">19 of 242 Tatari have their numbers recorded. Every line's skills and Horde Invasion skills are below.</p>
+    <p class="sk__count" id="sk-count">26 of 242 Tatari have their numbers recorded. Every line's skills and Horde Invasion skills are below.</p>
     <ol class="sk__list" id="sk-list">
       <li class="sk__line" data-type="Water" data-numbers aria-label="Droppit line"><ol class="sk__row" tabindex="0" aria-label="Droppit line, T1 to T4">
     <li class="sk" id="droppit" data-name="droppit" data-type="Water" data-role="Support" data-tier="1">
@@ -119,6 +119,87 @@
           <li><span class="sk__lv">Lv 7</span><div><b>Sea Fog</b><p>Summons sea fog, inflicting Super Fragile on all enemies.</p></div></li>
         </ol>
       </div></li>
+      <li class="sk__line" data-type="Rock" data-numbers aria-label="Punchimp line"><ol class="sk__row" tabindex="0" aria-label="Punchimp line, T1 to T4">
+    <li class="sk" id="punchimp" data-name="punchimp" data-type="Rock" data-role="Guardian" data-tier="1">
+      <div class="sk__head">
+        <img src="data/images/tatari/punchimp.png" alt="" width="48" height="48" loading="lazy" decoding="async">
+        <div>
+          <h3 class="sk__name">Punchimp <span class="sk__tier">T1</span></h3>
+          <p class="sk__meta"><img class="sk__ticon" src="data/images/icons/rock.png" alt="" width="16" height="16">Rock Guardian · <b>Clone Caper</b></p>
+        </div>
+      </div>
+      
+        
+        
+        <dl class="sk__rows"><dt>Damage Factor</dt><dd>80%</dd><dt>Clones</dt><dd>1</dd><dt>Cooldown</dt><dd>4s</dd></dl>
+        <dl class="sk__rows sk__rows--arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
+          <dt>Arena Factor</dt><dd>45%</dd></dl>
+      
+    </li>
+    <li class="sk" id="rockfu" data-name="rockfu" data-type="Rock" data-role="Guardian" data-tier="2">
+      <div class="sk__head">
+        <img src="data/images/tatari/rockfu.png" alt="" width="48" height="48" loading="lazy" decoding="async">
+        <div>
+          <h3 class="sk__name">Rockfu <span class="sk__tier">T2</span></h3>
+          <p class="sk__meta"><img class="sk__ticon" src="data/images/icons/rock.png" alt="" width="16" height="16">Rock Guardian · <b>Bop Brigade</b></p>
+        </div>
+      </div>
+      
+        <details class="sk__same"><summary>Same as Punchimp: base numbers</summary>
+        
+        
+        <dl class="sk__rows"><dt>Damage Factor</dt><dd>80%</dd><dt>Clones</dt><dd>1</dd><dt>Cooldown</dt><dd>4s</dd></dl>
+        </details>
+        <dl class="sk__rows sk__rows--arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
+          <dt>Arena Factor</dt><dd>45%</dd></dl>
+      
+    </li>
+    <li class="sk" id="rockwu" data-name="rockwu" data-type="Rock" data-role="Guardian" data-tier="3">
+      <div class="sk__head">
+        <img src="data/images/tatari/rockwu.png" alt="" width="48" height="48" loading="lazy" decoding="async">
+        <div>
+          <h3 class="sk__name">Rockwu <span class="sk__tier">T3</span></h3>
+          <p class="sk__meta"><img class="sk__ticon" src="data/images/icons/rock.png" alt="" width="16" height="16">Rock Guardian · <b>Whirling Band</b></p>
+        </div>
+      </div>
+      
+        
+        
+        <dl class="sk__rows"><dt>Damage Factor</dt><dd>80%</dd><dt>Clones</dt><dd><span class="sk__was">was 1</span>2</dd><dt>Cooldown</dt><dd>4s</dd></dl>
+        <dl class="sk__rows sk__rows--arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
+          <dt>Arena Factor</dt><dd>45%</dd></dl>
+      
+    </li>
+    <li class="sk" id="rockong" data-name="rockong" data-type="Rock" data-role="Guardian" data-tier="4">
+      <div class="sk__head">
+        <img src="data/images/tatari/rockong.png" alt="" width="48" height="48" loading="lazy" decoding="async">
+        <div>
+          <h3 class="sk__name">Rockong <span class="sk__tier">T4</span></h3>
+          <p class="sk__meta"><img class="sk__ticon" src="data/images/icons/rock.png" alt="" width="16" height="16">Rock Guardian · <b>Smashing Hit</b></p>
+        </div>
+      </div>
+      
+        <details class="sk__same"><summary>Same as Rockwu: base numbers</summary>
+        
+        
+        <dl class="sk__rows"><dt>Damage Factor</dt><dd>80%</dd><dt>Clones</dt><dd>2</dd><dt>Cooldown</dt><dd>4s</dd></dl>
+        </details>
+        <h4 class="sk__heading">Aura: Rock <span class="sk__new">New at T4</span></h4>
+        <p class="sk__text">Provides DMG Reduction for all allies. The effect for non-Rock allies is reduced by 50%. Aura: Rock can be stacked, but cannot take effect in some game modes.</p>
+        <dl class="sk__rows"><dt>Base DMG Reduction</dt><dd>3.5%</dd><dt>Max DMG Reduction</dt><dd>17.5%</dd></dl>
+        <dl class="sk__rows sk__rows--arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
+          <dt>Arena Factor</dt><dd>45%</dd></dl>
+      
+    </li>
+      </ol>
+      <div class="sk__horde">
+        <h4 class="sk__horde-title">Horde Invasion <span>the whole line learns these</span></h4>
+        <ol class="sk__levels">
+          <li><span class="sk__lv">Lv 3</span><div><b>Hit Me!</b><p>Periodically summon an attackable clone that deals AoE damage when it disappears.</p></div></li>
+          <li><span class="sk__lv">Lv 5</span><div><b>Barricade</b><p>When this Tatari or their summons take damage, there is a chance to gain Barricade: DMG Reduction.</p></div></li>
+          <li><span class="sk__lv">Lv 7</span><div><b>Staff Cyclone</b><p>Spins a golden staff to deal continuous AoE damage. The staff will bounce if it hits the edge of the battlefield.</p></div></li>
+        </ol>
+      </div></li>
       <li class="sk__line" data-type="Lightning" data-numbers aria-label="Voltkit line"><ol class="sk__row" tabindex="0" aria-label="Voltkit line, T1 to T4">
     <li class="sk" id="voltkit" data-name="voltkit" data-type="Lightning" data-role="Guardian" data-tier="1">
       <div class="sk__head">
@@ -129,9 +210,12 @@
         </div>
       </div>
       
+        
+        
+        <dl class="sk__rows"><dt>Damage Factor</dt><dd>90%</dd><dt>Damage Count</dt><dd>2</dd><dt>Cooldown</dt><dd>3.5s</dd></dl>
         <dl class="sk__rows sk__rows--arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
           <dt>Arena Factor</dt><dd>50%</dd></dl>
-      <p class="sk__more">Other numbers not recorded yet</p>
+      
     </li>
     <li class="sk" id="voltling" data-name="voltling" data-type="Lightning" data-role="Guardian" data-tier="2">
       <div class="sk__head">
@@ -142,9 +226,17 @@
         </div>
       </div>
       
+        <details class="sk__same"><summary>Same as Voltkit: base numbers</summary>
+        
+        
+        <dl class="sk__rows"><dt>Damage Factor</dt><dd>90%</dd><dt>Damage Count</dt><dd>2</dd><dt>Cooldown</dt><dd>3.5s</dd></dl>
+        </details>
+        <h4 class="sk__heading">Paralysis <span class="sk__new">New at T2</span></h4>
+        <p class="sk__text">Continuously takes damage while briefly under the effect of Bind.</p>
+        <dl class="sk__rows"><dt>Damage Factor</dt><dd>15%</dd><dt>Effect Interval</dt><dd>1.5s</dd><dt>Duration</dt><dd>5s</dd><dt>Bind</dt><dd>Unable to move.</dd><dt>Brief Bind Duration</dt><dd>0.2s</dd></dl>
         <dl class="sk__rows sk__rows--arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
           <dt>Arena Factor</dt><dd>50%</dd></dl>
-      <p class="sk__more">Other numbers not recorded yet</p>
+      
     </li>
     <li class="sk" id="voltverine" data-name="voltverine" data-type="Lightning" data-role="Guardian" data-tier="3">
       <div class="sk__head">
@@ -155,9 +247,20 @@
         </div>
       </div>
       
+        <details class="sk__same"><summary>Same as Voltling: base numbers, Paralysis</summary>
+        
+        
+        <dl class="sk__rows"><dt>Damage Factor</dt><dd>90%</dd><dt>Damage Count</dt><dd>2</dd><dt>Cooldown</dt><dd>3.5s</dd></dl>
+        <h4 class="sk__heading">Paralysis</h4>
+        <p class="sk__text">Continuously takes damage while briefly under the effect of Bind.</p>
+        <dl class="sk__rows"><dt>Damage Factor</dt><dd>15%</dd><dt>Effect Interval</dt><dd>1.5s</dd><dt>Duration</dt><dd>5s</dd><dt>Bind</dt><dd>Unable to move.</dd><dt>Brief Bind Duration</dt><dd>0.2s</dd></dl>
+        </details>
+        <h4 class="sk__heading">Invincibility <span class="sk__new">New at T3</span></h4>
+        <p class="sk__text">Immune to damage and control effects.</p>
+        
         <dl class="sk__rows sk__rows--arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
           <dt>Arena Factor</dt><dd>50%</dd></dl>
-      <p class="sk__more">Other numbers not recorded yet</p>
+      
     </li>
     <li class="sk" id="voltreaver" data-name="voltreaver" data-type="Lightning" data-role="Guardian" data-tier="4">
       <div class="sk__head">
@@ -168,9 +271,23 @@
         </div>
       </div>
       
+        <details class="sk__same"><summary>Same as Voltverine: base numbers, Paralysis, Invincibility</summary>
+        
+        
+        <dl class="sk__rows"><dt>Damage Factor</dt><dd>90%</dd><dt>Damage Count</dt><dd>2</dd><dt>Cooldown</dt><dd>3.5s</dd></dl>
+        <h4 class="sk__heading">Paralysis</h4>
+        <p class="sk__text">Continuously takes damage while briefly under the effect of Bind.</p>
+        <dl class="sk__rows"><dt>Damage Factor</dt><dd>15%</dd><dt>Effect Interval</dt><dd>1.5s</dd><dt>Duration</dt><dd>5s</dd><dt>Bind</dt><dd>Unable to move.</dd><dt>Brief Bind Duration</dt><dd>0.2s</dd></dl>
+        <h4 class="sk__heading">Invincibility</h4>
+        <p class="sk__text">Immune to damage and control effects.</p>
+        
+        </details>
+        <h4 class="sk__heading">Aura: Lightning <span class="sk__new">New at T4</span></h4>
+        <p class="sk__text">Boosts ATK Speed for all allies. The effect for non-Lightning allies is reduced by 50%. Aura: Lightning can be stacked, but cannot take effect in some game modes.</p>
+        <dl class="sk__rows"><dt>Base ATK Speed Boost</dt><dd>4%</dd><dt>Max ATK Speed Boost</dt><dd>20%</dd></dl>
         <dl class="sk__rows sk__rows--arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
           <dt>Arena Factor</dt><dd>50%</dd></dl>
-      <p class="sk__more">Other numbers not recorded yet</p>
+      
     </li>
       </ol>
       <div class="sk__horde">
@@ -289,20 +406,42 @@
         </div>
       </div>
       
+        
+        
+        <dl class="sk__rows"><dt>Damage Factor</dt><dd>150%</dd><dt>Cooldown</dt><dd>3s</dd></dl>
+        <h4 class="sk__heading">Slow</h4>
+        <p class="sk__text">Move Speed is reduced.</p>
+        <dl class="sk__rows"><dt>Amount Reduced</dt><dd>30%</dd><dt>Duration</dt><dd>3s</dd></dl>
+        <h4 class="sk__heading">Sleep</h4>
+        <p class="sk__text">Unable to move or attack. Will wake up early upon taking a certain amount of damage. Sleep cannot be inflicted continuously.</p>
+        <dl class="sk__rows"><dt>Sleep Frequency</dt><dd>Every 3 Slow Inflictions</dd><dt>Max Duration</dt><dd>4s</dd><dt>Early Waking DMG Needed</dt><dd>10% HP</dd><dt>Sleep Interval</dt><dd>8s</dd><dt>Boss Sleep Interval</dt><dd>24s</dd></dl>
         <dl class="sk__rows sk__rows--arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
           <dt>Arena Factor</dt><dd>35%</dd></dl>
-      <p class="sk__more">Other numbers not recorded yet</p>
+      
     </li>
-    <li class="sk sk--ghost" id="ripplewing" data-name="ripplewing" data-type="Water" data-role="Support" data-tier="2">
+    <li class="sk" id="ripplewing" data-name="ripplewing" data-type="Water" data-role="Support" data-tier="2">
       <div class="sk__head">
-        <img src="data/images/tatari/ripplewing.png" alt="" width="40" height="40" loading="lazy" decoding="async">
+        <img src="data/images/tatari/ripplewing.png" alt="" width="48" height="48" loading="lazy" decoding="async">
         <div>
           <h3 class="sk__name">Ripplewing <span class="sk__tier">T2</span></h3>
           <p class="sk__meta"><img class="sk__ticon" src="data/images/icons/water.png" alt="" width="16" height="16">Water Support · <b>Sleepy Shot</b></p>
         </div>
       </div>
-      <p class="sk__text">Launches water bombs that inflict Slow and sometimes inflict Sleep. Deals damage to enemies that wake from Sleep.</p>
-      <p class="sk__more">Numbers not recorded yet</p>
+      
+        <details class="sk__same"><summary>Same as Dewgrub: base numbers, Slow</summary>
+        
+        
+        <dl class="sk__rows"><dt>Damage Factor</dt><dd>150%</dd><dt>Cooldown</dt><dd>3s</dd></dl>
+        <h4 class="sk__heading">Slow</h4>
+        <p class="sk__text">Move Speed is reduced.</p>
+        <dl class="sk__rows"><dt>Amount Reduced</dt><dd>30%</dd><dt>Duration</dt><dd>3s</dd></dl>
+        </details>
+        <h4 class="sk__heading">Sleep</h4>
+        <p class="sk__text">Unable to move or attack. Will wake up early upon taking a certain amount of damage. Sleep cannot be inflicted continuously.</p>
+        <dl class="sk__rows"><dt>Sleep Frequency</dt><dd>Every 3 Slow Inflictions</dd><dt>Max Duration</dt><dd>4s</dd><dt>Early Waking DMG Needed</dt><dd>10% HP</dd><dt>Extra DMG Upon Waking <span class="sk__new">new</span></dt><dd>50% DMG Taken Asleep</dd><dt>Max Extra Damage <span class="sk__new">new</span></dt><dd>300%</dd><dt>Sleep Interval</dt><dd>8s</dd><dt>Boss Sleep Interval</dt><dd>24s</dd></dl>
+        <dl class="sk__rows sk__rows--arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
+          <dt>Arena Factor</dt><dd>35%</dd></dl>
+      
     </li>
     <li class="sk" id="waveflutter" data-name="waveflutter" data-type="Water" data-role="Support" data-tier="3">
       <div class="sk__head">
@@ -313,9 +452,20 @@
         </div>
       </div>
       
+        <details class="sk__same"><summary>Same as Ripplewing: base numbers, Slow, Sleep</summary>
+        
+        
+        <dl class="sk__rows"><dt>Damage Factor</dt><dd>150%</dd><dt>Cooldown</dt><dd>3s</dd></dl>
+        <h4 class="sk__heading">Slow</h4>
+        <p class="sk__text">Move Speed is reduced.</p>
+        <dl class="sk__rows"><dt>Amount Reduced</dt><dd>30%</dd><dt>Duration</dt><dd>3s</dd></dl>
+        <h4 class="sk__heading">Sleep</h4>
+        <p class="sk__text">Unable to move or attack. Will wake up early upon taking a certain amount of damage. Sleep cannot be inflicted continuously.</p>
+        <dl class="sk__rows"><dt>Sleep Frequency</dt><dd>Every 3 Slow Inflictions</dd><dt>Max Duration</dt><dd>4s</dd><dt>Early Waking DMG Needed</dt><dd>10% HP</dd><dt>Extra DMG Upon Waking</dt><dd>50% DMG Taken Asleep</dd><dt>Max Extra Damage</dt><dd>300%</dd><dt>Sleep Interval</dt><dd>8s</dd><dt>Boss Sleep Interval</dt><dd>24s</dd></dl>
+        </details>
         <dl class="sk__rows sk__rows--arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
           <dt>Arena Factor</dt><dd>35%</dd></dl>
-      <p class="sk__more">Other numbers not recorded yet</p>
+      
     </li>
     <li class="sk" id="morphanessa" data-name="morphanessa" data-type="Water" data-role="Support" data-tier="4">
       <div class="sk__head">
@@ -326,9 +476,23 @@
         </div>
       </div>
       
+        <details class="sk__same"><summary>Same as Waveflutter: base numbers, Slow, Sleep</summary>
+        
+        
+        <dl class="sk__rows"><dt>Damage Factor</dt><dd>150%</dd><dt>Cooldown</dt><dd>3s</dd></dl>
+        <h4 class="sk__heading">Slow</h4>
+        <p class="sk__text">Move Speed is reduced.</p>
+        <dl class="sk__rows"><dt>Amount Reduced</dt><dd>30%</dd><dt>Duration</dt><dd>3s</dd></dl>
+        <h4 class="sk__heading">Sleep</h4>
+        <p class="sk__text">Unable to move or attack. Will wake up early upon taking a certain amount of damage. Sleep cannot be inflicted continuously.</p>
+        <dl class="sk__rows"><dt>Sleep Frequency</dt><dd>Every 3 Slow Inflictions</dd><dt>Max Duration</dt><dd>4s</dd><dt>Early Waking DMG Needed</dt><dd>10% HP</dd><dt>Extra DMG Upon Waking</dt><dd>50% DMG Taken Asleep</dd><dt>Max Extra Damage</dt><dd>300%</dd><dt>Sleep Interval</dt><dd>8s</dd><dt>Boss Sleep Interval</dt><dd>24s</dd></dl>
+        </details>
+        <h4 class="sk__heading">Aura: Water <span class="sk__new">New at T4</span></h4>
+        <p class="sk__text">Heals all allies continuously. The healing effect for non-Water allies is reduced by 50%. Aura: Water can be stacked, but cannot take effect in some game modes.</p>
+        <dl class="sk__rows"><dt>Base Healing Factor</dt><dd>0.5% Target HP</dd><dt>Max Healing Factor</dt><dd>2.5% Target HP</dd></dl>
         <dl class="sk__rows sk__rows--arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
           <dt>Arena Factor</dt><dd>35%</dd></dl>
-      <p class="sk__more">Other numbers not recorded yet</p>
+      
     </li>
       </ol>
       <div class="sk__horde">
@@ -349,20 +513,34 @@
         </div>
       </div>
       
+        
+        
+        <dl class="sk__rows"><dt>Damage Factor</dt><dd>70%</dd><dt>Increased Bounce</dt><dd>Every 5 Attacks</dd><dt>Max Bounces</dt><dd>2</dd><dt>Cooldown</dt><dd>4s</dd></dl>
+        <h4 class="sk__heading">Paw Pals</h4>
+        <p class="sk__text">Gains a bonus effect when deployed alongside Kittazap and further evolutions. When the number of bounces is increased, Kittazap and evolutions have expanded ATK Range.</p>
+        <dl class="sk__rows"><dt>ATK Range Increased</dt><dd>Tiles: 1</dd><dt>Max Expansions</dt><dd>2</dd></dl>
         <dl class="sk__rows sk__rows--arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
           <dt>Arena Factor</dt><dd>50%</dd></dl>
-      <p class="sk__more">Other numbers not recorded yet</p>
+      
     </li>
-    <li class="sk sk--ghost" id="nekoflare" data-name="nekoflare" data-type="Fire" data-role="DPS" data-tier="2">
+    <li class="sk" id="nekoflare" data-name="nekoflare" data-type="Fire" data-role="DPS" data-tier="2">
       <div class="sk__head">
-        <img src="data/images/tatari/nekoflare.png" alt="" width="40" height="40" loading="lazy" decoding="async">
+        <img src="data/images/tatari/nekoflare.png" alt="" width="48" height="48" loading="lazy" decoding="async">
         <div>
           <h3 class="sk__name">Nekoflare <span class="sk__tier">T2</span></h3>
           <p class="sk__meta"><img class="sk__ticon" src="data/images/icons/fire.png" alt="" width="16" height="16">Fire DPS · <b>Meow Crackle</b></p>
         </div>
       </div>
-      <p class="sk__text">Throws jewels. Sometimes, the jewels can bounce an increasing number of times between enemies. Flameow shares the Paw Pals bond whenever on the field.</p>
-      <p class="sk__more">Numbers not recorded yet</p>
+      
+        
+        
+        <dl class="sk__rows"><dt>Damage Factor</dt><dd>70%</dd><dt>Increased Bounce</dt><dd><span class="sk__was">was Every 5 Attacks</span>Every 4 Attacks</dd><dt>Max Bounces</dt><dd><span class="sk__was">was 2</span>3</dd><dt>Cooldown</dt><dd>4s</dd></dl>
+        <h4 class="sk__heading">Paw Pals</h4>
+        <p class="sk__text">Gains a bonus effect when deployed alongside Kittazap and further evolutions. When the number of bounces is increased, Kittazap and evolutions have expanded ATK Range.</p>
+        <dl class="sk__rows"><dt>ATK Range Increased</dt><dd>Tiles: 1</dd><dt>Max Expansions</dt><dd><span class="sk__was">was 2</span>3</dd></dl>
+        <dl class="sk__rows sk__rows--arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
+          <dt>Arena Factor</dt><dd>50%</dd></dl>
+      
     </li>
     <li class="sk" id="silversear" data-name="silversear" data-type="Fire" data-role="DPS" data-tier="3">
       <div class="sk__head">
@@ -373,20 +551,47 @@
         </div>
       </div>
       
+        <details class="sk__same"><summary>Same as Nekoflare: base numbers, Paw Pals</summary>
+        
+        
+        <dl class="sk__rows"><dt>Damage Factor</dt><dd>70%</dd><dt>Increased Bounce</dt><dd>Every 4 Attacks</dd><dt>Max Bounces</dt><dd>3</dd><dt>Cooldown</dt><dd>4s</dd></dl>
+        <h4 class="sk__heading">Paw Pals</h4>
+        <p class="sk__text">Gains a bonus effect when deployed alongside Kittazap and further evolutions. When the number of bounces is increased, Kittazap and evolutions have expanded ATK Range.</p>
+        <dl class="sk__rows"><dt>ATK Range Increased</dt><dd>Tiles: 1</dd><dt>Max Expansions</dt><dd>3</dd></dl>
+        </details>
+        <h4 class="sk__heading">Searpaw: ATK Boost <span class="sk__new">New at T3</span></h4>
+        <p class="sk__text">ATK increases based on the caster&#39;s ATK.</p>
+        <dl class="sk__rows"><dt>Boost Factor</dt><dd>15%</dd></dl>
         <dl class="sk__rows sk__rows--arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
           <dt>Arena Factor</dt><dd>50%</dd></dl>
-      <p class="sk__more">Other numbers not recorded yet</p>
+      
     </li>
-    <li class="sk sk--ghost" id="cinderclaw" data-name="cinderclaw" data-type="Fire" data-role="DPS" data-tier="4">
+    <li class="sk" id="cinderclaw" data-name="cinderclaw" data-type="Fire" data-role="DPS" data-tier="4">
       <div class="sk__head">
-        <img src="data/images/tatari/cinderclaw.png" alt="" width="40" height="40" loading="lazy" decoding="async">
+        <img src="data/images/tatari/cinderclaw.png" alt="" width="48" height="48" loading="lazy" decoding="async">
         <div>
           <h3 class="sk__name">Cinderclaw <span class="sk__tier">T4</span></h3>
           <p class="sk__meta"><img class="sk__ticon" src="data/images/icons/fire.png" alt="" width="16" height="16">Fire DPS · <b>Meow Boom</b></p>
         </div>
       </div>
-      <p class="sk__text">Throws jewels. Sometimes, the jewels can bounce an increasing number of times between enemies. When the max number of bounces is reached, grants all allies Searpaw: ATK Boost. Silversear shares the Paw Pals bond whenever on the field. Cinderclaw carries Aura: Fire whenever on the field.</p>
-      <p class="sk__more">Numbers not recorded yet</p>
+      
+        <details class="sk__same"><summary>Same as Silversear: base numbers, Searpaw: ATK Boost, Paw Pals</summary>
+        
+        
+        <dl class="sk__rows"><dt>Damage Factor</dt><dd>70%</dd><dt>Increased Bounce</dt><dd>Every 4 Attacks</dd><dt>Max Bounces</dt><dd>3</dd><dt>Cooldown</dt><dd>4s</dd></dl>
+        <h4 class="sk__heading">Searpaw: ATK Boost</h4>
+        <p class="sk__text">ATK increases based on the caster&#39;s ATK.</p>
+        <dl class="sk__rows"><dt>Boost Factor</dt><dd>15%</dd></dl>
+        <h4 class="sk__heading">Paw Pals</h4>
+        <p class="sk__text">Gains a bonus effect when deployed alongside Kittazap and further evolutions. When the number of bounces is increased, Kittazap and evolutions have expanded ATK Range.</p>
+        <dl class="sk__rows"><dt>ATK Range Increased</dt><dd>Tiles: 1</dd><dt>Max Expansions</dt><dd>3</dd></dl>
+        </details>
+        <h4 class="sk__heading">Aura: Fire <span class="sk__new">New at T4</span></h4>
+        <p class="sk__text">Boosts ATK for all allies. The effect for non-Fire allies is reduced by 50%. Aura: Fire can be stacked, but cannot take effect in some game modes.</p>
+        <dl class="sk__rows"><dt>Base ATK Boost</dt><dd>2.5%</dd><dt>Max ATK Boost</dt><dd>12.5%</dd></dl>
+        <dl class="sk__rows sk__rows--arena" title="Gold Rush and Arena: the skill's damage against another Tatari is multiplied by this">
+          <dt>Arena Factor</dt><dd>50%</dd></dl>
+      
     </li>
       </ol>
       <div class="sk__horde">
@@ -1456,60 +1661,6 @@
           <li><span class="sk__lv">Lv 3</span><div><b>Vital Fumes</b><p>Attacks grant allies from behind Exhaust: DMG Boost and Exhaust: ATK Boost.</p></div></li>
           <li><span class="sk__lv">Lv 5</span><div><b>Airborne Ops</b><p>Periodically deals extra small AoE damage in the surrounding area while attacking.</p></div></li>
           <li><span class="sk__lv">Lv 7</span><div><b>Chain Charge</b><p>Periodically summons a Goonbug ally for an offensive charge.</p></div></li>
-        </ol>
-      </div></li>
-      <li class="sk__line" data-type="Rock" aria-label="Punchimp line"><ol class="sk__row" tabindex="0" aria-label="Punchimp line, T1 to T4">
-    <li class="sk sk--ghost" id="punchimp" data-name="punchimp" data-type="Rock" data-role="Guardian" data-tier="1">
-      <div class="sk__head">
-        <img src="data/images/tatari/punchimp.png" alt="" width="40" height="40" loading="lazy" decoding="async">
-        <div>
-          <h3 class="sk__name">Punchimp <span class="sk__tier">T1</span></h3>
-          <p class="sk__meta"><img class="sk__ticon" src="data/images/icons/rock.png" alt="" width="16" height="16">Rock Guardian · <b>Clone Caper</b></p>
-        </div>
-      </div>
-      <p class="sk__text">Wiggles hips, dealing small AoE damage. May summon a clone to assist.</p>
-      <p class="sk__more">Numbers not recorded yet</p>
-    </li>
-    <li class="sk sk--ghost" id="rockfu" data-name="rockfu" data-type="Rock" data-role="Guardian" data-tier="2">
-      <div class="sk__head">
-        <img src="data/images/tatari/rockfu.png" alt="" width="40" height="40" loading="lazy" decoding="async">
-        <div>
-          <h3 class="sk__name">Rockfu <span class="sk__tier">T2</span></h3>
-          <p class="sk__meta"><img class="sk__ticon" src="data/images/icons/rock.png" alt="" width="16" height="16">Rock Guardian · <b>Bop Brigade</b></p>
-        </div>
-      </div>
-      <p class="sk__text">Swings a club, dealing small AoE damage. May summon a clone to assist.</p>
-      <p class="sk__more">Numbers not recorded yet</p>
-    </li>
-    <li class="sk sk--ghost" id="rockwu" data-name="rockwu" data-type="Rock" data-role="Guardian" data-tier="3">
-      <div class="sk__head">
-        <img src="data/images/tatari/rockwu.png" alt="" width="40" height="40" loading="lazy" decoding="async">
-        <div>
-          <h3 class="sk__name">Rockwu <span class="sk__tier">T3</span></h3>
-          <p class="sk__meta"><img class="sk__ticon" src="data/images/icons/rock.png" alt="" width="16" height="16">Rock Guardian · <b>Whirling Band</b></p>
-        </div>
-      </div>
-      <p class="sk__text">Spins a staff, dealing AoE damage. Summons clones for synchronized attacks.</p>
-      <p class="sk__more">Numbers not recorded yet</p>
-    </li>
-    <li class="sk sk--ghost" id="rockong" data-name="rockong" data-type="Rock" data-role="Guardian" data-tier="4">
-      <div class="sk__head">
-        <img src="data/images/tatari/rockong.png" alt="" width="40" height="40" loading="lazy" decoding="async">
-        <div>
-          <h3 class="sk__name">Rockong <span class="sk__tier">T4</span></h3>
-          <p class="sk__meta"><img class="sk__ticon" src="data/images/icons/rock.png" alt="" width="16" height="16">Rock Guardian · <b>Smashing Hit</b></p>
-        </div>
-      </div>
-      <p class="sk__text">Spins a staff, dealing AoE damage. Summons clones for synchronized attacks. Rockong carries Aura: Rock whenever on the field.</p>
-      <p class="sk__more">Numbers not recorded yet</p>
-    </li>
-      </ol>
-      <div class="sk__horde">
-        <h4 class="sk__horde-title">Horde Invasion <span>the whole line learns these</span></h4>
-        <ol class="sk__levels">
-          <li><span class="sk__lv">Lv 3</span><div><b>Hit Me!</b><p>Periodically summon an attackable clone that deals AoE damage when it disappears.</p></div></li>
-          <li><span class="sk__lv">Lv 5</span><div><b>Barricade</b><p>When this Tatari or their summons take damage, there is a chance to gain Barricade: DMG Reduction.</p></div></li>
-          <li><span class="sk__lv">Lv 7</span><div><b>Staff Cyclone</b><p>Spins a golden staff to deal continuous AoE damage. The staff will bounce if it hits the edge of the battlefield.</p></div></li>
         </ol>
       </div></li>
       <li class="sk__line" data-type="Water" aria-label="Waddledo line"><ol class="sk__row" tabindex="0" aria-label="Waddledo line, T1 to T4">

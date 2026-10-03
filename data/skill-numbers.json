@@ -1,105 +1,1163 @@
 {
-  "_readme": [
-    "Each Tatari's base skill as the in-game skill panel shows it: the numbers the wiki does not have.",
-    "",
-    "Read off the game's own skill panel, by screenshot or screen recording, and checked by eye against",
-    "it. Values are kept exactly as the panel writes them ('130%', '4.5s', 'After Every 3 Attacks'),",
-    "because units and wording differ from row to row and a number without its unit is a guess.",
-    "",
-    "sections: the skill's own rows first (heading null), then one per effect box the panel shows,",
-    "in its order, with the box's text. arenaFactor is the panel's last box, kept apart because it",
-    "applies only in Gold Rush and Arena: a skill's base damage against another Tatari is multiplied",
-    "by it. A Tatari with only arenaFactor has not had its full panel recorded yet.",
-    "",
-    "Every player sees the same numbers; they do not change with account progress."
-  ],
-  "recorded": "2026-10-02",
-  "cribbler": {
-    "skill": "Claw Swing",
-    "arenaFactor": "90%",
-    "sections": [
-      { "heading": null, "rows": [["Damage Factor", "130%"], ["Cooldown", "4.5s"]] }
+ "_readme": [
+  "Each Tatari's base skill as the in-game skill panel shows it: the numbers the wiki does not have.",
+  "",
+  "Read off the game's own skill panel, by screenshot or screen recording, and checked by eye against",
+  "it. Values are kept exactly as the panel writes them ('130%', '4.5s', 'After Every 3 Attacks'),",
+  "because units and wording differ from row to row and a number without its unit is a guess.",
+  "",
+  "sections: the skill's own rows first (heading null), then one per effect box the panel shows,",
+  "in its order, with the box's text. arenaFactor is the panel's last box, kept apart because it",
+  "applies only in Gold Rush and Arena: a skill's base damage against another Tatari is multiplied",
+  "by it. A Tatari with only arenaFactor has not had its full panel recorded yet.",
+  "",
+  "Every player sees the same numbers; they do not change with account progress."
+ ],
+ "recorded": "2026-10-03",
+ "cribbler": {
+  "skill": "Claw Swing",
+  "arenaFactor": "90%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "130%"
+     ],
+     [
+      "Cooldown",
+      "4.5s"
+     ]
     ]
-  },
-  "clawzor": {
-    "skill": "Shredder Swing",
-    "arenaFactor": "90%",
-    "sections": [
-      { "heading": null, "rows": [["Damage Factor", "130%"], ["Cooldown", "4.5s"]] },
-      { "heading": "Shredded", "text": "Upon taking damage, Shredded is triggered for extra damage.",
-        "rows": [["Damage Factor", "20%"], ["Max Triggers", "8"], ["Duration", "4s"]] }
+   }
+  ]
+ },
+ "clawzor": {
+  "skill": "Shredder Swing",
+  "arenaFactor": "90%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "130%"
+     ],
+     [
+      "Cooldown",
+      "4.5s"
+     ]
     ]
-  },
-  "dreadclaw": {
-    "skill": "Claw Storm",
-    "arenaFactor": "90%",
-    "sections": [
-      { "heading": null, "rows": [["Damage Factor", "130%"], ["Cooldown", "4.5s"]] },
-      { "heading": "Shredded", "text": "Upon taking damage, Shredded is triggered for extra damage.",
-        "rows": [["Damage Factor", "20%"], ["Max Triggers", "8"], ["Duration", "4s"]] },
-      { "heading": "ATK Boost", "text": "ATK increases based on the target's ATK.",
-        "rows": [["Boost Factor", "15%"], ["Duration", "5s"]] }
+   },
+   {
+    "heading": "Shredded",
+    "text": "Upon taking damage, Shredded is triggered for extra damage.",
+    "rows": [
+     [
+      "Damage Factor",
+      "20%"
+     ],
+     [
+      "Max Triggers",
+      "8"
+     ],
+     [
+      "Duration",
+      "4s"
+     ]
     ]
-  },
-  "cribking": {
-    "skill": "Hydro Claw",
-    "arenaFactor": "90%",
-    "sections": [
-      { "heading": null, "rows": [["Damage Factor", "130%"], ["Cooldown", "4.5s"]] },
-      { "heading": "Shredded", "text": "Upon taking damage, Shredded is triggered for extra damage.",
-        "rows": [["Damage Factor", "20%"], ["Max Triggers", "8"], ["Duration", "4s"]] },
-      { "heading": "ATK Boost", "text": "ATK increases based on the target's ATK.",
-        "rows": [["Boost Factor", "15%"], ["Duration", "5s"]] },
-      { "heading": "Aura: Water", "text": "Heals all allies continuously. The healing effect for non-Water allies is reduced by 50%. Aura: Water can be stacked, but cannot take effect in some game modes.",
-        "rows": [["Base Healing Factor", "0.5% Target HP"], ["Max Healing Factor", "2.5% Target HP"], ["Healing Interval", "4s"]] }
+   }
+  ]
+ },
+ "dreadclaw": {
+  "skill": "Claw Storm",
+  "arenaFactor": "90%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "130%"
+     ],
+     [
+      "Cooldown",
+      "4.5s"
+     ]
     ]
-  },
-  "budboo": {
-    "skill": "Bud Venom",
-    "arenaFactor": "45%",
-    "sections": [
-      { "heading": null, "rows": [["Damage Factor", "180%"], ["Cooldown", "2.5s"],
-        ["Venomous Seed Frequency", "After Every 3 Attacks"], ["Venomous Seed Damage Factor", "100%"]] },
-      { "heading": "Poison", "text": "Takes increased damage and continuously takes damage.",
-        "rows": [["Boost Factor", "5%"], ["Damage Factor", "12%"], ["Damage Interval", "1s"], ["Duration", "5s"]] }
+   },
+   {
+    "heading": "Shredded",
+    "text": "Upon taking damage, Shredded is triggered for extra damage.",
+    "rows": [
+     [
+      "Damage Factor",
+      "20%"
+     ],
+     [
+      "Max Triggers",
+      "8"
+     ],
+     [
+      "Duration",
+      "4s"
+     ]
     ]
-  },
-  "snapshade": { "arenaFactor": "45%" },
-  "thornwisp": {
-    "skill": "Thorn Bite",
-    "arenaFactor": "45%",
-    "sections": [
-      { "heading": null, "rows": [["Damage Factor", "180%"], ["Cooldown", "2.5s"],
-        ["Venomous Seed Frequency", "After Every 3 Attacks"], ["Venomous Seeds", "3"], ["Venomous Seed Damage Factor", "100%"]] },
-      { "heading": "Poison", "text": "Takes increased damage and continuously takes damage.",
-        "rows": [["Boost Factor", "5%"], ["Damage Factor", "12%"], ["Damage Interval", "1s"], ["Duration", "5s"]] },
-      { "heading": "Poison Zone", "text": "Enemies inside the zone are inflicted with Poison. If a venomous seed misses an enemy, it will still create a Poison Zone before disappearing.",
-        "rows": [["Duration", "4s"]] }
+   },
+   {
+    "heading": "ATK Boost",
+    "text": "ATK increases based on the target's ATK.",
+    "rows": [
+     [
+      "Boost Factor",
+      "15%"
+     ],
+     [
+      "Duration",
+      "5s"
+     ]
     ]
-  },
-  "chomperwraith": {
-    "skill": "Chomp Menace",
-    "arenaFactor": "45%",
-    "sections": [
-      { "heading": null, "rows": [["Damage Factor", "180%"], ["Cooldown", "2.5s"],
-        ["Venomous Seed Frequency", "After Every 3 Attacks"], ["Venomous Seeds", "3"], ["Venomous Seed Damage Factor", "100%"]] },
-      { "heading": "Poison", "text": "Takes increased damage and continuously takes damage.",
-        "rows": [["Boost Factor", "5%"], ["Damage Factor", "12%"], ["Damage Interval", "1s"], ["Duration", "5s"]] },
-      { "heading": "Poison Zone", "text": "Enemies inside the zone are inflicted with Poison. If a venomous seed misses an enemy, it will still create a Poison Zone before disappearing.",
-        "rows": [["Duration", "4s"]] },
-      { "heading": "Aura: Grass", "text": "Increases Max HP for all allies. The effect for non-Grass allies is reduced by 50%. Aura: Grass can be stacked, but cannot take effect in some game modes.",
-        "rows": [["Base HP Boost", "4%"], ["Max HP Boost", "20%"]] }
+   }
+  ]
+ },
+ "cribking": {
+  "skill": "Hydro Claw",
+  "arenaFactor": "90%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "130%"
+     ],
+     [
+      "Cooldown",
+      "4.5s"
+     ]
     ]
-  },
-  "voltkit": { "arenaFactor": "50%" },
-  "voltling": { "arenaFactor": "50%" },
-  "voltverine": { "arenaFactor": "50%" },
-  "voltreaver": { "arenaFactor": "50%" },
-  "dewgrub": { "arenaFactor": "35%" },
-  "waveflutter": { "arenaFactor": "35%" },
-  "morphanessa": { "arenaFactor": "35%" },
-  "flameow": { "arenaFactor": "50%" },
-  "silversear": { "arenaFactor": "50%" },
-  "droppit": { "arenaFactor": "60%" },
-  "tideon": { "arenaFactor": "60%" }
+   },
+   {
+    "heading": "Shredded",
+    "text": "Upon taking damage, Shredded is triggered for extra damage.",
+    "rows": [
+     [
+      "Damage Factor",
+      "20%"
+     ],
+     [
+      "Max Triggers",
+      "8"
+     ],
+     [
+      "Duration",
+      "4s"
+     ]
+    ]
+   },
+   {
+    "heading": "ATK Boost",
+    "text": "ATK increases based on the target's ATK.",
+    "rows": [
+     [
+      "Boost Factor",
+      "15%"
+     ],
+     [
+      "Duration",
+      "5s"
+     ]
+    ]
+   },
+   {
+    "heading": "Aura: Water",
+    "text": "Heals all allies continuously. The healing effect for non-Water allies is reduced by 50%. Aura: Water can be stacked, but cannot take effect in some game modes.",
+    "rows": [
+     [
+      "Base Healing Factor",
+      "0.5% Target HP"
+     ],
+     [
+      "Max Healing Factor",
+      "2.5% Target HP"
+     ],
+     [
+      "Healing Interval",
+      "4s"
+     ]
+    ]
+   }
+  ]
+ },
+ "budboo": {
+  "skill": "Bud Venom",
+  "arenaFactor": "45%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "180%"
+     ],
+     [
+      "Cooldown",
+      "2.5s"
+     ],
+     [
+      "Venomous Seed Frequency",
+      "After Every 3 Attacks"
+     ],
+     [
+      "Venomous Seed Damage Factor",
+      "100%"
+     ]
+    ]
+   },
+   {
+    "heading": "Poison",
+    "text": "Takes increased damage and continuously takes damage.",
+    "rows": [
+     [
+      "Boost Factor",
+      "5%"
+     ],
+     [
+      "Damage Factor",
+      "12%"
+     ],
+     [
+      "Damage Interval",
+      "1s"
+     ],
+     [
+      "Duration",
+      "5s"
+     ]
+    ]
+   }
+  ]
+ },
+ "snapshade": {
+  "arenaFactor": "45%"
+ },
+ "thornwisp": {
+  "skill": "Thorn Bite",
+  "arenaFactor": "45%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "180%"
+     ],
+     [
+      "Cooldown",
+      "2.5s"
+     ],
+     [
+      "Venomous Seed Frequency",
+      "After Every 3 Attacks"
+     ],
+     [
+      "Venomous Seeds",
+      "3"
+     ],
+     [
+      "Venomous Seed Damage Factor",
+      "100%"
+     ]
+    ]
+   },
+   {
+    "heading": "Poison",
+    "text": "Takes increased damage and continuously takes damage.",
+    "rows": [
+     [
+      "Boost Factor",
+      "5%"
+     ],
+     [
+      "Damage Factor",
+      "12%"
+     ],
+     [
+      "Damage Interval",
+      "1s"
+     ],
+     [
+      "Duration",
+      "5s"
+     ]
+    ]
+   },
+   {
+    "heading": "Poison Zone",
+    "text": "Enemies inside the zone are inflicted with Poison. If a venomous seed misses an enemy, it will still create a Poison Zone before disappearing.",
+    "rows": [
+     [
+      "Duration",
+      "4s"
+     ]
+    ]
+   }
+  ]
+ },
+ "chomperwraith": {
+  "skill": "Chomp Menace",
+  "arenaFactor": "45%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "180%"
+     ],
+     [
+      "Cooldown",
+      "2.5s"
+     ],
+     [
+      "Venomous Seed Frequency",
+      "After Every 3 Attacks"
+     ],
+     [
+      "Venomous Seeds",
+      "3"
+     ],
+     [
+      "Venomous Seed Damage Factor",
+      "100%"
+     ]
+    ]
+   },
+   {
+    "heading": "Poison",
+    "text": "Takes increased damage and continuously takes damage.",
+    "rows": [
+     [
+      "Boost Factor",
+      "5%"
+     ],
+     [
+      "Damage Factor",
+      "12%"
+     ],
+     [
+      "Damage Interval",
+      "1s"
+     ],
+     [
+      "Duration",
+      "5s"
+     ]
+    ]
+   },
+   {
+    "heading": "Poison Zone",
+    "text": "Enemies inside the zone are inflicted with Poison. If a venomous seed misses an enemy, it will still create a Poison Zone before disappearing.",
+    "rows": [
+     [
+      "Duration",
+      "4s"
+     ]
+    ]
+   },
+   {
+    "heading": "Aura: Grass",
+    "text": "Increases Max HP for all allies. The effect for non-Grass allies is reduced by 50%. Aura: Grass can be stacked, but cannot take effect in some game modes.",
+    "rows": [
+     [
+      "Base HP Boost",
+      "4%"
+     ],
+     [
+      "Max HP Boost",
+      "20%"
+     ]
+    ]
+   }
+  ]
+ },
+ "voltkit": {
+  "skill": "Duskrush",
+  "arenaFactor": "50%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "90%"
+     ],
+     [
+      "Damage Count",
+      "2"
+     ],
+     [
+      "Cooldown",
+      "3.5s"
+     ]
+    ]
+   }
+  ]
+ },
+ "voltling": {
+  "skill": "Eboncharge",
+  "arenaFactor": "50%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "90%"
+     ],
+     [
+      "Damage Count",
+      "2"
+     ],
+     [
+      "Cooldown",
+      "3.5s"
+     ]
+    ]
+   },
+   {
+    "heading": "Paralysis",
+    "text": "Continuously takes damage while briefly under the effect of Bind.",
+    "rows": [
+     [
+      "Damage Factor",
+      "15%"
+     ],
+     [
+      "Effect Interval",
+      "1.5s"
+     ],
+     [
+      "Duration",
+      "5s"
+     ],
+     [
+      "Bind",
+      "Unable to move."
+     ],
+     [
+      "Brief Bind Duration",
+      "0.2s"
+     ]
+    ]
+   }
+  ]
+ },
+ "voltverine": {
+  "skill": "Phantom Storm",
+  "arenaFactor": "50%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "90%"
+     ],
+     [
+      "Damage Count",
+      "2"
+     ],
+     [
+      "Cooldown",
+      "3.5s"
+     ]
+    ]
+   },
+   {
+    "heading": "Paralysis",
+    "text": "Continuously takes damage while briefly under the effect of Bind.",
+    "rows": [
+     [
+      "Damage Factor",
+      "15%"
+     ],
+     [
+      "Effect Interval",
+      "1.5s"
+     ],
+     [
+      "Duration",
+      "5s"
+     ],
+     [
+      "Bind",
+      "Unable to move."
+     ],
+     [
+      "Brief Bind Duration",
+      "0.2s"
+     ]
+    ]
+   },
+   {
+    "heading": "Invincibility",
+    "text": "Immune to damage and control effects.",
+    "rows": []
+   }
+  ]
+ },
+ "voltreaver": {
+  "skill": "Shadow Strike",
+  "arenaFactor": "50%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "90%"
+     ],
+     [
+      "Damage Count",
+      "2"
+     ],
+     [
+      "Cooldown",
+      "3.5s"
+     ]
+    ]
+   },
+   {
+    "heading": "Paralysis",
+    "text": "Continuously takes damage while briefly under the effect of Bind.",
+    "rows": [
+     [
+      "Damage Factor",
+      "15%"
+     ],
+     [
+      "Effect Interval",
+      "1.5s"
+     ],
+     [
+      "Duration",
+      "5s"
+     ],
+     [
+      "Bind",
+      "Unable to move."
+     ],
+     [
+      "Brief Bind Duration",
+      "0.2s"
+     ]
+    ]
+   },
+   {
+    "heading": "Invincibility",
+    "text": "Immune to damage and control effects.",
+    "rows": []
+   },
+   {
+    "heading": "Aura: Lightning",
+    "text": "Boosts ATK Speed for all allies. The effect for non-Lightning allies is reduced by 50%. Aura: Lightning can be stacked, but cannot take effect in some game modes.",
+    "rows": [
+     [
+      "Base ATK Speed Boost",
+      "4%"
+     ],
+     [
+      "Max ATK Speed Boost",
+      "20%"
+     ]
+    ]
+   }
+  ]
+ },
+ "dewgrub": {
+  "skill": "Drowsy Shot",
+  "arenaFactor": "35%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "150%"
+     ],
+     [
+      "Cooldown",
+      "3s"
+     ]
+    ]
+   },
+   {
+    "heading": "Slow",
+    "text": "Move Speed is reduced.",
+    "rows": [
+     [
+      "Amount Reduced",
+      "30%"
+     ],
+     [
+      "Duration",
+      "3s"
+     ]
+    ]
+   },
+   {
+    "heading": "Sleep",
+    "text": "Unable to move or attack. Will wake up early upon taking a certain amount of damage. Sleep cannot be inflicted continuously.",
+    "rows": [
+     [
+      "Sleep Frequency",
+      "Every 3 Slow Inflictions"
+     ],
+     [
+      "Max Duration",
+      "4s"
+     ],
+     [
+      "Early Waking DMG Needed",
+      "10% HP"
+     ],
+     [
+      "Sleep Interval",
+      "8s"
+     ],
+     [
+      "Boss Sleep Interval",
+      "24s"
+     ]
+    ]
+   }
+  ]
+ },
+ "waveflutter": {
+  "skill": "Somno-Shot",
+  "arenaFactor": "35%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "150%"
+     ],
+     [
+      "Cooldown",
+      "3s"
+     ]
+    ]
+   },
+   {
+    "heading": "Slow",
+    "text": "Move Speed is reduced.",
+    "rows": [
+     [
+      "Amount Reduced",
+      "30%"
+     ],
+     [
+      "Duration",
+      "3s"
+     ]
+    ]
+   },
+   {
+    "heading": "Sleep",
+    "text": "Unable to move or attack. Will wake up early upon taking a certain amount of damage. Sleep cannot be inflicted continuously.",
+    "rows": [
+     [
+      "Sleep Frequency",
+      "Every 3 Slow Inflictions"
+     ],
+     [
+      "Max Duration",
+      "4s"
+     ],
+     [
+      "Early Waking DMG Needed",
+      "10% HP"
+     ],
+     [
+      "Extra DMG Upon Waking",
+      "50% DMG Taken Asleep"
+     ],
+     [
+      "Max Extra Damage",
+      "300%"
+     ],
+     [
+      "Sleep Interval",
+      "8s"
+     ],
+     [
+      "Boss Sleep Interval",
+      "24s"
+     ]
+    ]
+   }
+  ]
+ },
+ "morphanessa": {
+  "skill": "Rippling Shot",
+  "arenaFactor": "35%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "150%"
+     ],
+     [
+      "Cooldown",
+      "3s"
+     ]
+    ]
+   },
+   {
+    "heading": "Slow",
+    "text": "Move Speed is reduced.",
+    "rows": [
+     [
+      "Amount Reduced",
+      "30%"
+     ],
+     [
+      "Duration",
+      "3s"
+     ]
+    ]
+   },
+   {
+    "heading": "Sleep",
+    "text": "Unable to move or attack. Will wake up early upon taking a certain amount of damage. Sleep cannot be inflicted continuously.",
+    "rows": [
+     [
+      "Sleep Frequency",
+      "Every 3 Slow Inflictions"
+     ],
+     [
+      "Max Duration",
+      "4s"
+     ],
+     [
+      "Early Waking DMG Needed",
+      "10% HP"
+     ],
+     [
+      "Extra DMG Upon Waking",
+      "50% DMG Taken Asleep"
+     ],
+     [
+      "Max Extra Damage",
+      "300%"
+     ],
+     [
+      "Sleep Interval",
+      "8s"
+     ],
+     [
+      "Boss Sleep Interval",
+      "24s"
+     ]
+    ]
+   },
+   {
+    "heading": "Aura: Water",
+    "text": "Heals all allies continuously. The healing effect for non-Water allies is reduced by 50%. Aura: Water can be stacked, but cannot take effect in some game modes.",
+    "rows": [
+     [
+      "Base Healing Factor",
+      "0.5% Target HP"
+     ],
+     [
+      "Max Healing Factor",
+      "2.5% Target HP"
+     ]
+    ]
+   }
+  ]
+ },
+ "flameow": {
+  "skill": "Meow Pop",
+  "arenaFactor": "50%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "70%"
+     ],
+     [
+      "Increased Bounce",
+      "Every 5 Attacks"
+     ],
+     [
+      "Max Bounces",
+      "2"
+     ],
+     [
+      "Cooldown",
+      "4s"
+     ]
+    ]
+   },
+   {
+    "heading": "Paw Pals",
+    "text": "Gains a bonus effect when deployed alongside Kittazap and further evolutions. When the number of bounces is increased, Kittazap and evolutions have expanded ATK Range.",
+    "rows": [
+     [
+      "ATK Range Increased",
+      "Tiles: 1"
+     ],
+     [
+      "Max Expansions",
+      "2"
+     ]
+    ]
+   }
+  ]
+ },
+ "silversear": {
+  "skill": "Meow Bomb",
+  "arenaFactor": "50%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "70%"
+     ],
+     [
+      "Increased Bounce",
+      "Every 4 Attacks"
+     ],
+     [
+      "Max Bounces",
+      "3"
+     ],
+     [
+      "Cooldown",
+      "4s"
+     ]
+    ]
+   },
+   {
+    "heading": "Searpaw: ATK Boost",
+    "text": "ATK increases based on the caster's ATK.",
+    "rows": [
+     [
+      "Boost Factor",
+      "15%"
+     ]
+    ]
+   },
+   {
+    "heading": "Paw Pals",
+    "text": "Gains a bonus effect when deployed alongside Kittazap and further evolutions. When the number of bounces is increased, Kittazap and evolutions have expanded ATK Range.",
+    "rows": [
+     [
+      "ATK Range Increased",
+      "Tiles: 1"
+     ],
+     [
+      "Max Expansions",
+      "3"
+     ]
+    ]
+   }
+  ]
+ },
+ "droppit": {
+  "arenaFactor": "60%"
+ },
+ "tideon": {
+  "arenaFactor": "60%"
+ },
+ "ripplewing": {
+  "skill": "Sleepy Shot",
+  "arenaFactor": "35%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "150%"
+     ],
+     [
+      "Cooldown",
+      "3s"
+     ]
+    ]
+   },
+   {
+    "heading": "Slow",
+    "text": "Move Speed is reduced.",
+    "rows": [
+     [
+      "Amount Reduced",
+      "30%"
+     ],
+     [
+      "Duration",
+      "3s"
+     ]
+    ]
+   },
+   {
+    "heading": "Sleep",
+    "text": "Unable to move or attack. Will wake up early upon taking a certain amount of damage. Sleep cannot be inflicted continuously.",
+    "rows": [
+     [
+      "Sleep Frequency",
+      "Every 3 Slow Inflictions"
+     ],
+     [
+      "Max Duration",
+      "4s"
+     ],
+     [
+      "Early Waking DMG Needed",
+      "10% HP"
+     ],
+     [
+      "Extra DMG Upon Waking",
+      "50% DMG Taken Asleep"
+     ],
+     [
+      "Max Extra Damage",
+      "300%"
+     ],
+     [
+      "Sleep Interval",
+      "8s"
+     ],
+     [
+      "Boss Sleep Interval",
+      "24s"
+     ]
+    ]
+   }
+  ]
+ },
+ "punchimp": {
+  "skill": "Clone Caper",
+  "arenaFactor": "45%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "80%"
+     ],
+     [
+      "Clones",
+      "1"
+     ],
+     [
+      "Cooldown",
+      "4s"
+     ]
+    ]
+   }
+  ]
+ },
+ "rockfu": {
+  "skill": "Bop Brigade",
+  "arenaFactor": "45%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "80%"
+     ],
+     [
+      "Clones",
+      "1"
+     ],
+     [
+      "Cooldown",
+      "4s"
+     ]
+    ]
+   }
+  ]
+ },
+ "rockwu": {
+  "skill": "Whirling Band",
+  "arenaFactor": "45%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "80%"
+     ],
+     [
+      "Clones",
+      "2"
+     ],
+     [
+      "Cooldown",
+      "4s"
+     ]
+    ]
+   }
+  ]
+ },
+ "rockong": {
+  "skill": "Smashing Hit",
+  "arenaFactor": "45%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "80%"
+     ],
+     [
+      "Clones",
+      "2"
+     ],
+     [
+      "Cooldown",
+      "4s"
+     ]
+    ]
+   },
+   {
+    "heading": "Aura: Rock",
+    "text": "Provides DMG Reduction for all allies. The effect for non-Rock allies is reduced by 50%. Aura: Rock can be stacked, but cannot take effect in some game modes.",
+    "rows": [
+     [
+      "Base DMG Reduction",
+      "3.5%"
+     ],
+     [
+      "Max DMG Reduction",
+      "17.5%"
+     ]
+    ]
+   }
+  ]
+ },
+ "nekoflare": {
+  "skill": "Meow Crackle",
+  "arenaFactor": "50%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "70%"
+     ],
+     [
+      "Increased Bounce",
+      "Every 4 Attacks"
+     ],
+     [
+      "Max Bounces",
+      "3"
+     ],
+     [
+      "Cooldown",
+      "4s"
+     ]
+    ]
+   },
+   {
+    "heading": "Paw Pals",
+    "text": "Gains a bonus effect when deployed alongside Kittazap and further evolutions. When the number of bounces is increased, Kittazap and evolutions have expanded ATK Range.",
+    "rows": [
+     [
+      "ATK Range Increased",
+      "Tiles: 1"
+     ],
+     [
+      "Max Expansions",
+      "3"
+     ]
+    ]
+   }
+  ]
+ },
+ "cinderclaw": {
+  "skill": "Meow Boom",
+  "arenaFactor": "50%",
+  "sections": [
+   {
+    "heading": null,
+    "rows": [
+     [
+      "Damage Factor",
+      "70%"
+     ],
+     [
+      "Increased Bounce",
+      "Every 4 Attacks"
+     ],
+     [
+      "Max Bounces",
+      "3"
+     ],
+     [
+      "Cooldown",
+      "4s"
+     ]
+    ]
+   },
+   {
+    "heading": "Searpaw: ATK Boost",
+    "text": "ATK increases based on the caster's ATK.",
+    "rows": [
+     [
+      "Boost Factor",
+      "15%"
+     ]
+    ]
+   },
+   {
+    "heading": "Paw Pals",
+    "text": "Gains a bonus effect when deployed alongside Kittazap and further evolutions. When the number of bounces is increased, Kittazap and evolutions have expanded ATK Range.",
+    "rows": [
+     [
+      "ATK Range Increased",
+      "Tiles: 1"
+     ],
+     [
+      "Max Expansions",
+      "3"
+     ]
+    ]
+   },
+   {
+    "heading": "Aura: Fire",
+    "text": "Boosts ATK for all allies. The effect for non-Fire allies is reduced by 50%. Aura: Fire can be stacked, but cannot take effect in some game modes.",
+    "rows": [
+     [
+      "Base ATK Boost",
+      "2.5%"
+     ],
+     [
+      "Max ATK Boost",
+      "12.5%"
+     ]
+    ]
+   }
+  ]
+ }
 }

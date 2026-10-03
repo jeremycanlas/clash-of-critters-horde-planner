@@ -25,7 +25,7 @@ const attrs = (t) => `data-name="${esc(t.name.toLowerCase())}" data-type="${esc(
 const typeIcon = (type) => `<img class="sk__ticon" src="data/images/icons/${esc(type.toLowerCase())}.png" alt="" width="16" height="16">`;
 const art = (t, size) => `<img src="${esc(t.image)}" alt="" width="${size}" height="${size}" loading="lazy" decoding="async">`;
 /* A row can carry what it was at the tier below ("was 120%") or be new there. */
-const rows = (list) => `<dl class="sk__rows">${list.map(([label, value, mark]) =>
+const rows = (list) => !list.length ? '' : `<dl class="sk__rows">${list.map(([label, value, mark]) =>
   `<dt>${esc(label)}${mark === 'new' ? ' <span class="sk__new">new</span>' : ''}</dt><dd>${
     mark && mark !== 'new' ? `<span class="sk__was">was ${esc(mark)}</span>` : ''}${esc(value)}</dd>`).join('')}</dl>`;
 
