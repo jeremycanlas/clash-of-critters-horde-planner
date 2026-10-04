@@ -6964,3 +6964,20 @@ details.hint[open] > summary { margin-bottom: var(--s1); }
   .filters, .filters__body { min-width: 0; max-width: 100%; }
   .filters .chips:not(.chips--sub) { flex-wrap: wrap; }
 }
+
+/* The header's light/dark switch, on every page (site-nav.js). Square, a
+   finger wide, beside the credit. */
+.topbar .byline { margin-left: auto; }
+.themetoggle { flex: none; width: 40px; height: 40px; min-height: 40px; padding: 0; display: inline-grid; place-items: center; color: var(--text-dim); }
+.themetoggle:hover { color: var(--text); }
+/* The drafter's "?" joins the right-hand group rather than floating mid-bar. */
+.topbar__help { margin-left: auto; }
+.topbar__help ~ .byline { margin-left: 0; }
+/* A narrow phone: the cup alone says "tip jar", and the switch keeps its room. */
+@media (max-width: 420px) {
+  /* Not on the drafter, whose header was measured to keep it (mobiletest). */
+  .topbar:not(:has(.topbar__help)) .byline__tip-text { display: none; }
+  .topbar .byline { flex: 0 1 auto; min-width: 0; }
+  .topbar__title { min-width: 0; }
+  .topbar__title h1 { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}

@@ -1537,6 +1537,11 @@ async function main() {
    */
   if (!rows.length && !saying()) say('Nothing has been posted yet.');
 
+  // community.html?mode=goldrush opens on that filter: the link a guide gives
+  // for "see everyone's Gold Rush builds". Pressed like a person would.
+  const linked = new URLSearchParams(location.search).get('mode');
+  if (linked) $(`#mode-filter [data-mode="${CSS.escape(linked)}"]`)?.click();
+
   if (location.hash.startsWith('#f=')) openFromHash();
 }
 

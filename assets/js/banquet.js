@@ -137,10 +137,10 @@ const since = (iso) => {
   return min < 1 ? 'just now' : min < 60 ? `${min} min ago` : `${Math.floor(min / 60)} h ${min % 60} min ago`;
 };
 const ago = (iso) => `${time(iso)}, ${since(iso)}`;
-// A group's name, and whether it is a private list: never part of Both groups.
+// A group's name, and whether it is a private list: never part of All groups.
 const nameOf = (g) => state?.names?.[g] ?? `Group ${g}`;
 const isPrivate = (g) => !!state?.private?.includes(g);
-// In the current view: one group, or Both groups, which leaves private lists out.
+// In the current view: one group, or All groups, which leaves private lists out.
 const inView = (g) => (group ? g === group : !isPrivate(g));
 const tagOf = (g) => (g && !group ? `<span class="bq-grp">${esc(nameOf(g))}</span>` : '');
 const grpAttr = (g) => (g ? ` data-grp="${g}"` : '');
@@ -423,7 +423,7 @@ function render() {
   const groups = $('#bq-groups');
   if (state.groups && !groups.children.length) {
     groups.innerHTML = [0, ...state.groups].map((g) => `<button class="segmented__btn" type="button" data-group="${g}"
-      aria-pressed="${g === group}">${!g ? (combined ? 'Both servers' : 'Both groups') : isPrivate(g) ? esc(nameOf(g)) : `As ${esc(nameOf(g))}`}</button>`).join('');
+      aria-pressed="${g === group}">${!g ? (combined ? 'Both servers' : 'All groups') : isPrivate(g) ? esc(nameOf(g)) : `As ${esc(nameOf(g))}`}</button>`).join('');
   }
   $('#bq-view-note').textContent = !group ? ''
     : isPrivate(group) ? `${nameOf(group)}: only the people added to it can see it. Anything you add or press is kept here.`

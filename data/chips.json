@@ -109,7 +109,7 @@
       "name": "Lawn Care",
       "tier": 3,
       "shape": "map",
-      "text": "Generate 6 single-use lawn mowers at the bottom of the map. Once triggered, mowers kill 5 non-boss Zobos in front, and deal damage equal to 50% of Max HP to bosses and subsequent non-boss Zobos that are hit.",
+      "text": "Generate 6 single-use lawn mowers at the bottom of the map. Once triggered, mowers kill 5 non-boss Zobos in front, and deal damage equal to 40% of Max HP to bosses and subsequent non-boss Zobos that are hit.",
       "scope": "unknown",
       "scopeNote": "The mowers are generated on the map, and in co-op the map is shared.",
       "order": 8
@@ -143,7 +143,7 @@
       "name": "On the Move",
       "tier": 3,
       "shape": "stat",
-      "text": "After being moved, your Tatari gain 20% ATK and ATK Speed for 20 seconds.",
+      "text": "After being moved, your Tatari gain 20% ATK and ATK Speed for 30 seconds.",
       "scope": "self",
       "order": 12
     },
@@ -236,7 +236,7 @@
       "name": "Boss Killer",
       "tier": 2,
       "shape": "stat",
-      "text": "Your Tatari deal 25% more damage to Zobo bosses.",
+      "text": "Your Tatari deal 20% more damage to Zobo bosses.",
       "scope": "self",
       "order": 23
     },
@@ -244,7 +244,7 @@
       "name": "The Exile",
       "tier": 2,
       "shape": "placement",
-      "text": "Your Tatari without adjacent allies gain 20% ATK, Max HP, and DEF.",
+      "text": "Your Tatari without adjacent allies gain 35% ATK, Max HP, and DEF.",
       "scope": "self",
       "order": 24
     },
@@ -260,7 +260,7 @@
       "name": "Backend Support",
       "tier": 2,
       "shape": "placement",
-      "text": "Your Tatari with only 1 Tatari in front of them gain a 30% DMG Boost.",
+      "text": "Your Tatari with only 1 Tatari in front of them gain a 45% DMG Boost.",
       "scope": "self",
       "order": 26
     },
@@ -268,7 +268,7 @@
       "name": "Patch Upgrade",
       "tier": 2,
       "shape": "level",
-      "text": "Replace all of your deployed Tatari below Lvl 3 with random Tatari from your formation. Replaced Tatari's levels are upgraded by 1.",
+      "text": "Replace all of your deployed Tatari below Lvl 3 with random Tatari from your formation. Replaced Tatari's levels are upgraded by 2.",
       "scope": "self",
       "order": 27
     },
@@ -325,7 +325,7 @@
       "name": "Weakest Link",
       "tier": 2,
       "shape": "element",
-      "text": "Your Tatari of the element with the fewest units deployed gain 10% ATK, DEF, and ATK Speed.",
+      "text": "Your Tatari of the element with the fewest units deployed gain 15% ATK, DEF, and ATK Speed.",
       "scope": "self",
       "order": 34
     },
@@ -357,7 +357,7 @@
       "name": "AFK",
       "tier": 1,
       "shape": "economy",
-      "text": "Enter mandatory auto-battle mode for 90 seconds and immediately obtain 300 energizers.",
+      "text": "Enter mandatory auto-battle mode for 40 seconds and immediately obtain 300 energizers.",
       "scope": "unknown",
       "scopeNote": "\"Mandatory\" auto-battle, and the tooltip never says mandatory for whom.",
       "order": 38
@@ -427,7 +427,7 @@
       "name": "Parting Gift",
       "tier": 1,
       "shape": "economy",
-      "text": "Obtain 200 energizers whenever one of your Tatari is knocked down.",
+      "text": "Obtain 40 energizers whenever one of your Tatari is knocked down.",
       "scope": "self",
       "order": 46
     },
@@ -447,5 +447,6 @@
       "scope": "self",
       "order": 48
     }
-  ]
+  ],
+  "season": "Season 2"
 }

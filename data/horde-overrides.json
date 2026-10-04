@@ -13,5 +13,20 @@
       "name": "Cannon Ace",
       "text": "Periodically locks onto targets and charges a cannon. Upon impact, deals single-target damage and inflicts Hugs: Stun. Deals follow-up damage when stun ends, and prioritizes attacking bosses."
     }
+  },
+  "_dolphie": "Read off the game's Horde Invasion panels on 2026-10-03; the panel cuts each description after two lines, so the ends are inferred from the effect boxes below it (Rainsong: HP Boost, Bubblesong: Fragile, Wavesong: ATK & DEF Boost). Recheck against the long-press info card.",
+  "Dolphie": {
+    "level3": {
+      "name": "Rainbow Blessing",
+      "text": "Periodically summons a rainbow, granting Rainsong: HP Boost to nearby allies."
+    },
+    "level5": {
+      "name": "Bubbly Burst",
+      "text": "Launches piercing bubbles, dealing large AoE damage and applying stackable Bubblesong: Fragile."
+    },
+    "level7": {
+      "name": "Cascading Waves",
+      "text": "Unleashes ocean waves that deal AoE damage and inflict Stun, while healing allies and granting Wavesong: ATK & DEF Boost."
+    }
   }
 }

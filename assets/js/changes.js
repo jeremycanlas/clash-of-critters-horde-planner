@@ -271,7 +271,8 @@ function render(book) {
  * With nothing to preview the nav stays hidden and the page is what it was.
  */
 function mount(book) {
-  const books = [book, book.preview].filter((b) => b?.lines?.length);
+  // Live first, then anything not shipped yet, then earlier patches, newest first.
+  const books = [book, book.preview, ...(book.history ?? [])].filter((b) => b?.lines?.length);
   const tabs = $('#changes-tabs');
 
   /*
@@ -283,7 +284,7 @@ function mount(book) {
    * "preview" are the two things worth telling apart anyway: what is counted is
    * whether anybody reads notes that have not shipped, not which month it is.
    */
-  const kind = (b) => (b.provisional ? 'preview' : 'live');
+  const kind = (b) => (b.provisional ? 'preview' : b === book ? 'live' : 'past');
 
   if (books.length < 2) {
     tabs.hidden = true;

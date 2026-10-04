@@ -424,8 +424,8 @@ try {
   assert.ok(!/39900001/.test(await V.locator('#bq-log').innerText()), 'Both groups leaves the private list out of the log too');
   if (process.env.BANQUET_SHOTS) await V.screenshot({ path: `${process.env.BANQUET_SHOTS}/pc.png` });
 
-  // The private list: not in Both groups, its own button, and adding there stays there.
-  assert.equal(await V.locator('li[data-key="3:39900001"]').count(), 0, 'Both groups leaves the private list out');
+  // The private list: not in All groups, its own button, and adding there stays there.
+  assert.equal(await V.locator('li[data-key="3:39900001"]').count(), 0, 'All groups leaves the private list out');
   await V.click('[data-group="3"]');
   assert.equal(await V.locator('[data-group="3"]').textContent(), 'Private', 'it has its own button');
   assert.deepEqual(await V.locator('#bq-cards li[data-key]').evaluateAll((ls) => ls.map((l) => l.dataset.key)), ['3:39900001'], 'and only its banquets');
@@ -435,7 +435,7 @@ try {
   await V.waitForTimeout(300);
   assert.equal(lastSent('Vee', 'banquet_add').g, 3, 'adding in Private goes to the private list');
   await V.click('[data-group="0"]');
-  assert.equal(await V.locator('li[data-key="3:39900002"]').count(), 0, 'and does not show in Both groups');
+  assert.equal(await V.locator('li[data-key="3:39900002"]').count(), 0, 'and does not show in All groups');
   await V.fill('#bq-add-uid', '40000001');
   await V.click('#bq-add');
   assert.equal(await V.locator('#bq-mine-error').textContent(), 'Pick a group.');

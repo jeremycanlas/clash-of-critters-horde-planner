@@ -81,13 +81,15 @@ const BOARD_RULES = {
     test: (p) => rowOf(p.cell) >= ROWS - DEPTH,
   },
   'The Exile': {
-    why: 'with nobody beside, above or below them',
-    assumes: 'Counted on the four squares that touch. If diagonals count as adjacent too, this number is too high.',
+    why: "with nobody beside, above or below them, yours or your ally's",
+    // Confirmed in game: the four squares that touch, and an ally's Tatari
+    // there counts as a neighbour too -- so it reads the whole field.
+    field: true,
     test: (p, all) => !hasNeighbour(p, all),
   },
   'Backend Support': {
     why: 'with exactly 1 of yours ahead in the same column',
-    assumes: 'Counted down the column. If "in front" means anywhere ahead rather than in the same lane, this number is too high.',
+    // Confirmed in game: the same column, your own Tatari only.
     test: (p, all) => aheadInLane(p, all) === 1,
   },
 };
@@ -100,7 +102,14 @@ const BOARD_RULES = {
  * number on this page.
  */
 export function boardFor(player) {
-  return store.placedFor(player)
+  const board = toPieces(store.placedFor(player));
+  // Everybody's Tatari on the field, for the rules that count an ally's too.
+  board.field = toPieces(store.allPlaced().filter((o) => o.player > 0 && o.kind !== 'zobo'));
+  return board;
+}
+
+function toPieces(list) {
+  return list
     .map(({ cell, slug }) => {
       const t = state.bySlug.get(slug);
       return t ? { cell, slug, name: t.name, type: t.type, t } : null;
@@ -128,7 +137,7 @@ export function elementSplit(board) {
 export function scoreOne(chip, board) {
   const rule = BOARD_RULES[chip.name];
   if (rule) {
-    const who = board.filter((p) => rule.test(p, board));
+    const who = board.filter((p) => rule.test(p, rule.field ? board.field ?? board : board));
     return { n: who.length, of: board.length, who, why: rule.why, assumes: rule.assumes ?? null };
   }
 

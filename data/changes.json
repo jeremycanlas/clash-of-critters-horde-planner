@@ -25,94 +25,52 @@
     "One patch at a time. These markers are worth having the week an update lands",
     "and misleading three updates later, so when the next notes arrive this file",
     "is rewritten rather than appended to. Leaving lines empty is a coherent",
-    "state: the roster simply stops marking anything."
+    "state: the roster simply stops marking anything.",
+    "",
+    "`history` keeps earlier patches as older tabs on the Patch notes page, newest first. Nothing in it marks a card in the drafter; only the top-level patch does."
   ],
-  "patch": "2026-08-26",
-  "label": "26 August 2026",
-  "source": "In-game patch notes, section 8 (Horde Invasion skill balance)",
+  "patch": "2026-09-23",
+  "label": "Season 2",
+  "source": "In-game Season Update screen (first read off the Pioneer Server build, 2026-09-16, by .kippy. on Discord)",
   "lines": [
     {
-      "line": "Blueflick",
+      "line": "Gibber",
       "direction": "buff",
       "members": [
-        "blueflick",
-        "ignisnap",
-        "azurion",
-        "newflamander"
+        "gibber",
+        "turtuff",
+        "rockshell",
+        "terraton"
       ],
       "changes": [
-        "Fire Trigger: Damage 60% → 96%, follow-up 20% → 36%",
-        "Blazing Path: Damage 200% → 300%"
+        "Shell Burst: Damage Factor 280% → 420%"
       ]
     },
     {
-      "line": "Drilleroo",
+      "line": "Goonbug",
       "direction": "buff",
       "members": [
-        "drilleroo",
-        "cragolin",
-        "borelord"
+        "goonbug",
+        "capobeetle",
+        "donscarab",
+        "beetleknight"
       ],
       "changes": [
-        "Shredding Stab: trigger 30% → 45%",
-        "Crowd Crusher: base Shield 5% → 7% of HP"
+        "Airborne Ops: Damage Factor 300% → 450%"
       ]
     },
     {
-      "line": "Dumbopus",
+      "line": "Waddledo",
       "direction": "buff",
       "members": [
-        "dumbopus",
-        "dazopus",
-        "fishopus",
-        "lordopus"
+        "waddledo",
+        "swaystroll",
+        "stoodbeak",
+        "glideflip"
       ],
       "changes": [
-        "Ink Splatter: Damage 160% → 200%, extra bomb 40% → 55%, Blind 30% → 40%",
-        "Octo-Nuke: Damage 300% → 390%, centre 900% → 1150%"
-      ]
-    },
-    {
-      "line": "Fluffle",
-      "direction": "buff",
-      "members": [
-        "fluffle",
-        "nimbuzzy",
-        "galewether",
-        "cosmoram"
-      ],
-      "changes": [
-        "Flash Bolt: Damage 230% → 255%",
-        "Grim Skies: Damage 80% → 135%"
-      ]
-    },
-    {
-      "line": "Frostnip",
-      "direction": "buff",
-      "members": [
-        "frostnip",
-        "frostpaw",
-        "frostique",
-        "frostluna"
-      ],
-      "changes": [
-        "Ice Burst: Freeze 40% → 45%",
-        "Ice Scatter: Damage 120% → 135%",
-        "Frost Path: Freeze 40% → 45%"
-      ]
-    },
-    {
-      "line": "Fumekit",
-      "direction": "buff",
-      "members": [
-        "fumekit",
-        "sulfunk",
-        "magmusk",
-        "blastniff"
-      ],
-      "changes": [
-        "Ember Pop: Damage 400% → 450%, trigger 20% → 40%",
-        "Firework Frenzy: Damage 40% → 80%"
+        "Shield Gift: Shield Factor 6% → 10%",
+        "Ice Show: Damage Factor 150% → 240%"
       ]
     },
     {
@@ -125,176 +83,7 @@
         "cratzar"
       ],
       "changes": [
-        "Smoke Bomb: Damage 50% → 70%, smoke 50% → 60%",
-        "Escape Route: Damage 180% → 300%"
-      ]
-    },
-    {
-      "line": "Hootlet",
-      "direction": "buff",
-      "members": [
-        "hootlet",
-        "tikowl",
-        "chronerva",
-        "hypnostrix"
-      ],
-      "changes": [
-        "Timed Therapy: Healing 60% → 75%"
-      ]
-    },
-    {
-      "line": "Joeyo",
-      "direction": "buff",
-      "members": [
-        "joeyo",
-        "puncharoo",
-        "kangachamp",
-        "kaiseroo"
-      ],
-      "changes": [
-        "Combo!: extra punch 66% → 80%",
-        "Counterpunch!: counter 30% → 45%, invincibility 2s → 2.5s",
-        "Super Launch!: Damage 380% → 525%"
-      ]
-    },
-    {
-      "line": "Kittazap",
-      "direction": "buff",
-      "members": [
-        "kittazap",
-        "nekowatt",
-        "voltazar",
-        "thunderpaw"
-      ],
-      "changes": [
-        "Rain of Riches: Damage 85% → 100%"
-      ]
-    },
-    {
-      "line": "Lollama",
-      "direction": "buff",
-      "members": [
-        "lollama",
-        "slobberlama",
-        "ptooielama",
-        "blechlama"
-      ],
-      "changes": [
-        "Sticky Spit: Damage 220% → 240%",
-        "Precision Guidance: Damage 75% → 140%"
-      ]
-    },
-    {
-      "line": "Lullelly",
-      "direction": "buff",
-      "members": [
-        "lullelly",
-        "yawnelly",
-        "souverelle",
-        "somnrayna"
-      ],
-      "changes": [
-        "Splash Shot: Damage 230% → 280%, trigger 40% → 55%",
-        "Bubble Pop: Stun 25% → 35%"
-      ]
-    },
-    {
-      "line": "Maskfry",
-      "direction": "buff",
-      "members": [
-        "maskfry",
-        "ospisces",
-        "armorjaw",
-        "dagondeep"
-      ],
-      "changes": [
-        "Seeping Gaze: Damage 200% → 225%",
-        "Primordial Boon: Shield 30% → 40% of HP",
-        "Abyssal Maw: Damage 250% → 390%"
-      ]
-    },
-    {
-      "line": "Momopo",
-      "direction": "buff",
-      "members": [
-        "momopo",
-        "lulupo",
-        "lilypo",
-        "gemmapo"
-      ],
-      "changes": [
-        "Pink Protection: prevention count 3 → 4",
-        "Lovely Barrier: intercept count 12 → 15"
-      ]
-    },
-    {
-      "line": "Pyropup",
-      "direction": "buff",
-      "members": [
-        "pyropup",
-        "pyrohound",
-        "hellhound",
-        "pyrodaemon"
-      ],
-      "changes": [
-        "Flame Halo: Damage 60% → 85%",
-        "Hellflame: Damage 80% → 120%"
-      ]
-    },
-    {
-      "line": "Rubblet",
-      "direction": "buff",
-      "members": [
-        "rubblet",
-        "cobbledon",
-        "rockzilla",
-        "meteorax"
-      ],
-      "changes": [
-        "Fault Line: Damage 210% → 280%, Stun 20% → 32%"
-      ]
-    },
-    {
-      "line": "Sackling",
-      "direction": "buff",
-      "members": [
-        "sackling",
-        "jarachnid",
-        "terracrawler",
-        "weaverfang"
-      ],
-      "changes": [
-        "Liquid Shield: green bubble 30% → 45%",
-        "Spider Web: Bind 30% → 45%",
-        "Spider Lair: Damage 170% → 240%"
-      ]
-    },
-    {
-      "line": "Sealing",
-      "direction": "buff",
-      "members": [
-        "sealing",
-        "sealoon",
-        "seaswirl",
-        "sealord"
-      ],
-      "changes": [
-        "Pressure Orb: Damage 110% → 120%",
-        "Wave Blast: Damage 160% → 180%"
-      ]
-    },
-    {
-      "line": "Shrimpyro",
-      "direction": "buff",
-      "members": [
-        "shrimpyro",
-        "pyroprawn",
-        "pyroclobster",
-        "pyroviathan"
-      ],
-      "changes": [
-        "Blasting Jabs: Damage 40% → 65%",
-        "Piercing Jabs: Damage 80% → 140%"
+        "Escape Route: Damage Interval 3s → 2s"
       ]
     },
     {
@@ -307,8 +96,21 @@
         "hychroma"
       ],
       "changes": [
-        "Vortex Sap: trigger 40% → 45%",
-        "Technique: Veil: Damage 50% → 90%"
+        "Great Vortex: Damage Factor 50% → 100%"
+      ]
+    },
+    {
+      "line": "Lullelly",
+      "direction": "buff",
+      "members": [
+        "lullelly",
+        "yawnelly",
+        "souverelle",
+        "somnrayna"
+      ],
+      "changes": [
+        "Splash Shot: Water Orb Quantity 2 → 3",
+        "Bubble Pop: Damage Factor 100% → 140%"
       ]
     },
     {
@@ -321,95 +123,74 @@
         "saberheart"
       ],
       "changes": [
-        "Blaze Burst: Damage 160% → 230%",
-        "Flame Fists: Damage 400% → 580%"
+        "Blaze Burst: Trigger Chance 30% → 60%",
+        "Flame Fists: Minimum Cooldown 9s → 6s, Maximum Cooldown 13s → 9s"
       ]
     },
     {
-      "line": "Voltkit",
+      "line": "Fumekit",
       "direction": "buff",
       "members": [
-        "voltkit",
-        "voltling",
-        "voltverine",
-        "voltreaver"
+        "fumekit",
+        "sulfunk",
+        "magmusk",
+        "blastniff"
       ],
       "changes": [
-        "Phantom Hit: shadow hit 35% → 55%",
-        "Bolt Slash: Damage 420% → 600%, interval 9s → 8s"
+        "Fervent Fumes: ATK Boost 15% → 25%, DEF Boost 15% → 25%"
       ]
     },
     {
-      "line": "Voltfawn",
-      "direction": "adjusted",
+      "line": "Taptail",
+      "direction": "buff",
       "members": [
-        "voltfawn",
-        "sparkdoe",
-        "zapantler",
-        "magnedart"
+        "taptail",
+        "rattlecoil",
+        "clangnaga",
+        "dharmadder"
       ],
       "changes": [
-        "Scatter Bolt: trigger 60% → 45%",
-        "Bolt Trigger: Damage 300% → 255%, Paralysis 40% → 45%"
+        "Karmic Sharing: Trigger Chance 20% → 40%"
       ]
     },
     {
-      "line": "Ashlarva",
+      "line": "Blowfin",
+      "direction": "buff",
+      "members": [
+        "blowfin",
+        "puffbelly",
+        "chefugu",
+        "pyromaki"
+      ],
+      "changes": [
+        "Warship Roll: Damage Factor 300% → 450%"
+      ]
+    },
+    {
+      "line": "Momopo",
+      "direction": "buff",
+      "members": [
+        "momopo",
+        "lulupo",
+        "lilypo",
+        "gemmapo"
+      ],
+      "changes": [
+        "Pounding Hearts: Damage Factor 250% → 400%",
+        "Pink Protection: Min Trigger Interval 12s → 9s, Max Trigger Interval 20s → 15s"
+      ]
+    },
+    {
+      "line": "Blueflick",
       "direction": "nerf",
       "members": [
-        "ashlarva",
-        "firecoil",
-        "charflutter",
-        "chrysolaria"
+        "blueflick",
+        "ignisnap",
+        "azurion",
+        "newflamander"
       ],
       "changes": [
-        "Fluff Flame: Damage 350% → 240%",
-        "Flutter Flame: Damage 25% → 16%",
-        "Wing Embrace: All Stats UP 18% → 9%"
-      ]
-    },
-    {
-      "line": "Buddi",
-      "direction": "nerf",
-      "members": [
-        "buddi",
-        "sunfleur",
-        "solaflora",
-        "heliabloom"
-      ],
-      "changes": [
-        "Warm Aura: Shield 10% → 4% of ATK, stacks 4 → 2",
-        "Tint Shades: Damage 280% → 210%, strange sunlight 50% → 25%",
-        "Full Sun: interval 14-24s → 24-32s"
-      ]
-    },
-    {
-      "line": "Cheerling",
-      "direction": "nerf",
-      "members": [
-        "cheerling",
-        "cheerlet",
-        "cheerspring",
-        "cheerstella"
-      ],
-      "changes": [
-        "Just Dance: interval 16-20s → 18-22s, invincibility 2s → 1.5s",
-        "Zap Chord: Damage 200% → 120%, Slow/Bind/Stun 40/30/20% → 30/20/10%"
-      ]
-    },
-    {
-      "line": "Dewgrub",
-      "direction": "nerf",
-      "members": [
-        "dewgrub",
-        "ripplewing",
-        "waveflutter",
-        "morphanessa"
-      ],
-      "changes": [
-        "Aqua Flutter: Damage 100% → 45%, butterfly 20% → 12%",
-        "Resonant Flutter: interval 8-12s → 9-13s, ally effect 4s → 3.5s",
-        "Torrential Flutter: Damage 75% → 18%, Sleep 20% → 12%"
+        "Blazing Path: Damage Factor 300% → 270%"
       ]
     },
     {
@@ -422,495 +203,704 @@
         "haplysia"
       ],
       "changes": [
-        "Sea Fog: Super Fragile 40% → 30%"
+        "Sleep Mist: Sleep Chance 30% → 20%"
       ]
     },
     {
-      "line": "Flameow",
+      "line": "Ashlarva",
       "direction": "nerf",
       "members": [
-        "flameow",
-        "nekoflare",
-        "silversear",
-        "cinderclaw"
+        "ashlarva",
+        "firecoil",
+        "charflutter",
+        "chrysolaria"
       ],
       "changes": [
-        "Sweeping Jewel: Damage 100% → 50%",
-        "More Jewels: pierce 40% → 20%, final 130% → 50%"
+        "Fluff Flame: Trigger Chance 40% → 30%"
       ]
     },
     {
-      "line": "Pandaroo",
+      "line": "Buddi",
       "direction": "nerf",
       "members": [
-        "pandaroo",
-        "pandaroot",
-        "pandarrior",
-        "pandagrand"
+        "buddi",
+        "sunfleur",
+        "solaflora",
+        "heliabloom"
       ],
       "changes": [
-        "Bambattle: bamboo grove DMG Boost & Reduction 25% → 20%"
+        "Warm Aura: Min Trigger Interval 8s → 12s, Max Trigger Interval 12s → 18s"
       ]
     },
     {
-      "line": "Punchimp",
+      "line": "Humbug",
       "direction": "nerf",
       "members": [
-        "punchimp",
-        "rockfu",
-        "rockwu",
-        "rockong"
+        "humbug",
+        "humbleetle",
+        "zenscarab",
+        "hierotyrus"
       ],
       "changes": [
-        "Hit Me!: clone HP 30% → 24%",
-        "Staff Cyclone: Damage 240% → 180%"
+        "Bounce Ball: Damage Factor 70% → 60%",
+        "Spin Ball: Damage Factor 60% → 50%"
       ]
     },
     {
-      "line": "Souphog",
+      "line": "Hootlet",
       "direction": "nerf",
       "members": [
-        "souphog",
-        "grillhog",
-        "hothog",
-        "searhog"
+        "hootlet",
+        "tikowl",
+        "chronerva",
+        "hypnostrix"
       ],
       "changes": [
-        "Second Helping: Damage 280% → 180%, launch 40% → 20%",
-        "Free Snacks: Heal 20% → 12%",
-        "Food Fight!: Damage 200% → 105%, Heal 6% → 2.5%"
+        "Winged Rewind: Min Trigger Interval 10s → 14s, Max Trigger Interval 14s → 18s"
       ]
     },
     {
-      "line": "Sparkeet",
+      "line": "Poakie",
       "direction": "nerf",
       "members": [
-        "sparkeet",
-        "buzzbeak",
-        "toucanzam",
-        "technocan"
+        "poakie",
+        "sizzribb",
+        "lickflicker",
+        "ignitoad"
       ],
       "changes": [
-        "Full Charge: DMG Reduction 20% → 10%, ATK Boost 50% → 25%"
+        "Croaker Chant: Minimum Cooldown 10s → 14s, Maximum Cooldown 16s → 20s",
+        "Oil Onsen: Extra Damage Factor 550% → 450%"
       ]
     },
     {
-      "line": "Zaplet",
+      "line": "Budboo",
       "direction": "nerf",
       "members": [
-        "zaplet",
-        "synthhog",
-        "sonarbat",
-        "umbraveil"
+        "budboo",
+        "snapshade",
+        "thornwisp",
+        "chomperwraith"
       ],
       "changes": [
-        "Resonant Echoes: large DMG Boost 30% → 20%",
-        "Bat Swarm: Damage 100% → 50%",
-        "Radar Rage: Damage 100% → 50%"
+        "Shadow Bloom: Damage Factor 420% → 300%"
       ]
     },
     {
-      "line": "Zappur",
-      "direction": "nerf",
+      "line": "Cheerling",
+      "direction": "adjusted",
       "members": [
-        "zappur",
-        "electroar",
-        "blitzmane",
-        "stormlion"
+        "cheerling",
+        "cheerlet",
+        "cheerspring",
+        "cheerstella"
       ],
       "changes": [
-        "Lightburst: Damage 500% → 350%, Knockback 50% → 40%"
+        "Rhythmic Pierce: Healing Factor 10% → 5%",
+        "Zap Chord: Damage Factor 120% → 150%"
       ]
     }
   ],
   "mode": {
-    "_note": "The Horde Invasion parts of the update that are not about one Tatari. Trimmed from the full notes, which also cover Cozy Farm, the Bento Maker, the spinwheel and the chapter stages -- none of which this tool models.",
+    "_note": [
+      "The Season 2 notes that are not about one Tatari, as the Season Update",
+      "screen lists them. Same Pioneer Server caveat as the rest of this tab:",
+      "",
+      "The chip changes carry their own direction. A number cannot say it on its",
+      "own here: Parting Gift paying 40 energizers instead of 200 is a nerf, and",
+      "AFK Mode forcing 40 seconds of auto-battle instead of 90 is a buff.",
+      "",
+      "Tatari on this tab is marked in the drafter: chips.json is what the live",
+      "everybody playing today."
+    ],
     "groups": [
-      {
-        "title": "New",
-        "items": [
-          "Horde Invasion now runs in seasons, with balance passes to Tatari and Chips between them. The first season runs about four weeks.",
-          "Chips are back, and staying.",
-          "Difficulties are picked rather than fixed, and unlock in order: clear one to open the next. Single battles are shorter.",
-          "A season leaderboard, ranked on your highest difficulty and your kill count in one invasion. Tallied at the end of each season; rewards include a season-exclusive avatar frame.",
-          "Season history, so recent horde battles can be looked back at and shared."
-        ]
-      },
       {
         "title": "Changed",
         "items": [
-          "Each invasion window is three hours, up from two. The settlement phase is still one hour.",
-          "Fewer kills are needed for a clear, and clearing no longer ends the battle: you can keep chasing Zobos.",
-          "Everyone who took part is rewarded after a clear, not only the finisher.",
-          "Matchmaking prefers players of a similar level.",
-          "The teammate invite list puts recommended teammates ahead of offline friends.",
-          "Fixed: the Horde Invasion entrance sometimes vanishing on the first login of the day."
+          "A Tatari knocked down in battle now gives some of its energizers back. On the Pioneer Server it was confirmed to be 100 energizer.",
+          "Horde Invasion skills were adjusted for some Tatari and their evolutions. The changes below are the ones the Season Update screen names; the rest are in the game’s own Horde Invasion interface.",
+          "Stage difficulties moved a little: Difficulty 1 is slightly easier, and Difficulties 3 and 4 are slightly harder."
         ]
+      },
+      {
+        "title": "Fixed",
+        "items": [
+          "Dewgrub’s Aqua Flutter dealt less damage than it should have in some situations."
+        ]
+      }
+    ],
+    "chips": [
+      {
+        "chip": "AFK",
+        "direction": "buff",
+        "change": "Forced auto-battle 90s → 40s"
+      },
+      {
+        "chip": "Boss Killer",
+        "direction": "nerf",
+        "change": "Damage to Zobo bosses 25% → 20%"
+      },
+      {
+        "chip": "The Exile",
+        "direction": "buff",
+        "change": "Stat boost 20% → 35%"
+      },
+      {
+        "chip": "Backend Support",
+        "direction": "buff",
+        "change": "Damage boost 30% → 45%"
+      },
+      {
+        "chip": "Lawn Care",
+        "direction": "nerf",
+        "change": "Max HP damage 50% → 40%"
+      },
+      {
+        "chip": "Patch Upgrade",
+        "direction": "buff",
+        "change": "Tatari level +1 → +2"
+      },
+      {
+        "chip": "Parting Gift",
+        "direction": "nerf",
+        "change": "Energizers 200 → 40"
+      },
+      {
+        "chip": "On the Move",
+        "direction": "buff",
+        "change": "Duration 20s → 30s"
+      },
+      {
+        "chip": "Weakest Link",
+        "direction": "buff",
+        "change": "Stat boost 10% → 15%"
       }
     ]
   },
-  "preview": {
-    "_note": [
-      "Season 2, read off a Pioneer Server recording rather than published notes.",
-      "The Pioneer Server is the test build and its numbers may not be what ships.",
-      "That is why this sits on its own tab and never marks a card in the drafter.",
-      "",
-      "Season 2 renames Skinklet's level 5: the game calls it Tidal Gap, the wiki",
-      "still calls it Great Vortex. The wiki name is kept here so the level badge",
-      "resolves; the rename is the only one spotted."
-    ],
-    "patch": "2026-09-16",
-    "label": "Season 2",
-    "source": "Pioneer Server, in-game Season Update screen",
-    "by": ".kippy. (Discord)",
-    "provisional": true,
-    "lines": [
-      {
-        "line": "Gibber",
-        "direction": "buff",
-        "members": [
-          "gibber",
-          "turtuff",
-          "rockshell",
-          "terraton"
-        ],
-        "changes": [
-          "Shell Burst: Damage Factor 280% → 420%"
-        ]
-      },
-      {
-        "line": "Goonbug",
-        "direction": "buff",
-        "members": [
-          "goonbug",
-          "capobeetle",
-          "donscarab",
-          "beetleknight"
-        ],
-        "changes": [
-          "Airborne Ops: Damage Factor 300% → 450%"
-        ]
-      },
-      {
-        "line": "Waddledo",
-        "direction": "buff",
-        "members": [
-          "waddledo",
-          "swaystroll",
-          "stoodbeak",
-          "glideflip"
-        ],
-        "changes": [
-          "Shield Gift: Shield Factor 6% → 10%",
-          "Ice Show: Damage Factor 150% → 240%"
-        ]
-      },
-      {
-        "line": "Gopher",
-        "direction": "buff",
-        "members": [
-          "gopher",
-          "watchroo",
-          "bastogard",
-          "cratzar"
-        ],
-        "changes": [
-          "Escape Route: Damage Interval 3s → 2s"
-        ]
-      },
-      {
-        "line": "Skinklet",
-        "direction": "buff",
-        "members": [
-          "skinklet",
-          "skinkoon",
-          "ninjaguana",
-          "hychroma"
-        ],
-        "changes": [
-          "Great Vortex: Damage Factor 50% → 100%"
-        ]
-      },
-      {
-        "line": "Lullelly",
-        "direction": "buff",
-        "members": [
-          "lullelly",
-          "yawnelly",
-          "souverelle",
-          "somnrayna"
-        ],
-        "changes": [
-          "Splash Shot: Water Orb Quantity 2 → 3",
-          "Bubble Pop: Damage Factor 100% → 140%"
-        ]
-      },
-      {
-        "line": "Tindercub",
-        "direction": "buff",
-        "members": [
-          "tindercub",
-          "kitjitsu",
-          "taiglow",
-          "saberheart"
-        ],
-        "changes": [
-          "Blaze Burst: Trigger Chance 30% → 60%",
-          "Flame Fists: Minimum Cooldown 9s → 6s, Maximum Cooldown 13s → 9s"
-        ]
-      },
-      {
-        "line": "Fumekit",
-        "direction": "buff",
-        "members": [
-          "fumekit",
-          "sulfunk",
-          "magmusk",
-          "blastniff"
-        ],
-        "changes": [
-          "Fervent Fumes: ATK Boost 15% → 25%, DEF Boost 15% → 25%"
-        ]
-      },
-      {
-        "line": "Taptail",
-        "direction": "buff",
-        "members": [
-          "taptail",
-          "rattlecoil",
-          "clangnaga",
-          "dharmadder"
-        ],
-        "changes": [
-          "Karmic Sharing: Trigger Chance 20% → 40%"
-        ]
-      },
-      {
-        "line": "Blowfin",
-        "direction": "buff",
-        "members": [
-          "blowfin",
-          "puffbelly",
-          "chefugu",
-          "pyromaki"
-        ],
-        "changes": [
-          "Warship Roll: Damage Factor 300% → 450%"
-        ]
-      },
-      {
-        "line": "Momopo",
-        "direction": "buff",
-        "members": [
-          "momopo",
-          "lulupo",
-          "lilypo",
-          "gemmapo"
-        ],
-        "changes": [
-          "Pounding Hearts: Damage Factor 250% → 400%",
-          "Pink Protection: Min Trigger Interval 12s → 9s, Max Trigger Interval 20s → 15s"
-        ]
-      },
-      {
-        "line": "Blueflick",
-        "direction": "nerf",
-        "members": [
-          "blueflick",
-          "ignisnap",
-          "azurion",
-          "newflamander"
-        ],
-        "changes": [
-          "Blazing Path: Damage Factor 300% → 270%"
-        ]
-      },
-      {
-        "line": "Droppit",
-        "direction": "nerf",
-        "members": [
-          "droppit",
-          "bubbit",
-          "tideon",
-          "haplysia"
-        ],
-        "changes": [
-          "Sleep Mist: Sleep Chance 30% → 20%"
-        ]
-      },
-      {
-        "line": "Ashlarva",
-        "direction": "nerf",
-        "members": [
-          "ashlarva",
-          "firecoil",
-          "charflutter",
-          "chrysolaria"
-        ],
-        "changes": [
-          "Fluff Flame: Trigger Chance 40% → 30%"
-        ]
-      },
-      {
-        "line": "Buddi",
-        "direction": "nerf",
-        "members": [
-          "buddi",
-          "sunfleur",
-          "solaflora",
-          "heliabloom"
-        ],
-        "changes": [
-          "Warm Aura: Min Trigger Interval 8s → 12s, Max Trigger Interval 12s → 18s"
-        ]
-      },
-      {
-        "line": "Humbug",
-        "direction": "nerf",
-        "members": [
-          "humbug",
-          "humbleetle",
-          "zenscarab",
-          "hierotyrus"
-        ],
-        "changes": [
-          "Bounce Ball: Damage Factor 70% → 60%",
-          "Spin Ball: Damage Factor 60% → 50%"
-        ]
-      },
-      {
-        "line": "Hootlet",
-        "direction": "nerf",
-        "members": [
-          "hootlet",
-          "tikowl",
-          "chronerva",
-          "hypnostrix"
-        ],
-        "changes": [
-          "Winged Rewind: Min Trigger Interval 10s → 14s, Max Trigger Interval 14s → 18s"
-        ]
-      },
-      {
-        "line": "Poakie",
-        "direction": "nerf",
-        "members": [
-          "poakie",
-          "sizzribb",
-          "lickflicker",
-          "ignitoad"
-        ],
-        "changes": [
-          "Croaker Chant: Minimum Cooldown 10s → 14s, Maximum Cooldown 16s → 20s",
-          "Oil Onsen: Extra Damage Factor 550% → 450%"
-        ]
-      },
-      {
-        "line": "Budboo",
-        "direction": "nerf",
-        "members": [
-          "budboo",
-          "snapshade",
-          "thornwisp",
-          "chomperwraith"
-        ],
-        "changes": [
-          "Shadow Bloom: Damage Factor 420% → 300%"
-        ]
-      },
-      {
-        "line": "Cheerling",
-        "direction": "adjusted",
-        "members": [
-          "cheerling",
-          "cheerlet",
-          "cheerspring",
-          "cheerstella"
-        ],
-        "changes": [
-          "Rhythmic Pierce: Healing Factor 10% → 5%",
-          "Zap Chord: Damage Factor 120% → 150%"
+  "history": [
+    {
+      "patch": "2026-08-26",
+      "label": "Season 1",
+      "source": "In-game patch notes, section 8 (Horde Invasion skill balance)",
+      "lines": [
+        {
+          "line": "Blueflick",
+          "direction": "buff",
+          "members": [
+            "blueflick",
+            "ignisnap",
+            "azurion",
+            "newflamander"
+          ],
+          "changes": [
+            "Fire Trigger: Damage 60% → 96%, follow-up 20% → 36%",
+            "Blazing Path: Damage 200% → 300%"
+          ]
+        },
+        {
+          "line": "Drilleroo",
+          "direction": "buff",
+          "members": [
+            "drilleroo",
+            "cragolin",
+            "borelord"
+          ],
+          "changes": [
+            "Shredding Stab: trigger 30% → 45%",
+            "Crowd Crusher: base Shield 5% → 7% of HP"
+          ]
+        },
+        {
+          "line": "Dumbopus",
+          "direction": "buff",
+          "members": [
+            "dumbopus",
+            "dazopus",
+            "fishopus",
+            "lordopus"
+          ],
+          "changes": [
+            "Ink Splatter: Damage 160% → 200%, extra bomb 40% → 55%, Blind 30% → 40%",
+            "Octo-Nuke: Damage 300% → 390%, centre 900% → 1150%"
+          ]
+        },
+        {
+          "line": "Fluffle",
+          "direction": "buff",
+          "members": [
+            "fluffle",
+            "nimbuzzy",
+            "galewether",
+            "cosmoram"
+          ],
+          "changes": [
+            "Flash Bolt: Damage 230% → 255%",
+            "Grim Skies: Damage 80% → 135%"
+          ]
+        },
+        {
+          "line": "Frostnip",
+          "direction": "buff",
+          "members": [
+            "frostnip",
+            "frostpaw",
+            "frostique",
+            "frostluna"
+          ],
+          "changes": [
+            "Ice Burst: Freeze 40% → 45%",
+            "Ice Scatter: Damage 120% → 135%",
+            "Frost Path: Freeze 40% → 45%"
+          ]
+        },
+        {
+          "line": "Fumekit",
+          "direction": "buff",
+          "members": [
+            "fumekit",
+            "sulfunk",
+            "magmusk",
+            "blastniff"
+          ],
+          "changes": [
+            "Ember Pop: Damage 400% → 450%, trigger 20% → 40%",
+            "Firework Frenzy: Damage 40% → 80%"
+          ]
+        },
+        {
+          "line": "Gopher",
+          "direction": "buff",
+          "members": [
+            "gopher",
+            "watchroo",
+            "bastogard",
+            "cratzar"
+          ],
+          "changes": [
+            "Smoke Bomb: Damage 50% → 70%, smoke 50% → 60%",
+            "Escape Route: Damage 180% → 300%"
+          ]
+        },
+        {
+          "line": "Hootlet",
+          "direction": "buff",
+          "members": [
+            "hootlet",
+            "tikowl",
+            "chronerva",
+            "hypnostrix"
+          ],
+          "changes": [
+            "Timed Therapy: Healing 60% → 75%"
+          ]
+        },
+        {
+          "line": "Joeyo",
+          "direction": "buff",
+          "members": [
+            "joeyo",
+            "puncharoo",
+            "kangachamp",
+            "kaiseroo"
+          ],
+          "changes": [
+            "Combo!: extra punch 66% → 80%",
+            "Counterpunch!: counter 30% → 45%, invincibility 2s → 2.5s",
+            "Super Launch!: Damage 380% → 525%"
+          ]
+        },
+        {
+          "line": "Kittazap",
+          "direction": "buff",
+          "members": [
+            "kittazap",
+            "nekowatt",
+            "voltazar",
+            "thunderpaw"
+          ],
+          "changes": [
+            "Rain of Riches: Damage 85% → 100%"
+          ]
+        },
+        {
+          "line": "Lollama",
+          "direction": "buff",
+          "members": [
+            "lollama",
+            "slobberlama",
+            "ptooielama",
+            "blechlama"
+          ],
+          "changes": [
+            "Sticky Spit: Damage 220% → 240%",
+            "Precision Guidance: Damage 75% → 140%"
+          ]
+        },
+        {
+          "line": "Lullelly",
+          "direction": "buff",
+          "members": [
+            "lullelly",
+            "yawnelly",
+            "souverelle",
+            "somnrayna"
+          ],
+          "changes": [
+            "Splash Shot: Damage 230% → 280%, trigger 40% → 55%",
+            "Bubble Pop: Stun 25% → 35%"
+          ]
+        },
+        {
+          "line": "Maskfry",
+          "direction": "buff",
+          "members": [
+            "maskfry",
+            "ospisces",
+            "armorjaw",
+            "dagondeep"
+          ],
+          "changes": [
+            "Seeping Gaze: Damage 200% → 225%",
+            "Primordial Boon: Shield 30% → 40% of HP",
+            "Abyssal Maw: Damage 250% → 390%"
+          ]
+        },
+        {
+          "line": "Momopo",
+          "direction": "buff",
+          "members": [
+            "momopo",
+            "lulupo",
+            "lilypo",
+            "gemmapo"
+          ],
+          "changes": [
+            "Pink Protection: prevention count 3 → 4",
+            "Lovely Barrier: intercept count 12 → 15"
+          ]
+        },
+        {
+          "line": "Pyropup",
+          "direction": "buff",
+          "members": [
+            "pyropup",
+            "pyrohound",
+            "hellhound",
+            "pyrodaemon"
+          ],
+          "changes": [
+            "Flame Halo: Damage 60% → 85%",
+            "Hellflame: Damage 80% → 120%"
+          ]
+        },
+        {
+          "line": "Rubblet",
+          "direction": "buff",
+          "members": [
+            "rubblet",
+            "cobbledon",
+            "rockzilla",
+            "meteorax"
+          ],
+          "changes": [
+            "Fault Line: Damage 210% → 280%, Stun 20% → 32%"
+          ]
+        },
+        {
+          "line": "Sackling",
+          "direction": "buff",
+          "members": [
+            "sackling",
+            "jarachnid",
+            "terracrawler",
+            "weaverfang"
+          ],
+          "changes": [
+            "Liquid Shield: green bubble 30% → 45%",
+            "Spider Web: Bind 30% → 45%",
+            "Spider Lair: Damage 170% → 240%"
+          ]
+        },
+        {
+          "line": "Sealing",
+          "direction": "buff",
+          "members": [
+            "sealing",
+            "sealoon",
+            "seaswirl",
+            "sealord"
+          ],
+          "changes": [
+            "Pressure Orb: Damage 110% → 120%",
+            "Wave Blast: Damage 160% → 180%"
+          ]
+        },
+        {
+          "line": "Shrimpyro",
+          "direction": "buff",
+          "members": [
+            "shrimpyro",
+            "pyroprawn",
+            "pyroclobster",
+            "pyroviathan"
+          ],
+          "changes": [
+            "Blasting Jabs: Damage 40% → 65%",
+            "Piercing Jabs: Damage 80% → 140%"
+          ]
+        },
+        {
+          "line": "Skinklet",
+          "direction": "buff",
+          "members": [
+            "skinklet",
+            "skinkoon",
+            "ninjaguana",
+            "hychroma"
+          ],
+          "changes": [
+            "Vortex Sap: trigger 40% → 45%",
+            "Technique: Veil: Damage 50% → 90%"
+          ]
+        },
+        {
+          "line": "Tindercub",
+          "direction": "buff",
+          "members": [
+            "tindercub",
+            "kitjitsu",
+            "taiglow",
+            "saberheart"
+          ],
+          "changes": [
+            "Blaze Burst: Damage 160% → 230%",
+            "Flame Fists: Damage 400% → 580%"
+          ]
+        },
+        {
+          "line": "Voltkit",
+          "direction": "buff",
+          "members": [
+            "voltkit",
+            "voltling",
+            "voltverine",
+            "voltreaver"
+          ],
+          "changes": [
+            "Phantom Hit: shadow hit 35% → 55%",
+            "Bolt Slash: Damage 420% → 600%, interval 9s → 8s"
+          ]
+        },
+        {
+          "line": "Voltfawn",
+          "direction": "adjusted",
+          "members": [
+            "voltfawn",
+            "sparkdoe",
+            "zapantler",
+            "magnedart"
+          ],
+          "changes": [
+            "Scatter Bolt: trigger 60% → 45%",
+            "Bolt Trigger: Damage 300% → 255%, Paralysis 40% → 45%"
+          ]
+        },
+        {
+          "line": "Ashlarva",
+          "direction": "nerf",
+          "members": [
+            "ashlarva",
+            "firecoil",
+            "charflutter",
+            "chrysolaria"
+          ],
+          "changes": [
+            "Fluff Flame: Damage 350% → 240%",
+            "Flutter Flame: Damage 25% → 16%",
+            "Wing Embrace: All Stats UP 18% → 9%"
+          ]
+        },
+        {
+          "line": "Buddi",
+          "direction": "nerf",
+          "members": [
+            "buddi",
+            "sunfleur",
+            "solaflora",
+            "heliabloom"
+          ],
+          "changes": [
+            "Warm Aura: Shield 10% → 4% of ATK, stacks 4 → 2",
+            "Tint Shades: Damage 280% → 210%, strange sunlight 50% → 25%",
+            "Full Sun: interval 14-24s → 24-32s"
+          ]
+        },
+        {
+          "line": "Cheerling",
+          "direction": "nerf",
+          "members": [
+            "cheerling",
+            "cheerlet",
+            "cheerspring",
+            "cheerstella"
+          ],
+          "changes": [
+            "Just Dance: interval 16-20s → 18-22s, invincibility 2s → 1.5s",
+            "Zap Chord: Damage 200% → 120%, Slow/Bind/Stun 40/30/20% → 30/20/10%"
+          ]
+        },
+        {
+          "line": "Dewgrub",
+          "direction": "nerf",
+          "members": [
+            "dewgrub",
+            "ripplewing",
+            "waveflutter",
+            "morphanessa"
+          ],
+          "changes": [
+            "Aqua Flutter: Damage 100% → 45%, butterfly 20% → 12%",
+            "Resonant Flutter: interval 8-12s → 9-13s, ally effect 4s → 3.5s",
+            "Torrential Flutter: Damage 75% → 18%, Sleep 20% → 12%"
+          ]
+        },
+        {
+          "line": "Droppit",
+          "direction": "nerf",
+          "members": [
+            "droppit",
+            "bubbit",
+            "tideon",
+            "haplysia"
+          ],
+          "changes": [
+            "Sea Fog: Super Fragile 40% → 30%"
+          ]
+        },
+        {
+          "line": "Flameow",
+          "direction": "nerf",
+          "members": [
+            "flameow",
+            "nekoflare",
+            "silversear",
+            "cinderclaw"
+          ],
+          "changes": [
+            "Sweeping Jewel: Damage 100% → 50%",
+            "More Jewels: pierce 40% → 20%, final 130% → 50%"
+          ]
+        },
+        {
+          "line": "Pandaroo",
+          "direction": "nerf",
+          "members": [
+            "pandaroo",
+            "pandaroot",
+            "pandarrior",
+            "pandagrand"
+          ],
+          "changes": [
+            "Bambattle: bamboo grove DMG Boost & Reduction 25% → 20%"
+          ]
+        },
+        {
+          "line": "Punchimp",
+          "direction": "nerf",
+          "members": [
+            "punchimp",
+            "rockfu",
+            "rockwu",
+            "rockong"
+          ],
+          "changes": [
+            "Hit Me!: clone HP 30% → 24%",
+            "Staff Cyclone: Damage 240% → 180%"
+          ]
+        },
+        {
+          "line": "Souphog",
+          "direction": "nerf",
+          "members": [
+            "souphog",
+            "grillhog",
+            "hothog",
+            "searhog"
+          ],
+          "changes": [
+            "Second Helping: Damage 280% → 180%, launch 40% → 20%",
+            "Free Snacks: Heal 20% → 12%",
+            "Food Fight!: Damage 200% → 105%, Heal 6% → 2.5%"
+          ]
+        },
+        {
+          "line": "Sparkeet",
+          "direction": "nerf",
+          "members": [
+            "sparkeet",
+            "buzzbeak",
+            "toucanzam",
+            "technocan"
+          ],
+          "changes": [
+            "Full Charge: DMG Reduction 20% → 10%, ATK Boost 50% → 25%"
+          ]
+        },
+        {
+          "line": "Zaplet",
+          "direction": "nerf",
+          "members": [
+            "zaplet",
+            "synthhog",
+            "sonarbat",
+            "umbraveil"
+          ],
+          "changes": [
+            "Resonant Echoes: large DMG Boost 30% → 20%",
+            "Bat Swarm: Damage 100% → 50%",
+            "Radar Rage: Damage 100% → 50%"
+          ]
+        },
+        {
+          "line": "Zappur",
+          "direction": "nerf",
+          "members": [
+            "zappur",
+            "electroar",
+            "blitzmane",
+            "stormlion"
+          ],
+          "changes": [
+            "Lightburst: Damage 500% → 350%, Knockback 50% → 40%"
+          ]
+        }
+      ],
+      "mode": {
+        "_note": "The Horde Invasion parts of the update that are not about one Tatari. Trimmed from the full notes, which also cover Cozy Farm, the Bento Maker, the spinwheel and the chapter stages -- none of which this tool models.",
+        "groups": [
+          {
+            "title": "New",
+            "items": [
+              "Horde Invasion now runs in seasons, with balance passes to Tatari and Chips between them. The first season runs about four weeks.",
+              "Chips are back, and staying.",
+              "Difficulties are picked rather than fixed, and unlock in order: clear one to open the next. Single battles are shorter.",
+              "A season leaderboard, ranked on your highest difficulty and your kill count in one invasion. Tallied at the end of each season; rewards include a season-exclusive avatar frame.",
+              "Season history, so recent horde battles can be looked back at and shared."
+            ]
+          },
+          {
+            "title": "Changed",
+            "items": [
+              "Each invasion window is three hours, up from two. The settlement phase is still one hour.",
+              "Fewer kills are needed for a clear, and clearing no longer ends the battle: you can keep chasing Zobos.",
+              "Everyone who took part is rewarded after a clear, not only the finisher.",
+              "Matchmaking prefers players of a similar level.",
+              "The teammate invite list puts recommended teammates ahead of offline friends.",
+              "Fixed: the Horde Invasion entrance sometimes vanishing on the first login of the day."
+            ]
+          }
         ]
       }
-    ],
-    "mode": {
-      "_note": [
-        "The Season 2 notes that are not about one Tatari, as the Season Update",
-        "screen lists them. Same Pioneer Server caveat as the rest of this tab:",
-        "these are the test build’s numbers and may not be what ships.",
-        "",
-        "The chip changes carry their own direction. A number cannot say it on its",
-        "own here: Parting Gift paying 40 energizers instead of 200 is a nerf, and",
-        "AFK Mode forcing 40 seconds of auto-battle instead of 90 is a buff.",
-        "",
-        "They are recorded here and NOT in data/chips.json, for the same reason no",
-        "Tatari on this tab is marked in the drafter: chips.json is what the live",
-        "game does, and a chip page quoting a test build would be wrong for",
-        "everybody playing today."
-      ],
-      "groups": [
-        {
-          "title": "Changed",
-          "items": [
-            "A Tatari knocked down in battle now gives some of its energizers back. On the Pioneer Server it was confirmed to be 100 energizer.",
-            "Horde Invasion skills were adjusted for some Tatari and their evolutions. The changes below are the ones the Season Update screen names; the rest are in the game’s own Horde Invasion interface.",
-            "Stage difficulties moved a little: Difficulty 1 is slightly easier, and Difficulties 3 and 4 are slightly harder."
-          ]
-        },
-        {
-          "title": "Fixed",
-          "items": [
-            "Dewgrub’s Aqua Flutter dealt less damage than it should have in some situations."
-          ]
-        }
-      ],
-      "chips": [
-        {
-          "chip": "AFK",
-          "direction": "buff",
-          "change": "Forced auto-battle 90s → 40s"
-        },
-        {
-          "chip": "Boss Killer",
-          "direction": "nerf",
-          "change": "Damage to Zobo bosses 25% → 20%"
-        },
-        {
-          "chip": "The Exile",
-          "direction": "buff",
-          "change": "Stat boost 20% → 35%"
-        },
-        {
-          "chip": "Backend Support",
-          "direction": "buff",
-          "change": "Damage boost 30% → 45%"
-        },
-        {
-          "chip": "Lawn Care",
-          "direction": "nerf",
-          "change": "Max HP damage 50% → 40%"
-        },
-        {
-          "chip": "Patch Upgrade",
-          "direction": "buff",
-          "change": "Tatari level +1 → +2"
-        },
-        {
-          "chip": "Parting Gift",
-          "direction": "nerf",
-          "change": "Energizers 200 → 40"
-        },
-        {
-          "chip": "On the Move",
-          "direction": "buff",
-          "change": "Duration 20s → 30s"
-        },
-        {
-          "chip": "Weakest Link",
-          "direction": "buff",
-          "change": "Stat boost 10% → 15%"
-        }
-      ]
     }
-  }
+  ]
 }

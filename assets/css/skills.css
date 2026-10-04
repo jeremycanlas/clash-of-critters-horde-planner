@@ -1,126 +1,409 @@
 /*
- * Skill data. Panels, fields, segmented controls and the footer come from
- * app.css; this is the card grid, laid out like the game's skill panel: label
- * left, value right, one box per effect.
+ * Skill data. Built from the drafter's own parts in app.css so the two read
+ * as one site: the formation bar (.formbar) holds the view, search and type;
+ * the list, the open line and the table are .panel frames with .panel__head
+ * headings; a Tatari is drawn as the roster card draws it (type-tinted square,
+ * tier, the game's type and role badges); what is selected takes the accent.
+ * Two views: Lines (a list of evolution lines, and one line open beside it
+ * with a tier switcher) and Rankings (every Tatari in one table).
+ *
+ * Without script everything shows, stacked: the list, every line with every
+ * tier, then the table. skills.js adds .is-live and from then on only the
+ * chosen line, tier and view are shown.
  */
 
 .sk__main {
-  /* A definite width: centred by auto margins in the body's flex column, it
-     would otherwise shrink-wrap its content, and a four-card row is wide. */
   width: 100%; box-sizing: border-box;
-  max-width: 1280px;
+  max-width: 1500px;
   margin: 0 auto;
-  padding: var(--s5) var(--s4) var(--s6);
-  display: flex; flex-direction: column; gap: var(--s4);
+  padding: var(--s4) var(--s5) var(--s6);
+  display: flex; flex-direction: column; gap: var(--s3);
 }
+.sk__main > * { min-width: 0; }
 
-.sk__tools { display: flex; flex-wrap: wrap; gap: var(--s2) var(--s3); align-items: center; }
-.sk__search { flex: 1 1 260px; }
-.sk__search .field { width: 100%; font-size: 16px; } /* 16px, or iOS zooms on tap */
+/* ---------------------------------------------------------------- toolbar */
+
+.sk-tools { flex-wrap: wrap; gap: var(--s2) var(--s3); }
+.sk-search { flex: 1 1 240px; }
+.sk-search .field { width: 100%; box-sizing: border-box; min-height: 44px; font-size: 16px; } /* 16px, or iOS zooms on tap */
+.sk-tools .segmented__btn { min-height: 44px; display: inline-flex; align-items: center; }
+/* Lines and Rankings are places, not settings: the selected one takes the
+   accent, as the roster's Tatari / Zobos / Chips tabs do. */
 #sk-types { flex-wrap: wrap; }
-.sk__count { margin: 0; font-size: 13px; color: var(--text-mute); }
+/* On a phone the six types are one line that scrolls sideways, not two. */
+@media (max-width: 600px) {
+  #sk-types { flex-wrap: nowrap; max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+  #sk-types .segmented__btn { flex: none; }
+}
+.sk-ticon { width: 18px; height: 18px; object-fit: contain; vertical-align: -4px; margin-right: 5px; }
+.sk-count { margin: 0; font-size: 13px; line-height: 1.5; color: var(--text-mute); max-width: 80ch; }
+.sk-empty { margin: 0; padding: var(--s4); border: 1px dashed var(--line); border-radius: var(--r-md); color: var(--text-dim); font-size: 14px; }
+.sk-none { margin: 0; font-size: 12.5px; color: var(--text-mute); }
 
-/* One evolution line per row, T1 to T4. Four across where they fit; on a
-   narrower screen the row scrolls sideways, a card at a time, so a line still
-   reads as one line rather than stacking into the next. */
-.sk__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--s3); }
-/* A sideways-scrolling row is as wide as everything in it unless told otherwise,
-   and it took the whole column, the search box included, past the screen. */
-.sk__main > *, .sk__line { min-width: 0; }
-.sk__line[hidden] { display: none; }
-.sk__row {
-  list-style: none; margin: 0; padding: 0;
-  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--s3); align-items: start;
+/* Views. */
+.sk-app { display: flex; flex-direction: column; gap: var(--s5); }
+
+/* A Tatari's picture, everywhere on the page: the roster card's square of its
+   type's colour. */
+.sk-art {
+  flex: none; object-fit: contain; box-sizing: border-box; padding: 2px;
+  border-radius: var(--r-sm); background: color-mix(in srgb, var(--type-color) 13%, transparent);
 }
-@media (max-width: 1100px) {
-  .sk__row {
-    grid-template-columns: none; grid-auto-flow: column;
-    grid-auto-columns: min(340px, 86%);
-    overflow-x: auto; overscroll-behavior-x: contain;
-    scroll-snap-type: x mandatory; scroll-padding-inline: 2px;
-    padding-bottom: var(--s1);
-  }
-  .sk__row > .sk { scroll-snap-align: start; }
-  .sk__row:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: var(--r-sm); }
+/* The roster card's meta row: tier, type badge, role badge. */
+.sk-meta { display: inline-flex; align-items: center; gap: 3px; flex: none; }
+.sk-meta .card__tier { font-size: 10.5px; line-height: 1; }
+
+/* ---------------------------------------------------------------- lines */
+
+.sk-lines { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: var(--s4); align-items: start; }
+
+/* The list of lines. Sticky with its own scroll on a wide screen, so the line
+   you are reading stays put while you pick the next one. */
+.sk-index {
+  position: sticky; top: var(--s3);
+  max-height: calc(100dvh - 2 * var(--s3)); overflow-y: auto; overscroll-behavior: contain;
+  padding: 0 var(--s2) var(--s2);
 }
-.sk {
-  display: flex; flex-direction: column; gap: var(--s1);
+/* The heading stays put while the list scrolls under it. */
+.sk-index > .panel__head {
+  position: sticky; top: 0; z-index: 1;
+  margin: 0; padding: var(--s4) var(--s2) var(--s2);
+  background: var(--surface);
+}
+.sk-index__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.sk-index__item[hidden] { display: none; }
+.sk-pick {
+  display: flex; align-items: center; gap: var(--s3);
+  min-height: 56px; padding: var(--s1) var(--s3) var(--s1) var(--s1);
+  border: 1px solid transparent; border-radius: var(--r-md);
+  color: var(--text); text-decoration: none;
+  transition: background-color 120ms var(--ease-out), border-color 120ms var(--ease-out);
+}
+.sk-pick:hover { background: var(--surface-2); border-color: color-mix(in srgb, var(--type-color) 55%, var(--line)); }
+.sk-pick:focus-visible { outline-offset: -2px; }
+.sk-pick[aria-current="true"] { background: var(--surface-3); border-color: var(--accent); }
+.sk-pick .sk-art { width: 44px; height: 44px; }
+.sk-pick__text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.sk-pick__name { font-weight: 650; font-size: 14.5px; line-height: 1.3; }
+.sk-pick__sub { display: flex; align-items: center; gap: 6px; font-size: 12px; line-height: 1.2; color: var(--text-dim); white-space: nowrap; overflow: hidden; }
+.sk-pick__af { flex: none; font-family: var(--font-mono); font-size: 13px; font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; }
+/* What the number is, on the number itself and once in the list's header:
+   "25%" alone read as nothing in particular. */
+.sk-pick__af { display: flex; flex-direction: column; align-items: flex-end; line-height: 1.15; }
+.sk-pick__aflabel { font-family: var(--font-ui); font-size: 10px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--text-mute); }
+.sk-index__key { margin-left: auto; font-size: 11.5px; color: var(--text-mute); white-space: nowrap; }
+
+/* One line, open. */
+.sk-detail { display: flex; flex-direction: column; gap: var(--s4); min-width: 0; }
+.sk-line {
+  display: flex; flex-direction: column; gap: var(--s4);
+  padding: var(--s4) var(--s5) var(--s5);
+  scroll-margin-top: var(--s3);
+}
+.sk-app.is-live .sk-line:not(.is-on),
+.sk-app.is-live .sk-tier:not(.is-on) { display: none; }
+
+.sk-line__head { margin: 0; gap: var(--s2) var(--s4); }
+.sk-line__name { flex: 1 1 auto; }
+.sk-back { display: none; }
+.sk-switch { display: none; flex-wrap: wrap; gap: var(--s2); }
+.sk-app.is-live .sk-switch { display: flex; }
+/* The tiers as small roster cards. */
+.sk-switch__btn {
+  display: inline-flex; align-items: center; gap: var(--s2);
+  min-height: 44px; padding: 3px var(--s3) 3px 3px;
+  border: 1px solid var(--line-soft); border-radius: var(--r-md); background: var(--surface-2);
+  color: var(--text); font: inherit; text-align: left; cursor: pointer;
+  transition: background-color 120ms var(--ease-out), border-color 120ms var(--ease-out);
+}
+.sk-switch__btn:hover { background: var(--surface-3); border-color: color-mix(in srgb, var(--type-color) 55%, var(--line)); }
+.sk-switch__btn .sk-art { width: 36px; height: 36px; }
+.sk-switch__text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.sk-switch__name { font-size: 12px; font-weight: 550; line-height: 1.2; white-space: nowrap; }
+.sk-switch__btn[aria-pressed="true"] { background: var(--surface-3); border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+
+/* A tier: the Tatari's name in the site's own style, then its skill panel. */
+.sk-tier { display: flex; flex-direction: column; gap: var(--s3); scroll-margin-top: var(--s4); }
+.sk-app:not(.is-live) .sk-tier + .sk-tier { padding-top: var(--s4); border-top: 1px solid var(--line); }
+.sk-tier__name { margin: 0; font-size: 19px; line-height: 1.3; display: flex; flex-wrap: wrap; align-items: center; gap: var(--s1) var(--s3); }
+/* The drafter's detail-sheet tags: type, role, tier. */
+.sk-tier__tags { display: inline-flex; flex-wrap: wrap; gap: var(--s1) var(--s2); }
+.sk-tier__tags .tag { font-family: var(--font-ui); letter-spacing: 0; }
+.sk-tier__tags .badge { width: 15px; height: 15px; }
+
+/* ---------------------------------------------------------------- the game's skill panel
+   Drawn after the panel the game opens on a skill: a flat purple card in a
+   dark frame; the icon, the skill's name in white with a dark outline and a
+   line of what it does; then an inset, darker list ringed in the game's teal,
+   with each number on its own lighter pill (label lavender on the left, value
+   lime on the right) and each effect in a lighter box under a yellow heading.
+   The same purple in both of the site's themes, as the game has one look.
+   Colours read off the screenshots; each text colour is at least 4.5:1 on the
+   fill it sits on: on a pill lime 8.7, lavender 5.1, yellow 10.5, white 11.1;
+   on the purple white 9.2 and the level's orange 4.8 (the game's own #fd8a64
+   is 3.9 there, so it is a shade lighter). */
+.sk-panel {
+  /* The game's layout in the site's own colours, so the cards sit in both
+     themes: surfaces and lines from app.css with a faint violet cast (the
+     game's panel colour, at a whisper), titles in the site's yellow, values
+     in its green pulled toward the text colour so they hold 4.5:1 in light
+     as well as dark. */
+  --gp-violet: #7b5ce0;
+  --gp-panel: color-mix(in srgb, var(--gp-violet) 7%, var(--surface));
+  --gp-frame: color-mix(in srgb, var(--gp-violet) 22%, var(--line));
+  --gp-inset: color-mix(in srgb, var(--gp-violet) 4%, var(--bg));
+  --gp-ring: color-mix(in srgb, var(--gp-violet) 30%, var(--line));
+  --gp-pill: color-mix(in srgb, var(--gp-violet) 5%, var(--surface-2));
+  --gp-line: var(--line);
+  --gp-label: var(--text-dim);
+  --gp-value: color-mix(in srgb, var(--ok) 72%, var(--text));
+  --gp-title: var(--accent-ink-on);
+  --gp-lv: var(--accent-ink-on);
+  --gp-text: var(--text);
+  display: flex; flex-direction: column; gap: var(--s3);
   padding: var(--s3);
-  border: 1px solid var(--line); border-radius: var(--r-md, 12px);
-  background: var(--surface-1, var(--surface));
-  scroll-margin-top: var(--s4);
+  border: 2px solid var(--gp-frame); border-radius: var(--r-lg);
+  background: var(--gp-panel); color: var(--gp-text);
 }
-.sk.is-target { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 35%, transparent); }
-.sk[hidden], .sk__names li[hidden] { display: none; }
+.sk-panel__head { display: flex; align-items: flex-start; gap: var(--s3); min-width: 0; }
+.sk-panel__title { flex: 1; min-width: 0; }
+.sk-skill {
+  margin: 0; font-family: var(--font-display); font-size: 21px; font-weight: 800; line-height: 1.15; letter-spacing: 0;
+  color: var(--gp-text);
 
-.sk__head { display: flex; align-items: center; gap: var(--s2); margin-bottom: var(--s1); }
-.sk__head > img { flex: none; width: 48px; height: 48px; object-fit: contain; }
-.sk__head > div { flex: 1; min-width: 0; }
-.sk__name { margin: 0; font-size: 15px; font-weight: 700; line-height: 1.25; }
-.sk__tier { font-size: 12px; font-weight: 600; color: var(--text-mute); }
-.sk__meta { margin: 2px 0 0; font-size: 12.5px; color: var(--text-dim); }
-.sk__meta b { color: var(--text); font-weight: 650; }
-/* Element icons, in the meta line and on the type filter. */
-.sk__ticon { width: 16px; height: 16px; object-fit: contain; vertical-align: -3px; margin-right: 4px; }
-#sk-types .sk__ticon { width: 18px; height: 18px; vertical-align: -4px; margin-right: 5px; }
-
-/* Arena Factor: the panel's last row, set apart by space and a muted label
-   rather than a colour of its own. */
-.sk__rows--arena { margin-top: var(--s2); }
-.sk__rows--arena dt small { margin-left: 4px; font-size: 11px; color: var(--text-mute); }
-.sk__more { margin: 2px 0 0; font-size: 12px; color: var(--text-mute); }
-
-/* The pyramid: what this tier adds leads, what it keeps folds away. */
-.sk__same { margin-top: var(--s1); border-radius: var(--r-sm); background: var(--surface-2); }
-.sk__same > summary {
-  /* 44px: a finger's worth, as everywhere else on the site. */
-  min-height: 44px; box-sizing: border-box; display: flex; align-items: center; gap: 6px;
-  padding: 6px var(--s2); cursor: pointer;
-  font-size: 12.5px; color: var(--text-dim);
 }
-.sk__same > summary::-webkit-details-marker { display: none; }
-.sk__same > summary::before { content: '▸'; flex: none; transition: transform 150ms ease-out; }
-.sk__same[open] > summary::before { transform: rotate(90deg); }
-@media (prefers-reduced-motion: reduce) { .sk__same > summary::before { transition: none; } }
-.sk__same > summary:hover { color: var(--text); }
-.sk__same > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: var(--r-sm); }
-.sk__same[open] { padding-bottom: var(--s2); }
-.sk__same[open] > :not(summary) { margin-left: var(--s2); margin-right: var(--s2); }
-/* Text in the text colour: the accent yellow on a light background reads at
-   2:1. The yellow is the tag's edge and wash instead. */
-.sk__new {
-  margin-left: 4px; padding: 1px 6px; border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--accent) 70%, transparent);
-  background: color-mix(in srgb, var(--accent) 16%, transparent);
-  font-size: 10.5px; font-weight: 700; color: var(--text); vertical-align: 1px;
+.sk-desc { margin: 4px 0 0; font-size: 13.5px; font-weight: 400; line-height: 1.4; color: var(--text-dim); }
+/* The icon: a square of the type's colour in a white frame, the numeral on a
+   dark tab at its corner. */
+.sk-icon { position: relative; flex: none; line-height: 0; }
+.sk-icon .sk-art {
+  width: 64px; height: 64px; padding: 3px; border: 2px solid var(--gp-frame); border-radius: 12px;
+  background: color-mix(in srgb, var(--type-color) 22%, var(--gp-inset));
 }
-.sk__was { margin-right: 6px; font-size: 11.5px; font-weight: 500; color: var(--text-mute); }
+.sk-numeral {
+  position: absolute; left: -3px; bottom: -6px;
+  min-width: 22px; padding: 3px 5px; box-sizing: border-box; border-radius: 6px;
+  background: var(--surface-3); color: var(--text); border: 1px solid var(--gp-frame); text-align: center;
+  font-family: var(--font-display); font-size: 12px; font-weight: 800; line-height: 1;
+}
+.sk-level .sk-icon .sk-art { width: 40px; height: 40px; padding: 2px; border-width: 2px; border-radius: 9px; }
+/* Horde Invasion's level, top right as the game has it. */
+.sk-lv {
+  flex: none; display: inline-flex; align-items: center; gap: 4px; margin: 0;
+  font-family: var(--font-display); font-size: 15px; font-weight: 800; line-height: 1.2; color: var(--gp-lv);
+}
+.sk-lock { color: var(--text-mute); }
 
-/* Not recorded: a slot, not a card. Same row, no fill, dashed edge. */
-.sk--ghost {
-  flex-direction: row; align-items: center; gap: var(--s2);
-  border-style: dashed; background: transparent;
-  font-size: 12.5px; line-height: 1.35; color: var(--text-mute);
+.sk-list {
+  display: flex; flex-direction: column; gap: var(--s2); min-width: 0;
+  padding: var(--s2); border: 2px solid var(--gp-ring); border-radius: var(--r-md);
+  background: var(--gp-inset);
 }
-.sk--ghost b { color: var(--text-dim); font-weight: 650; }
-.sk--ghost img { flex: none; width: 36px; height: 36px; object-fit: contain; opacity: .55; }
+.sk-panel .sk-none { color: var(--gp-label); }
 
-.sk__heading { margin: var(--s2) 0 0; font-size: 13px; font-weight: 700; color: var(--text); }
-.sk__text { margin: 0; font-size: 12.5px; line-height: 1.45; color: var(--text-dim); }
-.sk__rows {
-  display: grid; grid-template-columns: 1fr auto; margin: 0;
-  border-radius: var(--r-sm); background: var(--surface-2); overflow: hidden;
-}
-.sk__rows dt, .sk__rows dd { margin: 0; padding: 5px var(--s2); border-top: 1px solid var(--line); font-size: 13px; }
-.sk__rows dt:first-of-type, .sk__rows dt:first-of-type + dd { border-top: 0; }
-.sk__rows dt { color: var(--text-dim); }
-.sk__rows dd { color: var(--text); font-weight: 650; font-variant-numeric: tabular-nums; text-align: right; }
+/* Rows. On the list itself each is a pill; inside a box they are split by a
+   rule, as the game does. */
+.sk-rows { display: grid; gap: 4px; margin: 0; }
+.sk-row { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s2); min-width: 0; padding: 5px var(--s2); border-radius: 7px; background: var(--gp-pill); }
+.sk-rows dt, .sk-rows dd { margin: 0; font-size: 13.5px; font-weight: 700; line-height: 1.3; }
+/* Three weights, three jobs: titles and numbers bold, labels medium, prose regular
+   in the dimmer text colour, so a description never reads as a heading. */
+.sk-rows dt { font-weight: 500; }
+.sk-rows dt { color: var(--gp-label); min-width: 0; }
+.sk-rows dd { color: var(--gp-value); text-align: right; font-variant-numeric: tabular-nums; }
+.sk-box .sk-rows { gap: 0; }
+.sk-box .sk-row { padding: 5px 0; border-radius: 0; background: none; border-top: 1px solid var(--gp-line); }
 
-.sk__missing h2 { margin: 0 0 var(--s2); font-size: 15px; }
-.sk__names {
-  list-style: none; margin: 0; padding: 0;
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--s1) var(--s2);
+.sk-boxes { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--s2); align-items: start; }
+.sk-box {
+  display: flex; flex-direction: column; gap: 4px; min-width: 0;
+  padding: var(--s2) var(--s3) 4px; border: 1px solid transparent; border-radius: var(--r-sm); background: var(--gp-pill);
 }
-.sk__names li { display: flex; align-items: center; gap: var(--s1); font-size: 13px; color: var(--text-dim); }
-.sk__names img { width: 28px; height: 28px; object-fit: contain; }
+.sk-box:not(:has(.sk-rows)) { padding-bottom: var(--s2); }
+.sk-box--new { border-color: var(--gp-title); }
+.sk-box__title { margin: 0; font-family: var(--font-ui); font-size: 14px; font-weight: 700; letter-spacing: 0; line-height: 1.3; color: var(--gp-title); }
+.sk-box__text { margin: 0; font-size: 13px; font-weight: 400; line-height: 1.4; color: var(--text-dim); }
+/* "New at T4" and "new": the game's yellow as an edge, white text. */
+.sk-new {
+  display: inline-block; margin-left: 4px; padding: 1px 7px; border-radius: 999px;
+  border: 1px solid var(--gp-title); background: var(--gp-inset);
+  font-family: var(--font-ui); font-size: 11px; font-weight: 700; letter-spacing: 0; color: var(--text); vertical-align: 1px;
+}
+.sk-was { margin-right: 6px; font-size: 11.5px; font-weight: 600; color: var(--gp-label); }
+
+/* Horde Invasion: the line's three level-ups, under every tier. */
+.sk-horde { padding-top: var(--s4); border-top: 1px solid var(--line); }
+.sk-horde__title { margin: 0 0 var(--s3); font-size: 15px; }
+.sk-horde__title span { display: block; margin-top: 2px; font-family: var(--font-ui); font-size: 12.5px; font-weight: 500; letter-spacing: 0; color: var(--text-mute); }
+.sk-levels { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s3); align-items: start; }
+.sk-level .sk-skill { font-size: 17px; }
+.sk-level .sk-desc { font-size: 12.5px; }
+
+/* ---------------------------------------------------------------- narrow */
+
+/* Below a laptop: list and line take turns. The list fills the screen; picking
+   a line opens it in its place with a way back, and the browser's Back works
+   too. Boxes stack, no sideways swiping. */
+@media (max-width: 899px) {
+  .sk__main { padding: var(--s3) var(--s3) var(--s5); }
+  .sk-lines { grid-template-columns: minmax(0, 1fr); }
+  .sk-index { position: static; max-height: none; overflow: visible; }
+  .sk-app.is-live[data-pane="list"] .sk-detail,
+  .sk-app.is-live[data-pane="line"] .sk-index { display: none; }
+  .sk-app.is-live .sk-back { display: inline-flex; gap: 6px; min-height: 44px; padding-left: var(--s2); }
+  .sk-back::before { content: '‹'; font-size: 20px; line-height: 1; }
+  .sk-line { padding: var(--s3) var(--s3) var(--s4); gap: var(--s3); }
+  .sk-line__head { gap: var(--s2) var(--s3); }
+  .sk-switch { flex-basis: 100%; flex-wrap: nowrap; }
+  /* Standing up, like the roster's cards: picture over tier and badges. */
+  .sk-switch__btn { flex: 1 1 0; min-width: 0; flex-direction: column; gap: 3px; padding: 4px; }
+  .sk-switch__text { align-items: center; }
+  .sk-switch__btn .sk-art { width: 44px; height: 44px; }
+  .sk-switch__name { display: none; }
+  .sk-panel { padding: var(--s2); gap: var(--s2); }
+  .sk-icon .sk-art { width: 56px; height: 56px; }
+  .sk-skill { font-size: 19px; }
+  .sk-boxes, .sk-levels { grid-template-columns: minmax(0, 1fr); }
+}
+/* A 320px phone: every pixel of padding counts for the table to fit. */
+@media (max-width: 400px) {
+}
+@media (prefers-reduced-motion: reduce) {
+  .sk-pick, .sk-switch__btn { transition: none; }
+}
+
+/* ---------------------------------------------------------------- one screen
+   On a computer the page is a dashboard: the window's height and no more. The
+   list and the open line scroll inside themselves, and the open line is laid
+   out in two columns (the skill and its boxes beside the Horde Invasion
+   skills), tight enough that a T4 with every box fits a 768px-tall laptop
+   without scrolling. Only once the script is running: without it the page is
+   the long, stacked document search engines read. */
+@media (min-width: 900px) and (min-height: 600px) {
+  /* clip, not hidden: a hidden box can still be scrolled by script, and the #slug jump did. */
+  html:has(body.skillspage .sk-app.is-live) { overflow: clip; }
+  body.skillspage:has(.sk-app.is-live) { height: 100dvh; overflow: clip; display: flex; flex-direction: column; }
+  body.skillspage:has(.sk-app.is-live) > * { flex: none; }
+  body.skillspage:has(.sk-app.is-live) > .sk__main { flex: 1 1 auto; min-height: 0; padding-block: var(--s2); gap: var(--s2); }
+  body.skillspage:has(.sk-app.is-live) .foot { padding-block: 6px; font-size: 11px; }
+  body.skillspage:has(.sk-app.is-live) .foot__avatar { width: 22px; height: 22px; }
+  body.skillspage:has(.sk-app.is-live) .formbar { padding-block: 6px; }
+  .sk-app.is-live { flex: 1 1 auto; min-height: 0; }
+  body.skillspage:has(.sk-app.is-live) .sk-count { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: none; }
+  .sk-app.is-live[data-view="lines"] .sk-lines { height: 100%; min-height: 0; align-items: stretch; grid-template-columns: 270px minmax(0, 1fr); gap: var(--s3); }
+  .sk-app.is-live .sk-index { position: static; height: 100%; max-height: none; box-sizing: border-box; }
+  .sk-app.is-live .sk-index > .panel__head { padding-top: var(--s3); }
+  .sk-app.is-live .sk-pick { padding-block: 3px; min-height: 52px; }
+  .sk-app.is-live .sk-detail { height: 100%; min-height: 0; overflow-y: auto; overscroll-behavior: contain; border-radius: var(--r-lg); }
+
+  .sk-app.is-live .sk-line {
+    display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); grid-template-rows: auto auto; align-content: start;
+    gap: var(--s2) var(--s5); min-height: 100%; flex: none; /* grows with a long Horde column instead of being squeezed to the panel's height */ box-sizing: border-box; padding: var(--s3) var(--s4) var(--s3);
+  }
+  .sk-app.is-live .sk-line__head { grid-column: 1 / -1; grid-row: 1; }
+  .sk-app.is-live .sk-tier { grid-column: 1; grid-row: 2; gap: var(--s3); }
+  .sk-app.is-live .sk-horde { grid-column: 2; grid-row: 2; align-self: start; padding: 0 0 0 var(--s5); border-top: 0; border-left: 1px solid var(--line); }
+
+  .sk-app.is-live .sk-tier__name { font-size: 17px; }
+  .sk-app.is-live .sk-tier__tags .tag { min-height: 0; padding-block: 1px; font-size: 12px; }
+  .sk-app.is-live .sk-panel { padding: var(--s2) var(--s3) var(--s3); gap: var(--s2); }
+  .sk-app.is-live .sk-skill { font-size: 19px; }
+  .sk-app.is-live .sk-desc { font-size: 12.5px; line-height: 1.35; margin-top: 2px; }
+  .sk-app.is-live .sk-icon .sk-art { width: 56px; height: 56px; }
+  .sk-app.is-live .sk-list { padding: 6px; gap: 6px; }
+  .sk-app.is-live .sk-row { padding: 3px var(--s2); }
+  .sk-app.is-live .sk-box .sk-row { padding: 3px 0; }
+  .sk-app.is-live .sk-rows dt, .sk-app.is-live .sk-rows dd { font-size: 12.5px; }
+  .sk-app.is-live .sk-box { padding: 6px var(--s2) 2px; gap: 2px; }
+  .sk-app.is-live .sk-box:not(:has(.sk-rows)) { padding-bottom: 6px; }
+  .sk-app.is-live .sk-box__title { font-size: 13px; }
+  .sk-app.is-live .sk-box__text { font-size: 12px; line-height: 1.35; }
+
+  /* The heading and its note on one line. */
+  .sk-app.is-live .sk-horde__title { margin-bottom: 4px; }
+  .sk-app.is-live .sk-horde__title span { display: inline; margin: 0 0 0 var(--s1); }
+  .sk-app.is-live .sk-levels { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  .sk-app.is-live .sk-level { padding: 6px var(--s2); gap: 6px; }
+  .sk-app.is-live .sk-level .sk-panel__head { gap: var(--s2); }
+  .sk-app.is-live .sk-level .sk-list { padding: 4px; gap: 4px; }
+  .sk-app.is-live .sk-level .sk-row { padding-block: 2px; }
+  .sk-app.is-live .sk-level .sk-box { padding-top: 4px; gap: 0; }
+  .sk-app.is-live .sk-level .sk-skill { font-size: 16px; }
+  .sk-app.is-live .sk-level .sk-desc { font-size: 12px; }
+  .sk-app.is-live .sk-level .sk-icon .sk-art { width: 36px; height: 36px; }
+  .sk-app.is-live .sk-level .sk-skill { line-height: 1.1; }
+  .sk-app.is-live .sk-level .sk-desc { line-height: 1.3; }
+  .sk-app.is-live .sk-level .sk-lv { font-size: 14px; }
+
+  /* Tighter still: pills run two to a line wherever a column is wide enough. */
+  .sk-app.is-live .sk-list > .sk-rows { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
+  .sk-app.is-live .sk-level .sk-box .sk-rows { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); column-gap: var(--s3); }
+  /* Boxes flow down two columns rather than sitting in rows, so a short box
+     (ATK Boost) leaves no hole beside a long one (Aura: Water). */
+  .sk-app.is-live .sk-tier .sk-boxes { display: block; column-count: 2; column-gap: 6px; }
+  .sk-app.is-live .sk-tier .sk-boxes > .sk-box { break-inside: avoid; margin-bottom: 6px; }
+  .sk-app.is-live .sk-tier .sk-boxes > .sk-box:last-child { margin-bottom: 0; }
+  .sk-app.is-live .sk-tier .sk-boxes > .sk-box:only-child { column-span: all; }
+}
+
+/* The tier switcher sits above the skill card and is exactly as wide as it, so
+   its edges line up with the card; the tiers share that width evenly (four for
+   most lines, two wider ones for a T1-T2 line), so there is no gap and T1 is
+   always at the card's left edge. The line's name sits on the line above. The
+   Horde column starts at the top beside both. Desktop only. */
+@media (min-width: 900px) {
+  .sk-app.is-live .sk-line__head { grid-column: 1; grid-row: 1; display: flex; flex-direction: column; align-items: stretch; gap: var(--s2); padding: 0; }
+  .sk-app.is-live .sk-line__name { flex: none; font-size: 15px; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sk-app.is-live .sk-switch { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: var(--s2); width: 100%; }
+  .sk-app.is-live .sk-switch__btn { min-width: 0; }
+  .sk-app.is-live .sk-switch__name { overflow: hidden; text-overflow: ellipsis; }
+  .sk-app.is-live .sk-horde { grid-row: 1 / span 2; }
+  /* The Horde column spans both rows; any extra height it brings goes to the
+     second row, so the switcher stays snug against the card below it. */
+  .sk-app.is-live .sk-line { grid-template-rows: min-content 1fr; row-gap: var(--s2); }
+  .sk-app.is-live .sk-line__head { gap: 6px; }
+  .sk-app.is-live .sk-switch__btn { min-height: 44px; padding-block: 2px; }
+  .sk-app.is-live .sk-switch__btn .sk-art { width: 34px; height: 34px; }
+  .sk-app.is-live .sk-tier { gap: var(--s2); }
+  .sk-app.is-live .sk-tier .sk-list { padding: 6px; gap: 6px; }
+  .sk-app.is-live .sk-tier .sk-box__text { font-size: 12px; line-height: 1.32; }
+  .sk-app.is-live .sk-tier__head { margin-block: -2px; }
+  .sk-app.is-live .sk-tier .sk-icon .sk-art { width: 50px; height: 50px; }
+  .sk-app.is-live .sk-tier .sk-skill { font-size: 18px; }
+  .sk-app.is-live .sk-tier .sk-panel { gap: 6px; padding-top: 6px; padding-bottom: var(--s2); }
+  .sk-app.is-live .sk-line { padding-top: var(--s2); }
+}
+
+/* From the all-Tatari check (2026-10-03):
+   - a row with a long label or value spans the whole width rather than
+     wrapping to three lines in half of it;
+   - "was 120%" sits on its own small line above the new value;
+   - the tier buttons' sprite and padding shrink a little so a long name
+     (Chomperwraith, Newflamander) fits instead of being cut. */
+.sk-rows > .sk-row--wide { grid-column: 1 / -1; }
+.sk-was { display: block; margin: 0 0 1px; font-size: 10.5px; line-height: 1.2; text-align: right; }
+@media (min-width: 900px) {
+  .sk-app.is-live .sk-switch__btn { gap: 4px; padding: 2px 3px 2px 3px; }
+  .sk-app.is-live .sk-switch__btn .sk-art { width: 28px; height: 28px; }
+  .sk-app.is-live .sk-switch__name { font-size: 11.5px; letter-spacing: -0.01em; }
+}
+/* A 1280px laptop: the four buttons are narrower, so the sprite and name step down once more. */
+@media (min-width: 900px) and (max-width: 1399px) {
+  .sk-app.is-live .sk-switch__btn .sk-art { width: 24px; height: 24px; }
+  .sk-app.is-live .sk-switch__name { font-size: 11px; }
+}
+@media (min-width: 900px) and (max-width: 1399px) {
+  .sk-app.is-live .sk-switch__name { letter-spacing: -0.03em; }
+}
+/* A long label and a long value: the value drops to its own line, right-aligned,
+   rather than both squeezing into three lines side by side. */
+.sk-rows > .sk-row--wide { flex-wrap: wrap; row-gap: 0; }
+.sk-rows > .sk-row--wide > dd { margin-left: auto; }
+/* With a real (not overlay) scrollbar, the list's own scrollbar took 15px and
+   the rows, sized for the full width, stuck out by 8: the list could be nudged
+   sideways. The rows now shrink to what is left, and neither panel scrolls
+   sideways at all. */
+.sk-index, .sk-detail { overflow-x: hidden; }
+.sk-index__list { min-width: 0; }
+.sk-index__item, .sk-pick { min-width: 0; }
+.sk-pick__name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
