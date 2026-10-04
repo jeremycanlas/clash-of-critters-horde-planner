@@ -119,6 +119,7 @@ function diff(before, after) {
   latest.length = Math.min(latest.length, 20);
 }
 let folded = false; // Your UIDs is folded or not once, on arrival; after that it is yours
+let drawnGroups = ''; // the groups and names the View as buttons were last drawn from
 let wasAsleep = []; // your UIDs not logged in at the last render, so a new one opens the fold
 
 const status = (text) => { $('#bq-status').textContent = text; $('#bq-status').hidden = !text; };
@@ -370,6 +371,8 @@ function offline() {
 
 function render() {
   const past = state.round !== state.current;
+  // First, as everything below is in its view: a member, or a stale choice (a group that went away).
+  if (!state.groups?.includes(group)) group = 0;
   $('#bq-sub').textContent = `Gold rush ${span(state.current)}`;
   if (document.activeElement !== $('#bq-round')) $('#bq-round').innerHTML = state.rounds
     .map((r) => `<option value="${r}"${r === state.round ? ' selected' : ''}>${span(r)}${r === state.current ? ' (now)' : ''}</option>`)
@@ -411,10 +414,18 @@ function render() {
   if (!folded) { $('#bq-mine-fold').open = !!asleep.length || !((past || state.shared) && mineShown.length); folded = true; }
   else if (asleep.some((u) => !wasAsleep.includes(u))) $('#bq-mine-fold').open = true;
   wasAsleep = asleep;
+  /* The groups are Discord roles, and a role can be added or renamed while
+     the page is open: the group buttons and the picker are redrawn whenever
+     the set or a name changes, not only on the first answer. */
+  const sig = state.groups ? JSON.stringify([state.groups, state.names, state.private]) : '';
+  const regroup = sig !== drawnGroups;
+  drawnGroups = sig;
   const pick = $('#bq-add-grp');
   pick.hidden = !state.groups || !!group;
-  if (state.groups && !pick.options.length) {
+  if (state.groups && regroup) {
+    const was = pick.value;
     pick.innerHTML = `<option value="">${combined ? 'Server…' : 'Group…'}</option>${state.groups.map((g) => `<option value="${g}">${esc(nameOf(g))}</option>`).join('')}`;
+    pick.value = state.groups.includes(Number(was)) ? was : '';
   }
 
   const open = past || state.shared;
@@ -422,12 +433,11 @@ function render() {
   $('#bq-locked').textContent = `${state.total} banquet${state.total === 1 ? '' : 's'} shared this round. `
     + `Add ${4 - n} more UID${4 - n === 1 ? '' : 's'} of your own to see them.`;
   $('#bq-list').hidden = !open;
-  if (!state.groups?.includes(group)) group = 0; // a member, or a stale choice
   $('#bq-view').hidden = !state.groups || shot;
   $('#bq-copies').hidden = !state.groups || shot || !!group;
   $('#bq-access').hidden = !state.groups || shot || !!group;
   const groups = $('#bq-groups');
-  if (state.groups && !groups.children.length) {
+  if (state.groups && regroup) {
     groups.innerHTML = [0, ...state.groups].map((g) => `<button class="segmented__btn" type="button" data-group="${g}"
       aria-pressed="${g === group}">${!g ? (combined ? 'Both servers' : 'All groups') : isPrivate(g) ? esc(nameOf(g)) : `As ${esc(nameOf(g))}`}</button>`).join('');
   }

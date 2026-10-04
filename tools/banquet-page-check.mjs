@@ -42,6 +42,8 @@ const db = {
   claims: [],
   marks: new Map([['1:60000137', { state: 'not-yet', by: 'Eli' }]]),
   events: [], // every claim and mark, as banquet_events keeps them
+  groups: [1, 2, 3], // what a viewer of every group gets; a new Discord role adds one
+  names: { 1: 'Group 1', 2: 'Group 2', 3: 'Private' },
 };
 for (const uid of ['20000001', '55555555', '10000001', '10000002']) db.uids.push({ grp: 1, uid, who: 'Yui', source: 'discord' });
 // A private list, 3, that Vee is in and Ana is not.
@@ -85,7 +87,7 @@ const sent = [];
 // What banquet_state() answers, including that a one-group member's answer has no group in it.
 function state(me) {
   reads++;
-  const groups = me.all ? [1, 2, 3] : [me.grp];
+  const groups = me.all ? db.groups : [me.grp];
   const mine = db.uids.filter((u) => u.who === me.name && groups.includes(u.grp));
   const shared = me.all || mine.length >= 4;
   const keys = [...new Map(db.uids.filter((u) => groups.includes(u.grp)).map((u) => [`${u.grp}:${u.uid}`, u])).values()];
@@ -113,7 +115,7 @@ function state(me) {
       ...db.uids.filter((u) => groups.includes(u.grp)).map((u, i) => ({ grp: u.grp, uid: u.uid, kind: 'post', by: u.who, at: new Date(Date.parse('2026-09-29T00:00:00Z') + i * 60e3).toISOString() }))]
       .sort((a, b) => b.at.localeCompare(a.at)).slice(0, 200)
       .map(({ grp, ...e }) => ({ ...e, ...(me.all ? { grp } : {}) })) : [],
-    ...(me.all ? { groups, names: { 1: 'Group 1', 2: 'Group 2', 3: 'Private' }, private: [3] } : {}),
+    ...(me.all ? { groups, names: db.names, private: [3] } : {}),
   };
 }
 
@@ -482,6 +484,25 @@ try {
   await V.click('[data-claim="20000001"]');
   await V.waitForTimeout(300);
   assert.equal(lastSent('Vee', 'banquet_claim').g, 1);
+
+  // A new Discord role while the page is open: its button turns up on the next refresh, no reload.
+  db.groups = [1, 2, 3, 4];
+  db.names = { ...db.names, 4: 'MVPgoats' };
+  await V.clock.fastForward(16_000);
+  await V.waitForSelector('[data-group="4"]');
+  assert.equal(await V.locator('[data-group="4"]').textContent(), 'As MVPgoats', 'a new group gets its button');
+  assert.equal(await V.locator('[data-group="1"]').getAttribute('aria-pressed'), 'true', 'and the one chosen stays pressed');
+  assert.ok(await V.locator('#bq-add-grp option[value="4"]').count(), 'and a place in the picker');
+  db.names = { ...db.names, 4: 'MVP Goats' };
+  await V.click('[data-group="4"]');
+  await V.clock.fastForward(16_000);
+  await V.waitForFunction(() => document.querySelector('[data-group="4"]')?.textContent === 'As MVP Goats');
+  assert.equal(await V.locator('[data-group="4"]').getAttribute('aria-pressed'), 'true', 'a rename keeps it pressed');
+  db.groups = [1, 2, 3];
+  await V.clock.fastForward(16_000);
+  await V.waitForSelector('[data-group="4"]', { state: 'detached' });
+  assert.equal(await V.locator('[data-group="0"]').getAttribute('aria-pressed'), 'true', 'the chosen group gone: back to All groups');
+  assert.ok(await V.locator('#bq-cards li[data-key]').count() > 26, 'showing every group again, not Group 1 alone');
 
   // ------------------------------------------------------------------ Ana sees Vee's work, on her own
   await A.locator('#bq-mine-fold').evaluate((d) => { d.open = true; });
