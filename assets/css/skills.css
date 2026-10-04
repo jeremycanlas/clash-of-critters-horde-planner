@@ -457,3 +457,11 @@
    rather than both squeezing into three lines side by side. */
 .sk-rows > .sk-row--wide { flex-wrap: wrap; row-gap: 0; }
 .sk-rows > .sk-row--wide > dd { margin-left: auto; }
+/* With a real (not overlay) scrollbar, the list's own scrollbar took 15px and
+   the rows, sized for the full width, stuck out by 8: the list could be nudged
+   sideways. The rows now shrink to what is left, and neither panel scrolls
+   sideways at all. */
+.sk-index, .sk-detail { overflow-x: hidden; }
+.sk-index__list { min-width: 0; }
+.sk-index__item, .sk-pick { min-width: 0; }
+.sk-pick__name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
