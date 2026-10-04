@@ -27,9 +27,10 @@ Design: screens 9–10, 2 and 5 of the banquet redesign canvas.
 
 ## Before this goes live
 
-1. Apply `supabase/migrations/031_banquet_statuses.sql` to the live database.
-2. Apply it to the second server too:
-   `sh tools/setup-server.sh tide supabase/migrations/031_banquet_statuses.sql`.
+1. Apply `supabase/migrations/031_banquet_statuses.sql`, then
+   `032_banquet_likes.sql`, to the live database.
+2. Apply both to the second server too:
+   `sh tools/setup-server.sh tide supabase/migrations/031_banquet_statuses.sql supabase/migrations/032_banquet_likes.sql`.
 3. Then merge and push the page. An old page against the new database is
    fine. The new page against the old database shows everything as
    "Needs a look" or "Not logged in" until 031 is in.
@@ -113,3 +114,35 @@ Design: screens 9–10, 2 and 5 of the banquet redesign canvas.
   back their claim on"). The newest line about a banquet you can claim has
   Copy UID and I claimed it. They use the same code as the card's buttons,
   Undo included. Once it is claimed or full, that line says so instead.
+
+## Round 3: likes, so a portrait is not mistaken for full
+
+The problem: after the reset an MVP's building keeps last time's portrait
+until its MVP logs in, and a portrait reads as "full". People marked banquets
+full that had not opened yet.
+
+- **Likes on a building.** Every card has a small heart ("Likes"). Tap it,
+  type what the building shows, Save (or Enter). Anyone in the group can, at
+  any time, and it says who and when. Each full banquet is 50 likes, so 100
+  means MVP twice before; the card says "MVP 2× before".
+- **Before the reset.** The last count noted before a round's reset is that
+  round's "Before reset" number. A member's UIDs come back every gold rush,
+  so noting likes on this round's cards (as you already check before reset)
+  sets up the next round. Counts noted since the reset show as "Now".
+- **Full asks first.** On a building that had 50 or more before the reset,
+  Full does not mark straight away. It asks: "150 or more · Full" or
+  "Still 100 · Not logged in". The claim run's Portrait answer asks the same.
+  A building with no likes noted (or under 50) works as before.
+- **Noting a count that settles it** offers the mark in the toast: 150 or more
+  offers "Mark full", the same 100 offers "Mark not logged in".
+- Kept per group and UID (`banquet_likes`), not per round. Not in the
+  activity log yet.
+- Checks: `supabase/banquet_check.sql` (before/now picked right, other groups
+  cannot write, nothing written by refused calls) and
+  `tools/banquet-page-check.mjs` (the question on the card and in the run,
+  the box survives a refresh, 320px fits). Screenshots: `E:\cachesq-likes\`.
+
+Decided without you (say if any is wrong):
+- 50 likes per banquet, as you said (100 = MVP twice).
+- The question only shows for a building with 50+ likes before the reset.
+- No auto-marking from a typed count: it offers the mark, you tap it.

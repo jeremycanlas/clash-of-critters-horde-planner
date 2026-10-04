@@ -540,6 +540,52 @@ const MINE = { claimable: 'claimable', look: 'needs a look', notin: 'not logged 
 // What "Copy a reminder" copies, to send to whoever plays that MVP.
 const reminder = (uids) => `Your MVP banquet has not opened yet (UID ${uids}). `
   + 'It opens once the MVP logs in after the gold rush reset, so please log in once today. Thank you!';
+/* Likes. Each full banquet leaves 50 on its MVP's building, so the count
+   before the reset says how many times it has been MVP, and the portrait it
+   shows until its MVP logs in again looks exactly like "full". A building that
+   had a banquet before (50 or more) gets asked about before Full is believed:
+   the same count as before is not logged in yet, fifty more is full. */
+const PER = 50;
+const hadOne = (b) => (b.likes_before?.n ?? 0) >= PER;
+const fullAt = (b) => b.likes_before.n + PER;
+const times = (n) => Math.floor(n / PER);
+let likesFor = null; // "grp:uid" whose likes box is open
+let likesDraft = '';
+let askFull = null; // "grp:uid" whose Full press is waiting on the likes question
+function likesRow(b, past) {
+  const k = keyOf(b);
+  const bf = b.likes_before;
+  const nw = b.likes_now;
+  if (!past && likesFor === k) {
+    return `<div class="bq-likes bq-likes--edit">
+        <label>Likes on the building <input class="field" data-likes-input inputmode="numeric" pattern="[0-9]*" maxlength="6"
+          autocomplete="off" value="${esc(likesDraft)}" aria-label="Likes on ${b.uid}'s building"></label>
+        <button type="button" class="btn btn--primary" data-likes-save="${b.uid}"${grpAttr(b.grp)}>Save</button>
+        <button type="button" class="btn btn--quiet" data-likes-cancel>Cancel</button>
+      </div>`;
+  }
+  const said = [
+    bf ? `<span title="${esc(`${bf.by}, ${new Date(bf.at).toLocaleString()}`)}">Before reset <b>${bf.n}</b>${
+      times(bf.n) ? ` · MVP ${times(bf.n)}× before` : ''}</span>` : '',
+    nw ? `<span title="${esc(`${nw.by}, ${new Date(nw.at).toLocaleString()}`)}">Now <b>${nw.n}</b> · ${esc(nw.by)} ${since(nw.at)}</span>` : '',
+  ].filter(Boolean).join('');
+  // Nothing noted: no row, only the heart button up in the card's first line.
+  if (!said) return '';
+  return `<div class="bq-likes">${icon('heart', 14)}${said}
+      ${past ? '' : `<button type="button" class="btn btn--quiet bq-likes__btn" data-likes="${k}" aria-label="Update the likes on ${b.uid}">Update</button>`}
+    </div>`;
+}
+// The way in when nothing is noted yet: a heart, kept small so a long list stays short.
+const likesAdd = (b, past) => (past || b.likes_before || b.likes_now ? ''
+  : `<button type="button" class="btn btn--quiet bq-likes__add" data-likes="${keyOf(b)}" aria-label="Note the likes on ${b.uid}" title="Note the likes on its building">${icon('heart', 15)}<span>Likes</span></button>`);
+// The question Full waits on, for a building that had a banquet before.
+const askRow = (b) => `<div class="bq-ask" role="group" aria-label="Full or not logged in">
+    <p>Before the reset this building had <b>${b.likes_before.n}</b> likes. The portrait stays up until its MVP logs in. What does it show now?</p>
+    <button type="button" class="btn" data-mark="full" data-sure data-uid="${b.uid}"${grpAttr(b.grp)}>${fullAt(b)} or more · Full</button>
+    <button type="button" class="btn" data-mark="not-yet" data-sure data-uid="${b.uid}"${grpAttr(b.grp)}>Still ${b.likes_before.n} · Not logged in</button>
+    <button type="button" class="btn btn--quiet" data-ask-cancel>Cancel</button>
+  </div>`;
+
 // Within a status: yours already claimed last, then fewest claims, the likeliest to have room.
 const ORDER = {
   claimable: (a, b) => a.claimed - b.claimed || a.claims - b.claims || a.uid.localeCompare(b.uid),
@@ -595,13 +641,15 @@ function card(b, past) {
         ${tag}
         ${isNew(b) ? '<span class="bq-tag bq-tag--new">New</span>' : ''}
         ${k === lastCopied ? '<span class="bq-tag bq-tag--last">Last copied</span>' : ''}
+        ${likesFor === k ? '' : likesAdd(b, past)}
       </div>
       ${st === 'notin' ? `<p class="bq-card__checked">Last checked ${ago(b.not_yet.at)} by ${esc(b.not_yet.by)}</p>` : ''}
       ${st === 'full' ? '' : `<div class="bq-card__row">
       <p class="bq-card__meta">From ${esc(b.entered_by.join(', '))}${b.posted ? ` · ${time(b.posted)}` : ''}${b.open ? ` · checked by ${esc(b.open.by)}` : ''}</p>
       ${gone}
       </div>`}
-      ${actions ? `<div class="bq-card__actions">${actions}</div>` : ''}
+      ${likesRow(b, past)}
+      ${!past && askFull === k && hadOne(b) ? askRow(b) : actions ? `<div class="bq-card__actions">${actions}</div>` : ''}
     </li>`;
 }
 
@@ -611,6 +659,7 @@ function renderCards(past) {
   for (const x of $$('[data-show]')) x.setAttribute('aria-pressed', String(x.dataset.show === show));
   const shown = inViewList.filter(found);
   const opened = new Set($$('#bq-cards details[open]').map((d) => d.closest('li').dataset.key));
+  const typing = document.activeElement?.matches?.('[data-likes-input]'); // a refresh must not take the box from under a thumb
   $('#bq-cards').innerHTML = SECTIONS.filter(([st]) => !show || show === st).map(([st, head, note]) => {
     const list = shown.filter((b) => statusOf(b) === st).sort(ORDER[st]);
     if (!list.length && !show) return '';
@@ -620,6 +669,7 @@ function renderCards(past) {
     </section>`;
   }).join('') || `<p class="muted bq-none">${inViewList.length ? 'Nothing matches.' : 'No banquets shared this round yet.'}</p>`;
   for (const d of $$('#bq-cards details')) d.open = opened.has(d.closest('li').dataset.key);
+  if (typing) { const box = $('#bq-cards [data-likes-input]'); box?.focus(); box?.setSelectionRange(box.value.length, box.value.length); }
   const due = past ? 0 : runQueue().length;
   $('#bq-run-start').hidden = past;
   $('#bq-run-start').disabled = !due;
@@ -655,6 +705,7 @@ const ICON = {
   claim: '<path d="M20 6 9 17l-5-5"/>',
   unclaim: '<path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/>',
   clear: '<path d="M18 6 6 18M6 6l12 12"/>',
+  heart: '<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z"/>',
 };
 const icon = (k, size = 26) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[k]}</svg>`;
@@ -678,6 +729,19 @@ function renderRun() {
           : 'Every banquet is claimed by you, full, or was checked less than an hour ago.'}</p>
         <button type="button" class="btn" data-run="again">Run it again</button>
       </section>`;
+    return;
+  }
+  if (run.ask) {
+    $('#bq-run-body').innerHTML = `<section class="bq-run__card" data-key="${keyOf(b)}">
+        <button type="button" class="tr-copy bq-run__uid" data-copy="${b.uid}" title="Copy UID">${b.uid}</button>
+        <span class="bq-run__about">${tagOf(b.grp)} before the reset: ${b.likes_before.n} likes, MVP ${times(b.likes_before.n)}× before</span>
+      </section>
+      <p class="bq-run__ask">The portrait stays up until its MVP logs in. How many likes now?</p>
+      <div class="bq-run__answers">
+        <button type="button" class="bq-run__btn is-full" data-run="full!">${icon('full')}<span>${fullAt(b)} or more · it's full<small>Takes it off everyone's list</small></span></button>
+        <button type="button" class="bq-run__btn is-notin" data-run="notin">${icon('notin')}<span>Still ${b.likes_before.n} · not logged in<small>Its poster gets a reminder to send</small></span></button>
+      </div>
+      <button type="button" class="btn btn--quiet bq-run__skip" data-run="back">Back</button>`;
     return;
   }
   const st = statusOf(b);
@@ -721,10 +785,15 @@ $('#bq-run').addEventListener('close', () => { run = null; });
 $('#bq-run-body').addEventListener('click', async (e) => {
   const btn = e.target.closest('[data-run]');
   if (!btn || !run) return;
-  const what = btn.dataset.run;
+  let what = btn.dataset.run;
   if (what === 'again') return startRun();
   const k = run.queue[run.i];
   const b = cardOf(k);
+  // A portrait on a building that had a banquet before: ask, it may only be the old one.
+  if (what === 'full' && b && hadOne(b)) { run.ask = true; return renderRun(); }
+  if (what === 'back') { run.ask = false; return renderRun(); }
+  run.ask = false;
+  if (what === 'full!') what = 'full';
   run.tally[what]++;
   markSeen(k);
   // On to the next first: the copy has to happen while the tap still counts as one.
@@ -880,11 +949,17 @@ async function press(e) {
   const mark = e.target.closest('[data-mark]');
   const btn = claim ?? mark;
   if (!btn) return;
-  btn.disabled = true;
   const on = btn.getAttribute('aria-pressed') !== 'true';
+  const li = btn.closest('li');
+  if (mark && on && mark.dataset.mark === 'full' && !('sure' in mark.dataset)) {
+    const b = cardOf(li.dataset.key);
+    if (b && hadOne(b)) { askFull = li.dataset.key; return renderCards(state.round !== state.current); }
+  }
+  askFull = null;
+  btn.disabled = true;
   const target = Number((claim ?? mark).dataset[claim ? 'claim' : 'uid']);
   const g = grpOf(btn);
-  markSeen(btn.closest('li').dataset.key); // claimed or marked: seen, whatever Undo does next
+  markSeen(li.dataset.key); // claimed or marked: seen, whatever Undo does next
   const got = claim
     ? await call('banquet_claim', { target, claimed: on, g })
     : await call('banquet_mark', { target, state: on ? mark.dataset.mark : null, g });
@@ -903,6 +978,51 @@ async function press(e) {
   load(state.round);
 }
 $('#bq-cards').addEventListener('click', press);
+
+// Likes: a box on the card, saved as what the game shows right now.
+async function saveLikes(btn) {
+  const box = btn.closest('li').querySelector('[data-likes-input]');
+  const typed = box.value.trim();
+  if (!/^[0-9]{1,6}$/.test(typed)) { box.focus(); toast('Likes is a number, like 100.', 'info'); return; }
+  const n = Number(typed);
+  btn.disabled = true;
+  const target = Number(btn.dataset.likesSave);
+  const g = grpOf(btn);
+  const got = await call('banquet_likes_set', { target, n, g });
+  btn.disabled = false;
+  if (!got.ok) { toast(got.why, 'info'); return; }
+  const b = cardOf(btn.closest('li').dataset.key);
+  likesFor = null;
+  // A count that answers the portrait question offers the mark that goes with it.
+  const mark = (to) => () => call('banquet_mark', { target, state: to, g }).then(() => load(state.round));
+  const now = b && state.round === state.current && hadOne(b) && !b.full;
+  if (now && n >= fullAt(b)) toast(`${target}: ${n} likes, so it is full`, 'info', { label: 'Mark full', fn: mark('full') });
+  else if (now && n === b.likes_before.n && !b.not_yet) toast(`${target}: still ${n}, not logged in yet`, 'info', { label: 'Mark not logged in', fn: mark('not-yet') });
+  else toast(`Noted ${n} likes on ${target}`);
+  load(state.round);
+}
+$('#bq-cards').addEventListener('click', (e) => {
+  const open = e.target.closest('[data-likes]');
+  if (open) {
+    likesFor = open.dataset.likes;
+    const b = cardOf(likesFor);
+    likesDraft = String(b?.likes_now?.n ?? b?.likes_before?.n ?? '');
+    askFull = null;
+    renderCards(state.round !== state.current);
+    $('#bq-cards [data-likes-input]')?.select();
+    return;
+  }
+  if (e.target.closest('[data-likes-cancel]')) { likesFor = null; return renderCards(state.round !== state.current); }
+  if (e.target.closest('[data-ask-cancel]')) { askFull = null; return renderCards(state.round !== state.current); }
+  const save = e.target.closest('[data-likes-save]');
+  if (save) saveLikes(save);
+});
+$('#bq-cards').addEventListener('input', (e) => { if (e.target.matches('[data-likes-input]')) likesDraft = e.target.value; });
+$('#bq-cards').addEventListener('keydown', (e) => {
+  if (!e.target.matches('[data-likes-input]')) return;
+  if (e.key === 'Enter') { e.preventDefault(); saveLikes(e.target.closest('li').querySelector('[data-likes-save]')); }
+  if (e.key === 'Escape') { likesFor = null; renderCards(state.round !== state.current); }
+});
 $('#bq-log').addEventListener('click', press);
 
 // A tile shows only its status; pressed again, all four.

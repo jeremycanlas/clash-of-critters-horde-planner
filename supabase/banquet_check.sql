@@ -15,7 +15,7 @@ begin;
 do $$
 declare t text;
 begin
-  foreach t in array array['banquet_settings', 'banquet_groups', 'banquet_members', 'banquet_uids', 'banquet_claims', 'banquet_marks', 'banquet_events'] loop
+  foreach t in array array['banquet_settings', 'banquet_groups', 'banquet_members', 'banquet_uids', 'banquet_claims', 'banquet_marks', 'banquet_events', 'banquet_likes'] loop
     if to_regclass('public.' || t) is not null then execute format('lock table public.%I in access exclusive mode', t); end if;
   end loop;
 end $$;
@@ -36,9 +36,11 @@ end $$;
 \i supabase/migrations/028_banquet_add_no_limit.sql
 \i supabase/migrations/029_banquet_viewer_ids.sql
 \i supabase/migrations/031_banquet_statuses.sql
+\i supabase/migrations/032_banquet_likes.sql
 
 -- Real entries would skew the counts. Gone for this transaction only.
 delete from public.banquet_claims; delete from public.banquet_marks; delete from public.banquet_uids; delete from public.banquet_access; delete from public.banquet_events;
+delete from public.banquet_likes;
 delete from public.banquet_group_members; delete from public.banquet_groups; delete from public.banquet_members;
 insert into public.banquet_groups (grp, role_id, channel_id, synced_at) values
   (1, 'r1', 'c1', now() - interval '2 minutes'), (2, 'r2', 'c2', now() - interval '9 minutes');
@@ -377,6 +379,37 @@ do $$ begin
          'and nothing A sends reaches the private list';
 end $$;
 
+-- ---------------------------------------------------------------- likes
+-- 10000001 showed 100 likes before the reset and 150 since: MVP twice before,
+-- and this round's banquet full. Only its group can write them down.
+reset role;
+insert into public.banquet_likes (grp, uid, likes, discord_id, by_name, at) values
+  (1, 10000001, 50, '990000000000000302', 'zz_b', public.banquet_opens(public.banquet_round()) - interval '7 days'),
+  (1, 10000001, 100, '990000000000000302', 'zz_b', public.banquet_opens(public.banquet_round()) - interval '1 hour');
+set local role authenticated;
+select pg_temp.as_(1);
+select public.banquet_likes_set(10000001, 150);
+do $$
+declare c jsonb;
+begin
+  c := pg_temp.card(public.banquet_state(), '10000001');
+  assert (c -> 'likes_before' ->> 'n')::int = 100 and c -> 'likes_before' ->> 'by' = 'zz_b', 'the last count before the reset, not the one before it';
+  assert (c -> 'likes_now' ->> 'n')::int = 150 and c -> 'likes_now' ->> 'by' = 'zz_a', 'and the last since';
+  assert pg_temp.card(public.banquet_state(), '10000002') -> 'likes_before' = 'null'::jsonb, 'none written down: null';
+  begin perform public.banquet_likes_set(10000001, -1); raise exception 'negative likes';
+  exception when raise_exception then if sqlerrm = 'negative likes' then raise; end if; end;
+end $$;
+select pg_temp.as_(3);
+do $$ begin
+  begin perform public.banquet_likes_set(10000001, 999); raise exception 'C wrote Group 1''s likes';
+  exception when raise_exception then if sqlerrm = 'C wrote Group 1''s likes' then raise; end if; end;
+end $$;
+reset role;
+do $$ begin
+  assert (select count(*) from public.banquet_likes) = 3, 'nothing written by the refused calls';
+  assert public.banquet_opens('2026-09-30') = '2026-09-30 08:00+08', 'a round opens at its reset';
+end $$;
+
 -- ---------------------------------------------------------------- the access log
 -- By now A, C, V and W have each opened the list, many times over: one visit each.
 -- W copies ten of Group 1's UIDs, claims none and shares none; V copies one
@@ -449,7 +482,7 @@ begin
 end $$;
 
 -- ---------------------------------------------------------------- what a user can reach at all
--- The eleven calls the page makes, nothing else: not the sync (it would let
+-- The twelve calls the page makes, nothing else: not the sync (it would let
 -- anyone hammer Discord as the bot), not the unfiltered list, not a table, not
 -- the vault the bot token is in. Anonymous visitors reach none of it.
 reset role;
@@ -459,7 +492,7 @@ begin
   got := array(select p.proname::text from pg_proc p
                 where p.pronamespace = 'public'::regnamespace and p.proname like 'banquet%'
                   and has_function_privilege('authenticated', p.oid, 'execute') order by 1);
-  assert got = '{banquet_access_log,banquet_add,banquet_check,banquet_claim,banquet_copies,banquet_edit,banquet_mark,banquet_note_copy,banquet_remove,banquet_round,banquet_state}',
+  assert got = '{banquet_access_log,banquet_add,banquet_check,banquet_claim,banquet_copies,banquet_edit,banquet_likes_set,banquet_mark,banquet_note_copy,banquet_remove,banquet_round,banquet_state}',
          'signed-in users can call exactly the page''s functions, got ' || got::text;
   assert not exists (select 1 from pg_proc p where p.pronamespace = 'public'::regnamespace and p.proname like 'banquet%'
                       and has_function_privilege('anon', p.oid, 'execute')), 'anonymous visitors can call nothing';

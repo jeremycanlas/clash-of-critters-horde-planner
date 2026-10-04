@@ -44,6 +44,9 @@ const db = {
   events: [], // every claim and mark, as banquet_events keeps them
   groups: [1, 2, 3], // what a viewer of every group gets; a new Discord role adds one
   names: { 1: 'Group 1', 2: 'Group 2', 3: 'Private' },
+  // Likes noted on a building: before this round's reset, and since. MVP twice before, both.
+  likes: new Map([['1:60000000', { before: { n: 100, by: 'Dee', at: '2026-09-23T20:00:00Z' } }],
+    ['1:60000274', { before: { n: 100, by: 'Fay', at: '2026-09-23T21:00:00Z' } }]]),
 };
 for (const uid of ['20000001', '55555555', '10000001', '10000002']) db.uids.push({ grp: 1, uid, who: 'Yui', source: 'discord' });
 // A private list, 3, that Vee is in and Ana is not.
@@ -103,6 +106,8 @@ function state(me) {
       not_yet: m?.state === 'not-yet' ? { by: m.by, at: m.at ?? NOT_YET_AT } : null,
       open: m?.state === 'open' ? { by: m.by, at: m.at } : null,
       full_at: m?.state === 'full' ? m.at : null,
+      likes_before: db.likes.get(`${k.grp}:${k.uid}`)?.before ?? null,
+      likes_now: db.likes.get(`${k.grp}:${k.uid}`)?.now ?? null,
       ...(me.all ? { grp: k.grp } : {}),
     };
   };
@@ -208,6 +213,11 @@ async function open(me, opts) {
       if (body.claimed && (!m || m.state === 'not-yet')) db.marks.set(`${g}:${body.target}`, { state: 'open', by: me.name, at: new Date().toISOString() });
       return ok();
     }
+    if (fn === 'banquet_likes_set') {
+      const k = `${g}:${body.target}`;
+      db.likes.set(k, { ...db.likes.get(k), now: { n: body.n, by: me.name, at: new Date().toISOString() } });
+      return ok();
+    }
     if (fn === 'banquet_mark') {
       if (body.state) db.marks.set(`${g}:${body.target}`, { state: body.state, by: me.name, at: new Date().toISOString() });
       else db.marks.delete(`${g}:${body.target}`);
@@ -296,9 +306,10 @@ try {
   assert.match(await A.locator('#bq-last').textContent(), /Last copied 55555555/);
   await A.click('[data-show="full"]');
   await A.click('#bq-last');
-  await A.waitForTimeout(600);
   assert.ok(await A.locator('#bq-cards li.is-last-copied').isVisible(), 'the button finds it even when a filter hid it');
-  assert.ok(await A.locator('#bq-cards li.is-last-copied').evaluate((e) => { const r = e.getBoundingClientRect(); return r.top >= 0 && r.bottom <= innerHeight; }), 'and brings it on screen');
+  // A smooth scroll: waited for, as a long list takes longer than any fixed pause.
+  await A.waitForFunction(() => { const r = document.querySelector('#bq-cards li.is-last-copied').getBoundingClientRect(); return r.top >= 0 && r.bottom <= innerHeight; },
+    null, { timeout: 3000 }).catch(() => assert.fail('and brings it on screen'));
   await A.reload();
   await A.waitForSelector('#bq-list:not([hidden])');
   assert.equal(await A.locator('#bq-cards li.is-last-copied').count() + await A.locator('#bq-last:not([hidden])').count(), 2, 'kept across a reload');
@@ -393,6 +404,7 @@ try {
   if (process.env.BANQUET_SHOTS) await A.screenshot({ path: `${process.env.BANQUET_SHOTS}/run-tally-320.png` });
   await A.setViewportSize(devices['iPhone SE'].viewport);
   await A.click('#bq-run-close');
+
   assert.ok(await A.locator('#bq-run').evaluate((d) => !d.open), 'List closes it');
   assert.match(await A.locator('#bq-run-start').textContent(), new RegExp(`${due - 3} to go`), 'claimed, full and not logged in are off the run');
   // The activity log: every press, newest first, with who; and the posts.
@@ -427,6 +439,64 @@ try {
   assert.ok(await A.locator('#bq-activity').evaluate((d) => d.getBoundingClientRect().top > document.querySelector('#bq-cards').getBoundingClientRect().bottom - 1),
     'on a phone, below the list');
   assert.equal(await A.evaluate(() => document.documentElement.scrollWidth - innerWidth), 0, 'the tiles fit a phone');
+  /* Likes. A building with 100 before the reset has had two banquets, so a
+     portrait on it may be the old one: Full asks first, on the card and in
+     the run, and the answer decides the mark. */
+  const deeCard = A.locator('#bq-cards li[data-key=":60000000"]');
+  assert.match((await deeCard.locator('.bq-likes').innerText()).replace(/\s+/g, ' '), /Before reset 100 · MVP 2× before/);
+  const marks = sent.filter((x) => x.fn === 'banquet_mark').length;
+  await deeCard.locator('[data-mark="full"]').click();
+  await A.waitForSelector('#bq-cards li[data-key=":60000000"] .bq-ask');
+  assert.equal(sent.filter((x) => x.fn === 'banquet_mark').length, marks, 'Full on a building with likes before asks, and sends nothing yet');
+  assert.match(await deeCard.locator('.bq-ask').innerText(), /150 or more · Full[\s\S]*Still 100 · Not logged in/);
+  await A.clock.runFor(8000); // the toast's own contrast is a known, separate fix: let it go first,
+  await A.waitForTimeout(500); // and its fade, which runs on the real clock
+  assert.deepEqual(await axe(A), [], 'axe, the Full question');
+  await A.setViewportSize({ width: 320, height: 640 });
+  assert.equal(await A.evaluate(() => innerWidth), 320, 'the question fits a 320px phone: it does not widen the page');
+  if (process.env.BANQUET_SHOTS) { await deeCard.scrollIntoViewIfNeeded(); await A.screenshot({ path: `${process.env.BANQUET_SHOTS}/likes-ask-phone.png` }); }
+  await A.setViewportSize(devices['iPhone SE'].viewport);
+  await deeCard.locator('.bq-ask [data-mark="not-yet"]').click();
+  await A.waitForFunction(() => document.querySelector('#bq-cards li[data-key=":60000000"]')?.classList.contains('is-notin'));
+  assert.equal(lastSent('Ana', 'banquet_mark').state, 'not-yet', 'still 100: not logged in');
+  // Noting likes: a box on the card, Enter saves, the card shows it.
+  const ana2 = A.locator('#bq-cards li[data-key=":10000002"]');
+  assert.equal(await ana2.locator('.bq-likes').count(), 0, 'no likes noted: no row, only the heart button');
+  await ana2.locator('[data-likes]').click();
+  await A.fill('#bq-cards [data-likes-input]', '50');
+  await A.press('#bq-cards [data-likes-input]', 'Enter');
+  await A.waitForFunction(() => /Now 50/.test(document.querySelector('#bq-cards li[data-key=":10000002"] .bq-likes')?.textContent));
+  assert.deepEqual(lastSent('Ana', 'banquet_likes_set'), { target: 10000002, n: 50, g: null });
+  await A.clock.runFor(15000); // a refresh while the box is open keeps it, and what is typed
+  await ana2.locator('[data-likes]').click();
+  await A.fill('#bq-cards [data-likes-input]', '7');
+  await A.setViewportSize({ width: 320, height: 640 });
+  assert.equal(await A.evaluate(() => innerWidth), 320, 'the likes box fits a 320px phone');
+  if (process.env.BANQUET_SHOTS) { await ana2.scrollIntoViewIfNeeded(); await A.screenshot({ path: `${process.env.BANQUET_SHOTS}/likes-box-320.png` }); }
+  await A.setViewportSize(devices['iPhone SE'].viewport);
+  await A.clock.runFor(16000);
+  await A.waitForTimeout(200);
+  assert.equal(await A.locator('#bq-cards [data-likes-input]').inputValue(), '7', 'a refresh keeps the box and what is in it');
+  await A.press('#bq-cards [data-likes-input]', 'Escape');
+  assert.equal(await A.locator('#bq-cards [data-likes-input]').count(), 0, 'Escape closes it');
+  // In the run: Portrait on Fay's asks too, and "150 or more" marks it full.
+  await A.click('#bq-run-start');
+  await A.waitForSelector('#bq-run[open] .bq-run__uid');
+  for (let i = 0; i < 40 && (await A.locator('.bq-run__uid').textContent()) !== '60000274'; i++) {
+    const at = await A.locator('#bq-run-step').textContent();
+    await A.click('[data-run="skip"]');
+    await A.waitForFunction((s) => document.querySelector('#bq-run-step')?.textContent !== s, at);
+  }
+  await A.click('[data-run="full"]');
+  await A.waitForSelector('[data-run="full!"]');
+  assert.match(await A.locator('.bq-run__about').textContent(), /100 likes, MVP 2× before/);
+  if (process.env.BANQUET_SHOTS) await A.screenshot({ path: `${process.env.BANQUET_SHOTS}/likes-run-phone.png` });
+  await A.click('[data-run="full!"]');
+  await A.waitForFunction(() => document.querySelector('.bq-run__uid')?.textContent !== '60000274' || !document.querySelector('.bq-run__uid'));
+  await A.waitForTimeout(300);
+  assert.equal(db.marks.get('1:60000274').state, 'full', '150 or more: full');
+  await A.click('#bq-run-close');
+
   await A.setViewportSize({ width: 320, height: 640 });
   assert.ok(await A.locator('[data-show]').evaluateAll((bs) => bs.every((b) => b.scrollWidth <= b.clientWidth + 1)), 'each tile fits a 320px phone');
   assert.equal(await A.evaluate(() => document.documentElement.scrollWidth - innerWidth), 0, 'nothing off the side at 320px');

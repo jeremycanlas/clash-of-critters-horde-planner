@@ -52,6 +52,22 @@
 /* Not open yet: still worth a trip, so it stays in To claim, dashed until someone finds it open. */
 .bq-card.is-notin { border-style: dashed; border-color: color-mix(in srgb, var(--accent) 60%, var(--line)); background: color-mix(in srgb, var(--accent) 5%, var(--surface)); }
 .bq-card__checked { margin: 0; font-size: 12.5px; font-weight: 600; color: var(--accent-ink-on); }
+/* Likes on the MVP's building: the count before the reset, and since. */
+.bq-likes { display: flex; flex-wrap: wrap; align-items: center; gap: 2px var(--s2); font-size: 12.5px; color: var(--text-dim); }
+.bq-likes > svg { color: color-mix(in srgb, var(--danger) 70%, var(--text-dim)); flex: none; }
+.bq-likes b { color: var(--text); font-variant-numeric: tabular-nums; }
+.bq-likes__btn { min-height: 32px; padding: 2px 8px; font-size: 12.5px; margin-left: auto; }
+.bq-likes__add { margin-left: auto; min-height: 32px; padding: 2px 8px; gap: 4px; font-size: 12.5px; color: var(--text-dim); }
+.bq-likes__add svg { color: color-mix(in srgb, var(--danger) 70%, var(--text-dim)); }
+.bq-likes--edit label { display: flex; align-items: center; gap: var(--s2); }
+.bq-likes--edit input { width: 7ch; min-height: 40px; font-size: 16px; } /* 16px, or iOS zooms on tap */
+.bq-likes--edit .btn { min-height: 40px; }
+/* Full, asked first: the portrait may be last time's. */
+.bq-ask { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; padding: var(--s2); border-radius: var(--r-md, 8px);
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface)); border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--line)); }
+.bq-ask p { grid-column: 1 / -1; margin: 0; font-size: 13px; line-height: 1.4; }
+.bq-ask .btn { min-height: 44px; font-size: 13px; white-space: normal; line-height: 1.25; }
+.bq-ask [data-ask-cancel] { grid-column: 1 / -1; min-height: 36px; }
 .bq-view { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); font-size: 13px; }
 .bq-shot { margin-left: auto; }
 
