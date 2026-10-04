@@ -178,7 +178,7 @@
   color: var(--gp-text);
 
 }
-.sk-desc { margin: 4px 0 0; font-size: 13.5px; font-weight: 600; line-height: 1.4; color: var(--gp-text); }
+.sk-desc { margin: 4px 0 0; font-size: 13.5px; font-weight: 400; line-height: 1.4; color: var(--text-dim); }
 /* The icon: a square of the type's colour in a white frame, the numeral on a
    dark tab at its corner. */
 .sk-icon { position: relative; flex: none; line-height: 0; }
@@ -212,6 +212,9 @@
 .sk-rows { display: grid; gap: 4px; margin: 0; }
 .sk-row { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s2); min-width: 0; padding: 5px var(--s2); border-radius: 7px; background: var(--gp-pill); }
 .sk-rows dt, .sk-rows dd { margin: 0; font-size: 13.5px; font-weight: 700; line-height: 1.3; }
+/* Three weights, three jobs: titles and numbers bold, labels medium, prose regular
+   in the dimmer text colour, so a description never reads as a heading. */
+.sk-rows dt { font-weight: 500; }
 .sk-rows dt { color: var(--gp-label); min-width: 0; }
 .sk-rows dd { color: var(--gp-value); text-align: right; font-variant-numeric: tabular-nums; }
 .sk-box .sk-rows { gap: 0; }
@@ -225,7 +228,7 @@
 .sk-box:not(:has(.sk-rows)) { padding-bottom: var(--s2); }
 .sk-box--new { border-color: var(--gp-title); }
 .sk-box__title { margin: 0; font-family: var(--font-ui); font-size: 14px; font-weight: 700; letter-spacing: 0; line-height: 1.3; color: var(--gp-title); }
-.sk-box__text { margin: 0; font-size: 13px; font-weight: 600; line-height: 1.4; color: var(--gp-text); }
+.sk-box__text { margin: 0; font-size: 13px; font-weight: 400; line-height: 1.4; color: var(--text-dim); }
 /* "New at T4" and "new": the game's yellow as an edge, white text. */
 .sk-new {
   display: inline-block; margin-left: 4px; padding: 1px 7px; border-radius: 999px;
