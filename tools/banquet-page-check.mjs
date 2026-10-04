@@ -235,6 +235,12 @@ try {
   const ana = await open({ name: 'Ana', grp: 1 }, devices['iPhone SE']);
   const A = ana.page;
   assert.equal(await A.locator('#bq-my li').count(), 3, 'her three posts fill in by themselves');
+  /* The line under the header, for a member: when the round ends and how fresh
+     Discord's posts are. #bq-status is only the "Checking your role…" line and
+     is gone once the list is in, which is how it should be. */
+  assert.match(await A.locator('#bq-when:visible').textContent(), /^Ends 00:00 UTC · .+ your time$/, 'when the round ends');
+  assert.match(await A.locator('#bq-fresh:visible').textContent(), /^Discord read (just now|\d+ min ago)$/, 'and when Discord was read');
+  assert.ok(await A.locator('#bq-status').isHidden(), 'the loading line is gone once loaded');
   assert.match(await A.locator('#bq-locked').textContent(), /Add 1 more UID/, 'three is not enough');
   assert.ok(await A.locator('#bq-list').isHidden(), 'the list stays shut');
 
