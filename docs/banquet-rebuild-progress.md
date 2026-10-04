@@ -142,7 +142,14 @@ full that had not opened yet.
   `tools/banquet-page-check.mjs` (the question on the card and in the run,
   the box survives a refresh, 320px fits). Screenshots: `E:\cachesq-likes\`.
 
+- **The last day before the reset** a line above Your UIDs says "Reset in
+  4 h. 25 of 26 buildings have no likes noted yet", with "Show those" to list
+  only the ones still to note. It goes away once all are noted, or after the
+  reset.
+- **Your UIDs** show the newest likes count noted beside each status.
+
 Decided without you (say if any is wrong):
+- The reminder line starts 24 hours before the reset.
 - 50 likes per banquet, as you said (100 = MVP twice).
 - The question only shows for a building with 50+ likes before the reset.
 - No auto-marking from a typed count: it offers the mark, you tap it.

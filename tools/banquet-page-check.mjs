@@ -478,6 +478,23 @@ try {
   await A.waitForTimeout(200);
   assert.equal(await A.locator('#bq-cards [data-likes-input]').inputValue(), '7', 'a refresh keeps the box and what is in it');
   await A.press('#bq-cards [data-likes-input]', 'Escape');
+  // Your UIDs show the newest count noted on each.
+  assert.match(await A.locator('#bq-my li', { hasText: '10000002' }).innerText(), /50/, 'her own UID shows its likes');
+  // The last day before the reset says how many have no count for next round, and can show only those.
+  assert.ok(await A.locator('#bq-likes-due').isHidden(), 'not shown days before the reset');
+  const realNow = await A.evaluate(() => Date.now());
+  await A.clock.setSystemTime(new Date('2026-09-29T20:00:00Z'));
+  await A.clock.runFor(16000);
+  await A.waitForSelector('#bq-likes-due:not([hidden])');
+  const dueText = await A.locator('#bq-likes-due').innerText();
+  assert.match(dueText, /Reset in 4 h\. \d+ of \d+ buildings have no likes noted yet/, dueText);
+  await A.click('#bq-likes-due [data-unnoted]');
+  assert.equal(await A.locator('#bq-cards li[data-key=":10000002"]').count(), 0, 'Show those hides the noted ones');
+  if (process.env.BANQUET_SHOTS) await A.screenshot({ path: `${process.env.BANQUET_SHOTS}/likes-due-phone.png` });
+  await A.click('#bq-likes-due [data-unnoted]');
+  assert.equal(await A.locator('#bq-cards li[data-key=":10000002"]').count(), 1, 'Show all brings them back');
+  await A.clock.setSystemTime(realNow + 40000);
+  await A.clock.runFor(16000);
   assert.equal(await A.locator('#bq-cards [data-likes-input]').count(), 0, 'Escape closes it');
   // In the run: Portrait on Fay's asks too, and "150 or more" marks it full.
   await A.click('#bq-run-start');

@@ -397,6 +397,7 @@ function render() {
   if (!editing) $('#bq-my').innerHTML = mineShown.map((m) => `<li class="bq-mine__uid">
       ${tagOf(m.grp)}<button type="button" class="tr-copy" data-copy="${m.uid}" title="Copy UID">${m.uid}</button>
       ${statusMine(m) ? `<span class="bq-mine__st is-${statusMine(m)}">${MINE[statusMine(m)]}</span>` : ''}
+      ${likesMine(cards.get(keyOf(m)))}
       ${m.source === 'discord' ? '<span class="bq-src">from Discord</span>'
         : past ? '' : `<button type="button" class="btn btn--quiet" data-edit="${m.uid}"${grpAttr(m.grp)} aria-label="Edit ${m.uid}">Edit</button>
           <button type="button" class="btn btn--quiet" data-remove="${m.uid}"${grpAttr(m.grp)} aria-label="Remove ${m.uid}">Remove</button>`}
@@ -445,6 +446,7 @@ function render() {
     : isPrivate(group) ? `${nameOf(group)}: only the people added to it can see it. Anything you add or press is kept here.`
     : `What ${nameOf(group)} members see. Anything you press counts for ${nameOf(group)}.`;
   if (open) renderCards(past);
+  renderLikesDue(open && !past);
   renderNews(open && !past);
   renderLog(open, past);
 }
@@ -505,6 +507,31 @@ function renderLog(on, past) {
     </li>`;
   }).join('') || '<li class="muted">Nothing yet this gold rush.</li>';
 }
+
+/* The last day of a round is when people check the buildings, before the
+   reset: a count noted now is the next round's "before". Says how many in
+   view still have none, and offers to show just those. */
+const DUE = 24 * 3600 * 1000;
+let onlyUnnoted = false;
+const unnoted = (b) => !b.likes_now;
+function renderLikesDue(on) {
+  const left = on ? closes(state.round).getTime() - Date.now() : 0;
+  const list = state.banquets.filter((b) => !b.grp || inView(b.grp));
+  const missing = list.filter(unnoted).length;
+  const show = on && left > 0 && left <= DUE && list.length > 0;
+  $('#bq-likes-due').hidden = !show;
+  if (!show) { onlyUnnoted = false; return; }
+  const h = Math.max(1, Math.round(left / 3600e3));
+  $('#bq-likes-due').innerHTML = `${icon('heart', 15)}<span>Reset in ${h} h. ${missing
+    ? `<b>${missing}</b> of ${list.length} building${list.length === 1 ? '' : 's'} have no likes noted yet. Noting them now means nobody mistakes a portrait for full next round.`
+    : 'Every building has its likes noted for next round.'}</span>
+    ${missing ? `<button type="button" class="btn btn--quiet" data-unnoted aria-pressed="${onlyUnnoted}">${onlyUnnoted ? 'Show all' : 'Show those'}</button>` : ''}`;
+}
+$('#bq-likes-due').addEventListener('click', (e) => {
+  if (!e.target.closest('[data-unnoted]')) return;
+  onlyUnnoted = !onlyUnnoted;
+  render();
+});
 
 // ------------------------------------------------------------------ what is new
 
@@ -576,6 +603,11 @@ function likesRow(b, past) {
     </div>`;
 }
 // The way in when nothing is noted yet: a heart, kept small so a long list stays short.
+// Beside your own UIDs: the newest count noted, if any.
+const likesMine = (b) => {
+  const n = (b?.likes_now ?? b?.likes_before)?.n;
+  return n == null ? '' : `<span class="bq-mine__likes" title="Likes on the building">${icon('heart', 12)}${n}</span>`;
+};
 const likesAdd = (b, past) => (past || b.likes_before || b.likes_now ? ''
   : `<button type="button" class="btn btn--quiet bq-likes__add" data-likes="${keyOf(b)}" aria-label="Note the likes on ${b.uid}" title="Note the likes on its building">${icon('heart', 15)}<span>Likes</span></button>`);
 // The question Full waits on, for a building that had a banquet before.
@@ -657,7 +689,7 @@ function renderCards(past) {
   const inViewList = state.banquets.filter((b) => !b.grp || inView(b.grp));
   for (const [st] of SECTIONS) $(`[data-n="${st}"]`).textContent = inViewList.filter((b) => statusOf(b) === st).length;
   for (const x of $$('[data-show]')) x.setAttribute('aria-pressed', String(x.dataset.show === show));
-  const shown = inViewList.filter(found);
+  const shown = inViewList.filter((b) => found(b) && (!onlyUnnoted || unnoted(b)));
   const opened = new Set($$('#bq-cards details[open]').map((d) => d.closest('li').dataset.key));
   const typing = document.activeElement?.matches?.('[data-likes-input]'); // a refresh must not take the box from under a thumb
   $('#bq-cards').innerHTML = SECTIONS.filter(([st]) => !show || show === st).map(([st, head, note]) => {
