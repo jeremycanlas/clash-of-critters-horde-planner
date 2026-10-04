@@ -504,6 +504,27 @@ try {
   assert.equal(await V.locator('[data-group="0"]').getAttribute('aria-pressed'), 'true', 'the chosen group gone: back to All groups');
   assert.ok(await V.locator('#bq-cards li[data-key]').count() > 26, 'showing every group again, not Group 1 alone');
 
+  // The claim run follows the view: As a group, that group's banquets; All groups, every group but private ones.
+  const dueIn = async (g) => {
+    await V.click(`[data-group="${g}"]`);
+    return Number((await V.locator('#bq-run-start').textContent()).match(/(\d+) to go/)?.[1] ?? 0);
+  };
+  const [g1, g2, g3, all] = [await dueIn(1), await dueIn(2), await dueIn(3), await dueIn(0)];
+  assert.ok(g1 && g2 && g3, `each group has some to go (${g1}, ${g2}, ${g3})`);
+  assert.equal(all, g1 + g2, 'All groups counts Group 1 and Group 2, never the private list');
+  await V.click('[data-group="2"]');
+  await V.click('#bq-run-start');
+  const ran = [];
+  for (let i = 1; i <= g2; i++) {
+    await V.waitForFunction((n) => document.querySelector('#bq-run-step')?.textContent.startsWith(`${n} /`), i);
+    ran.push(await V.locator('.bq-run__card').getAttribute('data-key'));
+    await V.click('[data-run="skip"]');
+  }
+  await V.waitForFunction(() => document.querySelector('#bq-run-step')?.textContent === 'done');
+  assert.ok(ran.length === g2 && ran.every((k) => k.startsWith('2:')), `As Group 2, the run is Group 2's only: ${ran}`);
+  await V.click('#bq-run-close');
+  await V.click('[data-group="0"]');
+
   // ------------------------------------------------------------------ Ana sees Vee's work, on her own
   await A.locator('#bq-mine-fold').evaluate((d) => { d.open = true; });
   await A.fill('#bq-add-uid', '9999');
