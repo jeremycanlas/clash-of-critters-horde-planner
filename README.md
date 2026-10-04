@@ -67,6 +67,21 @@ field, HAVE above LF.
 
 ## Changelog
 
+### 1.9.7
+
+#### Changes:
+- Skill data, rebuilt. Every Tatari's skill panel, all 242, read off the game: Damage Factor, Cooldown, every effect's numbers and the Arena Factor, with the wiki's description of the skill. Every evolution line's Horde Invasion level 3, 5 and 7 skills come with their numbers too, all 66 lines, the new Dolphie line included.
+- The page is a list of lines beside one open line: the T1 to T4 switcher sits on the skill card, the card is laid out like the game's own skill panel, and the Horde Invasion skills sit beside it. On a computer it fits one screen; on a phone the list opens a line in place, with no sideways swiping.
+- A Rankings view: all 242 Tatari in one table, sorted by Arena Factor, Damage Factor or Cooldown, filtered by type, tier and effect.
+- Season 2 is the live patch. The drafter's banner, the Patch notes and the roster's marks follow it, and nine chips take their Season 2 numbers: AFK, Boss Killer, The Exile, Backend Support, Lawn Care, Patch Upgrade, Parting Gift, On the Move and Weakest Link.
+- Gold Rush formations can be posted to Community, with a Gold Rush filter. community.html?mode=goldrush (or coop, or solo) opens on that filter.
+- Every page's header carries the credit, the tip jar and a light/dark switch, and the choice holds across every tab.
+- The first time a field fills up, a one-off reminder offers Share.
+
+#### Bug Fixes:
+- The Exile now counts an ally's Tatari as neighbours in co-op, as the game does.
+- The README's usage numbers count every visit and Google's share correctly.
+
 ### 1.9.6
 
 #### Changes:

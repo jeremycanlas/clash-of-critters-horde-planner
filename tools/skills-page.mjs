@@ -241,7 +241,7 @@ const a = page.indexOf(START);
 const b = page.indexOf(END);
 if (a === -1 || b === -1) throw new Error(`${PAGE} has no ${START} ... ${END} markers`);
 // Indentation is a sixth of the page's weight and nobody reads this source by hand.
-const next = page.slice(0, a) + body.replace(/\n\s+/g, '\n    ') + page.slice(b + END.length);
+const next = page.slice(0, a) + body.replace(/\n\s+/g, '\n') + page.slice(b + END.length);
 if (process.argv.includes('--check')) {
   if (next !== page) { console.error(`${PAGE} is out of date: run node tools/skills-page.mjs`); process.exit(1); }
   console.log(`${PAGE} is up to date`);
