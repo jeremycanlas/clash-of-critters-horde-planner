@@ -336,8 +336,13 @@ try {
   await A.locator('#bq-mine-fold').evaluate((d) => { d.open = true; });
   assert.equal(await A.locator('#bq-my li', { hasText: '10000001' }).locator('.bq-mine__st').textContent(), 'needs a look');
   assert.ok(await A.locator('#bq-remind').isHidden(), 'no reminder while none of hers is not logged in');
+  await A.locator('#bq-mine-fold').evaluate((d) => { d.open = false; });
   await A.click('[data-mark="not-yet"][data-uid="10000001"]');
   await A.waitForSelector('#bq-remind:not([hidden])');
+  assert.ok(await A.locator('#bq-mine-fold').evaluate((d) => d.open), 'one of hers turning not logged in opens Your UIDs');
+  await A.reload();
+  await A.waitForSelector('#bq-list:not([hidden])');
+  assert.ok(await A.locator('#bq-remind').isVisible(), 'and it arrives open while one is, reminder in view');
   assert.equal(await A.locator('#bq-my li', { hasText: '10000001' }).locator('.bq-mine__st').textContent(), 'not logged in');
   assert.match(await A.locator('#bq-remind').textContent(), /10000001 hasn't logged in since the reset/);
   await A.click('#bq-remind [data-remind]');

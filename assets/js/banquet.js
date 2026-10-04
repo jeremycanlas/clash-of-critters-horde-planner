@@ -119,6 +119,7 @@ function diff(before, after) {
   latest.length = Math.min(latest.length, 20);
 }
 let folded = false; // Your UIDs is folded or not once, on arrival; after that it is yours
+let wasAsleep = []; // your UIDs not logged in at the last render, so a new one opens the fold
 
 const status = (text) => { $('#bq-status').textContent = text; $('#bq-status').hidden = !text; };
 /* A round is one gold rush: it starts at the reset (00:00 UTC, 8am Manila) on
@@ -403,8 +404,13 @@ function render() {
     <button type="button" class="btn btn--quiet" data-remind="${asleep.join(', ')}">Copy a reminder</button>` : '';
   $('#bq-mine .bq-mine__actions').hidden = past;
   $('#bq-mine-n').textContent = mineShown.length ? `(${mineShown.length})` : '';
-  // Folded on arrival when there is nothing left to do in it; never while it is being used.
-  if (!folded) { $('#bq-mine-fold').open = !((past || state.shared) && mineShown.length); folded = true; }
+  /* Folded on arrival when there is nothing left to do in it; never while it
+     is being used. One of yours not logged in is something to do: the
+     reminder to copy is in there, so it opens, on arrival or whenever one
+     newly turns not logged in. Folding it again after that is yours. */
+  if (!folded) { $('#bq-mine-fold').open = !!asleep.length || !((past || state.shared) && mineShown.length); folded = true; }
+  else if (asleep.some((u) => !wasAsleep.includes(u))) $('#bq-mine-fold').open = true;
+  wasAsleep = asleep;
   const pick = $('#bq-add-grp');
   pick.hidden = !state.groups || !!group;
   if (state.groups && !pick.options.length) {
