@@ -3982,6 +3982,10 @@ body.is-dragging-active {
   /* On the narrowest phones the name came out as "by...", which credits nobody.
      The avatar still links to the same place, and the footer spells it out. */
   @media (max-width: 400px) { .byline__text { display: none; } }
+  /* At 320 (Galaxy S9+, iPhone SE) the help button, the avatar and "Say thanks"
+     overran the theme switch and covered half of it. The cup stays, and the
+     link keeps its "Say thanks" label for anyone reading it out. */
+  @media (max-width: 340px) { .byline__tip-text { display: none; } }
   .field--name {
     font-family: var(--font-display);
     font-size: 19px; font-weight: 700; letter-spacing: -.02em;

@@ -23,6 +23,15 @@ GARBLED = {
     'dAflitan vamageintervai': 'Damage Interval',
 }
 
+# Rows too garbled to fix from what was read: dropped, to be read again off the game.
+# Blowfin's Warship Roll repeats its 450% damage in this row; the panel needs a fresh look.
+UNREADABLE = {('Vamage Factor', '45U%T')}
+
+
+def value(v):
+    """The game's up arrow beside a number that rose, which the OCR reads as 个."""
+    return v.replace('个', '↑')
+
 
 def tidy(text):
     """Spaces the OCR dropped ("BoostFactor", "ATKBoost", "Fumes:ATK&DEF") and l read for I."""
@@ -43,20 +52,22 @@ def same(a, b):
 def clean(rows):
     own, boxes, order, last = [], {}, [], None
     for r in rows:
-        label, value, box = tidy(r[0]), r[1], (tidy(r[2]) if len(r) > 2 else None)
+        if (r[0], r[1]) in UNREADABLE:
+            continue
+        label, value_, box = tidy(r[0]), value(r[1]), (tidy(r[2]) if len(r) > 2 else None)
         if box:
             if box not in boxes:
                 boxes[box] = []; order.append(box)
-            if not any(same((label, value), x) for x in boxes[box]):
-                boxes[box].append((label, value))
+            if not any(same((label, value_), x) for x in boxes[box]):
+                boxes[box].append((label, value_))
             last = box
         elif last is None:
-            if not any(same((label, value), x) for x in own):
-                own.append((label, value))
+            if not any(same((label, value_), x) for x in own):
+                own.append((label, value_))
         else:
             everything = own + [x for b in order for x in boxes[b]]
-            if not any(same((label, value), x) for x in everything):
-                boxes[last].append((label, value))
+            if not any(same((label, value_), x) for x in everything):
+                boxes[last].append((label, value_))
     out = [[l, v] for l, v in own]
     for b in order:
         out += [[l, v, b] for l, v in boxes[b]]

@@ -57,3 +57,9 @@ Dolphie is the only line with no Horde Invasion skills anywhere; it needs the ga
   line by line. Gaps: Dagondeep's Aura: Water numbers sit below the screenshot's edge (heading
   only); Firefox is named Flametail in the game. Glowfly's line has Arena Factor 150%, the only
   one above 100%. Horde Invasion numbers are not on these panels; they need the Horde screen.
+- **2026-10-05**: Branch `guide-contest` (from main, not pushed). A **Guide** page (`guide.html`, new tab after
+  Drafter): build, co-op live, share, Arena Factor and Horde skills, with phone screenshots and a link card
+  (`assets/img/og/guide.png`). Its numbers are written from the data by `tools/guide-page.mjs`, so they stay true
+  after a patch. Two Discord pictures drawn from the data by `tools/guide-images.mjs` (`docs/media/guide/`).
+  The Discord draft is now seven paste-ready posts. Fixed on the way: 8 Horde numbers had the OCR's 个 for the
+  game's ↑ arrow, and Blowfin's Lv 7 had one garbled row ("Vamage Factor 45U%T"), dropped until it is re-read.

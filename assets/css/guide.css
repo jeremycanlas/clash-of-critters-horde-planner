@@ -1,0 +1,125 @@
+/*
+ * The guide. Built from app.css's parts (.panel, the tokens, the badges) so it
+ * reads as the same site as the Drafter and Skill data. One column on a phone,
+ * which is three in four readers; on a wide screen each section puts its words
+ * beside its picture or its numbers.
+ */
+
+.gd {
+  width: 100%; box-sizing: border-box;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: var(--s4) var(--s4) var(--s7);
+  display: flex; flex-direction: column; gap: var(--s4);
+}
+.gd > * { min-width: 0; }
+.gd h2 { margin: 0; font-family: var(--font-display); font-size: 22px; line-height: 1.2; letter-spacing: 0; }
+.gd h3 { margin: 0 0 var(--s2); font-size: 15px; }
+.gd p { margin: 0; line-height: 1.55; }
+.gd a { color: var(--accent-ink-on, var(--accent)); text-underline-offset: 2px; }
+
+/* ---------------------------------------------------------------- top */
+
+.gd-hero { display: flex; flex-direction: column; gap: var(--s3); padding: var(--s4) 0 var(--s2); }
+.gd-kicker { font-size: 12.5px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--accent-ink-on, var(--accent)); }
+.gd-hero h2 { font-size: clamp(26px, 6.4vw, 40px); font-weight: 800; line-height: 1.1; text-wrap: balance; max-width: 22ch; }
+.gd-lead { font-size: 16px; color: var(--text-dim); max-width: 62ch; }
+.gd-jump { display: flex; flex-wrap: wrap; gap: var(--s2); margin-top: var(--s1); }
+.gd-jump a {
+  display: inline-flex; align-items: center; min-height: 40px; padding: 0 var(--s3);
+  border: 1px solid var(--line); border-radius: 999px; background: var(--surface);
+  color: var(--text); font-size: 14px; font-weight: 600; text-decoration: none;
+}
+.gd-jump a:hover { border-color: var(--accent); }
+.gd-jump a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ---------------------------------------------------------------- sections */
+
+.gd-sec { display: grid; gap: var(--s4); scroll-margin-top: var(--s4); }
+.gd-sec__text { display: flex; flex-direction: column; gap: var(--s3); min-width: 0; }
+.gd-step {
+  display: inline-grid; place-items: center; width: 30px; height: 30px; margin-right: var(--s2);
+  border-radius: 50%; background: var(--accent); color: var(--accent-ink, #111);
+  font-size: 16px; font-weight: 800; vertical-align: 2px;
+}
+.gd-list { margin: 0; padding-left: 1.3em; display: flex; flex-direction: column; gap: var(--s2); line-height: 1.55; }
+.gd-list li::marker { font-weight: 700; color: var(--text-dim); }
+.gd-tip {
+  padding: var(--s2) var(--s3); border-left: 3px solid var(--accent); border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface)); font-size: 14px;
+}
+
+/* A phone screenshot, framed like a phone. */
+.gd-shot { margin: 0; display: flex; flex-direction: column; gap: var(--s2); }
+.gd-shot img {
+  display: block; width: 100%; height: auto; max-width: 300px; margin: 0 auto;
+  border: 1px solid var(--line); border-radius: 22px; box-shadow: var(--lift-2); background: var(--bg);
+}
+.gd-shot--card img { border-radius: var(--r-md); }
+.gd-shot figcaption { max-width: 300px; margin: 0 auto; font-size: 12.5px; line-height: 1.45; color: var(--text-dim); text-align: center; }
+.gd-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s3); align-items: start; }
+.gd-shot--inline img { max-width: 260px; }
+
+/* ---------------------------------------------------------------- numbers */
+
+.gd-data { display: flex; flex-direction: column; gap: var(--s4); min-width: 0; }
+.gd-facts { font-size: 15px; }
+.gd-facts b { font-variant-numeric: tabular-nums; }
+.gd-note { font-size: 13px; color: var(--text-dim); }
+
+/* How many lines keep each factor: one bar each, the longest is the most common. */
+.gd-chart { margin: 0; display: flex; flex-direction: column; gap: var(--s2); }
+.gd-chart figcaption { font-size: 13px; font-weight: 650; color: var(--text-dim); }
+.gd-bars { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 3px; }
+.gd-bars li { display: grid; grid-template-columns: 4.2ch minmax(0, 1fr) 3ch; align-items: center; gap: var(--s2); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.gd-bars__v { text-align: right; color: var(--text-dim); }
+.gd-bars__bar { height: 14px; border-radius: 4px; background: color-mix(in srgb, var(--line) 50%, transparent); overflow: hidden; }
+.gd-bars__bar span { display: block; height: 100%; width: calc(var(--n) / var(--of) * 100%); border-radius: 4px; background: var(--accent); }
+.gd-bars li.is-up .gd-bars__bar span { background: var(--ok); }
+.gd-bars li.is-low .gd-bars__bar span { background: var(--danger); }
+.gd-bars__n { font-weight: 650; }
+
+/* A line, as a row you can tap through to its Skill data. */
+.gd-two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s4); }
+.gd-tiles { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--s1); }
+.gd-tile {
+  display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; align-items: center; gap: var(--s2);
+  min-height: 56px; padding: var(--s1) var(--s3) var(--s1) var(--s1);
+  border: 1px solid var(--line); border-radius: var(--r-md); background: var(--bg);
+  color: var(--text) !important; text-decoration: none;
+}
+.gd-tile:hover { border-color: var(--accent); }
+.gd-tile:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.gd-tile__art { width: 44px; height: 44px; object-fit: contain; }
+.gd-tile__text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.gd-tile__name { font-weight: 650; font-size: 14px; line-height: 1.25; }
+.gd-tile__sub { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--text-dim); line-height: 1.3; overflow-wrap: anywhere; }
+.gd-badge { width: 16px; height: 16px; flex: none; }
+.gd-tile__val { font-family: var(--font-display); font-size: 17px; font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.gd-tiles--wide { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); gap: var(--s2); }
+
+/* ---------------------------------------------------------------- more, questions */
+
+.gd-sec--more, .gd-sec--faq { gap: var(--s3); }
+.gd-more { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr)); gap: var(--s2); }
+.gd-more a { display: flex; flex-direction: column; gap: 4px; height: 100%; box-sizing: border-box; color: var(--text) !important; text-decoration: none; }
+.gd-more a:hover { border-color: var(--accent); }
+.gd-more span { font-size: 13.5px; line-height: 1.45; color: var(--text-dim); }
+.gd-sec--faq details { padding: 0; }
+.gd-sec--faq summary { padding: var(--s3) var(--s4); min-height: 44px; box-sizing: border-box; display: flex; align-items: center; cursor: pointer; font-weight: 650; }
+.gd-sec--faq details p { padding: 0 var(--s4) var(--s4); color: var(--text-dim); }
+
+/* ---------------------------------------------------------------- wide */
+
+@media (min-width: 860px) {
+  .gd { padding-inline: var(--s5); gap: var(--s5); }
+  .gd-sec.panel { padding: var(--s5); }
+  #start { grid-template-columns: minmax(0, 1fr) 300px; align-items: start; }
+  #share { grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); align-items: start; }
+  .gd-sec--data { grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); align-items: start; }
+}
+@media (max-width: 520px) {
+  .gd-two { grid-template-columns: minmax(0, 1fr); }
+  .gd-pair { gap: var(--s2); }
+  .gd-sec.panel { padding: var(--s3); }
+}

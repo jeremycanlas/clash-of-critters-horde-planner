@@ -64,6 +64,12 @@ const CARDS = [
     sprites: ['cribking', 'chomperwraith', 'voltreaver', 'tideon', 'morphanessa'],
   },
   {
+    name: 'guide',
+    title: 'The Horde Drafter guide',
+    line: 'Build in a minute, plan co-op live with your partner, and the Arena Factor numbers the game keeps quiet about.',
+    sprites: ['glowfly', 'voltkit', 'tindercub', 'joeyo', 'cheerling'],
+  },
+  {
     name: 'farm',
     title: 'Cozy Farm rewards',
     line: 'Type your score: every prize you have earned, what the next tier pays, and the glitter fruit past 1.45M.',

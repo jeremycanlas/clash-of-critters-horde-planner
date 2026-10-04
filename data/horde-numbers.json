@@ -1114,7 +1114,7 @@
    "rows": [
     [
      "Trigger Chance",
-     "40%个"
+     "40%↑"
     ],
     [
      "ATK Speed Boost",
@@ -2254,7 +2254,7 @@
     ],
     [
      "Water Orb Quantity",
-     "3个"
+     "3↑"
     ],
     [
      "Trigger Chance",
@@ -2558,7 +2558,7 @@
     ],
     [
      "Shield Factor",
-     "10%个",
+     "10%↑",
      "Ice Shield"
     ]
    ]
@@ -4116,11 +4116,6 @@
      "Burn"
     ],
     [
-     "Vamage Factor",
-     "45U%T",
-     "Burn"
-    ],
-    [
      "Duration",
      "2s",
      "Stun"
@@ -4355,11 +4350,11 @@
     ],
     [
      "Minimum Cooldown",
-     "6s个"
+     "6s↑"
     ],
     [
      "Maximum Cooldown",
-     "9s个"
+     "9s↑"
     ]
    ]
   }
@@ -4392,11 +4387,11 @@
    "rows": [
     [
      "Min Trigger Interval",
-     "9s个"
+     "9s↑"
     ],
     [
      "Max Trigger Interval",
-     "15s个"
+     "15s↑"
     ],
     [
      "Base Prevention Count",
