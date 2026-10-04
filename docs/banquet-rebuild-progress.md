@@ -82,3 +82,34 @@ Design: screens 9–10, 2 and 5 of the banquet redesign canvas.
   login runs out and the sweep fails with 403s. It clears within the hour.
 - The worktree had no `data/tracker.local.json` (it is git-ignored), so the
   tracker page 404'd in the sweep. It was copied over from the main checkout.
+
+## Round 2: after the walkthrough
+
+- **The merge of main.** The hook had stopped it on apptest and mobiletest.
+  Both passed on a free port and again in the hook, with nothing changed:
+  the known flakiness, not the merge. Nothing was holding port 8199.
+- **1. The line at the top.** Not a page bug. `#bq-status` is only the
+  "Checking your role with Discord…" line and empties once the list is in.
+  The line a member reads at the top (round, "Ends 00:00 UTC", "Discord read
+  just now") was showing all along; the walkthrough pointed at the wrong
+  element. The check now asserts a member sees both lines.
+- **2. Your UIDs** opens on arrival while one of yours is not logged in, and
+  again whenever one newly turns not logged in, so the "Copy a reminder" line
+  is in view. Otherwise it folds as before.
+- **3. View as buttons** are redrawn whenever the groups, a name, or which
+  are private change, so a new Discord role shows without a reload. The
+  chosen view stays pressed; if its group goes, the page goes back to All
+  groups. The group picker beside Add UID had the same once-only build and
+  is redrawn the same way.
+- **4. The claim run** already followed the view (it uses the same in-view
+  rule as the cards). The check now proves it: All groups counts Group 1 plus
+  Group 2 and never the private list, and a run As Group 2 offers only
+  Group 2's UIDs.
+- **6. The run's tally** is now four icons (gift, portrait, moon, skip) with
+  a count each, one line on a 320px phone. The words are kept for screen
+  readers and as a tooltip.
+- **Activity log.** Each kind has its status icon and colour, and plainer
+  verbs ("saw the gift on", "marked X full", "found X not logged in", "took
+  back their claim on"). The newest line about a banquet you can claim has
+  Copy UID and I claimed it. They use the same code as the card's buttons,
+  Undo included. Once it is claimed or full, that line says so instead.
