@@ -10464,7 +10464,20 @@
   "etymology": null,
   "skill": "Tidal Tunes: Launches sound waves that provide healing and grant stackable Joysong: DMG Boost to allies in their path",
   "description": "Dolphie loves chasing clouds on sunny days, skimming across the sea as the world brightens under sunlight. The sky's a perfect shade of blue today, and Dolphie's mood couldn't be better.",
-  "hordeSkills": null,
+  "hordeSkills": {
+   "level3": {
+    "name": "Rainbow Blessing",
+    "text": "Periodically summons a rainbow, granting Rainsong: HP Boost to nearby allies."
+   },
+   "level5": {
+    "name": "Bubbly Burst",
+    "text": "Launches piercing bubbles, dealing large AoE damage and applying stackable Bubblesong: Fragile."
+   },
+   "level7": {
+    "name": "Cascading Waves",
+    "text": "Unleashes ocean waves that deal AoE damage and inflict Stun, while healing allies and granting Wavesong: ATK & DEF Boost."
+   }
+  },
   "rangeImage": null,
   "skillTypes": [],
   "image": "data/images/tatari/dolphie.png",
@@ -10492,7 +10505,20 @@
   "etymology": null,
   "skill": "Flowing Melodies: Launches sound waves and sometimes launches larger surging waves. Allies in contact will recieve healing and stackable Joysong: DMG Boost & DMG Reduction.",
   "description": "Each time Blubbles returns to the bay, small wooden planks carrying flowers and seashells float across the water. The petals scatter and drift as Blubbles swims through, leaving the harbor a little liveleier than before.",
-  "hordeSkills": null,
+  "hordeSkills": {
+   "level3": {
+    "name": "Rainbow Blessing",
+    "text": "Periodically summons a rainbow, granting Rainsong: HP Boost to nearby allies."
+   },
+   "level5": {
+    "name": "Bubbly Burst",
+    "text": "Launches piercing bubbles, dealing large AoE damage and applying stackable Bubblesong: Fragile."
+   },
+   "level7": {
+    "name": "Cascading Waves",
+    "text": "Unleashes ocean waves that deal AoE damage and inflict Stun, while healing allies and granting Wavesong: ATK & DEF Boost."
+   }
+  },
   "rangeImage": null,
   "skillTypes": [],
   "image": "data/images/tatari/blubbles.png",
@@ -10520,7 +10546,20 @@
   "etymology": null,
   "skill": "Sweet Symphony: Launches sound waves and often launches larger surging waves. Allies in contact will recieve healing and stackable Joysong: DMG Boost & DMG Reduction.",
   "description": "When Aquariel leaps out of water, the vibrant colors of rainbows would follow, skipping across the waves and into the distance. For those who are lucky enough to witness it, it is believed that good fortune will soon arrive on the sea breeze.",
-  "hordeSkills": null,
+  "hordeSkills": {
+   "level3": {
+    "name": "Rainbow Blessing",
+    "text": "Periodically summons a rainbow, granting Rainsong: HP Boost to nearby allies."
+   },
+   "level5": {
+    "name": "Bubbly Burst",
+    "text": "Launches piercing bubbles, dealing large AoE damage and applying stackable Bubblesong: Fragile."
+   },
+   "level7": {
+    "name": "Cascading Waves",
+    "text": "Unleashes ocean waves that deal AoE damage and inflict Stun, while healing allies and granting Wavesong: ATK & DEF Boost."
+   }
+  },
   "rangeImage": null,
   "skillTypes": [],
   "image": "data/images/tatari/aquariel.png",
@@ -10548,7 +10587,20 @@
   "etymology": null,
   "skill": "Endless Echo: Launches sound waves and often launches larger surging waves. Allies in contact will recieve healing and stackable Joysong: DMG Boost & DMG Reduction. Irisia carries Aura: Water whenever on field.",
   "description": "As light pours down from the sky, Irisia returns from the depths of the thunderstorm, parting massive waves to clear a safe path. As long as Irisia still roams these seas, the lights of every home along the shore will stay on, steady and bright.",
-  "hordeSkills": null,
+  "hordeSkills": {
+   "level3": {
+    "name": "Rainbow Blessing",
+    "text": "Periodically summons a rainbow, granting Rainsong: HP Boost to nearby allies."
+   },
+   "level5": {
+    "name": "Bubbly Burst",
+    "text": "Launches piercing bubbles, dealing large AoE damage and applying stackable Bubblesong: Fragile."
+   },
+   "level7": {
+    "name": "Cascading Waves",
+    "text": "Unleashes ocean waves that deal AoE damage and inflict Stun, while healing allies and granting Wavesong: ATK & DEF Boost."
+   }
+  },
   "rangeImage": null,
   "skillTypes": [],
   "image": "data/images/tatari/irisia.png",

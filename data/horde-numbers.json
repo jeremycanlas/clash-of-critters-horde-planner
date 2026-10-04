@@ -227,7 +227,7 @@
      "6s"
     ],
     [
-     "BoostFactor",
+     "Boost Factor",
      "30%",
      "Super Fragile"
     ]
@@ -297,7 +297,7 @@
      "3s"
     ],
     [
-     "3rd HitVortex Duration",
+     "3rd Hit Vortex Duration",
      "4s"
     ]
    ]
@@ -305,7 +305,7 @@
  },
  "Cheerling": {
   "level3": {
-   "name": "RhythmicPierce",
+   "name": "Rhythmic Pierce",
    "rows": [
     [
      "Damage Factor",
@@ -430,12 +430,12 @@
      "Bane"
     ],
     [
-     "AoE Damage Chance",
+     "Ao E Damage Chance",
      "40%",
      "Bane"
     ],
     [
-     "AoE Damage Factor",
+     "Ao E Damage Factor",
      "100%",
      "Bane"
     ],
@@ -830,10 +830,10 @@
    ]
   },
   "level5": {
-   "name": "FerventFumes",
+   "name": "Fervent Fumes",
    "rows": [
     [
-     "Fumes:ATK&DEF Boost Chance",
+     "Fumes: ATK & DEF Boost Chance",
      "30%",
      "Fumes: ATK & DEF Boost"
     ],
@@ -855,7 +855,7 @@
    ]
   },
   "level7": {
-   "name": "FireworkFrenzy",
+   "name": "Firework Frenzy",
    "rows": [
     [
      "Damage Factor",
@@ -874,7 +874,7 @@
  },
  "Ashlarva": {
   "level3": {
-   "name": "FluffFlame",
+   "name": "Fluff Flame",
    "rows": [
     [
      "Damage Factor",
@@ -883,7 +883,7 @@
    ]
   },
   "level5": {
-   "name": "FlutterFlame",
+   "name": "Flutter Flame",
    "rows": [
     [
      "Damage Factor",
@@ -898,7 +898,7 @@
      "9s"
     ],
     [
-     "AoE Duration",
+     "Ao E Duration",
      "5s"
     ],
     [
@@ -1199,7 +1199,7 @@
      "7s"
     ],
     [
-     "MaxTrigger Interval",
+     "Max Trigger Interval",
      "11s"
     ],
     [
@@ -1374,7 +1374,7 @@
      "70%"
     ],
     [
-     "ParalysisDamage Factor",
+     "Paralysis Damage Factor",
      "15%",
      "Paralysis"
     ],
@@ -1665,7 +1665,7 @@
      "Bubblesong: Fragile"
     ],
     [
-     "BoostFactor",
+     "Boost Factor",
      "4%",
      "Bubblesong: Fragile"
     ],
@@ -1717,11 +1717,6 @@
      "Stun"
     ],
     [
-     "IVidxmum Cooldown",
-     "12s",
-     "Stun"
-    ],
-    [
      "Effect Duration Increase",
      "0.5s Per Amp",
      "Stun"
@@ -1769,7 +1764,7 @@
    ]
   },
   "level5": {
-   "name": "lce Scatter",
+   "name": "Ice Scatter",
    "rows": [
     [
      "Damage Factor",
@@ -1976,7 +1971,7 @@
    ]
   },
   "level5": {
-   "name": "FreeSnacks",
+   "name": "Free Snacks",
    "rows": [
     [
      "Min Trigger Interval",
@@ -2342,18 +2337,18 @@
      "8s"
     ],
     [
-     "MaxTrigger Interval",
+     "Max Trigger Interval",
      "12s"
     ],
     [
      "Duration",
      "5s",
-     "ATKBoost"
+     "ATK Boost"
     ],
     [
      "ATK Boost",
      "15%",
-     "ATKBoost"
+     "ATK Boost"
     ]
    ]
   },
@@ -2406,7 +2401,7 @@
      "Exhaust: DMG Boost"
     ],
     [
-     "BoostFactor",
+     "Boost Factor",
      "20%",
      "Exhaust: DMG Boost"
     ],
@@ -2447,7 +2442,7 @@
      "3s"
     ],
     [
-     "MaxTrigger Interval",
+     "Max Trigger Interval",
      "5s"
     ]
    ]
@@ -2516,7 +2511,7 @@
      "14s"
     ],
     [
-     "MaxTrigger Interval",
+     "Max Trigger Interval",
      "18s"
     ],
     [
@@ -2528,7 +2523,7 @@
  },
  "Waddledo": {
   "level3": {
-   "name": "lce Strike",
+   "name": "Ice Strike",
    "rows": [
     [
      "Damage Factor",
@@ -2552,7 +2547,7 @@
    "name": "Shield Gift",
    "rows": [
     [
-     "lce Shield Chance",
+     "Ice Shield Chance",
      "70%",
      "Ice Shield"
     ],
@@ -2767,12 +2762,12 @@
      "10 Max"
     ],
     [
-     "BaseShield Value",
+     "Base Shield Value",
      "7% HP",
      "Sunder Shield"
     ],
     [
-     "BonusShield Value",
+     "Bonus Shield Value",
      "1% Per Enemy",
      "Sunder Shield"
     ],
@@ -3292,7 +3287,7 @@
  },
  "Voltfawn": {
   "level3": {
-   "name": "ScatterBolt",
+   "name": "Scatter Bolt",
    "rows": [
     [
      "Damage Factor",
@@ -3318,7 +3313,7 @@
    ]
   },
   "level7": {
-   "name": "BoltCleaver",
+   "name": "Bolt Cleaver",
    "rows": [
     [
      "Damage Factor",
@@ -3386,7 +3381,7 @@
    "name": "Heal Blades",
    "rows": [
     [
-     "BladeDamage Factor",
+     "Blade Damage Factor",
      "170%"
     ],
     [
@@ -3604,7 +3599,7 @@
  },
  "Sealing": {
   "level3": {
-   "name": "HitPractice",
+   "name": "Hit Practice",
    "rows": [
     [
      "Damage Factor",
@@ -3651,11 +3646,6 @@
     ],
     [
      "Knockback Distance",
-     "Tiles: 0.5",
-     "Knockback"
-    ],
-    [
-     "KnockbackDistance",
      "Tiles: 0.5",
      "Knockback"
     ]
@@ -3761,11 +3751,6 @@
      "Paralysis"
     ],
     [
-     "mifiitaDcua Paralysis Damage Factor",
-     "15%",
-     "Paralysis"
-    ],
-    [
      "Duration",
      "8s",
      "Glow"
@@ -3776,7 +3761,7 @@
      "Glow"
     ],
     [
-     "dAflitan vamageintervai",
+     "Damage Interval",
      "1.55",
      "Glow"
     ],
@@ -4176,23 +4161,8 @@
      "5%"
     ],
     [
-     "MaxSteal Stacks",
-     "3 Stacks"
-    ],
-    [
-     "Each Duration",
-     "8s",
-     "Returns:ATK Boost"
-    ],
-    [
-     "ATK Boost",
-     "15%",
-     "Returns:ATK Boost"
-    ],
-    [
      "Max Steal Stacks",
-     "3 Stacks",
-     "Returns:ATK Boost"
+     "3 Stacks"
     ],
     [
      "Each Duration",
@@ -4695,7 +4665,7 @@
  },
  "Sparkrow": {
   "level3": {
-   "name": "Ember Pop Il",
+   "name": "Ember Pop II",
    "rows": [
     [
      "Damage Factor",

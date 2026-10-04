@@ -22,6 +22,7 @@ const roster = Array.isArray(tatari) ? tatari : tatari.tatari ?? Object.values(t
 const numbers = JSON.parse(readFileSync('data/skill-numbers.json', 'utf8'));
 // Horde Invasion level 3/5/7 numbers, read off the deploy screen's skill panel, by family.
 // Still being filled in, so a missing file or family just means "not recorded yet".
+const hordeOverrides = (() => { try { return JSON.parse(readFileSync('data/horde-overrides.json', 'utf8')); } catch { return {}; } })();
 const hordeNumbers = (() => { try { return JSON.parse(readFileSync('data/horde-numbers.json', 'utf8')); } catch { return {}; } })();
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -130,7 +131,8 @@ function hordeRows(list) {
 // The game's padlock beside a level a Tatari has not reached.
 const LOCK = '<svg class="sk-lock" viewBox="0 0 12 14" width="11" height="13" aria-hidden="true"><path d="M3 6V4a3 3 0 0 1 6 0v2" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="1" y="6" width="10" height="8" rx="2" fill="currentColor"/></svg>';
 function horde(line) {
-  const h = line[0].hordeSkills;
+  // A line the wiki has no Horde skills for yet takes them from data/horde-overrides.json, read off the game.
+  const h = line[0].hordeSkills ?? hordeOverrides[line[0].family];
   if (!h) return `
           <p class="sk-none">Horde Invasion skills not recorded yet.</p>`;
   return `
@@ -152,7 +154,7 @@ const lineAF = (line) => line.map((t) => numbers[t.slug]?.arenaFactor).filter(Bo
 // What the search box reads for a line: names, skills, effect boxes, horde skills.
 const lineQ = (line) => [...new Set(line.flatMap((t) => [t.name, skillName(t),
   ...(numbers[t.slug]?.sections ?? []).map((s) => s.heading ?? '')])
-  .concat(Object.values(line[0].hordeSkills ?? {}).map((h) => h.name)))].join(' ').toLowerCase();
+  .concat(Object.values(line[0].hordeSkills ?? hordeOverrides[line[0].family] ?? {}).filter((h) => h?.name).map((h) => h.name)))].join(' ').toLowerCase();
 const hordeDone = ordered.filter((l) => hordeNumbers[l[0].family]).length;
 
 const index = `

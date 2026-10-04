@@ -8,11 +8,31 @@
 #     "Paralysis Damage Factor"); kept (in the last box) otherwise;
 #   - a box split by a scroll (two "Bane" groups) is joined, exact repeats removed;
 #   - the output lists the skill's own rows, then each box once, in first-seen order.
+# Labels, box headings and names also get the OCR's dropped spaces and l-for-I put back (tidy).
 import json
+import re
 from pathlib import Path
 
 SRC = Path('E:/caches/coc-arena/horde.json')   # the reader's raw output, outside the repo
 DST = Path(__file__).resolve().parent.parent / 'data' / 'horde-numbers.json'
+
+# OCR misreads seen in the reader's output, fixed by hand from the screenshots.
+GARBLED = {
+    'IVidxmum Cooldown': 'Maximum Cooldown',
+    'mifiitaDcua Paralysis Damage Factor': 'Paralysis Damage Factor',
+    'dAflitan vamageintervai': 'Damage Interval',
+}
+
+
+def tidy(text):
+    """Spaces the OCR dropped ("BoostFactor", "ATKBoost", "Fumes:ATK&DEF") and l read for I."""
+    t = GARBLED.get(text, text)
+    t = re.sub(r'([a-z])([A-Z])', r'\1 \2', t)             # BoostFactor -> Boost Factor
+    t = re.sub(r'([A-Z]{2,})([A-Z][a-z])', r'\1 \2', t)     # ATKBoost -> ATK Boost
+    t = re.sub(r'\s*:\s*', ': ', t).replace('&', ' & ')
+    t = re.sub(r'\blce\b', 'Ice', t)
+    t = re.sub(r'\bIl\b', 'II', t)
+    return re.sub(r'\s+', ' ', t).strip()
 
 
 def same(a, b):
@@ -23,7 +43,7 @@ def same(a, b):
 def clean(rows):
     own, boxes, order, last = [], {}, [], None
     for r in rows:
-        label, value, box = r[0], r[1], (r[2] if len(r) > 2 else None)
+        label, value, box = tidy(r[0]), r[1], (tidy(r[2]) if len(r) > 2 else None)
         if box:
             if box not in boxes:
                 boxes[box] = []; order.append(box)
@@ -52,6 +72,6 @@ for fam, v in src.items():
     for k in ('level3', 'level5', 'level7'):
         rows = clean(v[k]['rows'])
         dropped += len(v[k]['rows']) - len(rows)
-        out[fam][k] = {'name': v[k]['name'], 'rows': rows}
+        out[fam][k] = {'name': tidy(v[k]['name']), 'rows': rows}
 DST.write_text(json.dumps(out, indent=1, ensure_ascii=False) + '\n', encoding='utf-8')
 print(f'{len(out)} lines written, {dropped} re-read rows dropped')
