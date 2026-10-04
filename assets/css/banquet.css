@@ -265,11 +265,26 @@
 .bq-activity[open] summary h2::after { content: ' ▾'; }
 .bq-activity h2 .muted { font-family: var(--font-ui); font-weight: 400; font-size: 13px; }
 .bq-log { list-style: none; margin: var(--s2) 0 0; padding: 0; display: flex; flex-direction: column; font-size: 13px; }
-.bq-log li { display: flex; justify-content: space-between; align-items: baseline; gap: var(--s2); padding: 6px 0; border-bottom: 1px solid var(--line); }
+/* Icon, what happened, when; and under it, on a banquet's newest line, what you can do about it. */
+.bq-log li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: start; gap: 6px var(--s2);
+  padding: 8px 0; border-bottom: 1px solid var(--line); --kind: var(--text-dim); }
 .bq-log li:last-child { border-bottom: 0; }
+.bq-log li > svg { color: var(--kind); margin-top: 0; }
 .bq-log b { font-weight: 650; }
-.bq-log li > span { color: var(--text-dim); overflow-wrap: anywhere; }
+.bq-log__what { color: var(--text-dim); overflow-wrap: anywhere; }
+.bq-log__verb { color: var(--kind); }
 .bq-log b, .bq-log__uid { color: var(--text); }
+/* The status colours the cards and the claim run use, one per kind; posts and take-backs stay neutral. */
+.bq-log .is-claim, .bq-log .is-gift { --kind: color-mix(in srgb, var(--ok) 75%, var(--text)); }
+.bq-log .is-full { --kind: color-mix(in srgb, var(--danger) 75%, var(--text)); }
+.bq-log .is-notin { --kind: var(--accent-ink-on); }
+.bq-log__act, .bq-log__state { grid-column: 2 / -1; }
+.bq-log__act { display: flex; gap: var(--s2); }
+.bq-log__btn { flex: 1; min-height: 44px; }
+.bq-log__btn.tr-copy { padding: 0 12px; font: 600 13px/1.2 var(--font-ui); }
+.bq-log__state { font-size: 12.5px; font-weight: 650; }
+.bq-log__state.is-claimed { color: color-mix(in srgb, var(--ok) 75%, var(--text)); }
+.bq-log__state.is-full { color: color-mix(in srgb, var(--danger) 75%, var(--text)); }
 .bq-log__uid { font-family: var(--font-mono); font-size: 12.5px; font-weight: 600; }
 .bq-log time { color: var(--text-mute); white-space: nowrap; }
 

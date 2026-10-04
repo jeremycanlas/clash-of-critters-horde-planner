@@ -397,10 +397,33 @@ try {
   assert.match(await A.locator('#bq-run-start').textContent(), new RegExp(`${due - 3} to go`), 'claimed, full and not logged in are off the run');
   // The activity log: every press, newest first, with who; and the posts.
   assert.ok(await A.locator('#bq-activity').isVisible(), 'the activity log is on the page');
-  assert.match(await A.locator('#bq-log li').first().innerText(), new RegExp(`Ana saw no icon on ${asleep}[^]*?just now`));
-  assert.match(await A.locator('#bq-log').innerText(), new RegExp(`Ana saw a portrait on ${looked}[^]*Ana claimed 10000001`));
-  assert.match(await A.locator('#bq-log').innerText(), /Ana took back a claim on 55555555/);
+  assert.match(await A.locator('#bq-log li').first().innerText(), new RegExp(`Ana found ${asleep} not logged in[^]*?just now`));
+  assert.match(await A.locator('#bq-log').innerText(), new RegExp(`Ana marked ${looked} full[^]*Ana claimed 10000001`));
+  assert.match(await A.locator('#bq-log').innerText(), /Ana took back their claim on 55555555/);
   assert.ok(await A.locator('#bq-log li', { hasText: 'posted' }).count() > 0, 'posts are there too');
+  // Each kind its own icon and colour; a claimable one you have not claimed, a way to claim it on its newest line only.
+  assert.deepEqual(await A.locator('#bq-log li').first().evaluate((li) => [li.className, !!li.querySelector('svg')]), ['is-notin', true]);
+  const gift = A.locator('#bq-log li[data-key=":20000001"]');
+  assert.equal(await gift.first().locator('.bq-log__verb').textContent(), 'saw the gift on 20000001', 'the newest line on it is the gift Ana saw');
+  assert.equal(await gift.locator('.bq-log__act').count(), 1, 'Copy UID and I claimed it, once, not on every line about it');
+  assert.equal(await gift.first().locator('.bq-log__act').count(), 1, 'on the newest line');
+  for (const box of await gift.first().locator('button').evaluateAll((bs) => bs.map((b) => b.getBoundingClientRect().height))) {
+    assert.ok(box >= 44, `44px to tap, got ${box}`);
+  }
+  assert.equal(await A.locator('#bq-log li[data-key=":10000001"]').first().locator('.bq-log__state').textContent(), 'You claimed it',
+    'one already claimed says so instead');
+  await gift.first().getByRole('button', { name: 'Copy UID 20000001' }).click();
+  await A.waitForTimeout(200);
+  assert.deepEqual(lastSent('Ana', 'banquet_note_copy'), { target: 20000001, g: null }, 'Copy UID copies as a card does');
+  assert.equal(await gift.first().locator('.tr-copy').getAttribute('data-label'), 'Copied', 'and says Copied');
+  await gift.first().getByRole('button', { name: 'I claimed it, 20000001' }).click();
+  await A.waitForSelector('#toast.is-shown');
+  assert.deepEqual(lastSent('Ana', 'banquet_claim'), { target: 20000001, claimed: true, g: null }, 'I claimed it is the same claim as the card');
+  await A.waitForFunction(() => document.querySelector('#bq-log li[data-key=":20000001"] .bq-log__state')?.textContent === 'You claimed it');
+  assert.equal(await A.locator('#bq-cards [data-claim="20000001"]').getAttribute('aria-pressed'), 'true', 'and the card agrees');
+  await A.click('#toast .toast__act'); // Undo, as on a card
+  await A.waitForFunction(() => document.querySelector('[data-claim="20000001"]')?.getAttribute('aria-pressed') === 'false');
+  if (process.env.BANQUET_SHOTS) await A.locator('#bq-activity').screenshot({ path: `${process.env.BANQUET_SHOTS}/log-phone.png` });
   assert.ok(await A.locator('#bq-activity').evaluate((d) => d.getBoundingClientRect().top > document.querySelector('#bq-cards').getBoundingClientRect().bottom - 1),
     'on a phone, below the list');
   assert.equal(await A.evaluate(() => document.documentElement.scrollWidth - innerWidth), 0, 'the tiles fit a phone');
@@ -559,7 +582,7 @@ try {
   await A.clock.fastForward(31_000);
   await A.waitForTimeout(400);
   assert.ok(sames > quiet, 'nothing new: the refresh gets the short answer');
-  assert.equal(await A.locator('[data-claim="20000001"]').count(), 1, 'and the list stays as it was');
+  assert.equal(await A.locator('#bq-cards [data-claim="20000001"]').count(), 1, 'and the list stays as it was');
 
   await A.evaluate(() => {
     Object.defineProperty(document, 'hidden', { configurable: true, get: () => true });
@@ -632,7 +655,7 @@ try {
   const half = await open({ name: 'Ana', grp: 1, code: 'duo' }, { viewport: { width: 1280, height: 900 } });
   assert.ok(await half.page.locator('#bq-cards li[data-key]').evaluateAll((ls) => ls.every((l) => l.dataset.key.startsWith('10:'))),
     'only the first server, numbered as in the view of both');
-  await half.page.locator('li[data-key="10:20000001"] [data-claim]').click();
+  await half.page.locator('#bq-cards li[data-key="10:20000001"] [data-claim]').click();
   await half.page.waitForTimeout(300);
   assert.deepEqual(sent.filter((x) => x.who === 'Ana' && x.fn === 'banquet_claim').at(-1),
     { who: 'Ana', fn: 'banquet_claim', body: { target: 20000001, claimed: true, g: null } }, 'and its presses go to the first server');
@@ -643,15 +666,15 @@ try {
   assert.ok(keys.includes('11:20000001') && keys.includes('12:30000001') && keys.includes('21:82000001'), `both servers, renumbered: ${keys}`);
   assert.equal(keys.filter((k) => k.endsWith(':55555555')).length, 3, 'the same UID is a separate card per server and group');
   assert.ok(!keys.some((k) => k.startsWith('13:')), 'Both servers leaves the private list out');
-  assert.equal(await D.locator('li[data-key="21:82000001"] .bq-grp').textContent(), 'Send UIDs', 'a one-group server is called by its name');
-  assert.equal(await D.locator('li[data-key="12:30000001"] .bq-grp').textContent(), 'MVP UIDs · Group 2');
+  assert.equal(await D.locator('#bq-cards li[data-key="21:82000001"] .bq-grp').textContent(), 'Send UIDs', 'a one-group server is called by its name');
+  assert.equal(await D.locator('#bq-cards li[data-key="12:30000001"] .bq-grp').textContent(), 'MVP UIDs · Group 2');
   assert.equal(await D.locator('[data-group="0"]').textContent(), 'Both servers');
   // Every press goes to the card's own server, with the group number that server knows.
   await D.locator('[data-claim="82000001"]').click();
   await D.waitForTimeout(300);
   assert.deepEqual(sent.filter((x) => x.who === 'Vee' && x.fn === 'banquet_claim').at(-1),
     { who: 'Vee', fn: 'banquet_claim', body: { target: 82000001, claimed: true, g: 1 }, host: 'B' });
-  await D.locator('li[data-key="12:30000001"] [data-claim]').click();
+  await D.locator('#bq-cards li[data-key="12:30000001"] [data-claim]').click();
   await D.waitForTimeout(300);
   assert.deepEqual(sent.filter((x) => x.who === 'Vee' && x.fn === 'banquet_claim').at(-1),
     { who: 'Vee', fn: 'banquet_claim', body: { target: 30000001, claimed: true, g: 2 } }, 'a first-server card goes to the first server');

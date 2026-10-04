@@ -446,16 +446,24 @@ function render() {
     : `What ${nameOf(group)} members see. Anything you press counts for ${nameOf(group)}.`;
   if (open) renderCards(past);
   renderNews(open && !past);
-  renderLog(open);
+  renderLog(open, past);
 }
 
 // ------------------------------------------------------------------ activity
 
 /* Every claim, mark and post this gold rush, newest first, with who and when:
-   what moved a banquet to where it is, and whether to trust it. */
+   what moved a banquet to where it is, and whether to trust it. Each kind
+   wears the icon and colour its status has on the cards and in the claim run
+   (a gift for a gift seen, the portrait for full, the moon for not logged in),
+   so a long log scans by shape before a word of it is read. */
 const SAID = {
-  post: 'posted', claim: 'claimed', unclaim: 'took back a claim on', open: 'saw a gift on',
-  full: 'saw a portrait on', 'not-yet': 'saw no icon on', clear: 'cleared the mark on',
+  post: ['post', (u) => `posted ${u}`],
+  claim: ['claim', (u) => `claimed ${u}`],
+  unclaim: ['unclaim', (u) => `took back their claim on ${u}`],
+  open: ['gift', (u) => `saw the gift on ${u}`],
+  full: ['full', (u) => `marked ${u} full`],
+  'not-yet': ['notin', (u) => `found ${u} not logged in`],
+  clear: ['clear', (u) => `cleared the mark on ${u}`],
 };
 // The last hour as minutes, anything older as the day and time.
 const when = (iso) => {
@@ -463,15 +471,39 @@ const when = (iso) => {
   return min < 1 ? 'just now' : min < 60 ? `${min} min`
     : new Date(iso).toLocaleString(undefined, { weekday: 'short', hour: 'numeric', minute: '2-digit' });
 };
-function renderLog(on) {
+/* A line about a banquet you can claim right now is the quickest way to it:
+   its newest line, only, gets Copy UID and I claimed it, the same two the card
+   has and handled by the same code. Claimed or full since, that line says so
+   instead. Older lines about the same UID stay plain, so nothing repeats. */
+function logAction(e, b, past) {
+  if (past || !b) return '';
+  if (b.claimed) return '<span class="bq-log__state is-claimed">You claimed it</span>';
+  if (b.full) return e.kind === 'full' ? '' : '<span class="bq-log__state is-full">Full now</span>';
+  if (statusOf(b) !== 'claimable') return '';
+  return `<span class="bq-log__act">
+      <button type="button" class="tr-copy bq-log__btn" data-copy="${b.uid}" aria-label="Copy UID ${b.uid}">Copy UID</button>
+      <button type="button" class="btn bq-log__btn" data-claim="${b.uid}"${grpAttr(b.grp)} aria-label="I claimed it, ${b.uid}" aria-pressed="false">I claimed it</button>
+    </span>`;
+}
+function renderLog(on, past) {
   $('#bq-activity').hidden = !on;
   if (!on) return;
   // ponytail: the newest 50 of the 200 the database sends; a "more" button if a round ever needs it.
   const events = (state.events ?? []).filter((e) => !e.grp || inView(e.grp)).slice(0, 50);
-  $('#bq-log').innerHTML = events.map((e) => `<li>
-      <span>${tagOf(e.grp)}<b>${esc(e.by)}</b> ${SAID[e.kind] ?? esc(e.kind)} <span class="bq-log__uid">${e.uid}</span></span>
+  const cards = new Map(state.banquets.map((b) => [keyOf(b), b]));
+  const done = new Set(); // UIDs whose newest line is drawn: the rest are older news
+  $('#bq-log').innerHTML = events.map((e) => {
+    const k = keyOf(e);
+    const newest = !done.has(k);
+    done.add(k);
+    const [look, say] = SAID[e.kind] ?? ['clear', (u) => `${esc(e.kind)} ${u}`];
+    return `<li class="is-${look}" data-key="${k}">
+      ${icon(look, 18)}
+      <span class="bq-log__what">${tagOf(e.grp)}<b>${esc(e.by)}</b> <span class="bq-log__verb">${say(`<span class="bq-log__uid">${e.uid}</span>`)}</span></span>
       <time datetime="${e.at}">${when(e.at)}</time>
-    </li>`).join('') || '<li class="muted">Nothing yet this gold rush.</li>';
+      ${newest ? logAction(e, cards.get(k), past) : ''}
+    </li>`;
+  }).join('') || '<li class="muted">Nothing yet this gold rush.</li>';
 }
 
 // ------------------------------------------------------------------ what is new
@@ -618,6 +650,11 @@ const ICON = {
   full: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
   notin: '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>',
   skip: '<path d="M5 4l10 8-10 8z"/><path d="M19 5v14"/>',
+  // The activity log's own kinds: a post, a claim, a claim taken back, a mark cleared.
+  post: '<path d="M12 5v14M5 12h14"/>',
+  claim: '<path d="M20 6 9 17l-5-5"/>',
+  unclaim: '<path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/>',
+  clear: '<path d="M18 6 6 18M6 6l12 12"/>',
 };
 const icon = (k, size = 26) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[k]}</svg>`;
@@ -836,7 +873,9 @@ $('#bq-groups').addEventListener('click', (e) => {
   render();
 });
 
-$('#bq-cards').addEventListener('click', async (e) => {
+/* I claimed and the marks, on a card or on an activity line: one handler, so
+   the two can never drift apart. */
+async function press(e) {
   const claim = e.target.closest('[data-claim]');
   const mark = e.target.closest('[data-mark]');
   const btn = claim ?? mark;
@@ -862,7 +901,9 @@ $('#bq-cards').addEventListener('click', async (e) => {
     });
   }
   load(state.round);
-});
+}
+$('#bq-cards').addEventListener('click', press);
+$('#bq-log').addEventListener('click', press);
 
 // A tile shows only its status; pressed again, all four.
 for (const b of $$('[data-show]')) {
@@ -892,7 +933,7 @@ document.addEventListener('click', async (e) => {
   const btn = e.target.closest('.tr-copy');
   if (!btn) return;
   const ok = await copyText(btn.dataset.copy);
-  const card = btn.closest('#bq-cards li[data-key], .bq-run__card[data-key]');
+  const card = btn.closest('#bq-cards li[data-key], .bq-run__card[data-key], #bq-log li[data-key]');
   if (ok && card) { noteCopy(card.dataset.key); setLastCopied(card.dataset.key); }
   btn.classList.add(ok ? 'is-copied' : 'is-failed');
   btn.dataset.label = ok ? 'Copied' : 'Copy failed';
