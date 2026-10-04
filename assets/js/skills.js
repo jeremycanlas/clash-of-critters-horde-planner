@@ -1,11 +1,10 @@
 /**
  * The Skill data page. Its content is static HTML written by
  * tools/skills-page.mjs; this only chooses what shows: one line and one tier
- * of it in the Lines view, the filtered and sorted table in Rankings. With
- * script off every line, tier and row is simply on the page, stacked.
+ * of it. With script off every line and tier is simply on the page, stacked.
  *
- * The address is the state: skills.html#cribking opens that Tatari, and
- * skills.html#rankings the table, so a link a guide gives lands where it meant.
+ * The address is the state: skills.html#cribking opens that Tatari, so a link
+ * a guide gives lands where it meant.
  */
 import { applyPrefs } from './prefs.js';
 import { buildAnalytics, trackOnce } from './analytics.js';
@@ -16,14 +15,11 @@ buildAnalytics();
 
 const app = $('#sk-app');
 const find = $('#sk-find');
-const tbody = $('#sk-rows');
 const wide = matchMedia('(min-width: 900px)');
 app.classList.add('is-live');
 app.dataset.pane = 'list';
 
 let type = '';
-let tier = '';
-let tag = '';
 let current = '';    // the slug open in the Lines view
 let pushed = false;  // whether the open line is a history entry this page added
 
@@ -31,7 +27,6 @@ const press = (group, on) => { for (const b of group) b.setAttribute('aria-press
 
 function setView(view) {
   app.dataset.view = view;
-  press($$('#sk-views [data-view]'), $(`#sk-views [data-view="${view}"]`));
   filter();
 }
 
@@ -71,7 +66,6 @@ const oneScreen = matchMedia('(min-width: 900px) and (min-height: 600px)');
    beside it, so the right-hand side is never empty. */
 function route() {
   const h = decodeURIComponent(location.hash.slice(1));
-  if (h === 'rankings') { setView('rank'); return; }
   if (open(h)) return;
   pushed = false;
   app.dataset.pane = 'list';
@@ -116,34 +110,17 @@ $('#sk-detail').addEventListener('click', (e) => {
 addEventListener('popstate', route);
 addEventListener('hashchange', () => { route(); if (location.hash.length > 1 && current) toLine(); });
 
-$('#sk-views').addEventListener('click', (e) => {
-  const b = e.target.closest('[data-view]');
-  if (!b) return;
-  if (b.dataset.view === 'rank') {
-    history.replaceState(null, '', '#rankings');
-    trackOnce('skills-rankings');
-  } else {
-    history.replaceState(null, '', location.pathname + location.search + (current ? `#${current}` : ''));
-  }
-  setView(b.dataset.view);
-});
 
-/* Search and type apply to both views; tier and effect only to the table. */
+/* Search and type narrow the list of lines. */
 function filter() {
   const q = find.value.trim().toLowerCase();
   const fits = (el) => (!type || el.dataset.type === type) && (!q || el.dataset.q.includes(q));
   let lines = 0;
   for (const li of $$('#sk-list > li')) { li.hidden = !fits(li); if (!li.hidden) lines++; }
-  let rows = 0;
-  for (const tr of tbody.rows) {
-    tr.hidden = !(fits(tr) && (!tier || tr.dataset.tier === tier) && (!tag || tr.dataset.tags.split(' ').includes(tag)));
-    if (!tr.hidden) rows++;
-  }
-  $('#sk-none').hidden = (app.dataset.view === 'rank' ? rows : lines) > 0;
-  // The panel heads' counts, "12 of 66" while a filter is on, as the roster's does.
-  const all = (n, of) => (n === of ? String(of) : `${n} of ${of}`);
-  $('#sk-lines-n').textContent = all(lines, $$('#sk-list > li').length);
-  $('#sk-rank-n').textContent = all(rows, tbody.rows.length);
+  $('#sk-none').hidden = lines > 0;
+  // The panel head's count, "12 of 66" while a filter is on, as the roster's does.
+  const all = $$('#sk-list > li').length;
+  $('#sk-lines-n').textContent = lines === all ? String(all) : `${lines} of ${all}`;
 }
 find.addEventListener('input', () => { filter(); if (find.value.trim()) trackOnce('skills-searched'); });
 
@@ -156,29 +133,6 @@ const chooser = (sel, set) => $(sel).addEventListener('click', (e) => {
   trackOnce('skills-filtered');
 });
 chooser('#sk-types', (b) => { type = b.dataset.type; });
-chooser('#sk-tiers', (b) => { tier = b.dataset.tier; });
-chooser('#sk-tags', (b) => { tag = b.dataset.tag; });
-
-/* Sorting. A second press on the same column flips it. Biggest first, except
-   Cooldown, where shortest is best. A Tatari with no value sorts last either way. */
-let sortKey = 'af';
-let dir = -1;
-$('.sk-table thead').addEventListener('click', (e) => {
-  const b = e.target.closest('[data-sort]');
-  if (!b) return;
-  const k = b.dataset.sort;
-  dir = k === sortKey ? -dir : k === 'cd' ? 1 : -1;
-  sortKey = k;
-  for (const th of $$('.sk-table thead th')) th.removeAttribute('aria-sort');
-  b.parentElement.setAttribute('aria-sort', dir > 0 ? 'ascending' : 'descending');
-  const val = (tr) => tr.dataset[k] === '' ? null : Number(tr.dataset[k]);
-  tbody.append(...[...tbody.rows].sort((x, y) => {
-    const a = val(x), c = val(y);
-    if (a === null || c === null) return (a === null) - (c === null);
-    return (a - c) * dir;
-  }));
-  trackOnce('skills-sorted');
-});
 
 route();
 // Arriving on skills.html#cribking, the browser jumped to the tier itself; the

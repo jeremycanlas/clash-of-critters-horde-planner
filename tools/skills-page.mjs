@@ -7,7 +7,7 @@
  * Static HTML rather than drawn in script, because the page exists to be found:
  * search engines bring most of the people who arrive from anywhere, and these
  * numbers are on no other site. Everything is written here, every line and every
- * tier and the rankings table; assets/js/skills.js only picks which part shows.
+ * tier; assets/js/skills.js only picks which part shows.
  * Run it after adding to skill-numbers.json or horde-numbers.json; the --check
  * keeps the page and the data in step.
  */
@@ -40,18 +40,6 @@ const skillDesc = (t) => t.skill?.includes(':') ? t.skill.slice(t.skill.indexOf(
 /* The skill's own rows are the box with no heading. */
 const base = (n) => n?.sections?.find((s) => !s.heading)?.rows ?? [];
 const pick = (n, label) => base(n).find(([l]) => l === label)?.[1];
-
-/* Effect tags for the rankings filter, from the panel's own box names and row
-   labels. "Stun" counts the effects that stop a target outright. */
-const TAGS = [
-  ['aura', 'Aura', (h) => /^Aura:/.test(h)],
-  ['stun', 'Stun', (h) => /^(Stun|Paralysis|Sleep|Bind|Electricage)$/.test(h)],
-  ['heal', 'Heal', (h, l) => /Heal/.test(`${h} ${l}`)],
-  ['shield', 'Shield', (h, l) => /Shield/.test(`${h} ${l}`)],
-  ['slow', 'Slow', (h, l) => /^Slow/.test(h) || /Move Speed Reduction/.test(l)],
-];
-const tagsOf = (n) => TAGS.filter(([, , test]) => (n?.sections ?? []).some((s) =>
-  test(s.heading ?? '', s.rows.map(([l]) => l).join(' ')))).map(([k]) => k);
 
 /* A row can carry what it was at the tier below ("was 120%") or be new there.
    Each label and value pair is wrapped, so it can be one of the game's pills. */
@@ -191,48 +179,11 @@ const detail = `
         </article>`).join('')}
       </div>`;
 
-/* Rankings: every Tatari in one table, Arena Factor first. The sort buttons
-   and filters only reorder and hide these rows. */
-const ranked = [...roster].sort((a, b) => (num(numbers[b.slug]?.arenaFactor) ?? -1) - (num(numbers[a.slug]?.arenaFactor) ?? -1));
-// A phone has room for the short names only; the button keeps the full one.
-const sortBtn = (k, label, short, on) => `<th scope="col" class="sk-num"${on ? ' aria-sort="descending"' : ''}><button class="sk-sort" type="button" data-sort="${k}" aria-label="${label}"><span class="sk-long">${label}</span><span class="sk-short">${short}</span></button></th>`;
-const tagLabel = Object.fromEntries(TAGS.map(([k, l]) => [k, l]));
-const rankings = `
-      <section class="sk-rank panel" id="sk-rank" aria-label="Rankings">
-        <div class="panel__head"><h2>Rankings <span class="muted" id="sk-rank-n">${roster.length}</span></h2>
-        <div class="sk-rank__tools panel__tools">
-          <div class="segmented" role="group" aria-label="Tier" id="sk-tiers">
-            <button class="segmented__btn" type="button" data-tier="" aria-pressed="true">Any tier</button>${[1, 2, 3, 4].map((n) => `
-            <button class="segmented__btn" type="button" data-tier="${n}" aria-pressed="false">T${n}</button>`).join('')}
-          </div>
-          <div class="segmented" role="group" aria-label="Has effect" id="sk-tags">
-            <button class="segmented__btn" type="button" data-tag="" aria-pressed="true">Any effect</button>${TAGS.map(([k, l]) => `
-            <button class="segmented__btn" type="button" data-tag="${k}" aria-pressed="false">${l}</button>`).join('')}
-          </div>
-        </div>
-        </div>
-        <table class="sk-table">
-          <caption class="sr-only">Every Tatari's skill numbers, sortable</caption>
-          <thead><tr><th scope="col">Tatari</th>${sortBtn('af', 'Arena Factor', 'AF', true)}${sortBtn('dmg', 'Damage Factor', 'DMG')}${sortBtn('cd', 'Cooldown', 'CD')}</tr></thead>
-          <tbody id="sk-rows">${ranked.map((t) => {
-  const n = numbers[t.slug];
-  const tags = tagsOf(n);
-  const v = (x) => num(x) ?? '';
-  return `
-            <tr data-type="${esc(t.type)}" data-tier="${t.tier}" data-tags="${tags.join(' ')}" data-q="${esc([t.name, skillName(t), ...(n?.sections ?? []).map((s) => s.heading ?? '')].join(' ').toLowerCase())}" data-af="${v(n?.arenaFactor)}" data-dmg="${v(pick(n, 'Damage Factor'))}" data-cd="${v(pick(n, 'Cooldown'))}">
-              <th scope="row"><a class="sk-who" href="#${esc(t.slug)}">${art(t, 36)}<span><span class="sk-who__name">${esc(t.name)}</span><span class="sk-who__sub">${meta(`T${t.tier}`, t)}${esc(skillName(t))}${tags.map((k) => ` <span class="sk-tag">${tagLabel[k]}</span>`).join('')}</span></span></a></th>
-              <td class="sk-num">${esc(n?.arenaFactor ?? '–')}</td><td class="sk-num">${esc(pick(n, 'Damage Factor') ?? '–')}</td><td class="sk-num">${esc(pick(n, 'Cooldown') ?? '–')}</td>
-            </tr>`;
-}).join('')}
-          </tbody>
-        </table>
-      </section>`;
-
 const body = `${START}
     <p class="sk-count" id="sk-count">${ordered.length} lines, ${roster.length} Tatari. Arena Factor multiplies a skill's damage against other Tatari, in Gold Rush and Arena only. Horde Invasion numbers: ${hordeDone} of ${ordered.length} lines so far.</p>
     <div class="sk-app" id="sk-app">
       <div class="sk-lines" id="sk-lines">${index}${detail}
-      </div>${rankings}
+      </div>
     </div>
     ${END}`;
 

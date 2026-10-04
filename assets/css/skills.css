@@ -26,18 +26,14 @@
 .sk-tools { flex-wrap: wrap; gap: var(--s2) var(--s3); }
 .sk-search { flex: 1 1 240px; }
 .sk-search .field { width: 100%; box-sizing: border-box; min-height: 44px; font-size: 16px; } /* 16px, or iOS zooms on tap */
-.sk-tools .segmented__btn, .sk-rank__tools .segmented__btn { min-height: 44px; display: inline-flex; align-items: center; }
-.sk-views .segmented__btn { font-size: 13.5px; padding-inline: var(--s4); }
+.sk-tools .segmented__btn { min-height: 44px; display: inline-flex; align-items: center; }
 /* Lines and Rankings are places, not settings: the selected one takes the
    accent, as the roster's Tatari / Zobos / Chips tabs do. */
-.sk-views .segmented__btn[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); box-shadow: none; }
 #sk-types { flex-wrap: wrap; }
 /* On a phone the six types are one line that scrolls sideways, not two. */
 @media (max-width: 600px) {
-  #sk-types, .sk-rank__tools .segmented { flex-wrap: nowrap; max-width: 100%; overflow-x: auto; scrollbar-width: none; }
-  #sk-types .segmented__btn, .sk-rank__tools .segmented__btn { flex: none; }
-  .sk-views { width: 100%; box-sizing: border-box; }
-  .sk-views .segmented__btn { flex: 1; justify-content: center; }
+  #sk-types { flex-wrap: nowrap; max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+  #sk-types .segmented__btn { flex: none; }
 }
 .sk-ticon { width: 18px; height: 18px; object-fit: contain; vertical-align: -4px; margin-right: 5px; }
 .sk-count { margin: 0; font-size: 13px; line-height: 1.5; color: var(--text-mute); max-width: 80ch; }
@@ -46,8 +42,6 @@
 
 /* Views. */
 .sk-app { display: flex; flex-direction: column; gap: var(--s5); }
-.sk-app.is-live[data-view="lines"] .sk-rank,
-.sk-app.is-live[data-view="rank"] .sk-lines { display: none; }
 
 /* A Tatari's picture, everywhere on the page: the roster card's square of its
    type's colour. */
@@ -245,45 +239,6 @@
 .sk-level .sk-skill { font-size: 17px; }
 .sk-level .sk-desc { font-size: 12.5px; }
 
-/* ---------------------------------------------------------------- rankings */
-
-.sk-rank { display: flex; flex-direction: column; gap: var(--s3); max-width: 880px; box-sizing: border-box; }
-.sk-rank > .panel__head { margin: 0; }
-.sk-rank__tools { gap: var(--s2) var(--s3); min-width: 0; max-width: 100%; }
-.sk-table { width: 100%; border-collapse: separate; border-spacing: 0; }
-.sk-table thead th {
-  position: sticky; top: 0; z-index: 1;
-  padding: 0 var(--s3); background: var(--surface-2); border-bottom: 1px solid var(--line);
-  font-size: 12.5px; font-weight: 650; color: var(--text-dim); text-align: left;
-}
-.sk-table thead th:first-child { border-top-left-radius: var(--r-sm); }
-.sk-table thead th:last-child { border-top-right-radius: var(--r-sm); }
-.sk-table tbody tr[hidden] { display: none; }
-.sk-table tbody th, .sk-table td { padding: var(--s1) var(--s3); border-top: 1px solid var(--line); text-align: left; font-weight: 400; }
-.sk-table tbody tr:first-child > * { border-top: 0; }
-.sk-table .sk-num { text-align: right; width: 1%; white-space: nowrap; }
-.sk-table td.sk-num { white-space: normal; min-width: 4ch; font-family: var(--font-mono); font-size: 13.5px; font-weight: 600; font-variant-numeric: tabular-nums; }
-.sk-sort {
-  display: inline-flex; align-items: center; justify-content: flex-end; gap: 4px; width: 100%; min-height: 44px;
-  padding: 0; border: 0; background: none; color: inherit; font: inherit; cursor: pointer; white-space: nowrap;
-}
-.sk-sort:hover { color: var(--text); }
-.sk-short { display: none; }
-.sk-sort::after { content: '↕'; color: var(--text-mute); font-size: 12px; }
-[aria-sort] > .sk-sort { color: var(--text); }
-[aria-sort="descending"] > .sk-sort::after { content: '↓'; color: var(--text); }
-[aria-sort="ascending"] > .sk-sort::after { content: '↑'; color: var(--text); }
-.sk-who { display: flex; align-items: center; gap: var(--s3); min-height: 44px; color: var(--text); text-decoration: none; }
-.sk-who:hover .sk-who__name { text-decoration: underline; }
-.sk-who .sk-art { width: 40px; height: 40px; }
-.sk-who > span { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.sk-who__name { font-weight: 650; font-size: 14px; }
-.sk-who__sub { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 6px; font-size: 12px; color: var(--text-dim); }
-.sk-tag {
-  display: inline-block; padding: 0 6px; border-radius: 999px;
-  border: 1px solid var(--line); background: var(--surface-2); font-size: 11px; color: var(--text-dim);
-}
-
 /* ---------------------------------------------------------------- narrow */
 
 /* Below a laptop: list and line take turns. The list fills the screen; picking
@@ -309,20 +264,9 @@
   .sk-icon .sk-art { width: 56px; height: 56px; }
   .sk-skill { font-size: 19px; }
   .sk-boxes, .sk-levels { grid-template-columns: minmax(0, 1fr); }
-  .sk-rank { padding: var(--s3); }
-  .sk-table thead th, .sk-table tbody th, .sk-table td { padding-inline: var(--s2); }
-  .sk-long { display: none; }
-  .sk-short { display: inline; }
-  .sk-table td.sk-num { font-size: 12.5px; }
-  .sk-who { gap: var(--s2); }
-  .sk-who .sk-art { width: 34px; height: 34px; }
 }
 /* A 320px phone: every pixel of padding counts for the table to fit. */
 @media (max-width: 400px) {
-  .sk-rank { padding-inline: var(--s1); }
-  .sk-table thead th, .sk-table tbody th, .sk-table td { padding-inline: var(--s1); }
-  .sk-table thead th:first-child, .sk-table tbody th { padding-left: var(--s2); }
-  .sk-who .sk-art { width: 30px; height: 30px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .sk-pick, .sk-switch__btn { transition: none; }
@@ -351,8 +295,6 @@
   .sk-app.is-live .sk-index > .panel__head { padding-top: var(--s3); }
   .sk-app.is-live .sk-pick { padding-block: 3px; min-height: 52px; }
   .sk-app.is-live .sk-detail { height: 100%; min-height: 0; overflow-y: auto; overscroll-behavior: contain; border-radius: var(--r-lg); }
-  .sk-app.is-live[data-view="rank"] .sk-rank { height: 100%; min-height: 0; overflow-y: auto; max-width: none; padding-top: 0; }
-  .sk-app.is-live[data-view="rank"] .sk-rank > .panel__head { position: sticky; top: 0; z-index: 2; padding-top: var(--s3); background: var(--surface); }
 
   .sk-app.is-live .sk-line {
     display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); grid-template-rows: auto auto; align-content: start;
