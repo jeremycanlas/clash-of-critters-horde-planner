@@ -402,8 +402,10 @@
 /* With a real (not overlay) scrollbar, the list's own scrollbar took 15px and
    the rows, sized for the full width, stuck out by 8: the list could be nudged
    sideways. The rows now shrink to what is left, and neither panel scrolls
-   sideways at all. */
-.sk-index, .sk-detail { overflow-x: hidden; }
+   sideways at all. Clip, not hidden: hidden turns the other axis into a
+   scroll box, and on a phone the list (overscroll contain) then ate every
+   swipe, so the page would not scroll. */
+.sk-index, .sk-detail { overflow-x: clip; }
 .sk-index__list { min-width: 0; }
 .sk-index__item, .sk-pick { min-width: 0; }
 .sk-pick__name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
