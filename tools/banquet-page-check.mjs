@@ -384,7 +384,14 @@ try {
   assert.ok(db.claims.some((c) => c.who === 'Ana' && c.uid === '10000001'), 'Gift claims it');
   assert.equal(db.marks.get(`1:${looked}`).state, 'full', 'Portrait marks it full');
   assert.equal(db.marks.get(`1:${asleep}`).state, 'not-yet', 'Nothing marks it not logged in');
-  assert.equal(await A.locator('#bq-run-tally').textContent(), 'So far: 1 claimed · 1 full · 1 not logged in · 2 skipped');
+  assert.equal((await A.locator('#bq-run-tally').textContent()).replace(/\s+/g, ' ').trim(), 'So far: 1 claimed, 1 full, 1 not logged in, 2 skipped',
+    'the words are there for a screen reader');
+  assert.deepEqual(await A.locator('.bq-run__t b').allTextContents(), ['1', '1', '1', '2'], 'and on screen, icons and counts');
+  await A.setViewportSize({ width: 320, height: 640 });
+  assert.ok(await A.locator('#bq-run-tally').evaluate((p) => p.getBoundingClientRect().height < 26 && p.scrollWidth <= p.clientWidth),
+    'one line on a 320px phone');
+  if (process.env.BANQUET_SHOTS) await A.screenshot({ path: `${process.env.BANQUET_SHOTS}/run-tally-320.png` });
+  await A.setViewportSize(devices['iPhone SE'].viewport);
   await A.click('#bq-run-close');
   assert.ok(await A.locator('#bq-run').evaluate((d) => !d.open), 'List closes it');
   assert.match(await A.locator('#bq-run-start').textContent(), new RegExp(`${due - 3} to go`), 'claimed, full and not logged in are off the run');

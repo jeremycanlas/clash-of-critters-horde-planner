@@ -241,7 +241,14 @@
 .bq-run__btn:hover { filter: brightness(1.06); }
 .bq-run__btn:focus-visible, .bq-run__skip:focus-visible { outline: 2px solid var(--accent-ink-on); outline-offset: 2px; }
 .bq-run__skip { align-self: center; min-height: 44px; }
-.bq-run__tally { margin: auto 0 0; text-align: center; font-size: 13px; }
+.bq-run__tally { display: flex; justify-content: center; gap: var(--s4); margin: auto 0 0; font-size: 13px; }
+/* Each answer's icon in its status colour, the count beside it in the text colour. */
+.bq-run__t { display: inline-flex; align-items: center; gap: 5px; }
+.bq-run__t b { color: var(--text); font-size: 14px; font-variant-numeric: tabular-nums; }
+.bq-run__t.is-gift { color: color-mix(in srgb, var(--ok) 75%, var(--text)); }
+.bq-run__t.is-full { color: color-mix(in srgb, var(--danger) 75%, var(--text)); }
+.bq-run__t.is-notin { color: var(--accent-ink-on); }
+.bq-run__t.is-skip { color: var(--text-dim); }
 
 /* A phone: the whole screen, nothing else to tap by mistake. */
 @media (max-width: 560px) {

@@ -617,17 +617,23 @@ const ICON = {
   gift: '<rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7M7.5 8a2.5 2.5 0 0 1 0-5C10 3 12 8 12 8s2-5 4.5-5a2.5 2.5 0 0 1 0 5"/>',
   full: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
   notin: '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>',
+  skip: '<path d="M5 4l10 8-10 8z"/><path d="M19 5v14"/>',
 };
-const icon = (k) => `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+const icon = (k, size = 26) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[k]}</svg>`;
 
+const TALLY = [['gift', 'claimed'], ['full', 'full'], ['notin', 'not logged in'], ['skip', 'skipped']];
 function renderRun() {
   const total = run.queue.length;
   const b = run.i < total ? cardOf(run.queue[run.i]) : null;
   const t = run.tally;
   $('#bq-run-step').textContent = b ? `${run.i + 1} / ${total}` : 'done';
   $('#bq-run-bar').style.width = `${total ? Math.round((Math.min(run.i, total) / total) * 100) : 100}%`;
-  $('#bq-run-tally').textContent = `So far: ${t.gift} claimed · ${t.full} full · ${t.notin} not logged in · ${t.skip} skipped`;
+  /* The tally as the answers' own icons, each with its count: one line on the
+     narrowest phone, where the words ran to three. The words stay, for a
+     screen reader, and as a tooltip. */
+  $('#bq-run-tally').innerHTML = `<span class="sr-only">So far: </span>${TALLY.map(([k, word], i) => `<span class="bq-run__t is-${k}" title="${t[k]} ${word}">
+      ${icon(k, 16)}<b>${t[k]}</b><span class="sr-only"> ${word}${i < TALLY.length - 1 ? ', ' : ''}</span></span>`).join('')}`;
   if (!b) {
     $('#bq-run-body').innerHTML = `<section class="bq-run__card">
         <h3>${total ? 'Run finished' : 'Nothing to check right now'}</h3>
