@@ -70,3 +70,9 @@ before the page that needs it goes live.
 only asked about roles now, and `setup-server.sh` no longer reads the channel.
 Which groups are covered until the reset is data, set by hand:
 `update <schema>.banquet_groups set covered = true where grp in (…)`.
+
+034 lets one server's channel be read again. YCT (`tide`) reads its channel
+once more, from 6 Oct 00:00 Manila, and its list is not covered; the first
+server stays site-only. A server's reading is its own scheduled job:
+`select cron.schedule('tide-banquet-sync', '15 seconds', 'select tide.banquet_sync()')`
+starts it and `cron.unschedule` with that name stops it.

@@ -38,6 +38,7 @@ end $$;
 \i supabase/migrations/031_banquet_statuses.sql
 \i supabase/migrations/032_banquet_likes.sql
 \i supabase/migrations/033_banquet_site_only.sql
+\i supabase/migrations/034_banquet_channel_again.sql
 
 -- Real entries would skew the counts. Gone for this transaction only.
 delete from public.banquet_claims; delete from public.banquet_marks; delete from public.banquet_uids; delete from public.banquet_access; delete from public.banquet_events;
@@ -86,7 +87,7 @@ begin
   assert public.banquet_round('2026-10-04 23:59+00') = '2026-09-30', 'lasts until Duneside';
   assert public.banquet_round('2026-10-05 00:00+00') = '2026-10-07', 'Duneside is named by its reset, and its UIDs come before it';
   assert public.banquet_round('2026-10-20 00:00+00') = '2026-10-07', 'and it stays current until the next is set up';
-  assert not exists (select 1 from cron.job where jobname = 'banquet-sync'), 'Discord is no longer read';
+  assert public.banquet_reads_from('2026-10-07') = '2026-10-06 00:00+08' and public.banquet_reads_from('2026-09-30') = '2026-09-30 00:00+00', 'a channel is read from Duneside''s switch, older rounds from their reset';
 end $$;
 
 -- ---------------------------------------------------------------- the channels
