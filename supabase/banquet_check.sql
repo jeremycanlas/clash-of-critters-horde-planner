@@ -37,6 +37,7 @@ end $$;
 \i supabase/migrations/029_banquet_viewer_ids.sql
 \i supabase/migrations/031_banquet_statuses.sql
 \i supabase/migrations/032_banquet_likes.sql
+\i supabase/migrations/033_banquet_site_only.sql
 
 -- Real entries would skew the counts. Gone for this transaction only.
 delete from public.banquet_claims; delete from public.banquet_marks; delete from public.banquet_uids; delete from public.banquet_access; delete from public.banquet_events;
@@ -82,7 +83,10 @@ begin
          = '{11112222,12345678,87654321}'::bigint[], 'eight digits, any quoting, no longer or shorter';
   assert public.banquet_round('2026-09-30 07:59+08') = '2026-09-24', 'a minute before the end is the previous round';
   assert public.banquet_round('2026-09-30 08:00+08') = '2026-09-30', 'the end starts the round';
-  assert public.banquet_round('2026-10-06 07:59+08') = '2026-09-30', 'lasts six days';
+  assert public.banquet_round('2026-10-04 23:59+00') = '2026-09-30', 'lasts until Duneside';
+  assert public.banquet_round('2026-10-05 00:00+00') = '2026-10-07', 'Duneside is named by its reset, and its UIDs come before it';
+  assert public.banquet_round('2026-10-20 00:00+00') = '2026-10-07', 'and it stays current until the next is set up';
+  assert not exists (select 1 from cron.job where jobname = 'banquet-sync'), 'Discord is no longer read';
 end $$;
 
 -- ---------------------------------------------------------------- the channels
@@ -385,7 +389,7 @@ end $$;
 reset role;
 insert into public.banquet_likes (grp, uid, likes, discord_id, by_name, at) values
   (1, 10000001, 50, '990000000000000302', 'zz_b', public.banquet_opens(public.banquet_round()) - interval '7 days'),
-  (1, 10000001, 100, '990000000000000302', 'zz_b', public.banquet_opens(public.banquet_round()) - interval '1 hour');
+  (1, 10000001, 100, '990000000000000302', 'zz_b', least(public.banquet_opens(public.banquet_round()), now()) - interval '1 hour');
 set local role authenticated;
 select pg_temp.as_(1);
 select public.banquet_likes_set(10000001, 150);
@@ -393,8 +397,13 @@ do $$
 declare c jsonb;
 begin
   c := pg_temp.card(public.banquet_state(), '10000001');
-  assert (c -> 'likes_before' ->> 'n')::int = 100 and c -> 'likes_before' ->> 'by' = 'zz_b', 'the last count before the reset, not the one before it';
-  assert (c -> 'likes_now' ->> 'n')::int = 150 and c -> 'likes_now' ->> 'by' = 'zz_a', 'and the last since';
+  if now() >= public.banquet_round()::timestamp at time zone 'UTC' then
+    assert (c -> 'likes_before' ->> 'n')::int = 100 and c -> 'likes_before' ->> 'by' = 'zz_b', 'the last count before the reset, not the one before it';
+    assert (c -> 'likes_now' ->> 'n')::int = 150 and c -> 'likes_now' ->> 'by' = 'zz_a', 'and the last since';
+  else -- before this round's reset, a count noted now is its "before"
+    assert (c -> 'likes_before' ->> 'n')::int = 150 and c -> 'likes_before' ->> 'by' = 'zz_a', 'before the reset, the newest count is "before"';
+    assert c -> 'likes_now' = 'null'::jsonb, 'and nothing is "now" yet';
+  end if;
   assert pg_temp.card(public.banquet_state(), '10000002') -> 'likes_before' = 'null'::jsonb, 'none written down: null';
   begin perform public.banquet_likes_set(10000001, -1); raise exception 'negative likes';
   exception when raise_exception then if sqlerrm = 'negative likes' then raise; end if; end;
@@ -451,6 +460,47 @@ begin
   l := public.banquet_access_log();
   assert (select (x ->> 'copied')::int from jsonb_array_elements(l) x where x ->> 'name' = 'zz_v') = 0, 'W does not: it was from the private list';
   assert not exists (select 1 from jsonb_array_elements(l) x, jsonb_array_elements(x -> 'groups') g where g::int = 3), 'nor any private group';
+end $$;
+
+-- ---------------------------------------------------------------- a covered list
+-- Group 1 covered until the reset: A, with four of their own, sees only them.
+-- V, who sees every group, sees all; Group 2 is not covered.
+reset role;
+update public.banquet_groups set covered = true where grp = 1;
+set local role authenticated;
+select pg_temp.as_(1);
+do $$
+declare s jsonb;
+begin
+  if now() < public.banquet_round()::timestamp at time zone 'UTC' then
+    s := public.banquet_state();
+    assert (s ->> 'covered')::boolean, 'A is told the list is covered';
+    assert not (s ->> 'shared')::boolean and jsonb_array_length(s -> 'banquets') = 0 and jsonb_array_length(s -> 'events') = 0, 'and sees none of it';
+    assert jsonb_array_length(s -> 'mine') >= 4, 'but sees their own';
+    perform public.banquet_add(10000099);
+    assert (select count(*) from jsonb_array_elements(public.banquet_state() -> 'mine') x where x ->> 'uid' = '10000099') = 1, 'and can add more';
+    begin perform public.banquet_claim(10000001, true); raise exception 'claimed while covered';
+    exception when raise_exception then if sqlerrm = 'claimed while covered' then raise; end if; end;
+  end if;
+end $$;
+select pg_temp.as_(4);
+do $$ begin
+  assert not (public.banquet_state() ? 'covered') and jsonb_array_length(public.banquet_state() -> 'banquets') > 0, 'V sees every group, covered or not';
+end $$;
+select pg_temp.as_(3);
+do $$ begin
+  assert not (public.banquet_state() ? 'covered'), 'Group 2 is not covered';
+end $$;
+-- A UID from the last round can be added again: each round has its own.
+reset role;
+insert into public.banquet_uids (round, grp, uid, discord_id, by_name, source)
+values ('2026-09-30', 1, 10000077, '990000000000000301', 'zz_a', 'site');
+update public.banquet_groups set covered = false where grp = 1;
+set local role authenticated;
+select pg_temp.as_(1);
+select public.banquet_add(10000077);
+do $$ begin
+  assert (select count(*) from jsonb_array_elements(public.banquet_state() -> 'mine') x where x ->> 'uid' = '10000077') = 1, 'last round''s UID added again';
 end $$;
 
 -- ---------------------------------------------------------------- how long an answer is remembered

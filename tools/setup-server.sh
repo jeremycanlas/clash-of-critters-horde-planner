@@ -89,4 +89,5 @@ insert into $s.banquet_groups (grp, role_id, channel_id) values (1, :'role', :'c
 select vault.update_secret(id, :'token') from vault.secrets where name = :'name';
 select vault.create_secret(:'token', :'name') where not exists (select 1 from vault.secrets where name = :'name');
 SQL
-echo "settings: saved. First read of the channel: $(q -tAc "select $s.banquet_sync()")"
+# Channels are no longer read (033): UIDs are added on the site.
+echo "settings: saved."

@@ -65,3 +65,8 @@ other server too: `sh tools/setup-server.sh tide supabase/migrations/0NN_banquet
 applied to neither yet: apply it to `public`, then
 `sh tools/setup-server.sh tide supabase/migrations/031_banquet_statuses.sql`,
 before the page that needs it goes live.
+
+033 (site only, Duneside, covered groups) stops reading Discord: the bot is
+only asked about roles now, and `setup-server.sh` no longer reads the channel.
+Which groups are covered until the reset is data, set by hand:
+`update <schema>.banquet_groups set covered = true where grp in (…)`.

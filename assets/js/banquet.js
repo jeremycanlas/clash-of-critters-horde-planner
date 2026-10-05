@@ -1,5 +1,5 @@
 /**
- * MVP banquets: the UIDs a group posts in its Discord channel each gold rush,
+ * MVP banquets: the UIDs a group adds here each gold rush,
  * and who has claimed which banquet.
  *
  * Holds no data and decides nothing. Who gets in and which group they are (a
@@ -123,15 +123,18 @@ let drawnGroups = ''; // the groups and names the View as buttons were last draw
 let wasAsleep = []; // your UIDs not logged in at the last render, so a new one opens the fold
 
 const status = (text) => { $('#bq-status').textContent = text; $('#bq-status').hidden = !text; };
-/* A round is one gold rush: it starts at the reset (00:00 UTC, 8am Manila) on
-   the date it is stored under and ends six days later. Dates read in UTC so
-   everyone sees the same ones; the end is also given in the viewer's own time. */
+/* A round is one gold rush, named by its reset (00:00 UTC, 8am Manila): when
+   its banquets open. Its UIDs are added before that, and a past round ran six
+   days from it. The current round stays current until the next is set up, so
+   it is labelled by its reset alone. Dates read in UTC so everyone sees the
+   same ones; the reset is also given in the viewer's own time. */
 const opens = (d) => new Date(`${d}T00:00:00Z`);
 const closes = (d) => new Date(opens(d).getTime() + 6 * 864e5);
 const utcDay = (t) => t.toLocaleDateString(undefined, { day: 'numeric', month: 'short', timeZone: 'UTC' });
-const span = (d) => `${utcDay(opens(d))} – ${utcDay(closes(d))}`;
+const span = (d) => (d === state?.current ? `reset ${utcDay(opens(d))}` : `${utcDay(opens(d))} – ${utcDay(closes(d))}`);
+const before = (d) => Date.now() < opens(d).getTime(); // its UIDs are still being added
 // The date is in the round picker already; the weekday says which day it is where you are.
-const localEnd = (d) => closes(d).toLocaleString(undefined, { weekday: 'short', hour: 'numeric', minute: '2-digit' });
+const yourTime = (t) => t.toLocaleString(undefined, { weekday: 'short', hour: 'numeric', minute: '2-digit' });
 const time = (iso) => new Date(iso).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
 // "2:05 PM, 12 min ago": the clock for when, the gap for whether to go and look again.
 const since = (iso) => {
@@ -359,9 +362,10 @@ async function loadCopies() {
 
 /* A refresh that fails keeps the list on screen, so a phone that lost its
    signal would show an old list as if it were live. Two minutes without an
-   answer says so, and it is the reader's connection, not Discord. */
+   answer says so, and it goes once an answer comes back. */
 function offline() {
   const min = Math.floor((Date.now() - reached) / 60000);
+  $('#bq-stale').hidden = min < 2;
   if (min < 2) return;
   $('#bq-stale').hidden = false;
   $('#bq-stale').textContent = `This page has not reached the list for ${min} minutes, so what you see may be out of date. Check your connection.`;
@@ -377,17 +381,11 @@ function render() {
   if (document.activeElement !== $('#bq-round')) $('#bq-round').innerHTML = state.rounds
     .map((r) => `<option value="${r}"${r === state.round ? ' selected' : ''}>${span(r)}${r === state.current ? ' (now)' : ''}</option>`)
     .join('');
-  // How fresh the posts are: read every minute, so a gap of five means it stopped.
-  const age = state.synced_at ? Math.floor((Date.now() - Date.parse(state.synced_at)) / 60000) : null;
-  $('#bq-fresh').textContent = past || age == null ? '' : `Discord read ${age < 1 ? 'just now' : `${age} min ago`}`;
-  $('#bq-stale').hidden = past || (age != null && age < 5);
-  $('#bq-stale').textContent = age == null
-    ? 'Discord has not been read yet, so posted UIDs are missing. Tell the owner.'
-    : `Discord has not been read for ${age} minutes, so new or edited posts may be missing. Tell the owner.`;
   $('#bq-when').textContent = past ? 'A past round, read only.'
-    : `Ends 00:00 UTC · ${localEnd(state.round)} your time`;
+    : before(state.round) ? `Resets 00:00 UTC · ${yourTime(opens(state.round))} your time`
+    : `Reset ${yourTime(opens(state.round))} your time`;
 
-  // Yours: posted ones come from Discord and change there; added ones can go.
+  // Yours: added here, and they can go. Ones read from Discord, in older rounds, cannot.
   const n = state.mine.length;
   const mineShown = state.mine.filter((m) => !m.grp || inView(m.grp));
   // Each one's status, once the list is open to you.
@@ -401,7 +399,7 @@ function render() {
       ${m.source === 'discord' ? '<span class="bq-src">from Discord</span>'
         : past ? '' : `<button type="button" class="btn btn--quiet" data-edit="${m.uid}"${grpAttr(m.grp)} aria-label="Edit ${m.uid}">Edit</button>
           <button type="button" class="btn btn--quiet" data-remove="${m.uid}"${grpAttr(m.grp)} aria-label="Remove ${m.uid}">Remove</button>`}
-    </li>`).join('') || `<li class="muted">${past ? 'None this gold rush.' : 'None yet. Post them in Discord, or add them here.'}</li>`;
+    </li>`).join('') || `<li class="muted">${past ? 'None this gold rush.' : 'None yet. Add them here.'}</li>`;
   const asleep = past ? [] : mineShown.filter((m) => statusMine(m) === 'notin').map((m) => m.uid);
   $('#bq-remind').hidden = !asleep.length;
   $('#bq-remind').innerHTML = asleep.length ? `${asleep.join(', ')} ${asleep.length > 1 ? "haven't" : "hasn't"} logged in since the reset.
@@ -412,7 +410,7 @@ function render() {
      is being used. One of yours not logged in is something to do: the
      reminder to copy is in there, so it opens, on arrival or whenever one
      newly turns not logged in. Folding it again after that is yours. */
-  if (!folded) { $('#bq-mine-fold').open = !!asleep.length || !((past || state.shared) && mineShown.length); folded = true; }
+  if (!folded) { $('#bq-mine-fold').open = !!asleep.length || !!state.covered || !((past || state.shared) && mineShown.length); folded = true; }
   else if (asleep.some((u) => !wasAsleep.includes(u))) $('#bq-mine-fold').open = true;
   wasAsleep = asleep;
   /* The groups are Discord roles, and a role can be added or renamed while
@@ -431,8 +429,11 @@ function render() {
 
   const open = past || state.shared;
   $('#bq-locked').hidden = open;
-  $('#bq-locked').textContent = `${state.total} banquet${state.total === 1 ? '' : 's'} shared this round. `
-    + `Add ${4 - n} more UID${4 - n === 1 ? '' : 's'} of your own to see them.`;
+  // Covered: the group's list opens at the reset, however many you add.
+  $('#bq-locked').textContent = state.covered
+    ? `The list opens at the reset, ${yourTime(opens(state.round))} your time. Add your UIDs now: until then, only you see them.`
+    : `${state.total} banquet${state.total === 1 ? '' : 's'} shared this round. `
+      + `Add ${4 - n} more UID${4 - n === 1 ? '' : 's'} of your own to see them.`;
   $('#bq-list').hidden = !open;
   $('#bq-view').hidden = !state.groups || shot;
   $('#bq-copies').hidden = !state.groups || shot || !!group;
@@ -522,7 +523,7 @@ const DUE = 24 * 3600 * 1000;
 let onlyUnnoted = false;
 const unnoted = (b) => !b.likes_now;
 function renderLikesDue(on) {
-  const left = on ? closes(state.round).getTime() - Date.now() : 0;
+  const left = on ? (before(state.round) ? opens(state.round) : closes(state.round)).getTime() - Date.now() : 0;
   const list = state.banquets.filter((b) => !b.grp || inView(b.grp));
   const missing = list.filter(unnoted).length;
   const show = on && left > 0 && left <= DUE && list.length > 0;
@@ -530,7 +531,7 @@ function renderLikesDue(on) {
   if (!show) { onlyUnnoted = false; return; }
   const h = Math.max(1, Math.round(left / 3600e3));
   $('#bq-likes-due').innerHTML = `${icon('heart', 15)}<span>Reset in ${h} h. ${missing
-    ? `<b>${missing}</b> of ${list.length} building${list.length === 1 ? '' : 's'} have no likes noted yet. Noting them now means nobody mistakes a portrait for full next round.`
+    ? `<b>${missing}</b> of ${list.length} building${list.length === 1 ? '' : 's'} have no likes noted yet. Noting them now means nobody mistakes a portrait for full after the reset.`
     : 'Every building has its likes noted for next round.'}</span>
     ${missing ? `<button type="button" class="btn btn--quiet" data-unnoted aria-pressed="${onlyUnnoted}">${onlyUnnoted ? 'Show all' : 'Show those'}</button>` : ''}`;
 }

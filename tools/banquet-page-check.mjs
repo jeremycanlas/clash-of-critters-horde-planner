@@ -80,7 +80,7 @@ function stateB(me) {
 }
 const schemas = []; // the schema of every request each person's page made: 'public' or 'tide'
 
-let syncedAgo = 60e3;
+const syncedAgo = 60e3;
 let reads = 0;
 let sames = 0;
 let down = false; // the database unreachable, for the offline check
@@ -92,7 +92,7 @@ function state(me) {
   reads++;
   const groups = me.all ? db.groups : [me.grp];
   const mine = db.uids.filter((u) => u.who === me.name && groups.includes(u.grp));
-  const shared = me.all || mine.length >= 4;
+  const shared = me.all || (!me.covered && mine.length >= 4);
   const keys = [...new Map(db.uids.filter((u) => groups.includes(u.grp)).map((u) => [`${u.grp}:${u.uid}`, u])).values()];
   const card = (k) => {
     const cl = db.claims.filter((c) => c.grp === k.grp && c.uid === k.uid);
@@ -116,6 +116,7 @@ function state(me) {
     synced_at: new Date(Date.now() - syncedAgo).toISOString(),
     mine: mine.map((u) => ({ uid: u.uid, source: u.source, ...(me.all ? { grp: u.grp } : {}) })),
     banquets: shared ? keys.map(card) : [],
+    ...(me.covered ? { covered: true } : {}),
     events: shared ? [...db.events.filter((e) => groups.includes(e.grp)),
       ...db.uids.filter((u) => groups.includes(u.grp)).map((u, i) => ({ grp: u.grp, uid: u.uid, kind: 'post', by: u.who, at: new Date(Date.parse('2026-09-29T00:00:00Z') + i * 60e3).toISOString() }))]
       .sort((a, b) => b.at.localeCompare(a.at)).slice(0, 200)
@@ -247,11 +248,10 @@ try {
   const ana = await open({ name: 'Ana', grp: 1 }, devices['iPhone SE']);
   const A = ana.page;
   assert.equal(await A.locator('#bq-my li').count(), 3, 'her three posts fill in by themselves');
-  /* The line under the header, for a member: when the round ends and how fresh
-     Discord's posts are. #bq-status is only the "Checking your role…" line and
-     is gone once the list is in, which is how it should be. */
-  assert.match(await A.locator('#bq-when:visible').textContent(), /^Ends 00:00 UTC · .+ your time$/, 'when the round ends');
-  assert.match(await A.locator('#bq-fresh:visible').textContent(), /^Discord read (just now|\d+ min ago)$/, 'and when Discord was read');
+  /* The line under the header, for a member: when the round resets. #bq-status
+     is only the "Checking your role…" line and is gone once the list is in. */
+  assert.match(await A.locator('#bq-when:visible').textContent(), /^Resets? .+ your time$/, 'when the round resets');
+  assert.ok(!/Discord read|Post them in Discord/.test(await A.locator('#bq-app').innerText()), 'nothing says Discord is read');
   assert.ok(await A.locator('#bq-status').isHidden(), 'the loading line is gone once loaded');
   assert.match(await A.locator('#bq-locked').textContent(), /Add 1 more UID/, 'three is not enough');
   assert.ok(await A.locator('#bq-list').isHidden(), 'the list stays shut');
@@ -701,13 +701,21 @@ try {
   down = false;
   await A.clock.fastForward(31_000);
   await A.waitForTimeout(500);
-  assert.ok(!/connection/.test(await A.locator('#bq-stale').textContent()), 'back online, the connection warning goes');
+  assert.ok(await A.locator('#bq-stale').isHidden(), 'back online, the connection warning goes');
 
-  // ------------------------------------------------------------------ the sync stopped
-  syncedAgo = 12 * 60e3;
-  await A.reload();
-  await A.waitForSelector('#bq-app:not([hidden])');
-  assert.match(await A.locator('#bq-stale:not([hidden])').textContent(), /not been read for \d+ minutes/);
+  // ------------------------------------------------------------------ a covered list
+  // Cy's group is covered until the reset: whatever Cy adds, Cy sees only their own.
+  const cov = await open({ name: 'Cov', grp: 1, covered: true }, devices['iPhone SE']);
+  const C = cov.page;
+  for (const uid of ['91000001', '91000002', '91000003', '91000004', '91000005']) {
+    await C.fill('#bq-add-uid', uid);
+    await C.click('#bq-add');
+    await C.waitForSelector(`#bq-my [data-copy="${uid}"]`);
+  }
+  assert.equal(await C.locator('#bq-my li').count(), 5, 'five of their own, all shown');
+  assert.ok(await C.locator('#bq-list').isHidden(), 'and the list stays covered past four');
+  assert.match(await C.locator('#bq-locked').textContent(), /The list opens at the reset, .+ your time\. Add your UIDs now/, 'saying when it opens');
+  assert.deepEqual(await axe(C), [], 'axe, covered');
 
   // ------------------------------------------------------------------ a first load that fails
   down = true;
@@ -783,7 +791,7 @@ try {
   await D.waitForTimeout(400);
   assert.deepEqual(await axe(D), [], 'axe, both servers');
 
-  assert.deepEqual([...ana.errors, ...vee.errors, ...bea.errors, ...out.errors, ...junk.errors, ...half.errors, ...duo.errors], [],
+  assert.deepEqual([...ana.errors, ...cov.errors, ...vee.errors, ...bea.errors, ...out.errors, ...junk.errors, ...half.errors, ...duo.errors], [],
     'no script errors');
   console.log('banquet page: ok');
 } finally {

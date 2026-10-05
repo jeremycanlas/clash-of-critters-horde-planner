@@ -42,9 +42,8 @@
           <select id="bq-round" class="field" aria-label="Which gold rush"></select>
         </label>
         <span id="bq-when" class="muted bq-when"></span>
-        <span id="bq-fresh" class="muted bq-when"></span>
       </div>
-      <!-- The channels are read every minute; this says when that stopped. -->
+      <!-- Says when this page has stopped reaching the list. -->
       <p id="bq-stale" class="bq-stale" role="status" hidden></p>
       <!-- The last day before the reset: the time to note each building's likes for the next round. -->
       <p id="bq-likes-due" class="bq-likes-due" hidden></p>
@@ -74,8 +73,8 @@
         <div id="bq-copies-body"></div>
       </details>
 
-      <!-- Yours this gold rush: what you posted in Discord, filled in by itself,
-           and anything added here. Four of them opens everyone else's. -->
+      <!-- Yours this gold rush, added here. Four of them opens everyone else's,
+           unless the list is covered until the reset. -->
       <form id="bq-mine" class="panel bq-mine">
         <details id="bq-mine-fold" open>
         <summary><h2>Your UIDs <span id="bq-mine-n" class="muted"></span></h2></summary>
