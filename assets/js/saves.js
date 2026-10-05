@@ -25,12 +25,8 @@ import { track } from './analytics.js';
 
 const KEY = 'coc.saves.v1';
 
-/**
- * Forty is far more drafts than anyone iterates on and small enough that the
- * list stays a list. Refused loudly rather than silently dropping the oldest —
- * these are the user's decisions, not a cache.
- */
-const CAP = 40;
+/* No cap on how many: the only limit is the browser's storage, and write()
+   says so when that is full rather than dropping anything. */
 
 /** @typedef {{id: string, name: string, savedAt: number, data: object}} Save */
 
@@ -109,11 +105,6 @@ function saveCurrent({ quiet = false } = {}) {
   const now = Date.now();
   const name = snap.name.trim() || autoName(now);
   const at = saves.findIndex((s) => s.name.toLowerCase() === name.toLowerCase());
-
-  if (at === -1 && saves.length >= CAP) {
-    toast(`Saved formations are full (${CAP}). Delete a few first`, 'error');
-    return null;
-  }
 
   const entry = at === -1
     ? { id: newId(), name, savedAt: now, data: snap }
