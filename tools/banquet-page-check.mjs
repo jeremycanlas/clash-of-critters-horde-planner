@@ -419,6 +419,11 @@ try {
   assert.equal(await gift.first().locator('.bq-log__verb').textContent(), 'saw the gift on 20000001', 'the newest line on it is the gift Ana saw');
   assert.equal(await gift.locator('.bq-log__act').count(), 1, 'Copy UID and I claimed it, once, not on every line about it');
   assert.equal(await gift.first().locator('.bq-log__act').count(), 1, 'on the newest line');
+  // Lit up, so labelling MVPs never hides what you can claim: the newest line only, and a count in the heading.
+  assert.ok(await gift.first().evaluate((li) => li.classList.contains('is-claimable')), 'a line you can claim is lit up');
+  assert.equal(await A.locator('#bq-log li.is-claimable[data-key=":20000001"]').count(), 1, 'only its newest line');
+  const toClaim = await A.locator('#bq-cards .bq-card.is-claimable:not(.is-claimed)').count();
+  assert.equal(await A.locator('#bq-log-claim').textContent(), `· ${toClaim} to claim`, 'the heading counts what you can still claim');
   for (const box of await gift.first().locator('button').evaluateAll((bs) => bs.map((b) => b.getBoundingClientRect().height))) {
     assert.ok(box >= 44, `44px to tap, got ${box}`);
   }
@@ -432,6 +437,7 @@ try {
   await A.waitForSelector('#toast.is-shown');
   assert.deepEqual(lastSent('Ana', 'banquet_claim'), { target: 20000001, claimed: true, g: null }, 'I claimed it is the same claim as the card');
   await A.waitForFunction(() => document.querySelector('#bq-log li[data-key=":20000001"] .bq-log__state')?.textContent === 'You claimed it');
+  assert.ok(!(await A.locator('#bq-log li[data-key=":20000001"]').first().evaluate((li) => li.classList.contains('is-claimable'))), 'claimed: no longer lit');
   assert.equal(await A.locator('#bq-cards [data-claim="20000001"]').getAttribute('aria-pressed'), 'true', 'and the card agrees');
   await A.click('#toast .toast__act'); // Undo, as on a card
   await A.waitForFunction(() => document.querySelector('[data-claim="20000001"]')?.getAttribute('aria-pressed') === 'false');

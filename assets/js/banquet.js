@@ -493,13 +493,20 @@ function renderLog(on, past) {
   // ponytail: the newest 50 of the 200 the database sends; a "more" button if a round ever needs it.
   const events = (state.events ?? []).filter((e) => !e.grp || inView(e.grp)).slice(0, 50);
   const cards = new Map(state.banquets.map((b) => [keyOf(b), b]));
+  /* Labelling MVPs must never cost the labeller a banquet: what they can claim
+     right now is counted in the heading and lit up in the log, so it is in
+     view while they mark the rest. */
+  const canClaim = (b) => !past && b && !b.claimed && !b.full && statusOf(b) === 'claimable';
+  const open = state.banquets.filter((b) => (!b.grp || inView(b.grp)) && canClaim(b)).length;
+  $('#bq-log-claim').hidden = !open;
+  $('#bq-log-claim').textContent = open ? `· ${open} to claim` : '';
   const done = new Set(); // UIDs whose newest line is drawn: the rest are older news
   $('#bq-log').innerHTML = events.map((e) => {
     const k = keyOf(e);
     const newest = !done.has(k);
     done.add(k);
     const [look, say] = SAID[e.kind] ?? ['clear', (u) => `${esc(e.kind)} ${u}`];
-    return `<li class="is-${look}" data-key="${k}">
+    return `<li class="is-${look}${newest && canClaim(cards.get(k)) ? ' is-claimable' : ''}" data-key="${k}">
       ${icon(look, 18)}
       <span class="bq-log__what">${tagOf(e.grp)}<b>${esc(e.by)}</b> <span class="bq-log__verb">${say(`<span class="bq-log__uid">${e.uid}</span>`)}</span></span>
       <time datetime="${e.at}">${when(e.at)}</time>
