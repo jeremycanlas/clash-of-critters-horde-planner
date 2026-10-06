@@ -39,6 +39,7 @@ end $$;
 \i supabase/migrations/032_banquet_likes.sql
 \i supabase/migrations/033_banquet_site_only.sql
 \i supabase/migrations/034_banquet_channel_again.sql
+\i supabase/migrations/035_banquet_bot_answers.sql
 
 -- Real entries would skew the counts. Gone for this transaction only.
 delete from public.banquet_claims; delete from public.banquet_marks; delete from public.banquet_uids; delete from public.banquet_access; delete from public.banquet_events;
@@ -80,13 +81,27 @@ $$;
 -- ---------------------------------------------------------------- pure parts
 do $$
 begin
-  assert array(select public.banquet_parse('`12345678` / ‘87654321’ 123456789 1234567 x11112222y 12345678') order by 1)
-         = '{11112222,12345678,87654321}'::bigint[], 'eight digits, any quoting, no longer or shorter';
+  assert array(select public.banquet_parse('`13579246` / ‘87654321’ 135792469 1234567 x11112222y 13579246') order by 1)
+         = '{11112222,13579246,87654321}'::bigint[], 'eight digits, any quoting, no longer or shorter';
   assert public.banquet_round('2026-09-30 07:59+08') = '2026-09-24', 'a minute before the end is the previous round';
   assert public.banquet_round('2026-09-30 08:00+08') = '2026-09-30', 'the end starts the round';
   assert public.banquet_round('2026-10-04 23:59+00') = '2026-09-30', 'lasts until Duneside';
   assert public.banquet_round('2026-10-05 00:00+00') = '2026-10-07', 'Duneside is named by its reset, and its UIDs come before it';
   assert public.banquet_round('2026-10-20 00:00+00') = '2026-10-07', 'and it stays current until the next is set up';
+  -- 035: the example UID is never one, and what the bot makes of a post.
+  assert array(select public.banquet_parse('12345678 | 23456789 |')) = '{23456789}'::bigint[], '12345678 is the example, not a UID';
+  assert public.banquet_ack_read(E'1st
+14289205 | 10795976 | 22734148
+2nd
+16777530/17349955') = '{"uids": 5, "bad": []}', 'a clean post: five, nothing wrong';
+  assert public.banquet_ack_read('5th 257614831 / 28200817 / 1234567') = '{"uids": 1, "bad": ["1234567", "257614831"]}', 'nine and seven digits are flagged';
+  assert public.banquet_ack_read('<@606863557094539286> drop them here, format: 12345678 | 12345678') = '{"uids": 0, "bad": []}', 'the announcement: nothing';
+  assert public.banquet_ack_read('see https://discord.com/channels/151888059987866/155412215474697 <:vUp:1535202996252581909> <#1554122154746978> ok') = '{"uids": 0, "bad": []}', 'links, emoji and channels are not typos';
+  assert public.banquet_ack_read('the mvp keeps changing every hour') = '{"uids": 0, "bad": []}', 'chat: nothing';
+  assert public.banquet_ack_text('{"uids": 1, "bad": ["257614831"]}') = '⚠️ Not recorded: `257614831` has 9 digits. A UID is 8 digits. Edit your message to fix it and I''ll pick it up.', 'the warning';
+  assert public.banquet_ack_text('{"uids": 24, "bad": []}') = '✅ Fixed, all 24 UIDs recorded.', 'and once fixed';
+  assert public.banquet_ack(1::smallint, 'c', 't', '[{"id": "1", "content": "257614831", "author": {"id": "2"}, "timestamp": "2026-10-06T00:00:00Z"}]', true, now()) = 0
+         or exists (select 1 from public.banquet_settings where ack_up is not null), 'with no emojis set, nothing is answered and Discord is not asked';
   assert public.banquet_reads_from('2026-10-07') = '2026-10-06 00:00+08' and public.banquet_reads_from('2026-09-30') = '2026-09-30 00:00+00', 'a channel is read from Duneside''s switch, older rounds from their reset';
 end $$;
 
@@ -146,6 +161,8 @@ begin
   s := public.banquet_state();
   assert jsonb_array_length(s -> 'banquets') = 8, 'and removing them leaves the eight';
 
+  begin perform public.banquet_add(12345678); raise exception 'the example added';
+  exception when raise_exception then if sqlerrm = 'the example added' then raise; end if; end;
   begin perform public.banquet_add(1234567); raise exception 'seven digits added';
   exception when raise_exception then if sqlerrm = 'seven digits added' then raise; end if; end;
 
