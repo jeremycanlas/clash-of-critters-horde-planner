@@ -329,3 +329,19 @@
   .bq-activity { position: sticky; top: calc(var(--bq-top, 0px) + var(--s3));
     max-height: calc(100dvh - var(--bq-top, 0px) - 2 * var(--s3)); overflow: auto; }
 }
+
+/* Wider than a phone: a small panel, docked on the right, dragged by its title
+   bar, with the page usable behind it (assets/js/banquet.js, startRun). */
+.bq-run.bq-run--float {
+  position: fixed; inset: auto; top: var(--s4); right: var(--s4); margin: 0; z-index: var(--z-modal);
+  width: 320px; max-height: calc(100dvh - 2 * var(--s4)); overflow: auto; padding: var(--s3); gap: var(--s2);
+  box-shadow: 0 12px 32px color-mix(in srgb, #000 45%, transparent);
+}
+.bq-run--float .bq-run__top { cursor: grab; touch-action: none; user-select: none; }
+.bq-run--float .bq-run__top:active { cursor: grabbing; }
+.bq-run--float .bq-run__top h2 { font-size: 16px; }
+.bq-run--float .bq-run__card { padding: var(--s3); gap: 6px; }
+.bq-run--float .bq-run__uid.tr-copy { font-size: 26px; }
+.bq-run--float .bq-run__btn { min-height: 52px; font-size: 15px; gap: 10px; padding: 4px 12px; }
+.bq-run--float .bq-run__btn small { font-size: 12px; }
+.bq-run--float #bq-run-body { gap: var(--s2); }

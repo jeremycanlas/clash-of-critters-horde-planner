@@ -820,11 +820,51 @@ async function nextInRun() {
   if (say && run.queue[run.i] === k) say.textContent = ok ? 'Copied, paste it in the game' : 'Tap the UID to copy it';
 }
 
+/* On a phone the run is the whole screen. On anything wider it is a small
+   panel that does not block the page, docked on the right, so the game's
+   window (an emulator, often) stays in view beside it; dragged by its title
+   bar, it stays where it was put, per browser. */
+const RUNPOS = 'coc.banquet.runpos';
+const wide = () => matchMedia('(min-width: 561px)').matches;
+function placeRun(x, y) {
+  const d = $('#bq-run');
+  const left = Math.max(0, Math.min(x, innerWidth - d.offsetWidth));
+  const top = Math.max(0, Math.min(y, innerHeight - 48));
+  Object.assign(d.style, { left: `${left}px`, top: `${top}px`, right: 'auto' });
+  return { left, top };
+}
 function startRun() {
   run = { queue: runQueue(), i: -1, tally: { gift: 0, full: 0, notin: 0, skip: 0 } };
-  if (!$('#bq-run').open) $('#bq-run').showModal();
+  const d = $('#bq-run');
+  if (!d.open) {
+    d.classList.toggle('bq-run--float', wide());
+    if (wide()) {
+      d.show();
+      let at = null;
+      try { at = JSON.parse(localStorage.getItem(RUNPOS) ?? 'null'); } catch { /* docked, then */ }
+      if (at) placeRun(at.left, at.top); else d.removeAttribute('style');
+    } else d.showModal();
+  }
   nextInRun();
 }
+$('#bq-run').addEventListener('pointerdown', (e) => {
+  const d = $('#bq-run');
+  if (!d.classList.contains('bq-run--float') || !e.target.closest('.bq-run__top') || e.target.closest('button')) return;
+  const box = d.getBoundingClientRect();
+  const dx = e.clientX - box.left;
+  const dy = e.clientY - box.top;
+  const move = (m) => placeRun(m.clientX - dx, m.clientY - dy);
+  const drop = (m) => {
+    removeEventListener('pointermove', move);
+    removeEventListener('pointerup', drop);
+    try { localStorage.setItem(RUNPOS, JSON.stringify(placeRun(m.clientX - dx, m.clientY - dy))); } catch { /* this visit only */ }
+  };
+  addEventListener('pointermove', move);
+  addEventListener('pointerup', drop);
+  e.preventDefault();
+});
+// A panel that does not block the page has no Escape of its own.
+addEventListener('keydown', (e) => { if (e.key === 'Escape' && $('#bq-run').open && $('#bq-run').classList.contains('bq-run--float')) $('#bq-run').close(); });
 
 $('#bq-run-start').addEventListener('click', startRun);
 $('#bq-run-close').addEventListener('click', () => $('#bq-run').close());

@@ -602,6 +602,30 @@ try {
   assert.equal(lastSent('Vee', 'banquet_mark').g, 2, "a mark goes to the card's group");
   assert.deepEqual(await axe(V), [], 'axe, viewer, light, with a full card');
 
+  // On a PC the claim run is a small panel on the right, the page usable behind it, and it can be moved.
+  await V.click('#bq-run-start');
+  await V.waitForSelector('#bq-run[open] .bq-run__uid');
+  const panel = await V.locator('#bq-run').evaluate((d) => { const r = d.getBoundingClientRect(); return { modal: d.matches(':modal'), w: r.width, right: innerWidth - r.right }; });
+  assert.ok(!panel.modal && panel.w <= 340 && panel.right <= 24, `a small panel docked right, not a modal: ${JSON.stringify(panel)}`);
+  await V.fill('#bq-find', '2000');
+  assert.equal(await V.inputValue('#bq-find'), '2000', 'the page behind it still takes typing');
+  await V.fill('#bq-find', '');
+  if (process.env.BANQUET_SHOTS) await V.screenshot({ path: `${process.env.BANQUET_SHOTS}/run-pc.png` });
+  const head = await V.locator('#bq-run-head').boundingBox();
+  await V.mouse.move(head.x + 5, head.y + 5);
+  await V.mouse.down();
+  await V.mouse.move(head.x - 600, head.y + 200, { steps: 5 });
+  await V.mouse.up();
+  const moved = await V.locator('#bq-run').boundingBox();
+  assert.ok(moved.x < 1280 - 340 - 300 && moved.y > head.y + 100, `dragged by its title, got ${moved.x}, ${moved.y}`);
+  await V.keyboard.press('Escape');
+  assert.ok(await V.locator('#bq-run').evaluate((d) => !d.open), 'Escape closes it');
+  await V.click('#bq-run-start');
+  await V.waitForSelector('#bq-run[open]');
+  const again = await V.locator('#bq-run').boundingBox();
+  assert.ok(Math.abs(again.x - moved.x) < 2 && Math.abs(again.y - moved.y) < 2, 'and opens where it was left');
+  await V.click('#bq-run-close');
+
   await V.click('[data-group="1"]');
   // Screenshot mode: the bar goes, stays gone on reload, and the title brings it back.
   await V.click('#bq-shot');
