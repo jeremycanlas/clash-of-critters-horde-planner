@@ -860,9 +860,16 @@ $('#bq-mine').addEventListener('submit', async (e) => {
   if (!/^[0-9]{8}$/.test(uid)) { err.textContent = 'A UID is 8 digits.'; err.hidden = false; return; }
   const g = state.groups ? group || Number($('#bq-add-grp').value) || null : null;
   if (state.groups && !g) { err.textContent = combined ? 'Pick a server.' : 'Pick a group.'; err.hidden = false; return; }
+  // Back in the box after every add, so the next one can be typed straight away.
+  const again = () => $('#bq-add-uid').focus();
+  // Adding one you have already did nothing and said nothing, which reads as broken.
+  if (state.mine.some((m) => m.uid === uid && (m.grp ?? null) === g)) {
+    err.textContent = `${uid} is already in your list.`; err.hidden = false; $('#bq-add-uid').value = ''; again(); return;
+  }
   $('#bq-add').disabled = true;
   const got = await call('banquet_add', { target: Number(uid), g });
   $('#bq-add').disabled = false;
+  again();
   if (!got.ok) { err.textContent = got.why; err.hidden = false; return; }
   $('#bq-add-uid').value = '';
   markSeen(`${g ?? ''}:${uid}`); // yours: not news to you

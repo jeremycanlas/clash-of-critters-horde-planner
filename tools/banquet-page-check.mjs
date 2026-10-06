@@ -714,6 +714,12 @@ try {
   }
   assert.equal(await C.locator('#bq-my li').count(), 5, 'five of their own, all shown');
   assert.equal(await C.locator('#bq-my li').first().locator('[data-copy]').textContent(), '91000005', 'newest first, right under the box');
+  assert.equal(await C.evaluate(() => document.activeElement?.id), 'bq-add-uid', 'after clicking Add UID the cursor is back in the box');
+  await C.fill('#bq-add-uid', '91000003');
+  await C.click('#bq-add');
+  assert.equal(await C.locator('#bq-mine-error').textContent(), '91000003 is already in your list.', 'adding one you have says so');
+  assert.equal(await C.inputValue('#bq-add-uid'), '', 'and clears the box for the next');
+  assert.equal(await C.evaluate(() => document.activeElement?.id), 'bq-add-uid', 'with the cursor still in it');
   assert.ok(await C.evaluate(() => document.querySelector('#bq-add-uid').getBoundingClientRect().bottom
     <= document.querySelector('#bq-my').getBoundingClientRect().top), 'the box sits above the list, so adding never pushes it down');
   assert.ok(await C.locator('#bq-list').isHidden(), 'and the list stays covered past four');
