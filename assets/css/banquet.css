@@ -311,7 +311,7 @@
 .bq-log .is-full { --kind: color-mix(in srgb, var(--danger) 75%, var(--text)); }
 .bq-log .is-notin { --kind: var(--accent-ink-on); }
 .bq-log__act, .bq-log__state { grid-column: 2 / -1; }
-.bq-log__act { display: flex; gap: var(--s2); }
+.bq-log__act { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s2); } /* two by two: fits the 320px column */
 .bq-log__btn { flex: 1; min-height: 44px; }
 .bq-log__btn.tr-copy { padding: 0 12px; font: 600 13px/1.2 var(--font-ui); }
 .bq-log__state { font-size: 12.5px; font-weight: 650; }

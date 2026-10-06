@@ -475,8 +475,8 @@ const when = (iso) => {
     : new Date(iso).toLocaleString(undefined, { weekday: 'short', hour: 'numeric', minute: '2-digit' });
 };
 /* A line about a banquet you can claim right now is the quickest way to it:
-   its newest line, only, gets Copy UID and I claimed it, the same two the card
-   has and handled by the same code. Claimed or full since, that line says so
+   its newest line, only, gets the card's own buttons (Copy UID, I claimed it,
+   Full, Not logged in), handled by the same code. Claimed or full since, that line says so
    instead. Older lines about the same UID stay plain, so nothing repeats. */
 function logAction(e, b, past) {
   if (past || !b) return '';
@@ -486,6 +486,8 @@ function logAction(e, b, past) {
   return `<span class="bq-log__act">
       <button type="button" class="tr-copy bq-log__btn" data-copy="${b.uid}" aria-label="Copy UID ${b.uid}">Copy UID</button>
       <button type="button" class="btn bq-log__btn" data-claim="${b.uid}"${grpAttr(b.grp)} aria-label="I claimed it, ${b.uid}" aria-pressed="false">I claimed it</button>
+      <button type="button" class="btn btn--quiet bq-log__btn" data-mark="full" data-uid="${b.uid}"${grpAttr(b.grp)} aria-label="Full: ${b.uid}" aria-pressed="false">Full</button>
+      <button type="button" class="btn btn--quiet bq-log__btn" data-mark="not-yet" data-uid="${b.uid}"${grpAttr(b.grp)} aria-label="Not logged in: ${b.uid}" aria-pressed="false">Not logged in</button>
     </span>`;
 }
 function renderLog(on, past) {
@@ -1005,7 +1007,13 @@ async function press(e) {
   const li = btn.closest('li');
   if (mark && on && mark.dataset.mark === 'full' && !('sure' in mark.dataset)) {
     const b = cardOf(li.dataset.key);
-    if (b && hadOne(b)) { askFull = li.dataset.key; return renderCards(state.round !== state.current); }
+    if (b && hadOne(b)) {
+      // Its likes say it was MVP before: the card asks first. From the log, that card is brought into view.
+      askFull = li.dataset.key;
+      renderCards(state.round !== state.current);
+      if (btn.closest('#bq-log')) $(`#bq-cards li[data-key="${CSS.escape(li.dataset.key)}"]`)?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      return;
+    }
   }
   askFull = null;
   btn.disabled = true;
