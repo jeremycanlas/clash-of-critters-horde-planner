@@ -387,7 +387,7 @@ function render() {
 
   // Yours: added here, and they can go. Ones read from Discord, in older rounds, cannot.
   const n = state.mine.length;
-  const mineShown = state.mine.filter((m) => !m.grp || inView(m.grp));
+  const mineShown = state.mine.filter((m) => !m.grp || inView(m.grp)).reverse(); // newest first, under the box
   // Each one's status, once the list is open to you.
   const cards = new Map(state.banquets.map((b) => [keyOf(b), b]));
   const statusMine = (m) => { const b = cards.get(keyOf(m)); return b && statusOf(b); };

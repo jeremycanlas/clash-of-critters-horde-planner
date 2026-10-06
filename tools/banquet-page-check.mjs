@@ -713,6 +713,9 @@ try {
     await C.waitForSelector(`#bq-my [data-copy="${uid}"]`);
   }
   assert.equal(await C.locator('#bq-my li').count(), 5, 'five of their own, all shown');
+  assert.equal(await C.locator('#bq-my li').first().locator('[data-copy]').textContent(), '91000005', 'newest first, right under the box');
+  assert.ok(await C.evaluate(() => document.querySelector('#bq-add-uid').getBoundingClientRect().bottom
+    <= document.querySelector('#bq-my').getBoundingClientRect().top), 'the box sits above the list, so adding never pushes it down');
   assert.ok(await C.locator('#bq-list').isHidden(), 'and the list stays covered past four');
   assert.match(await C.locator('#bq-locked').textContent(), /The list opens at the reset, .+ your time\. Add your UIDs now/, 'saying when it opens');
   assert.deepEqual(await axe(C), [], 'axe, covered');

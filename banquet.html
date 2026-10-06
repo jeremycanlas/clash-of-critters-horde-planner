@@ -78,15 +78,17 @@
       <form id="bq-mine" class="panel bq-mine">
         <details id="bq-mine-fold" open>
         <summary><h2>Your UIDs <span id="bq-mine-n" class="muted"></span></h2></summary>
-        <ul id="bq-my" class="bq-my"></ul>
-        <!-- Yours that someone saw no icon on: the MVP has not logged in since the reset. -->
-        <p id="bq-remind" class="bq-remind" hidden></p>
+        <!-- The box first and the list newest first under it: adding twenty in a row,
+             the box stays put and the one just added is right below it. -->
         <div class="bq-mine__actions">
           <input id="bq-add-uid" class="field" inputmode="numeric" pattern="[0-9]{8}" maxlength="8" autocomplete="off" aria-label="Add a UID">
           <select id="bq-add-grp" class="field" aria-label="Which group" hidden></select>
           <button id="bq-add" class="btn btn--primary" type="submit">Add UID</button>
         </div>
         <p id="bq-mine-error" class="tr-form__error" role="alert" hidden></p>
+        <!-- Yours that someone saw no icon on: the MVP has not logged in since the reset. -->
+        <p id="bq-remind" class="bq-remind" hidden></p>
+        <ul id="bq-my" class="bq-my"></ul>
         </details>
       </form>
 
