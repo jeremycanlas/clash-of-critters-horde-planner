@@ -21,7 +21,7 @@
  * schema the card it is about came from.
  */
 
-import { rest, signIn, signOut, signedIn, readCallback, isConfigured } from './supabase.js';
+import { rest, signIn, signOut, signedIn, readCallback, isConfigured, whoAmI } from './supabase.js';
 import { applyPrefs } from './prefs.js';
 import { showPrivateTab } from './site-nav.js';
 import { $, $$, esc, copyText, toast } from './ui.js';
@@ -740,11 +740,22 @@ function renderCards(past) {
    nobody has checked; then those not logged in when last checked, once that
    was an hour ago or more. */
 const RECHECK = 60 * 60 * 1000;
+/* Clusters, so people checking at once do not all start at the same UID: each
+   person is one of four, fixed by their sign-in, and the unchecked lists (Needs a
+   look, Not logged in) start a quarter further along for each and wrap round.
+   Everyone still gets every UID; Claimable stays most room first for all, since
+   everyone claims every one of those anyway. */
+const CLUSTERS = 4;
+const cluster = [...(whoAmI()?.uid ?? '')].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 0) % CLUSTERS;
+const fromMine = (list) => {
+  const at = Math.floor((cluster * list.length) / CLUSTERS);
+  return [...list.slice(at), ...list.slice(0, at)];
+};
 function runQueue() {
   const list = state.banquets.filter((b) => !b.grp || inView(b.grp));
   const pick = (st, ok) => list.filter((b) => statusOf(b) === st && ok(b)).sort(ORDER[st]);
-  return [...pick('claimable', (b) => !b.claimed), ...pick('look', () => true),
-    ...pick('notin', (b) => Date.now() - Date.parse(b.not_yet.at) >= RECHECK)].map(keyOf);
+  return [...pick('claimable', (b) => !b.claimed), ...fromMine(pick('look', () => true)),
+    ...fromMine(pick('notin', (b) => Date.now() - Date.parse(b.not_yet.at) >= RECHECK))].map(keyOf);
 }
 let run = null; // { queue: ["grp:uid"], i, tally }
 const cardOf = (k) => state.banquets.find((b) => keyOf(b) === k);

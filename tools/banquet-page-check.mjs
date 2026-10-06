@@ -131,7 +131,8 @@ const browser = await chromium.launch();
 async function open(me, opts) {
   const ctx = await browser.newContext({ ...opts, colorScheme: me.scheme ?? 'dark' });
   await ctx.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: `http://127.0.0.1:${PORT}` });
-  await ctx.addInitScript(() => localStorage.setItem('coc.community.v1', JSON.stringify({ refresh_token: 'x', uid: 'u', name: 'x' })));
+  // Each person their own sign-in ID, which is what puts them in a claim-run cluster.
+  await ctx.addInitScript((id) => localStorage.setItem('coc.community.v1', JSON.stringify({ refresh_token: 'x', uid: id, name: 'x' })), me.name);
   await ctx.route(/supabase\.co/, async (route) => {
     const u = new URL(route.request().url());
     const body = route.request().postDataJSON?.() ?? {};
@@ -783,6 +784,28 @@ try {
   assert.deepEqual(dee.errors, [], 'the refresh timer stays quiet with no list');
   down = false;
 
+  // ------------------------------------------------------------------ claim-run clusters
+  // Ana is cluster 1 of 4 and starts the unchecked UIDs at the top; Eli is cluster 3
+  // and starts half way along, wrapping round. Both get every one.
+  const eli = await open({ name: 'Eli', grp: 1 }, { viewport: { width: 1280, height: 900 } });
+  const E = eli.page;
+  const looks = await E.locator('#bq-cards li.is-look').evaluateAll((ls) => ls.map((l) => l.dataset.key.split(':')[1]));
+  const claimN = await E.locator('#bq-cards li.is-claimable:not(.is-claimed)').count();
+  assert.ok(looks.length >= 4, `enough unchecked to split, got ${looks.length}`);
+  await E.click('#bq-run-start');
+  await E.waitForSelector('#bq-run[open] .bq-run__uid');
+  const eliRan = [];
+  for (let i = 0; i < claimN + looks.length; i++) {
+    const step = await E.locator('#bq-run-step').textContent();
+    eliRan.push(await E.locator('.bq-run__uid').textContent());
+    await E.click('[data-run="skip"]');
+    await E.waitForFunction((was) => document.querySelector('#bq-run-step')?.textContent !== was, step);
+  }
+  const at = Math.floor((2 * looks.length) / 4);
+  assert.deepEqual(eliRan.slice(claimN), [...looks.slice(at), ...looks.slice(0, at)], 'cluster 3 starts half way along the unchecked ones');
+  assert.deepEqual([...eliRan.slice(claimN)].sort(), [...looks].sort(), 'and still gets every one');
+  await E.click('#bq-run-close');
+
   // ------------------------------------------------------------------ the second server
   // The first server's link never asks the second's schema, and the reverse.
   assert.ok(schemas.filter((x) => ['Ana', 'Vee', 'Dee'].includes(x.who)).every((x) => x.schema === 'public'),
@@ -848,7 +871,7 @@ try {
   await D.waitForTimeout(400);
   assert.deepEqual(await axe(D), [], 'axe, both servers');
 
-  assert.deepEqual([...ana.errors, ...cov.errors, ...vee.errors, ...bea.errors, ...out.errors, ...junk.errors, ...half.errors, ...duo.errors], [],
+  assert.deepEqual([...ana.errors, ...cov.errors, ...eli.errors, ...vee.errors, ...bea.errors, ...out.errors, ...junk.errors, ...half.errors, ...duo.errors], [],
     'no script errors');
   console.log('banquet page: ok');
 } finally {
