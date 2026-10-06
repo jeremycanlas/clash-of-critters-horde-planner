@@ -473,6 +473,16 @@ try {
   await A.press('#bq-cards [data-likes-input]', 'Enter');
   await A.waitForFunction(() => /Now 50/.test(document.querySelector('#bq-cards li[data-key=":10000002"] .bq-likes')?.textContent));
   assert.deepEqual(lastSent('Ana', 'banquet_likes_set'), { target: 10000002, n: 50, g: null });
+  // With likes: only the buildings with a count noted, and back to all.
+  const everyCard = await A.locator('#bq-cards li[data-key]').count();
+  await A.click('#bq-liked');
+  const withLikes = await A.locator('#bq-cards li[data-key]').evaluateAll((ls) => ls.map((l) => l.dataset.key));
+  assert.ok(withLikes.includes(':10000002') && withLikes.length < everyCard, `With likes shows only those noted, got ${withLikes}`);
+  assert.ok(await A.locator('#bq-cards li[data-key]').evaluateAll((ls) => ls.every((l) => l.querySelector('.bq-likes'))), 'every one shown has its likes row');
+  assert.equal(await A.locator('#bq-liked').getAttribute('aria-pressed'), 'true');
+  assert.equal(await A.locator('#bq-liked-n').textContent(), `(${withLikes.length})`, 'and says how many');
+  await A.click('#bq-liked');
+  assert.equal(await A.locator('#bq-cards li[data-key]').count(), everyCard, 'pressed again, all of them');
   await A.clock.runFor(15000); // a refresh while the box is open keeps it, and what is typed
   await ana2.locator('[data-likes]').click();
   await A.fill('#bq-cards [data-likes-input]', '7');

@@ -522,6 +522,9 @@ function renderLog(on, past) {
 const DUE = 24 * 3600 * 1000;
 let onlyUnnoted = false;
 const unnoted = (b) => !b.likes_now;
+// "With likes": only buildings with a count noted, before the reset or since.
+let onlyLiked = false;
+const liked = (b) => !!(b.likes_before || b.likes_now);
 function renderLikesDue(on) {
   const left = on ? (before(state.round) ? opens(state.round) : closes(state.round)).getTime() - Date.now() : 0;
   const list = state.banquets.filter((b) => !b.grp || inView(b.grp));
@@ -697,7 +700,9 @@ function renderCards(past) {
   const inViewList = state.banquets.filter((b) => !b.grp || inView(b.grp));
   for (const [st] of SECTIONS) $(`[data-n="${st}"]`).textContent = inViewList.filter((b) => statusOf(b) === st).length;
   for (const x of $$('[data-show]')) x.setAttribute('aria-pressed', String(x.dataset.show === show));
-  const shown = inViewList.filter((b) => found(b) && (!onlyUnnoted || unnoted(b)));
+  $('#bq-liked-n').textContent = `(${inViewList.filter(liked).length})`;
+  $('#bq-liked').setAttribute('aria-pressed', String(onlyLiked));
+  const shown = inViewList.filter((b) => found(b) && (!onlyUnnoted || unnoted(b)) && (!onlyLiked || liked(b)));
   const opened = new Set($$('#bq-cards details[open]').map((d) => d.closest('li').dataset.key));
   const typing = document.activeElement?.matches?.('[data-likes-input]'); // a refresh must not take the box from under a thumb
   $('#bq-cards').innerHTML = SECTIONS.filter(([st]) => !show || show === st).map(([st, head, note]) => {
@@ -1071,6 +1076,11 @@ $('#bq-cards').addEventListener('keydown', (e) => {
   if (e.key === 'Escape') { likesFor = null; renderCards(state.round !== state.current); }
 });
 $('#bq-log').addEventListener('click', press);
+
+$('#bq-liked').addEventListener('click', () => {
+  onlyLiked = !onlyLiked;
+  renderCards(state.round !== state.current);
+});
 
 // A tile shows only its status; pressed again, all four.
 for (const b of $$('[data-show]')) {
