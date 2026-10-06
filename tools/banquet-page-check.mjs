@@ -46,7 +46,8 @@ const db = {
   names: { 1: 'Group 1', 2: 'Group 2', 3: 'Private' },
   // Likes noted on a building: before this round's reset, and since. MVP twice before, both.
   likes: new Map([['1:60000000', { before: { n: 100, by: 'Dee', at: '2026-09-23T20:00:00Z' } }],
-    ['1:60000274', { before: { n: 100, by: 'Fay', at: '2026-09-23T21:00:00Z' } }]]),
+    ['1:60000274', { before: { n: 100, by: 'Fay', at: '2026-09-23T21:00:00Z' } }],
+    ['1:60000411', { before: { n: 0, by: 'Dee', at: '2026-09-23T22:00:00Z' } }]]),
 };
 for (const uid of ['20000001', '55555555', '10000001', '10000002']) db.uids.push({ grp: 1, uid, who: 'Yui', source: 'discord' });
 // A private list, 3, that Vee is in and Ana is not.
@@ -480,16 +481,22 @@ try {
   await A.press('#bq-cards [data-likes-input]', 'Enter');
   await A.waitForFunction(() => /Now 50/.test(document.querySelector('#bq-cards li[data-key=":10000002"] .bq-likes')?.textContent));
   assert.deepEqual(lastSent('Ana', 'banquet_likes_set'), { target: 10000002, n: 50, g: null });
-  // With likes: only the buildings with a count noted, and back to all.
-  const everyCard = await A.locator('#bq-cards li[data-key]').count();
-  await A.click('#bq-liked');
-  const withLikes = await A.locator('#bq-cards li[data-key]').evaluateAll((ls) => ls.map((l) => l.dataset.key));
-  assert.ok(withLikes.includes(':10000002') && withLikes.length < everyCard, `With likes shows only those noted, got ${withLikes}`);
-  assert.ok(await A.locator('#bq-cards li[data-key]').evaluateAll((ls) => ls.every((l) => l.querySelector('.bq-likes'))), 'every one shown has its likes row');
-  assert.equal(await A.locator('#bq-liked').getAttribute('aria-pressed'), 'true');
-  assert.equal(await A.locator('#bq-liked-n').textContent(), `(${withLikes.length})`, 'and says how many');
-  await A.click('#bq-liked');
-  assert.equal(await A.locator('#bq-cards li[data-key]').count(), everyCard, 'pressed again, all of them');
+  // Likes: All, Has likes, 0 likes, Not noted; between them, every card once.
+  const keysNow = () => A.locator('#bq-cards li[data-key]').evaluateAll((ls) => ls.map((l) => l.dataset.key));
+  const everyCard = (await keysNow()).length;
+  await A.click('[data-liked="has"]');
+  const has = await keysNow();
+  assert.ok(has.includes(':10000002') && has.includes(':60000000') && !has.includes(':60000411'), `Has likes: more than 0 noted, got ${has}`);
+  assert.equal(await A.locator('[data-liked="has"]').getAttribute('aria-pressed'), 'true');
+  await A.click('[data-liked="zero"]');
+  assert.deepEqual(await keysNow(), [':60000411'], '0 likes: only the one noted at 0');
+  await A.click('[data-liked="none"]');
+  const none = await keysNow();
+  assert.ok(!none.includes(':10000002') && !none.includes(':60000411'), 'Not noted: none with a count');
+  assert.equal(has.length + 1 + none.length, everyCard, 'the three add up to all');
+  assert.equal(await A.evaluate(() => document.documentElement.scrollWidth - innerWidth), 0, 'the four fit a phone');
+  await A.click('[data-liked="all"]');
+  assert.equal((await keysNow()).length, everyCard, 'All: all of them');
   await A.clock.runFor(15000); // a refresh while the box is open keeps it, and what is typed
   await ana2.locator('[data-likes]').click();
   await A.fill('#bq-cards [data-likes-input]', '7');

@@ -110,7 +110,12 @@
             <input id="bq-find" class="field" type="search" maxlength="40" autocomplete="off" spellcheck="false">
           </label>
           <!-- Only the buildings someone has noted likes on: the ones a portrait can be read against. -->
-          <button id="bq-liked" class="btn btn--quiet bq-liked" type="button" aria-pressed="false">With likes <span id="bq-liked-n" class="muted"></span></button>
+          <div id="bq-liked" class="segmented bq-liked" role="group" aria-label="Likes">
+            <button class="segmented__btn" type="button" data-liked="all" aria-pressed="true">All</button>
+            <button class="segmented__btn" type="button" data-liked="has" aria-pressed="false">Has likes</button>
+            <button class="segmented__btn" type="button" data-liked="zero" aria-pressed="false">0 likes</button>
+            <button class="segmented__btn" type="button" data-liked="none" aria-pressed="false">Not noted</button>
+          </div>
           <!-- What changed, without interrupting: new banquets to claim, and the latest
                thing anyone in the group did. Pinned with the rest of this bar. -->
           <!-- Back to the one you were checking: the last UID copied, whatever has moved since. -->
