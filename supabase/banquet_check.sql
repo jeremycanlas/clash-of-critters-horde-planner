@@ -40,6 +40,9 @@ end $$;
 \i supabase/migrations/033_banquet_site_only.sql
 \i supabase/migrations/034_banquet_channel_again.sql
 \i supabase/migrations/035_banquet_bot_answers.sql
+\i supabase/migrations/036_banquet_check_fallback.sql
+\i supabase/migrations/037_banquet_state_one_pass.sql
+\i supabase/migrations/038_banquet_state_unchanged.sql
 
 -- Real entries would skew the counts. Gone for this transaction only.
 delete from public.banquet_claims; delete from public.banquet_marks; delete from public.banquet_uids; delete from public.banquet_access; delete from public.banquet_events;

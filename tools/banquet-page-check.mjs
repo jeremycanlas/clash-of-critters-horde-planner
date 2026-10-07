@@ -196,7 +196,8 @@ async function open(me, opts) {
           shared: 4, past_visits: 0, last: new Date().toISOString(), flags: [], recent: [] },
       ]);
     }
-    if (fn === 'banquet_check') return json('ok');
+    // `flaky`: Discord does not answer that many times first, as on 7 Oct.
+    if (fn === 'banquet_check') return json(me.flaky && me.flaky-- > 0 ? 'discord-down' : 'ok');
     if (fn === 'tracker_claim') return json(false);
     if (down) return route.abort('internetdisconnected');
     if (fn === 'banquet_state') {
@@ -660,18 +661,18 @@ try {
   // A new Discord role while the page is open: its button turns up on the next refresh, no reload.
   db.groups = [1, 2, 3, 4];
   db.names = { ...db.names, 4: 'MVPgoats' };
-  await V.clock.fastForward(16_000);
+  await V.clock.fastForward(61_000);
   await V.waitForSelector('[data-group="4"]');
   assert.equal(await V.locator('[data-group="4"]').textContent(), 'As MVPgoats', 'a new group gets its button');
   assert.equal(await V.locator('[data-group="1"]').getAttribute('aria-pressed'), 'true', 'and the one chosen stays pressed');
   assert.ok(await V.locator('#bq-add-grp option[value="4"]').count(), 'and a place in the picker');
   db.names = { ...db.names, 4: 'MVP Goats' };
   await V.click('[data-group="4"]');
-  await V.clock.fastForward(16_000);
+  await V.clock.fastForward(61_000);
   await V.waitForFunction(() => document.querySelector('[data-group="4"]')?.textContent === 'As MVP Goats');
   assert.equal(await V.locator('[data-group="4"]').getAttribute('aria-pressed'), 'true', 'a rename keeps it pressed');
   db.groups = [1, 2, 3];
-  await V.clock.fastForward(16_000);
+  await V.clock.fastForward(61_000);
   await V.waitForSelector('[data-group="4"]', { state: 'detached' });
   assert.equal(await V.locator('[data-group="0"]').getAttribute('aria-pressed'), 'true', 'the chosen group gone: back to All groups');
   assert.ok(await V.locator('#bq-cards li[data-key]').count() > 26, 'showing every group again, not Group 1 alone');
@@ -703,9 +704,9 @@ try {
   assert.ok(await A.locator('#bq-new').isHidden(), 'a first visit opens with nothing marked new, got ' + (await A.locator('#bq-new-uids').textContent()));
   db.uids.push({ grp: 1, uid: '71234567', who: 'Ben', source: 'discord' });
   const before = reads;
-  await A.clock.fastForward(16_000);
+  await A.clock.fastForward(61_000);
   await A.waitForTimeout(400);
-  assert.ok(reads > before, 'refreshed within 15 seconds');
+  assert.ok(reads > before, 'refreshed within a minute');
   assert.equal(await A.locator('[data-claim="20000001"]').locator('xpath=..').locator('..').locator('summary').textContent(), 'at least 1 of 50 gone',
     "Vee's Group 1 claim shows without a reload");
   assert.equal(await A.locator('li', { hasText: '55555555' }).locator('.bq-tag', { hasText: 'Full' }).count(), 0, "Vee's Group 2 full does not");
@@ -721,7 +722,7 @@ try {
   assert.equal(await A.locator('li[data-key=":71234567"] .bq-tag--new').count(), 0, 'and the tag');
   assert.equal(await A.inputValue('#bq-add-uid'), '9999', 'a refresh never wipes typing');
   const quiet = sames;
-  await A.clock.fastForward(31_000);
+  await A.clock.fastForward(61_000);
   await A.waitForTimeout(400);
   assert.ok(sames > quiet, 'nothing new: the refresh gets the short answer');
   assert.equal(await A.locator('#bq-cards [data-claim="20000001"]').count(), 1, 'and the list stays as it was');
@@ -731,9 +732,9 @@ try {
     document.dispatchEvent(new Event('visibilitychange'));
   });
   const hidden = reads;
-  await A.clock.fastForward(95_000);
+  await A.clock.fastForward(400_000);
   await A.waitForTimeout(300);
-  assert.ok(reads - hidden >= 1 && reads - hidden <= 2, `about once a minute while hidden, not every 15 seconds (got ${reads - hidden})`);
+  assert.ok(reads - hidden >= 1 && reads - hidden <= 3, `about every three minutes while hidden, not every minute (got ${reads - hidden})`);
 
   // ------------------------------------------------------------------ the page lost its connection
   await A.evaluate(() => {
@@ -748,9 +749,13 @@ try {
     'a page that cannot reach the list says so');
   assert.equal(await A.locator('#bq-cards li[data-key]').count() > 0, true, 'and keeps what it had');
   down = false;
-  await A.clock.fastForward(31_000);
+  await A.clock.fastForward(61_000);
   await A.waitForTimeout(500);
   assert.ok(await A.locator('#bq-stale').isHidden(), 'back online, the connection warning goes');
+
+  // ------------------------------------------------------------------ Discord slow to answer
+  const flo = await open({ name: 'Flo', grp: 1, flaky: 2 }, devices['iPhone SE']);
+  assert.ok(await flo.page.locator('#bq-app').isVisible(), 'two unanswered role checks, then in, with no error shown');
 
   // ------------------------------------------------------------------ a covered list
   // Cy's group is covered until the reset: whatever Cy adds, Cy sees only their own.
@@ -871,7 +876,7 @@ try {
   await D.waitForTimeout(400);
   assert.deepEqual(await axe(D), [], 'axe, both servers');
 
-  assert.deepEqual([...ana.errors, ...cov.errors, ...eli.errors, ...vee.errors, ...bea.errors, ...out.errors, ...junk.errors, ...half.errors, ...duo.errors], [],
+  assert.deepEqual([...ana.errors, ...flo.errors, ...cov.errors, ...eli.errors, ...vee.errors, ...bea.errors, ...out.errors, ...junk.errors, ...half.errors, ...duo.errors], [],
     'no script errors');
   console.log('banquet page: ok');
 } finally {

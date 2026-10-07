@@ -159,10 +159,18 @@ const WHY = {
   'signed-out': ['This page is private', 'Sign in with Discord to see it.'],
 };
 
+/* Discord, or the way to it, sometimes does not answer for a few seconds, and
+   the database can be busy: asked again up to three times before saying so. */
 async function check(d) {
-  const got = await ask(d, 'banquet_check', {});
-  if (!got.ok) return got.why;
-  return got.data;
+  let said;
+  for (let i = 0; i < 4; i++) {
+    if (i) await new Promise((r) => setTimeout(r, 1500 * i));
+    const got = await ask(d, 'banquet_check', {});
+    said = got.ok ? got.data : got.why;
+    if (got.ok && said !== 'discord-down') return said;
+    if (!got.ok && !/busy|reach/i.test(said)) return said; // a real answer, not a moment's overload
+  }
+  return said;
 }
 
 async function start() {
@@ -193,17 +201,20 @@ async function start() {
   showPrivateTab('banquet.html', code ? `?s=${code}` : ''); // a known code: dbs is empty otherwise
   await load();
 
-  /* Everyone else's claims and marks, every 15 seconds while the tab is in
-     view, and at once on coming back to it from the game. While hidden, once a
-     minute: enough for the tab's title to say something new has come in. */
+  /* Everyone else's claims and marks, every minute while the tab is in view,
+     and at once on coming back to it from the game. While hidden, every three
+     minutes: enough for the tab's title to say something new has come in.
+     Every 15 s for every open page was more than the database could build on
+     7 Oct; an unchanged list now costs almost nothing (038), a changed one a
+     rebuild. */
   const refresh = async () => {
     if (!state) return; // no list yet: the first load failed and said so
-    if (document.hidden && Date.now() - reached < 60 * 1000) return;
+    if (document.hidden && Date.now() - reached < 3 * 60 * 1000) return;
     await load(state.round === state.current ? null : state.round, true);
     offline();
     if ($('#bq-access').open && !document.hidden) loadAccess();
   };
-  setInterval(refresh, 15 * 1000);
+  setInterval(refresh, 60 * 1000);
   document.addEventListener('visibilitychange', refresh);
 
   // Keeps the database's yes fresh, and notices a role taken away.
