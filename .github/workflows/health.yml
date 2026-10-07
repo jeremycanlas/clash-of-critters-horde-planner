@@ -1,0 +1,39 @@
+# Is the MVP banquet tracker answering? Every 10 minutes, and a Discord post
+# when it is not (tools/health-check.mjs). Silent while all is well.
+#
+# Needs one repository secret, DISCORD_ALERT_WEBHOOK: a webhook on the Discord
+# channel the alerts should go to (Channel settings -> Integrations -> Webhooks
+# -> New Webhook -> Copy URL), added under Settings -> Secrets and variables ->
+# Actions. Without it the check still runs and its result is in the Actions log.
+#
+# GitHub runs scheduled workflows late when it is busy, sometimes by 10-20
+# minutes, and pauses them after 60 days without a commit to the repository.
+
+name: Banquet health check
+
+run-name: Banquet health check (${{ github.event_name }})
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: banquet-health
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node tools/health-check.mjs
+        env:
+          DISCORD_ALERT_WEBHOOK: ${{ secrets.DISCORD_ALERT_WEBHOOK }}
