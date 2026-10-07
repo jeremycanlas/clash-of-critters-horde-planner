@@ -351,3 +351,6 @@
 .bq-paused { margin: 0; padding: var(--s2) var(--s3); border: 1px solid color-mix(in srgb, var(--accent) 55%, var(--line));
   border-radius: var(--r-md); background: color-mix(in srgb, var(--accent) 8%, var(--surface)); font-size: 13px; }
 .bq-paused[hidden] { display: none; }
+
+/* The likes question, asked in an activity line: under the text, full width. */
+.bq-log .bq-ask { grid-column: 2 / -1; }

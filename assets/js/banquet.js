@@ -567,11 +567,13 @@ function logAction(e, b, past) {
   if (b.claimed) return '<span class="bq-log__state is-claimed">You claimed it</span>';
   if (b.full) return e.kind === 'full' ? '' : '<span class="bq-log__state is-full">Full now</span>';
   if (statusOf(b) !== 'claimable') return '';
+  // Full on a building with likes asks first, here in the line where it was pressed.
+  if (askFull === keyOf(b) && hadOne(b)) return askRow(b);
   return `<span class="bq-log__act">
       <button type="button" class="tr-copy bq-log__btn" data-copy="${b.uid}" aria-label="Copy UID ${b.uid}">Copy UID</button>
       <button type="button" class="btn bq-log__btn" data-claim="${b.uid}"${grpAttr(b.grp)} aria-label="I claimed it, ${b.uid}" aria-pressed="false">I claimed it</button>
-      <button type="button" class="btn btn--quiet bq-log__btn" data-mark="full" data-uid="${b.uid}"${grpAttr(b.grp)} aria-label="Full: ${b.uid}" aria-pressed="false">Full</button>
-      <button type="button" class="btn btn--quiet bq-log__btn" data-mark="not-yet" data-uid="${b.uid}"${grpAttr(b.grp)} aria-label="Not logged in: ${b.uid}" aria-pressed="false">Not logged in</button>
+      <button type="button" class="btn bq-log__btn" data-mark="full" data-uid="${b.uid}"${grpAttr(b.grp)} aria-label="Full: ${b.uid}" aria-pressed="false">Full</button>
+      <button type="button" class="btn bq-log__btn" data-mark="not-yet" data-uid="${b.uid}"${grpAttr(b.grp)} aria-label="Not logged in: ${b.uid}" aria-pressed="false">Not logged in</button>
     </span>`;
 }
 function renderLog(on, past) {
@@ -1152,11 +1154,9 @@ async function press(e) {
   if (mark && on && mark.dataset.mark === 'full' && !('sure' in mark.dataset)) {
     const b = cardOf(li.dataset.key);
     if (b && hadOne(b)) {
-      // Its likes say it was MVP before: the card asks first. From the log, that card is brought into view.
+      // Its likes say it was MVP before: it asks first, on the card or in the log line pressed.
       askFull = li.dataset.key;
-      renderCards(state.round !== state.current);
-      if (btn.closest('#bq-log')) $(`#bq-cards li[data-key="${CSS.escape(li.dataset.key)}"]`)?.scrollIntoView({ block: 'center', behavior: 'smooth' });
-      return;
+      return render();
     }
   }
   askFull = null;
@@ -1227,7 +1227,10 @@ $('#bq-cards').addEventListener('keydown', (e) => {
   if (e.key === 'Enter') { e.preventDefault(); saveLikes(e.target.closest('li').querySelector('[data-likes-save]')); }
   if (e.key === 'Escape') { likesFor = null; renderCards(state.round !== state.current); }
 });
-$('#bq-log').addEventListener('click', press);
+$('#bq-log').addEventListener('click', (e) => {
+  if (e.target.closest('[data-ask-cancel]')) { askFull = null; return render(); }
+  press(e);
+});
 
 $('#bq-liked').addEventListener('click', (e) => {
   const b = e.target.closest('[data-liked]');

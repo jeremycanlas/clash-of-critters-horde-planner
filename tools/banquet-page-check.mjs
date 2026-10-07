@@ -476,6 +476,23 @@ try {
   await A.click('#toast .toast__act'); // Undo, as on a card
   await A.waitForFunction(() => document.querySelector('[data-claim="20000001"]')?.getAttribute('aria-pressed') === 'false');
   if (process.env.BANQUET_SHOTS) await A.locator('#bq-activity').screenshot({ path: `${process.env.BANQUET_SHOTS}/log-phone.png` });
+  // Full from the log on a building with likes before the reset: the question comes up in that line, and its answer is saved.
+  const before274 = db.marks.get('1:60000274');
+  db.marks.set('1:60000274', { state: 'open', by: 'Eli', at: new Date().toISOString() });
+  await A.locator('body').dispatchEvent('pointerdown');
+  await A.clock.runFor(11_000);
+  const liked = A.locator('#bq-log li[data-key=":60000274"]').first();
+  await liked.getByRole('button', { name: 'Full: 60000274' }).click();
+  await liked.locator('.bq-ask').waitFor();
+  assert.match(await liked.locator('.bq-ask').innerText(), /had 100 likes/, 'the likes question, in the line pressed');
+  assert.notEqual(lastSent('Ana', 'banquet_mark')?.target, 60000274, 'nothing marked before it is answered');
+  await liked.locator('[data-mark="not-yet"][data-sure]').click();
+  await A.waitForFunction(() => document.querySelector('#bq-cards li[data-key=":60000274"]')?.classList.contains('is-notin'));
+  assert.deepEqual(lastSent('Ana', 'banquet_mark'), { target: 60000274, state: 'not-yet', g: null }, 'and the answer is the mark');
+  // Back as it was, for the tests after this one.
+  if (before274) db.marks.set('1:60000274', before274); else db.marks.delete('1:60000274');
+  await A.locator('body').dispatchEvent('pointerdown');
+  await A.clock.runFor(11_000);
   assert.ok(await A.locator('#bq-activity').evaluate((d) => d.getBoundingClientRect().top > document.querySelector('#bq-cards').getBoundingClientRect().bottom - 1),
     'on a phone, below the list');
   assert.equal(await A.evaluate(() => document.documentElement.scrollWidth - innerWidth), 0, 'the tiles fit a phone');
