@@ -482,7 +482,7 @@ function render() {
       ${statusMine(m) ? `<span class="bq-mine__st is-${statusMine(m)}">${MINE[statusMine(m)]}</span>` : ''}
       ${mineLikes(m, cards.get(keyOf(m)), past)}
       ${m.source === 'discord' ? '<span class="bq-src">from Discord</span>'
-        : past ? '' : `<button type="button" class="btn btn--quiet" data-edit="${m.uid}"${grpAttr(m.grp)} aria-label="Edit ${m.uid}">Edit</button>
+        : past || mineLikesFor === keyOf(m) ? '' : `<button type="button" class="btn btn--quiet" data-edit="${m.uid}"${grpAttr(m.grp)} aria-label="Edit ${m.uid}">Edit</button>
           <button type="button" class="btn btn--quiet" data-remove="${m.uid}"${grpAttr(m.grp)} aria-label="Remove ${m.uid}">Remove</button>`}
     </li>`).join('') || `<li class="muted">${past ? 'None this gold rush.' : 'None yet. Add them here.'}</li>`;
   const asleep = past ? [] : mineShown.filter((m) => statusMine(m) === 'notin').map((m) => m.uid);

@@ -854,7 +854,9 @@ try {
   await C.waitForFunction(() => /120/.test(document.querySelector('#bq-my li .bq-mine__likes')?.textContent ?? '')
     || [...document.querySelectorAll('#bq-my li')].some((li) => /91000001/.test(li.textContent) && /120/.test(li.textContent)));
   assert.deepEqual(lastSent('Cov', 'banquet_likes_set'), { target: 91000001, n: 120, g: null }, 'a covered member notes likes on their own UID');
-  assert.match(await C.locator('#bq-my li', { hasText: '91000001' }).innerText(), /120[\s\S]*Update/, 'and sees the count, with Update');
+  const row = C.locator('#bq-my li', { hasText: '91000001' });
+  assert.match(await row.locator('.bq-mine__likes').innerText(), /120/, 'and sees the count');
+  assert.equal(await row.locator('[data-mylikes]').count(), 1, 'with the heart to update it (its word hidden on a phone)');
   assert.ok(await C.locator('#bq-list').isHidden(), 'and the list stays covered');
 
   // ------------------------------------------------------------------ a first load that fails

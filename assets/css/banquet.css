@@ -360,3 +360,10 @@
 .bq-mine__uid .bq-likes--edit input { width: 6em; font-size: 16px; font-variant-numeric: tabular-nums; }
 /* With Likes beside Edit and Remove, a row wraps rather than widening a 320px phone. */
 .bq-mine__uid { flex-wrap: wrap; max-width: 100%; }
+
+/* A phone: one line per UID. Smaller buttons, and Likes as its heart alone (the count is beside it). */
+@media (max-width: 560px) {
+  .bq-mine__uid { gap: 6px; }
+  .bq-mine__uid > .btn { min-height: 36px; padding: 4px 9px; font-size: 13px; }
+  .bq-mine__uid .bq-likes__add span { display: none; }
+}
