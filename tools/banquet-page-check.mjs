@@ -84,6 +84,22 @@ const schemas = []; // the schema of every request each person's page made: 'pub
 const syncedAgo = 60e3;
 let reads = 0;
 let sames = 0;
+let changes = 0; // banquet_changes calls
+let cheap = 0;   // of those, ones where nothing had changed
+const SEEN = new Map(); // per person: the cards and keys of their last answer
+function changesFor(me, full) {
+  changes++;
+  const key = (b) => `${b.grp ?? ''}:${b.uid}`;
+  const was = SEEN.get(me.name) ?? new Map();
+  const now = new Map(full.banquets.map((b) => [key(b), JSON.stringify(b)]));
+  const cards = full.banquets.filter((b) => was.get(key(b)) !== now.get(key(b)));
+  const gone = [...was.keys()].filter((k) => !now.has(k)).map((k) => { const [g, uid] = k.split(':'); return { uid, ...(g ? { grp: Number(g) } : {}) }; });
+  SEEN.set(me.name, now);
+  if (!cards.length && !gone.length) cheap++;
+  return { since: new Date().toISOString(), round: full.round, current: full.current, shared: full.shared, total: full.total,
+    mine: full.mine, cards, gone, events_new: full.events, synced_at: full.synced_at, ...(full.covered ? { covered: true } : {}),
+    ...(full.groups ? { groups: full.groups, names: full.names, private: full.private } : {}) };
+}
 let down = false; // the database unreachable, for the offline check
 const NOT_YET_AT = new Date(Date.now() - 5 * 60e3).toISOString();
 const sent = [];
@@ -146,7 +162,12 @@ async function open(me, opts) {
     if (schema === 'tide') {
       sent.push({ who: me.name, fn, body, host: 'B' });
       if (fn === 'banquet_check') return json(me.inB ? 'ok' : 'no-role');
-      if (fn === 'banquet_state') return json({ ...stateB(me), hash: `b${JSON.stringify(dbB.claims)}` });
+      if (fn === 'banquet_state') {
+        const full = stateB(me);
+        SEEN.set(`B:${me.name}`, new Map(full.banquets.map((b) => [`${b.grp ?? ''}:${b.uid}`, JSON.stringify(b)])));
+        return json({ ...full, since: new Date().toISOString(), hash: `b${JSON.stringify(dbB.claims)}` });
+      }
+      if (fn === 'banquet_changes') return json(body.since ? changesFor({ ...me, name: `B:${me.name}` }, stateB(me)) : { reload: true });
       if (fn === 'banquet_claim') {
         dbB.claims = dbB.claims.filter((c) => !(c.uid === String(body.target) && c.who === me.name));
         if (body.claimed) dbB.claims.push({ uid: String(body.target), who: me.name });
@@ -159,7 +180,7 @@ async function open(me, opts) {
       }
       return ok();
     }
-    if (!['banquet_state', 'banquet_check', 'tracker_claim'].includes(fn)) sent.push({ who: me.name, fn, body });
+    if (!['banquet_state', 'banquet_changes', 'banquet_check', 'tracker_claim'].includes(fn)) sent.push({ who: me.name, fn, body });
     const g = me.all ? body.g : me.grp; // what banquet_group_for() does
     if (fn === 'banquet_copies') {
       if (!me.all) return route.fulfill({ status: 400, contentType: 'application/json', body: '{"code":"P0001","message":"Not for this account."}' });
@@ -204,9 +225,12 @@ async function open(me, opts) {
       const full = state(me);
       const { synced_at, ...rest } = full;
       const hash = JSON.stringify(rest);
-      if (body.known === hash) { sames++; return json({ same: true, hash, synced_at }); }
-      return json({ ...full, hash });
+      SEEN.set(me.name, new Map(full.banquets.map((b) => [`${b.grp ?? ''}:${b.uid}`, JSON.stringify(b)])));
+      const since = new Date().toISOString();
+      if (body.known === hash) { sames++; return json({ same: true, hash, since, synced_at }); }
+      return json({ ...full, since, hash });
     }
+    if (fn === 'banquet_changes') return json(body.since ? changesFor(me, state(me)) : { reload: true });
     if (fn === 'banquet_add') { db.uids.push({ grp: g, uid: String(body.target), who: me.name, source: 'site' }); return ok(); }
     if (fn === 'banquet_claim') {
       db.claims = db.claims.filter((c) => !(c.grp === g && c.uid === String(body.target) && c.who === me.name));
@@ -721,11 +745,36 @@ try {
   assert.ok(!/^\(/.test(await A.title()), 'and the title count');
   assert.equal(await A.locator('li[data-key=":71234567"] .bq-tag--new').count(), 0, 'and the tag');
   assert.equal(await A.inputValue('#bq-add-uid'), '9999', 'a refresh never wipes typing');
-  const quiet = sames;
-  await A.clock.fastForward(61_000);
+  // Nothing new: the page asks only what changed, every 10 s while in use, and gets nothing back.
+  const quiet = cheap;
+  const asked = changes;
+  const fulls = reads;
+  await A.locator('body').dispatchEvent('pointerdown'); // in use
+  await A.clock.runFor(31_000); // every timer as it falls due, not each once as fastForward does
   await A.waitForTimeout(400);
-  assert.ok(sames > quiet, 'nothing new: the refresh gets the short answer');
+  assert.ok(cheap - quiet >= 2, `asks what changed every 10 s, and nothing has (${cheap - quiet} empty answers)`);
+  assert.ok(reads - fulls <= cheap - quiet + 1, 'and does not load the whole list for it');
   assert.equal(await A.locator('#bq-cards [data-claim="20000001"]').count(), 1, 'and the list stays as it was');
+
+  // Left untouched: every 10 s for ten minutes, then once a minute, then paused at an hour until tapped.
+  await A.locator('body').dispatchEvent('pointerdown');
+  let c0 = changes;
+  await A.clock.runFor(10 * 60_000 - 5_000);
+  const busy = changes - c0;
+  c0 = changes;
+  await A.clock.runFor(10 * 60_000);
+  const idle = changes - c0;
+  assert.ok(busy >= 50 && idle >= 8 && idle <= 12, `in use every 10 s (${busy} in 10 min), idle once a minute (${idle} in 10 min)`);
+  await A.clock.runFor(41 * 60_000);
+  assert.ok(await A.locator('#bq-paused').isVisible(), 'paused after an hour untouched, and says so');
+  c0 = changes;
+  await A.clock.runFor(5 * 60_000);
+  assert.equal(changes - c0, 0, 'and asks nothing while paused');
+  if (process.env.BANQUET_SHOTS) await A.locator('#bq-paused').screenshot({ path: `${process.env.BANQUET_SHOTS}/paused.png` });
+  const r0 = reads; // a whole load or a what-changed both read the list here
+  await A.locator('body').dispatchEvent('pointerdown');
+  await A.waitForTimeout(300);
+  assert.ok(await A.locator('#bq-paused').isHidden() && reads > r0, 'a tap resumes, asking at once (a whole load, after so long)');
 
   await A.evaluate(() => {
     Object.defineProperty(document, 'hidden', { configurable: true, get: () => true });

@@ -201,27 +201,48 @@ async function start() {
   showPrivateTab('banquet.html', code ? `?s=${code}` : ''); // a known code: dbs is empty otherwise
   await load();
 
-  /* Everyone else's claims and marks, every minute while the tab is in view,
-     and at once on coming back to it from the game. While hidden, every three
-     minutes: enough for the tab's title to say something new has come in.
-     Every 15 s for every open page was more than the database could build on
-     7 Oct; an unchanged list now costs almost nothing (038), a changed one a
-     rebuild. */
-  const refresh = async () => {
-    if (!state) return; // no list yet: the first load failed and said so
-    if (document.hidden && Date.now() - reached < 3 * 60 * 1000) return;
-    await load(state.round === state.current ? null : state.round, true);
-    offline();
-    if ($('#bq-access').open && !document.hidden) loadAccess();
-  };
-  setInterval(refresh, 60 * 1000);
-  document.addEventListener('visibilitychange', refresh);
+  /* Everyone else's claims and marks: what changed, every 10 s while you are
+     using the page, every minute once it has sat untouched for 10 minutes, every
+     3 minutes while hidden, and at once on coming back to it from the game.
+     Untouched for an hour, it pauses until tapped. 7 Oct: every open tab asked
+     for its whole list every 15 s, for as long as it was open, overnight too,
+     and the database could not keep up (039). */
+  // Real input only: a redraw can move the scroll position by itself, which is not someone there.
+  for (const ev of ['pointerdown', 'keydown', 'wheel', 'touchstart', 'touchmove']) addEventListener(ev, touched, { passive: true });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) { touched(); tick(true); } });
+  setInterval(tick, 5 * 1000);
 
   // Keeps the database's yes fresh, and notices a role taken away.
   setInterval(async () => {
+    if (paused) return;
     const again = await Promise.all(dbs.map(check));
     if (again.includes('no-role')) location.reload();
   }, 10 * 60 * 1000);
+}
+
+/* How long since `t`. A clock moved back (a phone resetting it, say) makes
+   anything waiting due at once, and never makes you look away for days. */
+const ago_ = (t) => (Date.now() < t ? Infinity : Date.now() - t);
+const away = () => Math.max(0, Date.now() - lastActive);
+const ACTIVE = 10 * 1000;
+const IDLE_AFTER = 10 * 60 * 1000;
+const PAUSE_AFTER = 60 * 60 * 1000;
+let lastActive = Date.now();
+let lastAsk = 0;
+let paused = false;
+function touched() {
+  lastActive = Date.now();
+  if (paused) { paused = false; $('#bq-paused').hidden = true; tick(true); }
+}
+const every = () => (document.hidden ? 3 * 60 * 1000 : away() > IDLE_AFTER ? 60 * 1000 : ACTIVE);
+async function tick(now = false) {
+  if (!state || paused) return; // no list yet: the first load failed and said so
+  if (away() > PAUSE_AFTER) { paused = true; $('#bq-paused').hidden = false; return; }
+  if (!now && ago_(lastAsk) < every()) return;
+  lastAsk = Date.now();
+  await poll();
+  offline();
+  if ($('#bq-access').open && !document.hidden) loadAccess();
 }
 
 function gate(head, text, canSignIn) {
@@ -288,7 +309,9 @@ async function load(round = null, quiet = false) {
   dbs.forEach((d, i) => {
     const a = got[i].data;
     d.state = a.same ? { ...d.state, synced_at: a.synced_at } : a;
+    d.since = a.since; // what changed is asked from here
   });
+  lastFull = Date.now();
   state = combined ? merge(dbs.map(lift)) : dbs[0].state;
   if (!seen || before?.round !== state.round) loadSeen(state.round, state.banquets);
   // Just unlocked: the list is new to you all at once, which is the same as none of it.
@@ -300,6 +323,55 @@ async function load(round = null, quiet = false) {
   render();
   if (changed && state.groups) loadCopies();
 }
+
+/* What changed since the last answer, merged into what is held: the cards
+   that moved, whole, and the ones gone. A few rows, however big the list. A
+   full load instead when the database says this page is too far behind, when
+   the list has just opened to you, when the gold rush turns, and every hour
+   in case anything slipped past (a whole list is 0.4-1 MB). A past round does not change. */
+let lastFull = 0;
+let lastDrawn = 0;
+async function poll() {
+  if (!state) return;
+  if (state.round !== state.current) return;
+  if (ago_(lastFull) > 60 * 60 * 1000 || dbs.some((d) => !d.since)) return load(null, true);
+  const got = await Promise.all(dbs.map((d) => ask(d, 'banquet_changes', { since: d.since })));
+  if (got.some((x) => !x.ok)) return; // keeps what is on screen; offline() says so after two minutes
+  reached = Date.now();
+  if (got.some((x, i) => x.data.reload || x.data.current !== dbs[i].state.current
+      || (x.data.shared && !dbs[i].state.shared))) return load(null, true);
+  const before = state;
+  let changed = false;
+  dbs.forEach((d, i) => {
+    const a = got[i].data;
+    const s = d.state;
+    const byKey = new Map(s.banquets.map((b) => [keyOf(b), b]));
+    for (const g of a.gone) byKey.delete(keyOf(g));
+    for (const c of a.cards) byKey.set(keyOf(c), c);
+    const groups = a.groups ? { groups: a.groups, names: a.names, private: a.private } : {};
+    changed ||= a.cards.length > 0 || a.gone.length > 0 || a.shared !== s.shared || a.total !== s.total
+      || !!a.covered !== !!s.covered || JSON.stringify(a.mine) !== JSON.stringify(s.mine)
+      || (a.groups && JSON.stringify([a.groups, a.names, a.private]) !== JSON.stringify([s.groups, s.names, s.private]));
+    // New log lines go on top of what is held; one sent twice (the 30 s overlap) is kept once.
+    const line = (e) => `${e.at}|${e.kind}|${e.grp ?? ''}|${e.uid}|${e.by}`;
+    const events = a.events_new?.length
+      ? [...new Map([...a.events_new, ...(s.events ?? [])].map((e) => [line(e), e])).values()]
+        .sort((x, y) => y.at.localeCompare(x.at)).slice(0, 200)
+      : s.events;
+    changed ||= events !== s.events;
+    d.state = { ...s, ...groups, banquets: [...byKey.values()], mine: a.mine, shared: a.shared, total: a.total,
+      synced_at: a.synced_at, covered: a.covered, events };
+    d.since = a.since;
+  });
+  // Unchanged, it is still drawn once a minute: "5 min ago" and the reset countdown move on their own.
+  if (!changed && ago_(lastDrawn) < 60 * 1000) return;
+  state = combined ? merge(dbs.map(lift)) : dbs[0].state;
+  if (changed) diff(before, state);
+  render();
+  if (changed && state.groups) loadCopies();
+}
+// After your own press: what changed, at once, rather than the whole list.
+const fresh = () => (state.round === state.current ? poll() : load(state.round));
 
 // ------------------------------------------------------------------ access log
 
@@ -375,7 +447,7 @@ async function loadCopies() {
    signal would show an old list as if it were live. Two minutes without an
    answer says so, and it goes once an answer comes back. */
 function offline() {
-  const min = Math.floor((Date.now() - reached) / 60000);
+  const min = paused ? 0 : Math.floor((Date.now() - reached) / 60000);
   $('#bq-stale').hidden = min < 2;
   if (min < 2) return;
   $('#bq-stale').hidden = false;
@@ -385,6 +457,7 @@ function offline() {
 // ------------------------------------------------------------------ render
 
 function render() {
+  lastDrawn = Date.now();
   const past = state.round !== state.current;
   // First, as everything below is in its view: a member, or a stale choice (a group that went away).
   if (!state.groups?.includes(group)) group = 0;
@@ -922,7 +995,7 @@ $('#bq-run-body').addEventListener('click', async (e) => {
   const got = what === 'gift' ? await call('banquet_claim', { target, claimed: true, g })
     : await call('banquet_mark', { target, state: what === 'full' ? 'full' : 'not-yet', g });
   if (!got.ok) toast(`${b.uid}: ${got.why}`, 'info');
-  load(state.round);
+  fresh();
 });
 
 // ------------------------------------------------------------------ actions
@@ -951,7 +1024,7 @@ $('#bq-mine').addEventListener('submit', async (e) => {
   if (!got.ok) { err.textContent = got.why; err.hidden = false; return; }
   $('#bq-add-uid').value = '';
   markSeen(`${g ?? ''}:${uid}`); // yours: not news to you
-  load();
+  fresh();
 });
 
 /* Edit, for UIDs added here: the row becomes a box with the UID in it. Save
@@ -972,7 +1045,7 @@ async function saveEdit(li) {
   markSeen(`${g}:${next}`); // yours: not news to you
   editing = false;
   toast(`Changed ${li.dataset.uid} to ${next}`);
-  load();
+  fresh();
 }
 $('#bq-my').addEventListener('keydown', (e) => {
   const li = e.target.closest('li.is-editing');
@@ -1004,7 +1077,7 @@ $('#bq-my').addEventListener('click', async (e) => {
   remove.disabled = true;
   const got = await call('banquet_remove', { target: Number(remove.dataset.remove), g: grpOf(remove) });
   if (!got.ok) { remove.disabled = false; remove.textContent = got.why; return; }
-  load();
+  fresh();
 });
 
 $('#bq-remind').addEventListener('click', async (e) => {
@@ -1102,11 +1175,11 @@ async function press(e) {
       label: 'Undo',
       fn: async () => {
         await call('banquet_claim', { target, claimed: false, g });
-        load(state.round);
+        fresh();
       },
     });
   }
-  load(state.round);
+  fresh();
 }
 $('#bq-cards').addEventListener('click', press);
 
@@ -1125,12 +1198,12 @@ async function saveLikes(btn) {
   const b = cardOf(btn.closest('li').dataset.key);
   likesFor = null;
   // A count that answers the portrait question offers the mark that goes with it.
-  const mark = (to) => () => call('banquet_mark', { target, state: to, g }).then(() => load(state.round));
+  const mark = (to) => () => call('banquet_mark', { target, state: to, g }).then(() => fresh());
   const now = b && state.round === state.current && hadOne(b) && !b.full;
   if (now && n >= fullAt(b)) toast(`${target}: ${n} likes, so it is full`, 'info', { label: 'Mark full', fn: mark('full') });
   else if (now && n === b.likes_before.n && !b.not_yet) toast(`${target}: still ${n}, not logged in yet`, 'info', { label: 'Mark not logged in', fn: mark('not-yet') });
   else toast(`Noted ${n} likes on ${target}`);
-  load(state.round);
+  fresh();
 }
 $('#bq-cards').addEventListener('click', (e) => {
   const open = e.target.closest('[data-likes]');

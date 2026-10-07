@@ -346,3 +346,8 @@
 .bq-run--float .bq-run__btn { min-height: 52px; font-size: 15px; gap: 10px; padding: 4px 12px; }
 .bq-run--float .bq-run__btn small { font-size: 12px; }
 .bq-run--float #bq-run-body { gap: var(--s2); }
+
+/* Paused after an hour untouched: says so, and any tap resumes. */
+.bq-paused { margin: 0; padding: var(--s2) var(--s3); border: 1px solid color-mix(in srgb, var(--accent) 55%, var(--line));
+  border-radius: var(--r-md); background: color-mix(in srgb, var(--accent) 8%, var(--surface)); font-size: 13px; }
+.bq-paused[hidden] { display: none; }

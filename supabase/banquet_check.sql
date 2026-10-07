@@ -43,6 +43,7 @@ end $$;
 \i supabase/migrations/036_banquet_check_fallback.sql
 \i supabase/migrations/037_banquet_state_one_pass.sql
 \i supabase/migrations/038_banquet_state_unchanged.sql
+\i supabase/migrations/039_banquet_feed.sql
 
 -- Real entries would skew the counts. Gone for this transaction only.
 delete from public.banquet_claims; delete from public.banquet_marks; delete from public.banquet_uids; delete from public.banquet_access; delete from public.banquet_events;
@@ -182,7 +183,7 @@ declare s jsonb; h text;
 begin
   s := public.banquet_state();
   h := s ->> 'hash';
-  assert public.banquet_state(null, h) - 'synced_at' = jsonb_build_object('same', true, 'hash', h), 'unchanged: only same and the hash';
+  assert public.banquet_state(null, h) - 'synced_at' - 'since' = jsonb_build_object('same', true, 'hash', h), 'unchanged: only same and the hash (and when to ask from)';
   assert public.banquet_state(null, 'stale') ? 'banquets', 'a wrong fingerprint gets the list';
   perform public.banquet_claim(20000003, true);
   assert not (public.banquet_state(null, h) ? 'same'), 'a claim changes it';
@@ -483,6 +484,61 @@ begin
   assert not exists (select 1 from jsonb_array_elements(l) x, jsonb_array_elements(x -> 'groups') g where g::int = 3), 'nor any private group';
 end $$;
 
+-- ---------------------------------------------------------------- 039: snapshots and what changed
+-- A second load reuses the group's snapshot rather than building another.
+select pg_temp.as_(1);
+select public.banquet_state() is not null;
+reset role;
+create temp table snap1 as select since from public.banquet_snap where round = public.banquet_round() and grp = 1 and not with_grp;
+set local role authenticated;
+select pg_temp.as_(1);
+select public.banquet_state() is not null;
+reset role;
+do $$ begin
+  assert (select count(*) from snap1) = 1, 'group 1 has one snapshot';
+  assert (select since from public.banquet_snap where round = public.banquet_round() and grp = 1 and not with_grp) = (select since from snap1), 'and a second load reuses it';
+end $$;
+set local role authenticated;
+select pg_temp.as_(1);
+do $$
+declare s jsonb; d jsonb; since_ timestamptz; c jsonb;
+begin
+  s := public.banquet_state();
+  since_ := (s ->> 'since')::timestamptz;
+  assert since_ is not null, 'a full load says when to ask from';
+
+  -- A mark: the next "what changed" has that card, whole and current, with A's own bits.
+  perform public.banquet_mark(10000004, 'full');
+  d := public.banquet_changes(since_);
+  c := (select x from jsonb_array_elements(d -> 'cards') x where x ->> 'uid' = '10000004');
+  assert c ->> 'full' = 'zz_a' and c ? 'claimed' and c ? 'mine_site', 'the changed card, current, with A''s own bits';
+  assert d::text not like '%grp%', 'a member''s changes say nothing of groups';
+  assert (d ->> 'since')::timestamptz >= since_ and d ? 'events_new' and d ? 'mine' and d ? 'shared', 'and when to ask from next, the new log lines, yours, shared';
+  -- The full list agrees at once, snapshot or not.
+  assert pg_temp.card(public.banquet_state(), '10000004') ->> 'full' = 'zz_a', 'a full load straight after shows the mark';
+  perform public.banquet_mark(10000004, null);
+
+  -- Gone: a UID removed is in "gone", not in "cards".
+  perform public.banquet_add(10000066);
+  perform public.banquet_remove(10000066);
+  d := public.banquet_changes(since_);
+  assert d -> 'gone' @> '[{"uid": "10000066"}]' and not exists (select 1 from jsonb_array_elements(d -> 'cards') x where x ->> 'uid' = '10000066'), 'removed: gone';
+
+  assert public.banquet_changes(null) = '{"reload": true}' and public.banquet_changes(now() - interval '2 hours') = '{"reload": true}', 'too far behind: load again';
+end $$;
+select pg_temp.as_(4);
+do $$
+declare d jsonb;
+begin
+  d := public.banquet_changes(now() - interval '1 minute');
+  assert (select bool_and(x ? 'grp') from jsonb_array_elements(d -> 'cards') x), 'a viewer''s changed cards say their group';
+end $$;
+select pg_temp.as_(5);
+do $$ begin
+  begin perform public.banquet_changes(now()); raise exception 'X asked for changes';
+  exception when raise_exception then if sqlerrm = 'X asked for changes' then raise; end if; end;
+end $$;
+
 -- ---------------------------------------------------------------- a covered list
 -- Group 1 covered until the reset: A, with four of their own, sees only them.
 -- V, who sees every group, sees all; Group 2 is not covered.
@@ -563,7 +619,7 @@ begin
   got := array(select p.proname::text from pg_proc p
                 where p.pronamespace = 'public'::regnamespace and p.proname like 'banquet%'
                   and has_function_privilege('authenticated', p.oid, 'execute') order by 1);
-  assert got = '{banquet_access_log,banquet_add,banquet_check,banquet_claim,banquet_copies,banquet_edit,banquet_likes_set,banquet_mark,banquet_note_copy,banquet_remove,banquet_round,banquet_state}',
+  assert got = '{banquet_access_log,banquet_add,banquet_changes,banquet_check,banquet_claim,banquet_copies,banquet_edit,banquet_likes_set,banquet_mark,banquet_note_copy,banquet_remove,banquet_round,banquet_state}',
          'signed-in users can call exactly the page''s functions, got ' || got::text;
   assert not exists (select 1 from pg_proc p where p.pronamespace = 'public'::regnamespace and p.proname like 'banquet%'
                       and has_function_privilege('anon', p.oid, 'execute')), 'anonymous visitors can call nothing';
