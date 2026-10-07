@@ -44,6 +44,7 @@ end $$;
 \i supabase/migrations/037_banquet_state_one_pass.sql
 \i supabase/migrations/038_banquet_state_unchanged.sql
 \i supabase/migrations/039_banquet_feed.sql
+\i supabase/migrations/040_banquet_mine_likes.sql
 
 -- Real entries would skew the counts. Gone for this transaction only.
 delete from public.banquet_claims; delete from public.banquet_marks; delete from public.banquet_uids; delete from public.banquet_access; delete from public.banquet_events;
@@ -540,6 +541,16 @@ do $$ begin
 end $$;
 
 -- ---------------------------------------------------------------- a covered list
+
+-- 040: likes noted on your own UID come with it in "Your UIDs", cards or no cards.
+select pg_temp.as_(1);
+do $$ begin
+  perform public.banquet_likes_set(10000003, 150);
+  assert (select (x ->> 'likes')::int from jsonb_array_elements(public.banquet_state() -> 'mine') x where x ->> 'uid' = '10000003') = 150, 'your own UID shows its likes';
+  assert (select (x ->> 'likes')::int from jsonb_array_elements(public.banquet_changes(now() - interval '1 minute') -> 'mine') x where x ->> 'uid' = '10000003') = 150, 'in what changed too';
+  assert (select x -> 'likes' from jsonb_array_elements(public.banquet_state() -> 'mine') x where x ->> 'uid' = '10000004') = 'null'::jsonb, 'and null where none is noted';
+end $$;
+
 -- Group 1 covered until the reset: A, with four of their own, sees only them.
 -- V, who sees every group, sees all; Group 2 is not covered.
 reset role;

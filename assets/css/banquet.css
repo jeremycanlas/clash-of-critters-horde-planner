@@ -354,3 +354,9 @@
 
 /* The likes question, asked in an activity line: under the text, full width. */
 .bq-log .bq-ask { grid-column: 2 / -1; }
+
+/* Likes noted on your own UIDs, in the row (040). */
+.bq-mine__uid .bq-likes--edit { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.bq-mine__uid .bq-likes--edit input { width: 6em; font-size: 16px; font-variant-numeric: tabular-nums; }
+/* With Likes beside Edit and Remove, a row wraps rather than widening a 320px phone. */
+.bq-mine__uid { flex-wrap: wrap; max-width: 100%; }

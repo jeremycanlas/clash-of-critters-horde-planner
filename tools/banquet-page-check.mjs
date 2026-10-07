@@ -131,7 +131,8 @@ function state(me) {
   return {
     round: '2026-09-24', current: '2026-09-24', rounds: ['2026-09-24'], shared, total: keys.length,
     synced_at: new Date(Date.now() - syncedAgo).toISOString(),
-    mine: mine.map((u) => ({ uid: u.uid, source: u.source, ...(me.all ? { grp: u.grp } : {}) })),
+    mine: mine.map((u) => { const l = db.likes.get(`${u.grp}:${u.uid}`); return { uid: u.uid, source: u.source,
+      likes: (l?.now ?? l?.before)?.n ?? null, ...(me.all ? { grp: u.grp } : {}) }; }),
     banquets: shared ? keys.map(card) : [],
     ...(me.covered ? { covered: true } : {}),
     events: shared ? [...db.events.filter((e) => groups.includes(e.grp)),
@@ -784,6 +785,7 @@ try {
   assert.ok(busy >= 50 && idle >= 8 && idle <= 12, `in use every 10 s (${busy} in 10 min), idle once a minute (${idle} in 10 min)`);
   await A.clock.runFor(41 * 60_000);
   assert.ok(await A.locator('#bq-paused').isVisible(), 'paused after an hour untouched, and says so');
+  await A.waitForTimeout(500); // a request sent just before pausing lands first
   c0 = changes;
   await A.clock.runFor(5 * 60_000);
   assert.equal(changes - c0, 0, 'and asks nothing while paused');
@@ -845,6 +847,15 @@ try {
   assert.ok(await C.locator('#bq-list').isHidden(), 'and the list stays covered past four');
   assert.match(await C.locator('#bq-locked').textContent(), /The list opens at the reset, .+ your time\. Add your UIDs now/, 'saying when it opens');
   assert.deepEqual(await axe(C), [], 'axe, covered');
+  // Covered, no cards: likes noted on your own UIDs, in Your UIDs.
+  await C.locator('#bq-my li', { hasText: '91000001' }).locator('[data-mylikes]').click();
+  await C.fill('#bq-my [data-likes-input]', '120');
+  await C.press('#bq-my [data-likes-input]', 'Enter');
+  await C.waitForFunction(() => /120/.test(document.querySelector('#bq-my li .bq-mine__likes')?.textContent ?? '')
+    || [...document.querySelectorAll('#bq-my li')].some((li) => /91000001/.test(li.textContent) && /120/.test(li.textContent)));
+  assert.deepEqual(lastSent('Cov', 'banquet_likes_set'), { target: 91000001, n: 120, g: null }, 'a covered member notes likes on their own UID');
+  assert.match(await C.locator('#bq-my li', { hasText: '91000001' }).innerText(), /120[\s\S]*Update/, 'and sees the count, with Update');
+  assert.ok(await C.locator('#bq-list').isHidden(), 'and the list stays covered');
 
   // ------------------------------------------------------------------ a first load that fails
   down = true;

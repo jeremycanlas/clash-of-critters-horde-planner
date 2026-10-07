@@ -476,10 +476,11 @@ function render() {
   const cards = new Map(state.banquets.map((b) => [keyOf(b), b]));
   const statusMine = (m) => { const b = cards.get(keyOf(m)); return b && statusOf(b); };
   // Left alone while one is being edited: a refresh must not throw the edit away.
-  if (!editing) $('#bq-my').innerHTML = mineShown.map((m) => `<li class="bq-mine__uid">
+  // Left alone while a likes count is being typed there, too.
+  if (!editing && !document.activeElement?.closest?.('#bq-my [data-likes-input]')) $('#bq-my').innerHTML = mineShown.map((m) => `<li class="bq-mine__uid">
       ${tagOf(m.grp)}<button type="button" class="tr-copy" data-copy="${m.uid}" title="Copy UID">${m.uid}</button>
       ${statusMine(m) ? `<span class="bq-mine__st is-${statusMine(m)}">${MINE[statusMine(m)]}</span>` : ''}
-      ${likesMine(cards.get(keyOf(m)))}
+      ${mineLikes(m, cards.get(keyOf(m)), past)}
       ${m.source === 'discord' ? '<span class="bq-src">from Discord</span>'
         : past ? '' : `<button type="button" class="btn btn--quiet" data-edit="${m.uid}"${grpAttr(m.grp)} aria-label="Edit ${m.uid}">Edit</button>
           <button type="button" class="btn btn--quiet" data-remove="${m.uid}"${grpAttr(m.grp)} aria-label="Remove ${m.uid}">Remove</button>`}
@@ -710,9 +711,24 @@ function likesRow(b, past) {
 }
 // The way in when nothing is noted yet: a heart, kept small so a long list stays short.
 // Beside your own UIDs: the newest count noted, if any.
-const likesMine = (b) => {
-  const n = (b?.likes_now ?? b?.likes_before)?.n;
-  return n == null ? '' : `<span class="bq-mine__likes" title="Likes on the building">${icon('heart', 12)}${n}</span>`;
+/* Your own building's likes: the count, and a box to note it, whether or not
+   the list is open to you yet. A covered group sees no cards before the reset,
+   which is when this count matters (040). */
+let mineLikesFor = null; // "grp:uid" of yours whose likes box is open
+const mineLikes = (m, b, past) => {
+  const n = m.likes ?? (b?.likes_now ?? b?.likes_before)?.n;
+  const k = keyOf(m);
+  if (!past && mineLikesFor === k) {
+    return `<span class="bq-likes bq-likes--edit">
+        <label>Likes <input class="field" data-likes-input inputmode="numeric" pattern="[0-9]*" maxlength="6"
+          autocomplete="off" value="${n ?? ''}" aria-label="Likes on ${m.uid}'s building"></label>
+        <button type="button" class="btn btn--primary" data-likes-save="${m.uid}"${grpAttr(m.grp)}>Save</button>
+        <button type="button" class="btn btn--quiet" data-mylikes-cancel>Cancel</button>
+      </span>`;
+  }
+  const count = n == null ? '' : `<span class="bq-mine__likes" title="Likes on the building">${icon('heart', 12)}${n}</span>`;
+  return count + (past ? '' : `<button type="button" class="btn btn--quiet bq-likes__add" data-mylikes="${k}"
+      aria-label="Note the likes on ${m.uid}" title="Note the likes on its building">${icon('heart', 15)}<span>${n == null ? 'Likes' : 'Update'}</span></button>`);
 };
 const likesAdd = (b, past) => (past || b.likes_before || b.likes_now ? ''
   : `<button type="button" class="btn btn--quiet bq-likes__add" data-likes="${keyOf(b)}" aria-label="Note the likes on ${b.uid}" title="Note the likes on its building">${icon('heart', 15)}<span>Likes</span></button>`);
@@ -1050,6 +1066,11 @@ async function saveEdit(li) {
   fresh();
 }
 $('#bq-my').addEventListener('keydown', (e) => {
+  if (e.target.matches('[data-likes-input]')) {
+    if (e.key === 'Enter') { e.preventDefault(); saveLikes(e.target.closest('li').querySelector('[data-likes-save]')); }
+    if (e.key === 'Escape') { mineLikesFor = null; e.target.blur(); render(); }
+    return;
+  }
   const li = e.target.closest('li.is-editing');
   if (!li) return;
   if (e.key === 'Enter') { e.preventDefault(); saveEdit(li); }
@@ -1057,6 +1078,11 @@ $('#bq-my').addEventListener('keydown', (e) => {
 });
 
 $('#bq-my').addEventListener('click', async (e) => {
+  const ml = e.target.closest('[data-mylikes]');
+  if (ml) { mineLikesFor = ml.dataset.mylikes; render(); $('#bq-my [data-likes-input]')?.select(); return; }
+  if (e.target.closest('[data-mylikes-cancel]')) { mineLikesFor = null; return render(); }
+  const save = e.target.closest('[data-likes-save]');
+  if (save) return saveLikes(save);
   const edit = e.target.closest('[data-edit]');
   if (edit) {
     const li = edit.closest('li');
@@ -1196,7 +1222,9 @@ async function saveLikes(btn) {
   btn.disabled = false;
   if (!got.ok) { toast(got.why, 'info'); return; }
   const b = cardOf(btn.closest('li').dataset.key);
+  box.blur(); // saved: the list may redraw over it now
   likesFor = null;
+  mineLikesFor = null;
   // A count that answers the portrait question offers the mark that goes with it.
   const mark = (to) => () => call('banquet_mark', { target, state: to, g }).then(() => fresh());
   const now = b && state.round === state.current && hadOne(b) && !b.full;
