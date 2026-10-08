@@ -799,7 +799,8 @@ function card(b, past) {
   const mark = (to, label, aria, pressed) => `<button type="button" class="btn btn--quiet" data-mark="${to}" data-uid="${b.uid}"${grpAttr(b.grp)}
     aria-label="${aria}: ${b.uid}"${pressed == null ? '' : ` aria-pressed="${pressed}"`}>${label}</button>`;
   const actions = past ? '' : st === 'full' ? mark('full', 'Not full', 'Not full', true)
-    : st === 'notin' ? mark('open', 'Open now', 'Open now', false) + mark('not-yet', 'Still not open', 'Still not open')
+    : st === 'notin' ? mark('open', 'Open now', 'Open now', false) + mark('full', 'Full', 'Full', false)
+      + mark('not-yet', 'Still not open', 'Still not open')
     : `<button type="button" class="btn${b.claimed ? ' btn--primary' : ''}" data-claim="${b.uid}"${grpAttr(b.grp)} aria-label="I claimed ${b.uid}" aria-pressed="${b.claimed}">${b.claimed ? 'Claimed ✓' : 'I claimed'}</button>`
       + mark('full', 'Full', 'Full', false)
       + mark('not-yet', '<span class="bq-long">Not logged in</span><span class="bq-short">Not in</span>', 'Not logged in', false);
@@ -1223,6 +1224,8 @@ async function press(e) {
   const target = Number((claim ?? mark).dataset[claim ? 'claim' : 'uid']);
   const g = grpOf(btn);
   markSeen(li.dataset.key); // claimed or marked: seen, whatever Undo does next
+  const was = cardOf(li.dataset.key);
+  const prev = was?.full ? 'full' : was?.not_yet ? 'not-yet' : was?.open ? 'open' : null;
   const got = claim
     ? await call('banquet_claim', { target, claimed: on, g })
     : await call('banquet_mark', { target, state: on ? mark.dataset.mark : null, g });
@@ -1234,6 +1237,17 @@ async function press(e) {
       label: 'Undo',
       fn: async () => {
         await call('banquet_claim', { target, claimed: false, g });
+        fresh();
+      },
+    });
+  }
+  // A mark moves the card too (Open now out of Not logged in, say): the same way back, to what it was.
+  if (mark) {
+    const to = on ? mark.dataset.mark : null;
+    toast(to ? `Marked ${target} ${{ open: 'open', full: 'full', 'not-yet': 'not logged in' }[to]}` : `Took the mark off ${target}`, 'info', {
+      label: 'Undo',
+      fn: async () => {
+        await call('banquet_mark', { target, state: prev, g });
         fresh();
       },
     });

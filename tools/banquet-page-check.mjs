@@ -482,7 +482,12 @@ try {
   assert.deepEqual(lastSent('Ana', 'banquet_mark'), { target: 55555555, state: 'not-yet', g: null }, 'Not logged in from the log marks it');
   assert.equal(await A.locator('#bq-log li[data-key=":55555555"]').first().locator('.bq-log__act').count(), 0, 'and its line is no longer claimable');
   assert.equal(await A.locator('#bq-cards [data-claim="20000001"]').getAttribute('aria-pressed'), 'true', 'and the card agrees');
-  await A.click('#toast .toast__act'); // Undo, as on a card
+  // A mark gets Undo too: a misclick put back, to what it was.
+  assert.match(await A.locator('#toast').textContent(), /Marked 55555555 not logged in/);
+  await A.click('#toast .toast__act');
+  await A.waitForFunction(() => !document.querySelector('#bq-cards li[data-key=":55555555"]')?.classList.contains('is-notin'));
+  assert.deepEqual(lastSent('Ana', 'banquet_mark'), { target: 55555555, state: 'open', g: null }, 'Undo puts the mark back as it was (open)');
+  await A.click('#bq-cards [data-claim="20000001"]'); // and the claim off again, on its card
   await A.waitForFunction(() => document.querySelector('[data-claim="20000001"]')?.getAttribute('aria-pressed') === 'false');
   if (process.env.BANQUET_SHOTS) await A.locator('#bq-activity').screenshot({ path: `${process.env.BANQUET_SHOTS}/log-phone.png` });
   // Full from the log on a building with likes before the reset: the question comes up in that line, and its answer is saved.
@@ -659,6 +664,8 @@ try {
   await V.locator('#bq-cards li[data-key]', { hasText: 'Group 2' }).filter({ hasText: '55555555' }).locator('[data-mark="full"]').click();
   await V.waitForTimeout(300);
   assert.equal(lastSent('Vee', 'banquet_mark').g, 2, "a mark goes to the card's group");
+  await V.clock.runFor(8000); // its Undo toast gone first, as for the Full question above
+  await V.waitForTimeout(500);
   assert.deepEqual(await axe(V), [], 'axe, viewer, light, with a full card');
 
   // On a PC the claim run is a small panel on the right, the page usable behind it, and it can be moved.
