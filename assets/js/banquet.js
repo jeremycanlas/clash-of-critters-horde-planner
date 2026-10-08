@@ -763,6 +763,9 @@ const askRow = (b) => `<div class="bq-ask" role="group" aria-label="Full or not 
   </div>`;
 
 // Within a status: yours already claimed last, then fewest claims, the likeliest to have room.
+const likesOf = (b) => (b.likes_before ?? b.likes_now)?.n ?? -1;
+const checkFirst = (b) => !b.full && (b.not_yet || likesOf(b) > 0);
+const byLikes = (a, b) => likesOf(b) - likesOf(a) || a.uid.localeCompare(b.uid);
 const ORDER = {
   claimable: (a, b) => a.claimed - b.claimed || a.claims - b.claims || a.uid.localeCompare(b.uid),
   look: (a, b) => (b.posted ?? '').localeCompare(a.posted ?? '') || a.uid.localeCompare(b.uid),
@@ -840,8 +843,16 @@ function renderCards(past) {
   const shown = inViewList.filter((b) => found(b) && (!onlyUnnoted || unnoted(b)) && LIKES[likesShow](b));
   const opened = new Set($$('#bq-cards details[open]').map((d) => d.closest('li').dataset.key));
   const typing = document.activeElement?.matches?.('[data-likes-input]'); // a refresh must not take the box from under a thumb
-  $('#bq-cards').innerHTML = SECTIONS.filter(([st]) => !show || show === st).map(([st, head, note]) => {
-    const list = shown.filter((b) => statusOf(b) === st).sort(ORDER[st]);
+  /* On All: those not logged in or with likes, unless full, first, most likes
+     first. A building that had an MVP shows its old portrait after the reset,
+     so those are the ones to check (asked for on 9 Oct). */
+  const first = !show && likesShow === 'all' ? shown.filter(checkFirst).sort(byLikes) : [];
+  const rest = first.length ? shown.filter((b) => !checkFirst(b)) : shown;
+  $('#bq-cards').innerHTML = (first.length ? `<section class="bq-section">
+      <h2>Check first <span class="muted">· not logged in or has likes, most likes first</span></h2>
+      <ul class="bq-cards">${first.map((b) => card(b, past)).join('')}</ul>
+    </section>` : '') + SECTIONS.filter(([st]) => !show || show === st).map(([st, head, note]) => {
+    const list = rest.filter((b) => statusOf(b) === st).sort(ORDER[st]);
     if (!list.length && !show) return '';
     return `<section class="bq-section">
       <h2>${head}${note && list.length > 1 ? ` <span class="muted">· ${note}</span>` : ''}</h2>

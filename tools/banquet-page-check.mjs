@@ -376,7 +376,11 @@ try {
   await A.click('[data-show="notin"]');
   assert.equal(await A.locator('#bq-cards li[data-key]').count(), 26, 'and back to all');
   assert.deepEqual(await A.locator('#bq-cards .bq-section h2').evaluateAll((hs) => hs.map((h) => h.firstChild.textContent.trim())),
-    ['Claimable', 'Needs a look', 'Not logged in yet'], 'one heading per status there is, in order');
+    ['Check first', 'Claimable', 'Needs a look'], 'Check first on top, then one heading per status there is, in order');
+  // Check first: not logged in or with likes, not full, most likes first.
+  const firstKeys = await A.locator('#bq-cards .bq-section').first().locator('li[data-key]').evaluateAll((ls) => ls.map((l) => l.dataset.key));
+  assert.ok(firstKeys[0] === ':60000000' && firstKeys.includes(':60000137') && !firstKeys.some((k) => k.endsWith('60000411')),
+    `100 likes first, the not logged in one there too, 0 likes not (${firstKeys})`);
   // Your UIDs: each with its status, and a reminder to copy for one not logged in.
   await A.locator('#bq-mine-fold').evaluate((d) => { d.open = true; });
   assert.equal(await A.locator('#bq-my li', { hasText: '10000001' }).locator('.bq-mine__st').textContent(), 'needs a look');
@@ -895,7 +899,9 @@ try {
   // and starts half way along, wrapping round. Both get every one.
   const eli = await open({ name: 'Eli', grp: 1 }, { viewport: { width: 1280, height: 900 } });
   const E = eli.page;
+  await E.click('[data-show="look"]'); // in their own order: on All, those with likes sit in Check first
   const looks = await E.locator('#bq-cards li.is-look').evaluateAll((ls) => ls.map((l) => l.dataset.key.split(':')[1]));
+  await E.click('[data-show="look"]');
   const claimN = await E.locator('#bq-cards li.is-claimable:not(.is-claimed)').count();
   assert.ok(looks.length >= 4, `enough unchecked to split, got ${looks.length}`);
   await E.click('#bq-run-start');
