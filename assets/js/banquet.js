@@ -230,6 +230,17 @@ const PAUSE_AFTER = 60 * 60 * 1000;
 let lastActive = Date.now();
 let lastAsk = 0;
 let paused = false;
+/* Refreshes in a row that got no answer, and how long to leave it after the
+   last: about 20 s, 40 s, 80 s, up to 5 minutes, each a little early or late
+   so the tabs that failed together do not all come back together. A database
+   that is struggling then gets room to recover, where every tab asking again
+   every 10 s kept it buried (the load test on 8 Oct). */
+let failures = 0;
+let backoff = 0;
+function failed() {
+  failures++;
+  backoff = Math.min(5 * 60 * 1000, 20 * 1000 * 2 ** (failures - 1) * (0.75 + Math.random() / 2));
+}
 function touched() {
   lastActive = Date.now();
   if (paused) { paused = false; $('#bq-paused').hidden = true; tick(true); }
@@ -238,7 +249,8 @@ const every = () => (document.hidden ? 3 * 60 * 1000 : away() > IDLE_AFTER ? 60 
 async function tick(now = false) {
   if (!state || paused) return; // no list yet: the first load failed and said so
   if (away() > PAUSE_AFTER) { paused = true; $('#bq-paused').hidden = false; return; }
-  if (!now && ago_(lastAsk) < every()) return;
+  // Coming back to the page asks at once, unless the last ones failed.
+  if ((!now || failures) && ago_(lastAsk) < (failures ? Math.max(backoff, every()) : every())) return;
   lastAsk = Date.now();
   await poll();
   offline();
@@ -294,34 +306,43 @@ function merge(parts) {
   };
 }
 
+/* A whole list as the database sends it (041): the group's shared copy, then
+   the cards moved since it was made, fresh, so the later of two is kept, less
+   those since removed; and yours apart, marked here rather than per person there. */
+function settle(a) {
+  if (!a.my_claims) return a;
+  const keys = (xs) => new Set(xs.map(keyOf));
+  const claimed = keys(a.my_claims), site = keys(a.my_site), gone = keys(a.gone);
+  const byKey = new Map(a.banquets.map((b) => [keyOf(b), b]));
+  for (const k of gone) byKey.delete(k);
+  for (const [k, b] of byKey) { b.claimed = claimed.has(k); b.mine_site = site.has(k); }
+  return { ...a, banquets: [...byKey.values()] };
+}
+
 /* `quiet` is the timer's: a failed refresh keeps what is on screen, where a
    failed load someone asked for says so. */
 async function load(round = null, quiet = false) {
-  /* A refresh sends the fingerprint of what it holds; an unchanged list comes
-     back as a few bytes saying so, rather than the whole list again. */
-  const same = quiet && state && (round ?? state.current) === state.round;
-  const got = await Promise.all(dbs.map((d) => ask(d, 'banquet_state', { r: round, known: same ? d.state?.hash ?? null : null })));
+  const got = await Promise.all(dbs.map((d) => ask(d, 'banquet_state', { r: round })));
   const bad = got.find((x) => !x.ok);
-  if (bad) return quiet ? undefined : gate('Could not load the banquets', bad.why, true);
+  if (bad) return quiet ? failed() : gate('Could not load the banquets', bad.why, true);
   reached = Date.now();
-  const changed = got.some((x) => !x.data.same);
+  failures = 0;
   const before = state;
   dbs.forEach((d, i) => {
-    const a = got[i].data;
-    d.state = a.same ? { ...d.state, synced_at: a.synced_at } : a;
-    d.since = a.since; // what changed is asked from here
+    d.state = settle(got[i].data);
+    d.since = d.state.since; // what changed is asked from here
   });
   lastFull = Date.now();
   state = combined ? merge(dbs.map(lift)) : dbs[0].state;
   if (!seen || before?.round !== state.round) loadSeen(state.round, state.banquets);
   // Just unlocked: the list is new to you all at once, which is the same as none of it.
   else if (!before.shared && state.shared) markSeen(...state.banquets.map(keyOf));
-  else if (changed && quiet) diff(before, state);
+  else if (quiet) diff(before, state);
   status('');
   $('#bq-gate').hidden = true;
   $('#bq-app').hidden = false;
   render();
-  if (changed && state.groups) loadCopies();
+  if (state.groups) loadCopies();
 }
 
 /* What changed since the last answer, merged into what is held: the cards
@@ -336,8 +357,9 @@ async function poll() {
   if (state.round !== state.current) return;
   if (ago_(lastFull) > 60 * 60 * 1000 || dbs.some((d) => !d.since)) return load(null, true);
   const got = await Promise.all(dbs.map((d) => ask(d, 'banquet_changes', { since: d.since })));
-  if (got.some((x) => !x.ok)) return; // keeps what is on screen; offline() says so after two minutes
+  if (got.some((x) => !x.ok)) return failed(); // keeps what is on screen; offline() says so after two minutes
   reached = Date.now();
+  failures = 0;
   if (got.some((x, i) => x.data.reload || x.data.current !== dbs[i].state.current
       || (x.data.shared && !dbs[i].state.shared))) return load(null, true);
   const before = state;

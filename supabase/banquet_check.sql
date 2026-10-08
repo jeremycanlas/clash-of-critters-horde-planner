@@ -45,6 +45,7 @@ end $$;
 \i supabase/migrations/038_banquet_state_unchanged.sql
 \i supabase/migrations/039_banquet_feed.sql
 \i supabase/migrations/040_banquet_mine_likes.sql
+\i supabase/migrations/041_banquet_lighter_load.sql
 
 -- Real entries would skew the counts. Gone for this transaction only.
 delete from public.banquet_claims; delete from public.banquet_marks; delete from public.banquet_uids; delete from public.banquet_access; delete from public.banquet_events;
@@ -79,8 +80,19 @@ create function pg_temp.msg(id text, author text, content text, bot boolean defa
   select jsonb_build_object('id', id, 'content', content, 'timestamp', now(),
          'author', jsonb_build_object('id', author, 'username', 'u' || right(author, 3), 'bot', bot));
 $$;
+-- The cards as the page reads them (041): the later of one sent twice, less those
+-- gone since, with yours marked on them.
+create function pg_temp.settled(s jsonb) returns jsonb language sql as $$
+  select coalesce(jsonb_agg(x || case when s ? 'my_claims' then jsonb_build_object(
+           'claimed', s -> 'my_claims' @> jsonb_build_array(k), 'mine_site', s -> 'my_site' @> jsonb_build_array(k)) else '{}' end), '[]')
+    from (select distinct on (k) x, k
+            from (select x, n, jsonb_build_object('uid', x -> 'uid') || case when x ? 'grp' then jsonb_build_object('grp', x -> 'grp') else '{}' end as k
+                    from jsonb_array_elements(s -> 'banquets') with ordinality t(x, n)) a
+           order by k, n desc) b
+   where not coalesce(s -> 'gone' @> jsonb_build_array(k), false);
+$$;
 create function pg_temp.card(s jsonb, uid text) returns jsonb language sql as $$
-  select x from jsonb_array_elements(s -> 'banquets') x where x ->> 'uid' = uid;
+  select x from jsonb_array_elements(pg_temp.settled(s)) x where x ->> 'uid' = uid limit 1;
 $$;
 
 -- ---------------------------------------------------------------- pure parts
@@ -144,7 +156,7 @@ begin
 
   s := public.banquet_state();
   assert jsonb_array_length(s -> 'mine') = 3, 'A''s posts, in two goes, filled in: 3';
-  assert not (s ->> 'shared')::boolean and jsonb_array_length(s -> 'banquets') = 0, 'three is not enough';
+  assert not (s ->> 'shared')::boolean and jsonb_array_length(pg_temp.settled(s)) = 0, 'three is not enough';
   assert (s ->> 'total')::int = 7, 'Group 1 only, bots ignored';
 
   begin perform public.banquet_claim(20000001, true); raise exception 'claimed early';
@@ -153,9 +165,9 @@ begin
   -- The fourth on the site. Sent for Group 2, it still lands in Group 1.
   perform public.banquet_add(10000004, 2::smallint);
   s := public.banquet_state();
-  assert (s ->> 'shared')::boolean and jsonb_array_length(s -> 'banquets') = 8, 'four unlocks Group 1''s eight';
+  assert (s ->> 'shared')::boolean and jsonb_array_length(pg_temp.settled(s)) = 8, 'four unlocks Group 1''s eight';
   assert s::text not like '%grp%' and s::text not like '%groups%', 'nothing says there are groups';
-  assert (select bool_and(x ? 'posted' and (x ->> 'posted')::timestamptz is not null) from jsonb_array_elements(s -> 'banquets') x), 'every banquet says when it was first posted';
+  assert (select bool_and(x ? 'posted' and (x ->> 'posted')::timestamptz is not null) from jsonb_array_elements(pg_temp.settled(s)) x), 'every banquet says when it was first posted';
   assert s::text not like '%3000000%' and s::text not like '%zz_c%' and s::text not like '%u303%', 'nothing of Group 2';
   assert (s ->> 'synced_at')::timestamptz = now() - interval '2 minutes', 'A gets Group 1''s last read only';
 
@@ -164,7 +176,7 @@ begin
   assert (select count(*) from jsonb_array_elements(public.banquet_state() -> 'mine')) = 34, 'thirty-one added on the site, no limit';
   perform public.banquet_remove(70000000 + i) from generate_series(1, 30) i;
   s := public.banquet_state();
-  assert jsonb_array_length(s -> 'banquets') = 8, 'and removing them leaves the eight';
+  assert jsonb_array_length(pg_temp.settled(s)) = 8, 'and removing them leaves the eight';
 
   begin perform public.banquet_add(12345678); raise exception 'the example added';
   exception when raise_exception then if sqlerrm = 'the example added' then raise; end if; end;
@@ -178,20 +190,17 @@ begin
   assert pg_temp.card(public.banquet_state(), '10000001') is not null, 'posted stays';
 end $$;
 
--- ---------------------------------------------------------------- the same list, in a few bytes
+-- ---------------------------------------------------------------- yours, apart from the shared cards (041)
 do $$
-declare s jsonb; h text;
+declare s jsonb;
 begin
-  s := public.banquet_state();
-  h := s ->> 'hash';
-  assert public.banquet_state(null, h) - 'synced_at' - 'since' = jsonb_build_object('same', true, 'hash', h), 'unchanged: only same and the hash (and when to ask from)';
-  assert public.banquet_state(null, 'stale') ? 'banquets', 'a wrong fingerprint gets the list';
   perform public.banquet_claim(20000003, true);
-  assert not (public.banquet_state(null, h) ? 'same'), 'a claim changes it';
+  s := public.banquet_state();
+  assert s -> 'my_claims' @> '[{"uid":"20000003"}]', 'your claims come as a list';
+  assert (pg_temp.card(s, '20000003') ->> 'claimed')::boolean, 'and read onto the card';
+  assert not (s ? 'hash'), 'and no fingerprint of it all';
   perform public.banquet_claim(20000003, false);
-  -- The log keeps the claim and the take-back, so the list is not the one before.
-  h := public.banquet_state() ->> 'hash';
-  assert public.banquet_state(null, h) ? 'same', 'and once read, it is the same again';
+  assert not (public.banquet_state() -> 'my_claims' @> '[{"uid":"20000003"}]'), 'taken back';
 end $$;
 
 -- ---------------------------------------------------------------- four statuses, and the log
@@ -240,7 +249,7 @@ do $$
 declare s jsonb;
 begin
   s := public.banquet_state();
-  assert (s ->> 'shared')::boolean and jsonb_array_length(s -> 'banquets') = 4, 'C sees Group 2''s four';
+  assert (s ->> 'shared')::boolean and jsonb_array_length(pg_temp.settled(s)) = 4, 'C sees Group 2''s four';
   assert (pg_temp.card(s, '55555555') ->> 'claims')::int = 0, 'A''s claim on the shared UID is Group 1''s';
   assert s::text not like '%grp%' and s::text not like '%1000000%' and s::text not like '%zz_a%', 'nothing of Group 1';
   perform public.banquet_mark(55555555, 'not-yet');
@@ -254,12 +263,12 @@ begin
   s := public.banquet_state();
   assert s -> 'groups' = '[1, 2, 3]'::jsonb, 'V is told there are two, and the private list V is in';
   assert (s ->> 'synced_at')::timestamptz = now() - interval '9 minutes', 'V gets the staler of the two';
-  assert jsonb_array_length(s -> 'banquets') = 12, 'eight and four, 55555555 once per group';
-  assert (select count(*) from jsonb_array_elements(s -> 'banquets') x where x ->> 'uid' = '55555555') = 2, 'one card per group';
-  assert (select bool_and(x ? 'grp') from jsonb_array_elements(s -> 'banquets') x), 'every card says its group';
-  assert (select x -> 'not_yet' ->> 'by' from jsonb_array_elements(s -> 'banquets') x where x ->> 'uid' = '55555555' and x ->> 'grp' = '2') = 'zz_c',
+  assert jsonb_array_length(pg_temp.settled(s)) = 12, 'eight and four, 55555555 once per group';
+  assert (select count(*) from jsonb_array_elements(pg_temp.settled(s)) x where x ->> 'uid' = '55555555') = 2, 'one card per group';
+  assert (select bool_and(x ? 'grp') from jsonb_array_elements(pg_temp.settled(s)) x), 'every card says its group';
+  assert (select x -> 'not_yet' ->> 'by' from jsonb_array_elements(pg_temp.settled(s)) x where x ->> 'uid' = '55555555' and x ->> 'grp' = '2') = 'zz_c',
          'C''s mark is on Group 2''s card';
-  assert (select (x ->> 'claims')::int from jsonb_array_elements(s -> 'banquets') x where x ->> 'uid' = '55555555' and x ->> 'grp' = '1') = 1,
+  assert (select (x ->> 'claims')::int from jsonb_array_elements(pg_temp.settled(s)) x where x ->> 'uid' = '55555555' and x ->> 'grp' = '1') = 1,
          'A''s claim is on Group 1''s card';
 
   begin perform public.banquet_add(40000001); raise exception 'no group picked';
@@ -372,7 +381,7 @@ begin
   perform public.banquet_add(33300001, 3::smallint);
   perform public.banquet_claim(33300001, true, 3::smallint);
   s := public.banquet_state();
-  assert (select count(*) from jsonb_array_elements(s -> 'banquets') x where x ->> 'grp' = '3') = 1, 'V has a private banquet, claimed';
+  assert (select count(*) from jsonb_array_elements(pg_temp.settled(s)) x where x ->> 'grp' = '3') = 1, 'V has a private banquet, claimed';
 end $$;
 select pg_temp.as_(6);
 do $$
@@ -402,7 +411,7 @@ do $$ begin
 end $$;
 select pg_temp.as_(4);
 do $$ begin
-  assert (select count(*) from jsonb_array_elements(public.banquet_state() -> 'banquets') x where x ->> 'grp' = '3') = 1,
+  assert (select count(*) from jsonb_array_elements(pg_temp.settled(public.banquet_state())) x where x ->> 'grp' = '3') = 1,
          'and nothing A sends reaches the private list';
 end $$;
 
@@ -563,7 +572,7 @@ begin
   if now() < public.banquet_round()::timestamp at time zone 'UTC' then
     s := public.banquet_state();
     assert (s ->> 'covered')::boolean, 'A is told the list is covered';
-    assert not (s ->> 'shared')::boolean and jsonb_array_length(s -> 'banquets') = 0 and jsonb_array_length(s -> 'events') = 0, 'and sees none of it';
+    assert not (s ->> 'shared')::boolean and jsonb_array_length(pg_temp.settled(s)) = 0 and jsonb_array_length(s -> 'events') = 0, 'and sees none of it';
     assert jsonb_array_length(s -> 'mine') >= 4, 'but sees their own';
     perform public.banquet_add(10000099);
     assert (select count(*) from jsonb_array_elements(public.banquet_state() -> 'mine') x where x ->> 'uid' = '10000099') = 1, 'and can add more';
@@ -573,7 +582,7 @@ begin
 end $$;
 select pg_temp.as_(4);
 do $$ begin
-  assert not (public.banquet_state() ? 'covered') and jsonb_array_length(public.banquet_state() -> 'banquets') > 0, 'V sees every group, covered or not';
+  assert not (public.banquet_state() ? 'covered') and jsonb_array_length(pg_temp.settled(public.banquet_state())) > 0, 'V sees every group, covered or not';
 end $$;
 select pg_temp.as_(3);
 do $$ begin

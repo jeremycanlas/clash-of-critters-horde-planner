@@ -83,7 +83,6 @@ const schemas = []; // the schema of every request each person's page made: 'pub
 
 const syncedAgo = 60e3;
 let reads = 0;
-let sames = 0;
 let changes = 0; // banquet_changes calls
 let cheap = 0;   // of those, ones where nothing had changed
 const SEEN = new Map(); // per person: the cards and keys of their last answer
@@ -101,6 +100,7 @@ function changesFor(me, full) {
     ...(full.groups ? { groups: full.groups, names: full.names, private: full.private } : {}) };
 }
 let down = false; // the database unreachable, for the offline check
+let tries = 0;    // refreshes sent while it was
 const NOT_YET_AT = new Date(Date.now() - 5 * 60e3).toISOString();
 const sent = [];
 
@@ -221,15 +221,19 @@ async function open(me, opts) {
     // `flaky`: Discord does not answer that many times first, as on 7 Oct.
     if (fn === 'banquet_check') return json(me.flaky && me.flaky-- > 0 ? 'discord-down' : 'ok');
     if (fn === 'tracker_claim') return json(false);
-    if (down) return route.abort('internetdisconnected');
+    if (down) { if (['banquet_state', 'banquet_changes'].includes(fn)) tries++; return route.abort('internetdisconnected'); }
     if (fn === 'banquet_state') {
       const full = state(me);
-      const { synced_at, ...rest } = full;
-      const hash = JSON.stringify(rest);
       SEEN.set(me.name, new Map(full.banquets.map((b) => [`${b.grp ?? ''}:${b.uid}`, JSON.stringify(b)])));
-      const since = new Date().toISOString();
-      if (body.known === hash) { sames++; return json({ same: true, hash, since, synced_at }); }
-      return json({ ...full, since, hash });
+      // As the database sends it (041): the cards without yours marked, which come as
+      // lists; a card moved since the shared copy sent twice, the fresh one last; one removed since, in `gone`.
+      const key = (b) => ({ uid: b.uid, ...(b.grp != null ? { grp: b.grp } : {}) });
+      const bare = full.banquets.map(({ claimed, mine_site, ...b }) => b);
+      const stale = bare.length ? [{ ...bare[0], claims: 99, claimed_by: [] }] : [];
+      return json({ ...full, since: new Date().toISOString(),
+        banquets: [...stale, ...bare, { uid: '99999998', posted: bare[0]?.posted ?? null, entered_by: ['Gone'], claims: 0, claimed_by: [] }],
+        gone: [{ uid: '99999998' }],
+        my_claims: full.banquets.filter((b) => b.claimed).map(key), my_site: full.banquets.filter((b) => b.mine_site).map(key) });
     }
     if (fn === 'banquet_changes') return json(body.since ? changesFor(me, state(me)) : { reload: true });
     if (fn === 'banquet_add') { db.uids.push({ grp: g, uid: String(body.target), who: me.name, source: 'site' }); return ok(); }
@@ -820,6 +824,24 @@ try {
   await A.clock.fastForward(61_000);
   await A.waitForTimeout(500);
   assert.ok(await A.locator('#bq-stale').isHidden(), 'back online, the connection warning goes');
+
+  // Failing in a row, it leaves longer each time: about 20 s, 40 s, 80 s, up to 5 minutes, not every 10 s.
+  await A.locator('body').dispatchEvent('pointerdown');
+  down = true;
+  tries = 0;
+  await A.clock.runFor(10 * 60_000);
+  await A.waitForTimeout(300);
+  const t0 = tries;
+  assert.ok(t0 >= 4 && t0 <= 8, `ten minutes unreachable: ${t0} tries, not 60`);
+  down = false;
+  await A.clock.runFor(5 * 60_000 + 10_000);
+  await A.waitForTimeout(500);
+  assert.ok(await A.locator('#bq-stale').isHidden(), 'and within five minutes of it coming back, it is back');
+  const c1 = changes;
+  await A.locator('body').dispatchEvent('pointerdown');
+  await A.clock.runFor(31_000);
+  await A.waitForTimeout(300);
+  assert.ok(changes - c1 >= 2, 'then every 10 s again');
 
   // ------------------------------------------------------------------ Discord slow to answer
   const flo = await open({ name: 'Flo', grp: 1, flaky: 2 }, devices['iPhone SE']);
