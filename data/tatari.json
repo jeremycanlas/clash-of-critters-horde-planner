@@ -6128,12 +6128,13 @@
   "tier": 1,
   "family": "Cactobud",
   "familyId": 40,
-  "stages": 3,
+  "stages": 4,
   "rarity": "Rare",
   "evolutionLine": [
    "Cactobud",
    "Cactobloom",
-   "Cactoczar"
+   "Cactoczar",
+   "Cactobodhi"
   ],
   "battleRow": null,
   "previousRole": "Same",
@@ -6170,12 +6171,13 @@
   "tier": 2,
   "family": "Cactobud",
   "familyId": 40,
-  "stages": 3,
+  "stages": 4,
   "rarity": "Rare",
   "evolutionLine": [
    "Cactobud",
    "Cactobloom",
-   "Cactoczar"
+   "Cactoczar",
+   "Cactobodhi"
   ],
   "battleRow": null,
   "previousRole": "Same",
@@ -6213,12 +6215,13 @@
   "tier": 3,
   "family": "Cactobud",
   "familyId": 40,
-  "stages": 3,
+  "stages": 4,
   "rarity": "Rare",
   "evolutionLine": [
    "Cactobud",
    "Cactobloom",
-   "Cactoczar"
+   "Cactoczar",
+   "Cactobodhi"
   ],
   "battleRow": null,
   "previousRole": "Same",
@@ -6247,6 +6250,47 @@
   "image": "data/images/tatari/cactoczar.png",
   "glitterImage": "data/images/glitter/cactoczar.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Cactoczar"
+ },
+ {
+  "name": "Cactobodhi",
+  "slug": "cactobodhi",
+  "type": "Grass",
+  "role": "DPS",
+  "tier": 4,
+  "family": "Cactobud",
+  "familyId": 40,
+  "stages": 4,
+  "rarity": "Rare",
+  "evolutionLine": [
+   "Cactobud",
+   "Cactobloom",
+   "Cactoczar",
+   "Cactobodhi"
+  ],
+  "battleRow": null,
+  "previousRole": "None",
+  "etymology": null,
+  "skill": "???: Launches spines to apply stacks of Sting. Sting stacks implode when affected enemies are killed, dealing AoE damage and transferring some stacks to other nearby enemies. Cactobodhi carries Aura: Grass whenever on the field.",
+  "description": "",
+  "hordeSkills": {
+   "level3": {
+    "name": "Prickly Pace",
+    "text": "Periodically gains ATK Speed."
+   },
+   "level5": {
+    "name": "Spiny Fans",
+    "text": "Launches 3 bursts of fan-shaped spines."
+   },
+   "level7": {
+    "name": "Prickly Pal",
+    "text": "Periodically summons a cactus ally that fires piercing spines in 8 directions. The spines explode after a delay, dealing small AoE damage."
+   }
+  },
+  "rangeImage": null,
+  "skillTypes": [],
+  "image": "data/images/tatari/cactobodhi.png",
+  "glitterImage": "data/images/glitter/cactobodhi.png",
+  "wikiUrl": null
  },
  {
   "name": "Lullelly",
@@ -7738,6 +7782,7 @@
   },
   "rangeImage": "data/images/range/nekowatt.jpg",
   "skillTypes": [
+   "ATK Range Boost",
    "AoE"
   ],
   "image": "data/images/tatari/nekowatt.png",
@@ -7781,6 +7826,7 @@
   },
   "rangeImage": null,
   "skillTypes": [
+   "ATK Range Boost",
    "AoE",
    "DEF Boost"
   ],
@@ -7806,9 +7852,9 @@
   ],
   "battleRow": null,
   "previousRole": "None",
-  "etymology": null,
-  "skill": "Fortunes Favor: Unleashes electrified punches that deal AoE damage. The closer the enemy, the higher the damage. Cooldowns decrease with each strike, and when cooldown reaches the minimum, gains increased ATK Range and grants all allies Voltkitty: DEF Boost. Voltazar shares the Paw Pals bond whenever on the field. Thunderpaw carries Aura: Lightning whenever on the field.",
-  "description": "People have build shrines for Thunderpaw, where they present offerings of food and reverently await blessings. With a gentle tilt of the paw, a flurry of lightning bolts can erupt from behind. But can Thunderpaw really bring good fortune? Certainly-if you believe in it!",
+  "etymology": "portmanteau of \"thunder\" + \"paw\"",
+  "skill": "Fortune's Favor: Unleashes electrified punches that deal AoE damage. The closer the enemy, the higher the damage. Cooldowns decrease with each strike, and when cooldown reaches the minimum, gains increased ATK Range and grants all allies Voltkitty: DEF Boost. Voltazar shares the Paw Pals bond whenever on the field. Thunderpaw carries Aura: Lightning whenever on the field.",
+  "description": "People have built shrines for Thunderpaw, where they present offerings of food and reverently await blessings. With a gentle lift of the paw, a flurry of lightning bolts can erupt from behind. But can Thunderpaw really bring good fortune? Certainly-if you believe in it!",
   "hordeSkills": {
    "level3": {
     "name": "Got Gold?",
@@ -7824,10 +7870,15 @@
    }
   },
   "rangeImage": null,
-  "skillTypes": [],
+  "skillTypes": [
+   "ATK Range Boost",
+   "ATK Speed Boost",
+   "AoE",
+   "DEF Boost"
+  ],
   "image": "data/images/tatari/thunderpaw.png",
-  "glitterImage": null,
-  "wikiUrl": null
+  "glitterImage": "data/images/glitter/thunderpaw.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Thunderpaw"
  },
  {
   "name": "Lollama",
@@ -8332,7 +8383,7 @@
   ],
   "battleRow": null,
   "previousRole": "None",
-  "etymology": null,
+  "etymology": "portmanteau of \"cinder\" + \"claw\"",
   "skill": "Meow Boom: Throws jewels. Sometimes, the jewels can bounce an increasing number of times between enemies. When the max number of bounces is reached, grants all allies Searpaw: ATK Boost. Silversear shares the Paw Pals bond whenever on the field. Cinderclaw carries Aura: Fire whenever on the field.",
   "description": "People say that if you gaze into those eyes for too long, the dark thoughts hidden in the depths of your mind will ignite. Other Tatari keep their distance-which suits Cinderclaw just fine. Whenever the camp is in danger, however, the same terrifying flames are the first to engulf enemies.",
   "hordeSkills": {
@@ -8350,10 +8401,13 @@
    }
   },
   "rangeImage": null,
-  "skillTypes": [],
+  "skillTypes": [
+   "ATK Boost",
+   "Chain"
+  ],
   "image": "data/images/tatari/cinderclaw.png",
-  "glitterImage": null,
-  "wikiUrl": null
+  "glitterImage": "data/images/glitter/cinderclaw.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Cinderclaw"
  },
  {
   "name": "Drilleroo",
@@ -8363,12 +8417,13 @@
   "tier": 1,
   "family": "Drilleroo",
   "familyId": 53,
-  "stages": 3,
+  "stages": 4,
   "rarity": "Rare",
   "evolutionLine": [
    "Drilleroo",
    "Cragolin",
-   "Borelord"
+   "Borelord",
+   "Armavolve"
   ],
   "battleRow": null,
   "previousRole": "Same",
@@ -8407,12 +8462,13 @@
   "tier": 2,
   "family": "Drilleroo",
   "familyId": 53,
-  "stages": 3,
+  "stages": 4,
   "rarity": "Rare",
   "evolutionLine": [
    "Drilleroo",
    "Cragolin",
-   "Borelord"
+   "Borelord",
+   "Armavolve"
   ],
   "battleRow": null,
   "previousRole": "Same",
@@ -8452,12 +8508,13 @@
   "tier": 3,
   "family": "Drilleroo",
   "familyId": 53,
-  "stages": 3,
+  "stages": 4,
   "rarity": "Rare",
   "evolutionLine": [
    "Drilleroo",
    "Cragolin",
-   "Borelord"
+   "Borelord",
+   "Armavolve"
   ],
   "battleRow": null,
   "previousRole": "Same",
@@ -8488,6 +8545,47 @@
   "image": "data/images/tatari/borelord.png",
   "glitterImage": "data/images/glitter/borelord.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Borelord"
+ },
+ {
+  "name": "Armavolve",
+  "slug": "armavolve",
+  "type": "Rock",
+  "role": "Specialist",
+  "tier": 4,
+  "family": "Drilleroo",
+  "familyId": 53,
+  "stages": 4,
+  "rarity": "Rare",
+  "evolutionLine": [
+   "Drilleroo",
+   "Cragolin",
+   "Borelord",
+   "Armavolve"
+  ],
+  "battleRow": null,
+  "previousRole": "None",
+  "etymology": null,
+  "skill": "???: Swipes claw to deal large AoE damage. Sometimes launches a heavy attack that inflicts Stun and Knockback on enemies to force them into adjacent rows, or inflicts Shredded on enemies that cannot be knocked back. Armavolve carries Aura: Rock whenever on the field.",
+  "description": "",
+  "hordeSkills": {
+   "level3": {
+    "name": "Shredding Stab",
+    "text": "Attacks have a chance to launch an extra stab forward, dealing AoE damage and inflicting DEF Down. Gains DEF Boost based on the number of enemies hit."
+   },
+   "level5": {
+    "name": "Crowd Crusher",
+    "text": "Periodically gains a Sunder Shield. Value of the shield is based on the number of enemies nearby. The more enemies, the higher the shield value."
+   },
+   "level7": {
+    "name": "Where To?",
+    "text": "Able to move above the deployment area. Periodically gains Prepared. After moving, expends Prepared to deal large AoE damage. When in Danger, retreats and recovers HP while losing this skill's effect for some time."
+   }
+  },
+  "rangeImage": null,
+  "skillTypes": [],
+  "image": "data/images/tatari/armavolve.png",
+  "glitterImage": "data/images/glitter/armavolve.png",
+  "wikiUrl": null
  },
  {
   "name": "Zaplet",
@@ -9618,7 +9716,7 @@
   ],
   "battleRow": null,
   "previousRole": "None",
-  "etymology": null,
+  "etymology": "portmanteau of \"sizzle\" + \"ribbit\"",
   "skill": "Ribbity Drip: Spits flames, dealing AoE damage and inflicting Burn. Sometimes spits flames non-stop, continuously dealing AoE damage. Consumes Burn on targets to deal follow up damage.",
   "description": "Loves to press close to the ground, silently sensing distant vibrations as well as changes in temperature and humidity. Whether it's the best resting sot in camp or the newest Zobo hideout, Sizzribb can always tell beforehand, although it'll take some time to actually get moving.",
   "hordeSkills": {
@@ -9706,7 +9804,7 @@
   ],
   "battleRow": null,
   "previousRole": "None",
-  "etymology": null,
+  "etymology": "portmanteau of \"ignite\" + \"toad\"",
   "skill": "Firesurge Cloud: Spits flames, dealing large AoE damage and inflicting Burn. Sometimes spits flames non-stop, continuously dealing large AoE damage. Consumes Burn on targets to deal follow up damage. Ignitoad carries Aura: Fire whenever on the field.",
   "description": "Ignitoad's breath is like a slow, churning current of volcanic heat, scorching the earth beneath. The flames that devour Ignitoad's enemies don't come from rage, however, but rather an attempt to keep the ambient temperature just right.",
   "hordeSkills": {
@@ -9923,7 +10021,7 @@
   ],
   "battleRow": null,
   "previousRole": "None",
-  "etymology": null,
+  "etymology": "portmanteau of \"cavy\" + \"zap\"",
   "skill": "Electro Cage: Shoots an Electricage orb that deals small AoE damage and creates an Electricage. Fires piercing signals towards the Electricage after, creating an electric surge that deals small AoE damage after impact.",
   "description": "Cavyzap has always been extremely insecure and is never seen outside the cage. But don't be mistaken-the cage isn't a prison but a safehouse. As long as the house is there, Cavyzap isn't afraid to give passing Zobos the stink eye.",
   "hordeSkills": {
@@ -10100,7 +10198,7 @@
   ],
   "battleRow": null,
   "previousRole": "None",
-  "etymology": null,
+  "etymology": "portmanteau of \"snow\" + \"cub\"",
   "skill": "Fish Ahoy: Throws 3 fish in turn to deal AoE damage. Carries Foodie: Fragile. When in Danger, eats 1 fish to recover HP and dispell all other debuffs.",
   "description": "Snowcub has a great appetite but not so great hunting skills. After finally catching one fish, Snowcub now brings it everywhere as a bluff to cover the fact that there's no catching another one any time soon.",
   "hordeSkills": {
@@ -10145,7 +10243,7 @@
   ],
   "battleRow": null,
   "previousRole": "None",
-  "etymology": null,
+  "etymology": "portmanteau of \"polar\" + \"paw\"",
   "skill": "Fish Delish: Throws 4 fish in turn to deal AoE damage. Carries Foodie: Fragile. When in Danger, eats 1 fish to recover HP and dispell all other debuffs.",
   "description": "Polarpaw is gradually learning to discern the distinct smell of fish, the flow of currents, and movement patterns beneath the ice. Although sometimes the prey turns out to be seaweed, random sticks of wood, and even Polarpaw's own shadow, this is all part of the master plan. At least, that's what Polarpaw would tell you.",
   "hordeSkills": {
@@ -10190,7 +10288,7 @@
   ],
   "battleRow": null,
   "previousRole": "None",
-  "etymology": null,
+  "etymology": "portmanteau of \"blizzard\" + \"grizzly bear\"",
   "skill": "Fish Feast: Throws 4 fish in turn to deal AoE damage. Carries Foodie: Fragile. When in Danger, shares 1 fish with an ally to recover HP and dispell all other debuffs.",
   "description": "Having adapted to the harsh environments, Blizzgrizz's hunting abilities are steadily improving. The catch of the day is carefully collected into the creel, then brought to the kitchen at camp. While acting like it's nothing special, Blizzgrizz will always secretly look out for a nod of approval.",
   "hordeSkills": {
@@ -10235,7 +10333,7 @@
   ],
   "battleRow": null,
   "previousRole": "None",
-  "etymology": null,
+  "etymology": "portmanteau of \"angler\" + \"bear\"",
   "skill": "Fish Bonanza: Throws 4 fish in turn to deal AoE damage. Carries Foodie: Fragile. When in Danger, shares 1 fish with an ally to recover HP and dispell all other debuffs. Anglerbear carries Aura: Water whenever on field.",
   "description": "The searing snow is Anglerbear's playground, and hunting is as easy as a game. An entertaining one, too, especially if the prey are cunning enough to attempt escape.",
   "hordeSkills": {
@@ -10462,7 +10560,7 @@
   "battleRow": null,
   "previousRole": "None",
   "etymology": null,
-  "skill": "Tidal Tunes: Launches sound waves that provide healing and grant stackable Joysong: DMG Boost to allies in their path",
+  "skill": "Tidal Tunes: Launches sound waves that provide healing and grant stackable Joysong: DMG Boost to allies in their path.",
   "description": "Dolphie loves chasing clouds on sunny days, skimming across the sea as the world brightens under sunlight. The sky's a perfect shade of blue today, and Dolphie's mood couldn't be better.",
   "hordeSkills": {
    "level3": {
@@ -10479,10 +10577,13 @@
    }
   },
   "rangeImage": null,
-  "skillTypes": [],
+  "skillTypes": [
+   "DMG Boost",
+   "Heal"
+  ],
   "image": "data/images/tatari/dolphie.png",
   "glitterImage": "data/images/glitter/dolphie.png",
-  "wikiUrl": null
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Dolphie"
  },
  {
   "name": "Blubbles",
@@ -10503,7 +10604,7 @@
   "battleRow": null,
   "previousRole": "None",
   "etymology": null,
-  "skill": "Flowing Melodies: Launches sound waves and sometimes launches larger surging waves. Allies in contact will recieve healing and stackable Joysong: DMG Boost & DMG Reduction.",
+  "skill": "Flowing Melodies: Launches sound waves and sometimes launches larger surging waves. Allies in contact will receive healing and stackable Joysong: DMG Boost & DMG Reduction.",
   "description": "Each time Blubbles returns to the bay, small wooden planks carrying flowers and seashells float across the water. The petals scatter and drift as Blubbles swims through, leaving the harbor a little liveleier than before.",
   "hordeSkills": {
    "level3": {
@@ -10520,10 +10621,14 @@
    }
   },
   "rangeImage": null,
-  "skillTypes": [],
+  "skillTypes": [
+   "DMG Boost",
+   "DMG Reduction",
+   "Heal"
+  ],
   "image": "data/images/tatari/blubbles.png",
   "glitterImage": "data/images/glitter/blubbles.png",
-  "wikiUrl": null
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Blubbles"
  },
  {
   "name": "Aquariel",
@@ -10544,7 +10649,7 @@
   "battleRow": null,
   "previousRole": "None",
   "etymology": null,
-  "skill": "Sweet Symphony: Launches sound waves and often launches larger surging waves. Allies in contact will recieve healing and stackable Joysong: DMG Boost & DMG Reduction.",
+  "skill": "Sweet Symphony: Launches sound waves and often launches larger surging waves. Allies in contact will receive healing and stackable Joysong: DMG Boost & DMG Reduction.",
   "description": "When Aquariel leaps out of water, the vibrant colors of rainbows would follow, skipping across the waves and into the distance. For those who are lucky enough to witness it, it is believed that good fortune will soon arrive on the sea breeze.",
   "hordeSkills": {
    "level3": {
@@ -10561,10 +10666,14 @@
    }
   },
   "rangeImage": null,
-  "skillTypes": [],
+  "skillTypes": [
+   "DMG Boost",
+   "DMG Reduction",
+   "Heal"
+  ],
   "image": "data/images/tatari/aquariel.png",
   "glitterImage": "data/images/glitter/aquariel.png",
-  "wikiUrl": null
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Aquariel"
  },
  {
   "name": "Irisia",
@@ -10585,7 +10694,7 @@
   "battleRow": null,
   "previousRole": "None",
   "etymology": null,
-  "skill": "Endless Echo: Launches sound waves and often launches larger surging waves. Allies in contact will recieve healing and stackable Joysong: DMG Boost & DMG Reduction. Irisia carries Aura: Water whenever on field.",
+  "skill": "Endless Echo: Launches sound waves and often launches larger surging waves. Allies in contact will receive healing and stackable Joysong: DMG Boost & DMG Reduction. Irisia carries Aura: Water whenever on field.",
   "description": "As light pours down from the sky, Irisia returns from the depths of the thunderstorm, parting massive waves to clear a safe path. As long as Irisia still roams these seas, the lights of every home along the shore will stay on, steady and bright.",
   "hordeSkills": {
    "level3": {
@@ -10602,9 +10711,125 @@
    }
   },
   "rangeImage": null,
-  "skillTypes": [],
+  "skillTypes": [
+   "DMG Boost",
+   "DMG Reduction",
+   "Heal"
+  ],
   "image": "data/images/tatari/irisia.png",
-  "glitterImage": null,
+  "glitterImage": "data/images/glitter/irisia.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Irisia"
+ },
+ {
+  "name": "Popa",
+  "slug": "popa",
+  "type": "Rock",
+  "role": null,
+  "tier": 1,
+  "family": "Popa",
+  "familyId": 66,
+  "stages": 4,
+  "rarity": "Rare",
+  "evolutionLine": [
+   "Popa",
+   "Popapouch",
+   "Popagrind",
+   "Popafam"
+  ],
+  "battleRow": null,
+  "previousRole": null,
+  "etymology": null,
+  "skill": "Popa Knows Best: Ponders possum life and carries Possum: DMG Reduction & Heal Reduction. Sometimes Plays Dead to continuously deal AoE damage nearby.",
+  "description": "The outside world was almost within reach, but no matter what Popa tried, the window wouldn't budge. Nothing to do but stand tall, watch the sky grow dark, and jest let things be.",
+  "hordeSkills": null,
+  "rangeImage": null,
+  "skillTypes": [],
+  "image": "data/images/tatari/popa.png",
+  "glitterImage": "data/images/glitter/popa.png",
+  "wikiUrl": null
+ },
+ {
+  "name": "Popapouch",
+  "slug": "popapouch",
+  "type": "Rock",
+  "role": null,
+  "tier": 2,
+  "family": "Popa",
+  "familyId": 66,
+  "stages": 4,
+  "rarity": "Rare",
+  "evolutionLine": [
+   "Popa",
+   "Popapouch",
+   "Popagrind",
+   "Popafam"
+  ],
+  "battleRow": null,
+  "previousRole": null,
+  "etymology": null,
+  "skill": "Pouch Trouble: Ponders possum life and carries Possum: DMG Reduction & Heal Reduction. Sometimes Plays Dead to continuously deal AoE damage nearby. Entrusts the baby to 1 ally, granting them Possum: ATK & DEF Boost.",
+  "description": "The responsibility that comes with a baby isn't something that can be canceled or delayed. Whenever Popapouch wants to take a break, a gentle tug would serve as a reminder that this is a job for life.",
+  "hordeSkills": null,
+  "rangeImage": null,
+  "skillTypes": [],
+  "image": "data/images/tatari/popapouch.png",
+  "glitterImage": "data/images/glitter/popapouch.png",
+  "wikiUrl": null
+ },
+ {
+  "name": "Popagrind",
+  "slug": "popagrind",
+  "type": "Rock",
+  "role": null,
+  "tier": 3,
+  "family": "Popa",
+  "familyId": 66,
+  "stages": 4,
+  "rarity": "Rare",
+  "evolutionLine": [
+   "Popa",
+   "Popapouch",
+   "Popagrind",
+   "Popafam"
+  ],
+  "battleRow": null,
+  "previousRole": null,
+  "etymology": null,
+  "skill": "The Grind Goes On: Ponders possum life and carries Possum: DMG Reduction & Heal Reduction. Sometimes Plays Dead to continuously deal AoE damage nearby. Entrusts the baby to 2 allies, granting them Possum: ATK & DEF Boost.",
+  "description": "Whenever Popagrind hits the streets carrying the lil' ones, passing males would all turn to look. But this is nothing. Being a parent doesn't cost you your dignity, only your sleep- and raising two babies just...",
+  "hordeSkills": null,
+  "rangeImage": null,
+  "skillTypes": [],
+  "image": "data/images/tatari/popagrind.png",
+  "glitterImage": "data/images/glitter/popagrind.png",
+  "wikiUrl": null
+ },
+ {
+  "name": "Popafam",
+  "slug": "popafam",
+  "type": "Rock",
+  "role": null,
+  "tier": 4,
+  "family": "Popa",
+  "familyId": 66,
+  "stages": 4,
+  "rarity": "Rare",
+  "evolutionLine": [
+   "Popa",
+   "Popapouch",
+   "Popagrind",
+   "Popafam"
+  ],
+  "battleRow": null,
+  "previousRole": null,
+  "etymology": null,
+  "skill": "All of the Fam: Ponders possum life and carries Possum: DMG Reduction & Heal Reduction. Sometimes Plays Dead to continuously deal AoE damage nearby. Entrusts the baby to 3 allies, granting them Possum: ATK & DEF Boost.",
+  "description": "Before, hitting a dead end meant giving up. But now, Popafam knows to carry on no matter how many obstacles need to be faced. With time, come true understanding of your responsibility.",
+  "hordeSkills": null,
+  "rangeImage": null,
+  "skillTypes": [],
+  "image": "data/images/tatari/popafam.png",
+  "glitterImage": "data/images/glitter/popafam.png",
   "wikiUrl": null
  }
 ]

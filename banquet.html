@@ -36,15 +36,20 @@
     </section>
 
     <section id="bq-app" hidden>
+      <div class="bq-col">
       <div class="bq-bar">
         <label class="bq-round">Gold rush
           <select id="bq-round" class="field" aria-label="Which gold rush"></select>
         </label>
         <span id="bq-when" class="muted bq-when"></span>
-        <span id="bq-fresh" class="muted bq-when"></span>
+        <a id="bq-leaders" class="btn btn--quiet bq-leaders" href="banquet-leaders.html">Leaderboards</a>
       </div>
-      <!-- The channels are read every minute; this says when that stopped. -->
+      <!-- Says when this page has stopped reaching the list. -->
       <p id="bq-stale" class="bq-stale" role="status" hidden></p>
+      <!-- Untouched for an hour, the page stops asking until tapped (assets/js/banquet.js, tick). -->
+      <p id="bq-paused" class="bq-paused" role="status" hidden>Paused to save the server. Tap anywhere to pick up where you left off.</p>
+      <!-- The last day before the reset: the time to note each building's likes for the next round. -->
+      <p id="bq-likes-due" class="bq-likes-due" hidden></p>
 
       <!-- Only for those who see both groups; built by the script. "As Group N"
            is the page exactly as that group's members see it. -->
@@ -71,59 +76,85 @@
         <div id="bq-copies-body"></div>
       </details>
 
-      <!-- Yours this gold rush: what you posted in Discord, filled in by itself,
-           and anything added here. Four of them opens everyone else's. -->
+      <!-- Yours this gold rush, added here. Four of them opens everyone else's,
+           unless the list is covered until the reset. -->
       <form id="bq-mine" class="panel bq-mine">
-        <details id="bq-mine-fold" open>
-        <summary><h2>Your UIDs <span id="bq-mine-n" class="muted"></span></h2></summary>
-        <ul id="bq-my" class="bq-my"></ul>
+        <h2>Your UIDs <span id="bq-mine-n" class="muted"></span></h2>
+        <!-- The box first and the list newest first under it: adding twenty in a row,
+             the box stays put and the one just added is right below it. Only the
+             list folds: the box stays open either way. -->
         <div class="bq-mine__actions">
           <input id="bq-add-uid" class="field" inputmode="numeric" pattern="[0-9]{8}" maxlength="8" autocomplete="off" aria-label="Add a UID">
           <select id="bq-add-grp" class="field" aria-label="Which group" hidden></select>
           <button id="bq-add" class="btn btn--primary" type="submit">Add UID</button>
         </div>
         <p id="bq-mine-error" class="tr-form__error" role="alert" hidden></p>
+        <details id="bq-mine-fold" open>
+        <summary><span class="bq-mine__fold">Your list</span></summary>
+        <!-- Yours that someone saw no icon on: the MVP has not logged in since the reset. -->
+        <p id="bq-remind" class="bq-remind" hidden></p>
+        <ul id="bq-my" class="bq-my"></ul>
         </details>
       </form>
 
       <p id="bq-locked" class="panel bq-locked" hidden></p>
 
       <section id="bq-list" class="bq-list" hidden>
+        <!-- Four statuses, counted; each tile shows only its own, and pressed again shows all four. -->
+        <div class="bq-tiles" role="group" aria-label="Show only">
+          <button class="bq-tile" type="button" data-show="claimable" aria-pressed="false"><span>Claimable</span><b data-n="claimable">0</b></button>
+          <button class="bq-tile" type="button" data-show="look" aria-pressed="false"><span>Needs a look</span><b data-n="look">0</b></button>
+          <button class="bq-tile" type="button" data-show="notin" aria-pressed="false"><span>Not logged in</span><b data-n="notin">0</b></button>
+          <button class="bq-tile" type="button" data-show="full" aria-pressed="false"><span>Full</span><b data-n="full">0</b></button>
+        </div>
+        <button id="bq-run-start" class="btn btn--primary bq-run-start" type="button" hidden></button>
         <div class="bq-bar bq-bar--pinned">
           <!-- First and full width: after claiming in the game, this is how you find the card. -->
           <label class="bq-find">
             <span class="bq-find__label">Search <small>UID or name</small></span>
             <input id="bq-find" class="field" type="search" maxlength="40" autocomplete="off" spellcheck="false">
           </label>
+          <!-- Only the buildings someone has noted likes on: the ones a portrait can be read against. -->
+          <div id="bq-liked" class="segmented bq-liked" role="group" aria-label="Likes">
+            <button class="segmented__btn" type="button" data-liked="all" aria-pressed="true">All</button>
+            <button class="segmented__btn" type="button" data-liked="has" aria-pressed="false">Has likes</button>
+            <button class="segmented__btn" type="button" data-liked="zero" aria-pressed="false">0 likes</button>
+            <button class="segmented__btn" type="button" data-liked="none" aria-pressed="false">Not noted</button>
+          </div>
           <!-- What changed, without interrupting: new banquets to claim, and the latest
                thing anyone in the group did. Pinned with the rest of this bar. -->
           <!-- Back to the one you were checking: the last UID copied, whatever has moved since. -->
           <button id="bq-last" class="bq-last" type="button" hidden></button>
           <div id="bq-new" class="bq-new" hidden>
-            <span class="bq-new__label">New to claim</span>
+            <span class="bq-new__label">Newly added</span>
             <span id="bq-new-uids" class="bq-new__uids"></span>
             <button id="bq-new-clear" class="btn btn--quiet bq-new__clear" type="button">Clear</button>
           </div>
           <p id="bq-latest" class="bq-latest" role="status" aria-live="polite" hidden></p>
-          <div class="segmented" role="group" aria-label="Which banquets">
-            <button class="segmented__btn" type="button" data-show="ready" aria-pressed="true" title="Open now, not full, not claimed by you">Ready</button>
-            <button class="segmented__btn" type="button" data-show="waiting" aria-pressed="false" title="Marked not yet available: worth checking again">Not open</button>
-            <button class="segmented__btn" type="button" data-show="claimed" aria-pressed="false">Claimed</button>
-            <button class="segmented__btn" type="button" data-show="full" aria-pressed="false">Full</button>
-            <button class="segmented__btn" type="button" data-show="all" aria-pressed="false">All</button>
-          </div>
         </div>
-        <!-- Not pinned: nobody changes the order mid-scroll, and a phone needs the room. -->
-        <div class="bq-bar bq-bar--order">
-          <div class="segmented" role="group" aria-label="Order">
-            <button class="segmented__btn" type="button" data-order="room" aria-pressed="true">Most room</button>
-            <button class="segmented__btn" type="button" data-order="new" aria-pressed="false">Newest</button>
-          </div>
-          <span id="bq-count" class="muted tr-count" role="status" aria-live="polite"></span>
-        </div>
-        <ul id="bq-cards" class="bq-cards"></ul>
+        <div id="bq-cards" class="bq-sections"></div>
       </section>
+      </div>
+
+      <!-- Every claim, mark and post this gold rush, newest first. A fold at the
+           bottom on a phone, a column on the right on a PC. -->
+      <details id="bq-activity" class="panel bq-activity" open hidden>
+        <summary><h2>Activity <span class="muted">this gold rush</span> <span id="bq-log-claim" class="bq-log-claim" hidden></span></h2></summary>
+        <ul id="bq-log" class="bq-log"></ul>
+      </details>
     </section>
+
+    <!-- The claim run: one UID at a time, already copied, and what the game showed. -->
+    <dialog id="bq-run" class="bq-run" aria-labelledby="bq-run-head">
+      <header class="bq-run__top">
+        <button id="bq-run-close" class="btn btn--quiet" type="button">‹ List</button>
+        <h2 id="bq-run-head">Claim run</h2>
+        <span id="bq-run-step" class="bq-run__step"></span>
+      </header>
+      <div class="bq-run__bar"><div id="bq-run-bar"></div></div>
+      <div id="bq-run-body"></div>
+      <p id="bq-run-tally" class="muted bq-run__tally"></p>
+    </dialog>
 
     <p id="bq-status" class="muted tr-status" role="status" aria-live="polite">Loading…</p>
   </main>

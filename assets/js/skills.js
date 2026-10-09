@@ -113,8 +113,9 @@ addEventListener('hashchange', () => { route(); if (location.hash.length > 1 && 
 
 /* Search and type narrow the list of lines. */
 function filter() {
-  const q = find.value.trim().toLowerCase();
-  const fits = (el) => (!type || el.dataset.type === type) && (!q || el.dataset.q.includes(q));
+  // Every word, in any order, as the drafter's search: "water dolphin" finds the Dolphie line.
+  const words = find.value.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  const fits = (el) => (!type || el.dataset.type === type) && words.every((w) => el.dataset.q.includes(w));
   let lines = 0;
   for (const li of $$('#sk-list > li')) { li.hidden = !fits(li); if (!li.hidden) lines++; }
   $('#sk-none').hidden = lines > 0;

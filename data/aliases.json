@@ -44,7 +44,7 @@
   "Cribbler": ["crab", "claw", "crayfish"],
   "Shrimpyro": ["shrimp", "prawn", "lobster", "mantis shrimp"],
   "Buddi": ["sunflower", "flower", "plant", "sun"],
-  "Joeyo": ["kangaroo", "joey", "wallaby", "boxing"],
+  "Joeyo": ["kangaroo", "joey", "wallaby", "boxing", "roo"],
   "Sparkeet": ["parakeet", "budgie", "toucan", "parrot", "bird"],
   "Sackling": ["spider", "arachnid", "tarantula", "web", "weaver"],
   "Skinklet": ["skink", "lizard", "iguana", "chameleon", "ninja", "gecko"],
@@ -54,10 +54,10 @@
   "Cactobud": ["cactus", "succulent", "plant"],
   "Lullelly": ["jellyfish", "jelly", "manta ray", "ray", "sleep"],
   "Tindercub": ["tiger", "cat", "cub", "sabertooth", "samurai"],
-  "Humbug": ["dung beetle", "beetle", "scarab", "bug", "monk"],
+  "Humbug": ["dung beetle", "beetle", "scarab", "bug", "monk", "poop bug"],
   "Fluffle": ["sheep", "ram", "lamb", "cloud", "wether"],
   "Funglet": ["mushroom", "fungus", "toadstool", "shroom"],
-  "Dewgrub": ["dragonfly", "grub", "nymph", "damselfly"],
+  "Dewgrub": ["dragonfly", "grub", "nymph", "damselfly", "butterfly", "water butterfly"],
   "Fumekit": ["skunk", "polecat", "stink"],
   "Taptail": ["rattlesnake", "snake", "naga", "serpent", "viper"],
   "Kittazap": ["cat", "kitten", "neko", "nekomata"],
@@ -72,5 +72,10 @@
   "Blowfin": ["pufferfish", "fugu", "blowfish", "chef", "sushi"],
   "Glowfly": ["firefly", "lightning bug", "glowworm", "beetle"],
   "Poakie": ["pig", "pork", "boar", "toad", "bbq"],
-  "Budboo": ["venus flytrap", "flytrap", "plant", "ghost", "wraith"]
+  "Budboo": ["venus flytrap", "flytrap", "plant", "ghost", "wraith"],
+  "Cavyzap": ["guinea pig", "cavy", "rodent"],
+  "Snowcub": ["polar bear", "bear", "cub"],
+  "Ringtail": ["raccoon", "ringtail", "thief"],
+  "Dolphie": ["dolphin"],
+  "Popa": ["possum", "opossum"]
 }

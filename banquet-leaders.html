@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Horde Drafter: MVP banquet leaderboards</title>
+  <!-- Private, as the banquet page: only the groups you are in (supabase/migrations/042). -->
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='19' font-size='20'>🐾</text></svg>">
+  <link rel="stylesheet" href="assets/css/app.css">
+  <link rel="stylesheet" href="assets/css/site-nav.css">
+  <link rel="stylesheet" href="assets/css/tracker.css">
+  <link rel="stylesheet" href="assets/css/banquet.css">
+  <link rel="stylesheet" href="assets/css/banquet-leaders.css">
+</head>
+
+<body class="tracker">
+
+  <header class="topbar">
+    <div class="topbar__title">
+      <h1>Banquet leaderboards</h1>
+      <span class="topbar__sub">Who does the work that helps everyone</span>
+    </div>
+  </header>
+
+  <nav id="site-tabs" class="sitetabs" aria-label="Horde Drafter pages"></nav>
+
+  <main class="tr-main bq-main">
+    <section id="lb-gate" class="panel tr-gate" hidden>
+      <h2 id="lb-gate-head">This page is private</h2>
+      <p id="lb-gate-text" class="muted">Sign in with Discord on the banquet page first.</p>
+      <a id="lb-signin" class="btn btn--primary" href="banquet.html">Go to MVP banquets</a>
+    </section>
+
+    <section id="lb-app" hidden>
+      <div class="bq-bar lb-bar">
+        <a id="lb-back" class="btn btn--quiet" href="banquet.html">‹ Banquets</a>
+        <label class="bq-round">Show
+          <select id="lb-round" class="field" aria-label="Which gold rush"></select>
+        </label>
+      </div>
+      <p class="muted lb-note">Each UID counts once, for whoever did it first. A mark changed or undone within
+        5 minutes does not count. Updated every 5 minutes.</p>
+      <div id="lb-groups"></div>
+    </section>
+
+    <p id="lb-status" class="muted tr-status" role="status" aria-live="polite">Loading…</p>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script type="module" src="assets/js/banquet-leaders.js"></script>
+  <script type="module" src="assets/js/site-nav.js"></script>
+</body>
+
+</html>

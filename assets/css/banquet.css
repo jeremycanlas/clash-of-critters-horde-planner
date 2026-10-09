@@ -4,8 +4,9 @@
  */
 
 .bq-main { max-width: 960px; }
-#bq-app { display: flex; flex-direction: column; gap: var(--s3); }
-#bq-app[hidden], #bq-list[hidden], .bq-last[hidden], .bq-new[hidden], .bq-latest[hidden], .bq-copies[hidden], .bq-locked[hidden], .bq-mine[hidden], .bq-stale[hidden] { display: none; }
+#bq-app, .bq-col { display: flex; flex-direction: column; gap: var(--s3); }
+.bq-col { min-width: 0; }
+#bq-app[hidden], #bq-list[hidden], .bq-activity[hidden], .bq-run-start[hidden], .bq-last[hidden], .bq-new[hidden], .bq-latest[hidden], .bq-copies[hidden], .bq-locked[hidden], .bq-mine[hidden], .bq-stale[hidden] { display: none; }
 
 .bq-bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); }
 .bq-round { display: inline-flex; align-items: center; gap: var(--s2); font-size: 13px; color: var(--text-dim); }
@@ -49,8 +50,32 @@
 .bq-none { padding: var(--s3); }
 .bq-tag--wait { color: var(--accent-ink-on); }
 /* Not open yet: still worth a trip, so it stays in To claim, dashed until someone finds it open. */
-.bq-card.is-waiting { border-style: dashed; border-color: color-mix(in srgb, var(--accent) 60%, var(--line)); background: color-mix(in srgb, var(--accent) 5%, var(--surface)); }
+.bq-card.is-notin { border-style: dashed; border-color: color-mix(in srgb, var(--accent) 60%, var(--line)); background: color-mix(in srgb, var(--accent) 5%, var(--surface)); }
 .bq-card__checked { margin: 0; font-size: 12.5px; font-weight: 600; color: var(--accent-ink-on); }
+/* Likes on the MVP's building: the count before the reset, and since. */
+.bq-likes { display: flex; flex-wrap: wrap; align-items: center; gap: 2px var(--s2); font-size: 12.5px; color: var(--text-dim); }
+.bq-likes > svg { color: color-mix(in srgb, var(--danger) 70%, var(--text-dim)); flex: none; }
+.bq-likes b { color: var(--text); font-variant-numeric: tabular-nums; }
+.bq-likes__btn { min-height: 32px; padding: 2px 8px; font-size: 12.5px; margin-left: auto; }
+.bq-likes__add { margin-left: auto; min-height: 32px; padding: 2px 8px; gap: 4px; font-size: 12.5px; color: var(--text-dim); }
+.bq-likes__add svg { color: color-mix(in srgb, var(--danger) 70%, var(--text-dim)); }
+.bq-likes-due { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s1) var(--s2); margin: 0; padding: var(--s2) var(--s3);
+  border-radius: var(--r-md); font-size: 13px; line-height: 1.4;
+  background: color-mix(in srgb, var(--danger) 8%, var(--surface)); border: 1px solid color-mix(in srgb, var(--danger) 35%, var(--line)); }
+.bq-likes-due[hidden] { display: none; }
+.bq-likes-due > svg { flex: none; color: color-mix(in srgb, var(--danger) 70%, var(--text-dim)); }
+.bq-likes-due > span { flex: 1 1 14em; }
+.bq-likes-due .btn { min-height: 40px; }
+.bq-mine__likes { display: inline-flex; align-items: center; gap: 3px; font-size: 12px; font-variant-numeric: tabular-nums; color: var(--text-dim); }
+.bq-likes--edit label { display: flex; align-items: center; gap: var(--s2); }
+.bq-likes--edit input { width: 7ch; min-height: 40px; font-size: 16px; } /* 16px, or iOS zooms on tap */
+.bq-likes--edit .btn { min-height: 40px; }
+/* Full, asked first: the portrait may be last time's. */
+.bq-ask { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; padding: var(--s2); border-radius: var(--r-md, 8px);
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface)); border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--line)); }
+.bq-ask p { grid-column: 1 / -1; margin: 0; font-size: 13px; line-height: 1.4; }
+.bq-ask .btn { min-height: 44px; font-size: 13px; white-space: normal; line-height: 1.25; }
+.bq-ask [data-ask-cancel] { grid-column: 1 / -1; min-height: 36px; }
 .bq-view { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); font-size: 13px; }
 .bq-shot { margin-left: auto; }
 
@@ -58,8 +83,9 @@
 
 .bq-mine summary { display: flex; align-items: center; cursor: pointer; list-style: none; }
 .bq-mine summary::-webkit-details-marker { display: none; }
-.bq-mine summary h2::after { content: ' ▾'; color: var(--text-mute); font-size: 12px; }
-.bq-mine details:not([open]) summary h2::after { content: ' ▸'; }
+.bq-mine__fold { font-size: 14px; font-weight: 600; color: var(--text-mute); min-height: 32px; display: inline-flex; align-items: center; }
+.bq-mine summary .bq-mine__fold::after { content: ' ▾'; font-size: 12px; white-space: pre; }
+.bq-mine details:not([open]) summary .bq-mine__fold::after { content: ' ▸'; }
 .bq-mine details[open] > :not(summary) { margin-top: var(--s2); }
 .bq-mine h2 .muted { font-weight: 400; font-size: 13px; }
 
@@ -68,7 +94,11 @@
   position: sticky; top: var(--bq-top, 0); z-index: var(--z-sticky);
   padding: var(--s2) 0; background: var(--bg);
 }
-.bq-find { flex: 1 1 100%; display: flex; align-items: center; gap: var(--s2); }
+.bq-find { flex: 1 1 14em; display: flex; align-items: center; gap: var(--s2); }
+/* Beside the search on a wide screen, under it when there is no room. */
+.bq-liked { flex: 1 1 100%; }
+.bq-liked .segmented__btn { flex: 1; min-height: 40px; white-space: nowrap; }
+@media (max-width: 400px) { .bq-liked .segmented__btn { padding-inline: 2px; font-size: 12.5px; } }
 .bq-find__label { font-size: 14px; font-weight: 650; white-space: nowrap; }
 .bq-find__label small { display: block; font-size: 11.5px; font-weight: 400; color: var(--text-mute); }
 /* 16px so a phone does not zoom in on it; the accent edge so it is the first thing found. */
@@ -81,7 +111,6 @@
 @media (max-width: 560px) {
   .bq-list > .bq-bar { gap: 6px; }
   .bq-list > .bq-bar .segmented { flex: 1 1 100%; }
-  .bq-list > .bq-bar--order .segmented { flex: 0 1 auto; }
   .bq-list > .bq-bar .segmented__btn { flex: 1; }
   /* The filters on one line of a 320px phone. */
   .bq-bar--pinned .segmented__btn { padding-inline: 2px; font-size: 13px; white-space: nowrap; }
@@ -155,3 +184,187 @@
   border: 1px solid var(--ok); background: color-mix(in srgb, var(--ok) 12%, var(--surface)); color: var(--text); }
 .bq-last b { font-variant-numeric: tabular-nums; }
 .bq-last:focus-visible { outline: 2px solid var(--ok); outline-offset: 1px; }
+
+/* ---------------------------------------------------------------- four statuses */
+
+/* The counts are the filter: two by two on a phone, one row on anything wider. */
+.bq-tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s2); }
+.bq-tile {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--s2);
+  padding: var(--s2) 14px; border: 1px solid var(--line); border-radius: var(--r-lg);
+  background: var(--surface); color: var(--text-dim); font: inherit; font-size: 13px; font-weight: 550; text-align: left; cursor: pointer;
+}
+.bq-tile b { font-family: var(--font-display); font-size: 22px; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+.bq-tile:hover { background: var(--surface-2); }
+.bq-tile[aria-pressed="true"] { background: var(--surface-3); box-shadow: inset 0 0 0 1px var(--accent); color: var(--text); }
+.bq-tile:focus-visible { outline: 2px solid var(--accent-ink-on); outline-offset: 2px; }
+.bq-run-start { min-height: 44px; }
+
+.bq-sections { display: flex; flex-direction: column; gap: var(--s3); }
+.bq-section { display: flex; flex-direction: column; gap: var(--s2); }
+.bq-section h2 { margin: 4px 0 0; font-size: 15px; }
+.bq-section h2 .muted { font-family: var(--font-ui); font-size: 13px; font-weight: 400; }
+.bq-tag--ok { color: color-mix(in srgb, var(--ok) 75%, var(--text)); }
+/* Full: one line, done, out of the way. */
+.bq-card.is-full { flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: space-between; }
+.bq-card.is-full .bq-card__actions { margin-top: 0; }
+
+@media (max-width: 560px) {
+  .bq-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .bq-tile { flex-direction: column; align-items: flex-start; gap: 2px; padding: var(--s3); }
+  .bq-tile b { font-size: 24px; }
+  .bq-card.is-notin .bq-card__actions { grid-template-columns: repeat(2, 1fr); }
+  .bq-card.is-full .bq-card__actions { display: flex; }
+  .bq-card.is-full .bq-card__actions .btn { min-height: 40px; }
+}
+
+/* Your UIDs: each one's status, and a nudge for any not logged in. */
+.bq-mine__st { font-size: 12px; font-weight: 650; color: var(--text-dim); white-space: nowrap; }
+.bq-mine__st.is-claimable { color: color-mix(in srgb, var(--ok) 75%, var(--text)); }
+.bq-mine__st.is-notin { color: var(--accent-ink-on); }
+.bq-mine__st.is-full { color: color-mix(in srgb, var(--danger) 75%, var(--text)); }
+.bq-remind { display: flex; flex-wrap: wrap; align-items: center; gap: 4px var(--s2); margin: 0;
+  font-size: 12.5px; font-weight: 600; color: var(--accent-ink-on); }
+.bq-remind[hidden] { display: none; }
+.bq-remind .btn { min-height: 36px; }
+
+/* ---------------------------------------------------------------- claim run */
+
+.bq-run {
+  width: min(440px, calc(100vw - 2 * var(--s4))); max-height: calc(100dvh - 2 * var(--s4));
+  padding: var(--s4); border: 1px solid var(--line); border-radius: var(--r-lg);
+  background: var(--bg); color: var(--text);
+}
+.bq-run[open] { display: flex; flex-direction: column; gap: var(--s3); }
+.bq-run::backdrop { background: color-mix(in srgb, #000 60%, transparent); }
+.bq-run__top { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); }
+.bq-run__top h2 { margin: 0; font-size: 18px; }
+.bq-run__top .btn { min-height: 44px; }
+.bq-run__step { font-family: var(--font-mono); font-size: 14px; color: var(--text-dim); font-variant-numeric: tabular-nums; }
+.bq-run__bar { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
+.bq-run__bar > div { height: 100%; border-radius: 3px; background: var(--accent); transition: width .2s ease-out; }
+#bq-run-body { display: flex; flex-direction: column; gap: var(--s3); }
+.bq-run__card {
+  display: flex; flex-direction: column; align-items: center; gap: var(--s2); text-align: center;
+  padding: var(--s4); border: 1px solid var(--line); border-radius: var(--r-lg); background: var(--surface);
+}
+.bq-run__card h3 { margin: 0; font-size: 22px; }
+.bq-run__card p { margin: 0; color: var(--text-dim); }
+.bq-run__copied { padding: 2px 10px; border-radius: 999px; font-size: 13px; font-weight: 650;
+  color: color-mix(in srgb, var(--ok) 75%, var(--text)); background: color-mix(in srgb, var(--ok) 14%, var(--surface)); }
+.bq-run__uid.tr-copy { font-family: var(--font-mono); font-size: 34px; font-weight: 700; letter-spacing: 1px; padding: 2px 12px; }
+.bq-run__about { font-size: 13px; color: var(--text-dim); }
+.bq-run__ask { margin: 0; text-align: center; font-weight: 650; }
+.bq-run__answers { display: flex; flex-direction: column; gap: var(--s2); }
+.bq-run__btn {
+  display: flex; align-items: center; gap: 14px; min-height: 64px; padding: 6px 16px;
+  border: 1px solid var(--line); border-radius: var(--r-lg); background: var(--surface-2); color: var(--text);
+  font: inherit; font-size: 16px; font-weight: 700; text-align: left; cursor: pointer;
+}
+.bq-run__btn span { display: flex; flex-direction: column; gap: 2px; }
+.bq-run__btn small { font-size: 13px; font-weight: 500; color: var(--text-dim); }
+.bq-run__btn svg { flex: none; }
+.bq-run__btn.is-gift { background: var(--accent); border-color: color-mix(in srgb, var(--accent) 80%, #000); color: var(--accent-ink); }
+.bq-run__btn.is-gift small { color: var(--accent-ink); }
+.bq-run__btn.is-full { color: color-mix(in srgb, var(--danger) 75%, var(--text)); border-color: color-mix(in srgb, var(--danger) 40%, var(--line)); }
+.bq-run__btn:hover { filter: brightness(1.06); }
+.bq-run__btn:focus-visible, .bq-run__skip:focus-visible { outline: 2px solid var(--accent-ink-on); outline-offset: 2px; }
+.bq-run__skip { align-self: center; min-height: 44px; }
+.bq-run__tally { display: flex; justify-content: center; gap: var(--s4); margin: auto 0 0; font-size: 13px; }
+/* Each answer's icon in its status colour, the count beside it in the text colour. */
+.bq-run__t { display: inline-flex; align-items: center; gap: 5px; }
+.bq-run__t b { color: var(--text); font-size: 14px; font-variant-numeric: tabular-nums; }
+.bq-run__t.is-gift { color: color-mix(in srgb, var(--ok) 75%, var(--text)); }
+.bq-run__t.is-full { color: color-mix(in srgb, var(--danger) 75%, var(--text)); }
+.bq-run__t.is-notin { color: var(--accent-ink-on); }
+.bq-run__t.is-skip { color: var(--text-dim); }
+
+/* A phone: the whole screen, nothing else to tap by mistake. */
+@media (max-width: 560px) {
+  .bq-run { width: 100vw; height: 100dvh; max-width: none; max-height: none; margin: 0; border: 0; border-radius: 0; padding: var(--s3); }
+}
+@media (prefers-reduced-motion: reduce) { .bq-run__bar > div { transition: none; } }
+
+/* ---------------------------------------------------------------- activity */
+
+.bq-activity summary { cursor: pointer; list-style: none; }
+.bq-activity summary::-webkit-details-marker { display: none; }
+.bq-activity summary h2 { margin: 0; font-size: 16px; }
+.bq-activity summary h2::after { content: ' ▸'; color: var(--text-mute); font-size: 12px; }
+.bq-activity[open] summary h2::after { content: ' ▾'; }
+.bq-activity h2 .muted { font-family: var(--font-ui); font-weight: 400; font-size: 13px; }
+.bq-log { list-style: none; margin: var(--s2) 0 0; padding: 0; display: flex; flex-direction: column; font-size: 13px; }
+/* Icon, what happened, when; and under it, on a banquet's newest line, what you can do about it. */
+.bq-log li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: start; gap: 6px var(--s2);
+  padding: 8px 0; border-bottom: 1px solid var(--line); --kind: var(--text-dim); }
+.bq-log li:last-child { border-bottom: 0; }
+/* One you can still claim: tinted, edge to edge, so it stands out of a long log. */
+.bq-log li.is-claimable { margin-inline: calc(-1 * var(--s2)); padding-inline: var(--s2); border-radius: var(--r-sm);
+  background: color-mix(in srgb, var(--ok) 13%, transparent); box-shadow: inset 3px 0 0 var(--ok); }
+.bq-log-claim { font-family: var(--font-ui); font-size: 13px; font-weight: 700; color: color-mix(in srgb, var(--ok) 80%, var(--text)); }
+.bq-log-claim[hidden] { display: none; }
+.bq-log li > svg { color: var(--kind); margin-top: 0; }
+.bq-log b { font-weight: 650; }
+.bq-log__what { color: var(--text-dim); overflow-wrap: anywhere; }
+.bq-log__verb { color: var(--kind); }
+.bq-log b, .bq-log__uid { color: var(--text); }
+/* The status colours the cards and the claim run use, one per kind; posts and take-backs stay neutral. */
+.bq-log .is-claim, .bq-log .is-gift { --kind: color-mix(in srgb, var(--ok) 75%, var(--text)); }
+.bq-log .is-full { --kind: color-mix(in srgb, var(--danger) 75%, var(--text)); }
+.bq-log .is-notin { --kind: var(--accent-ink-on); }
+.bq-log__act, .bq-log__state { grid-column: 2 / -1; }
+.bq-log__act { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s2); } /* two by two: fits the 320px column */
+.bq-log__btn { flex: 1; min-height: 44px; }
+.bq-log__btn.tr-copy { padding: 0 12px; font: 600 13px/1.2 var(--font-ui); }
+.bq-log__state { font-size: 12.5px; font-weight: 650; }
+.bq-log__state.is-claimed { color: color-mix(in srgb, var(--ok) 75%, var(--text)); }
+.bq-log__state.is-full { color: color-mix(in srgb, var(--danger) 75%, var(--text)); }
+.bq-log__uid { font-family: var(--font-mono); font-size: 12.5px; font-weight: 600; }
+.bq-log time { color: var(--text-mute); white-space: nowrap; }
+
+/* A PC: the list in the middle, the activity in a column on the right, in view while scrolling. */
+@media (min-width: 1100px) {
+  .bq-main:has(.bq-activity:not([hidden])) { max-width: 1280px; }
+  #bq-app:not([hidden]):has(> .bq-activity:not([hidden])) {
+    display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: var(--s4); align-items: start;
+  }
+  .bq-activity { position: sticky; top: calc(var(--bq-top, 0px) + var(--s3));
+    max-height: calc(100dvh - var(--bq-top, 0px) - 2 * var(--s3)); overflow: auto; }
+}
+
+/* Wider than a phone: a small panel, docked on the right, dragged by its title
+   bar, with the page usable behind it (assets/js/banquet.js, startRun). */
+.bq-run.bq-run--float {
+  position: fixed; inset: auto; top: var(--s4); right: var(--s4); margin: 0; z-index: var(--z-modal);
+  width: 320px; max-height: calc(100dvh - 2 * var(--s4)); overflow: auto; padding: var(--s3); gap: var(--s2);
+  box-shadow: 0 12px 32px color-mix(in srgb, #000 45%, transparent);
+}
+.bq-run--float .bq-run__top { cursor: grab; touch-action: none; user-select: none; }
+.bq-run--float .bq-run__top:active { cursor: grabbing; }
+.bq-run--float .bq-run__top h2 { font-size: 16px; }
+.bq-run--float .bq-run__card { padding: var(--s3); gap: 6px; }
+.bq-run--float .bq-run__uid.tr-copy { font-size: 26px; }
+.bq-run--float .bq-run__btn { min-height: 52px; font-size: 15px; gap: 10px; padding: 4px 12px; }
+.bq-run--float .bq-run__btn small { font-size: 12px; }
+.bq-run--float #bq-run-body { gap: var(--s2); }
+
+/* Paused after an hour untouched: says so, and any tap resumes. */
+.bq-paused { margin: 0; padding: var(--s2) var(--s3); border: 1px solid color-mix(in srgb, var(--accent) 55%, var(--line));
+  border-radius: var(--r-md); background: color-mix(in srgb, var(--accent) 8%, var(--surface)); font-size: 13px; }
+.bq-paused[hidden] { display: none; }
+
+/* The likes question, asked in an activity line: under the text, full width. */
+.bq-log .bq-ask { grid-column: 2 / -1; }
+
+/* Likes noted on your own UIDs, in the row (040). */
+.bq-mine__uid .bq-likes--edit { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.bq-mine__uid .bq-likes--edit input { width: 6em; font-size: 16px; font-variant-numeric: tabular-nums; }
+/* With Likes beside Edit and Remove, a row wraps rather than widening a 320px phone. */
+.bq-mine__uid { flex-wrap: wrap; max-width: 100%; }
+
+/* A phone: one line per UID. Smaller buttons, and Likes as its heart alone (the count is beside it). */
+@media (max-width: 560px) {
+  .bq-mine__uid { gap: 6px; }
+  .bq-mine__uid > .btn { min-height: 36px; padding: 4px 9px; font-size: 13px; }
+  .bq-mine__uid .bq-likes__add span { display: none; }
+}

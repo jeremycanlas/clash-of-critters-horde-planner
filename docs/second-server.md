@@ -60,3 +60,26 @@ other server too: `sh tools/setup-server.sh tide supabase/migrations/0NN_banquet
 - **What this does not guard against:** anyone with the database password sees
   both schemas, and a future hand-written function could name both. With every
   banquet migration going through the script's check, it would be refused there.
+
+031 (four statuses and the activity log) is on the banquet rebuild branch and
+applied to neither yet: apply it to `public`, then
+`sh tools/setup-server.sh tide supabase/migrations/031_banquet_statuses.sql`,
+before the page that needs it goes live.
+
+033 (site only, Duneside, covered groups) stops reading Discord: the bot is
+only asked about roles now, and `setup-server.sh` no longer reads the channel.
+Which groups are covered until the reset is data, set by hand:
+`update <schema>.banquet_groups set covered = true where grp in (…)`.
+
+034 lets one server's channel be read again. YCT (`tide`) reads its channel
+once more, from 6 Oct 00:00 Manila, and its list is not covered; the first
+server stays site-only. A server's reading is its own scheduled job:
+`select cron.schedule('tide-banquet-sync', '15 seconds', 'select tide.banquet_sync()')`
+starts it and `cron.unschedule` with that name stops it.
+
+035 has the bot answer each post in a channel it reads, YCT only: `:upvote:`
+when every UID is recorded, `:downvote:` and a reply naming any 6-7 or 9-10
+digit number, nothing for chat. Edits swap the reaction and edit the reply.
+On for a server when `banquet_settings.ack_up` and `ack_down` name two emojis
+its bot can use ("name:id"; YCT's are Baymax's own app emojis). Set both to
+null to turn it off. 12345678 is never a UID, anywhere.

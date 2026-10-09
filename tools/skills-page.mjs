@@ -20,6 +20,8 @@ const END = '<!-- skills:end -->';
 const tatari = JSON.parse(readFileSync('data/tatari.json', 'utf8'));
 const roster = Array.isArray(tatari) ? tatari : tatari.tatari ?? Object.values(tatari);
 const numbers = JSON.parse(readFileSync('data/skill-numbers.json', 'utf8'));
+// The drafter's search words (data.js searchTerms): the animal and nicknames per family, and per Tatari.
+const aliases = JSON.parse(readFileSync('data/aliases.json', 'utf8'));
 // Horde Invasion level 3/5/7 numbers, read off the deploy screen's skill panel, by family.
 // Still being filled in, so a missing file or family just means "not recorded yet".
 const hordeOverrides = (() => { try { return JSON.parse(readFileSync('data/horde-overrides.json', 'utf8')); } catch { return {}; } })();
@@ -28,7 +30,8 @@ const hordeNumbers = (() => { try { return JSON.parse(readFileSync('data/horde-n
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 /* The drafter's own badges (app.css .badge): the game's type disc and role plate. */
 // alt is empty where the name is written beside it anyway.
-const badge = (name, alt = name) => `<span class="badge" title="${esc(name)}"><img class="icon__art" src="data/images/icons/${esc(name.toLowerCase().replace(/[^a-z0-9]+/g, '-'))}.png" alt="${esc(alt)}" width="17" height="17"></span>`;
+// A role the wiki has not given yet (the Popa line, Oct 2026): no badge rather than a broken one.
+const badge = (name, alt = name) => !name ? '' : `<span class="badge" title="${esc(name)}"><img class="icon__art" src="data/images/icons/${esc(name.toLowerCase().replace(/[^a-z0-9]+/g, '-'))}.png" alt="${esc(alt)}" width="17" height="17"></span>`;
 // The roster card's meta row: tier, then type and role.
 const meta = (tierText, t, roleAlt = t.role) => `<span class="sk-meta"><span class="card__tier">${tierText}</span>${badge(t.type)}${badge(t.role, roleAlt)}</span>`;
 const art = (t, size) => `<img class="sk-art" src="${esc(t.image)}" alt="" width="${size}" height="${size}" loading="lazy" decoding="async">`;
@@ -92,7 +95,7 @@ function tier(t, line, i) {
   if (n?.arenaFactor) boxes.push(box('Arena Factor', AF_TEXT, rows([['Arena Factor', n.arenaFactor]]), ' sk-box--af'));
   return `
         <section class="sk-tier" id="${esc(t.slug)}" data-tier="${t.tier}" aria-label="${esc(t.name)}, tier ${t.tier}">
-          <h3 class="sk-tier__name">${esc(t.name)} <span class="sk-tier__tags"><span class="tag">${badge(t.type, '')}${esc(t.type)}</span><span class="tag">${badge(t.role, '')}${esc(t.role)}</span><span class="tag">T${t.tier} of ${line.length}</span></span></h3>
+          <h3 class="sk-tier__name">${esc(t.name)} <span class="sk-tier__tags"><span class="tag">${badge(t.type, '')}${esc(t.type)}</span>${t.role ? `<span class="tag">${badge(t.role, '')}${esc(t.role)}</span>` : ''}<span class="tag">T${t.tier} of ${line.length}</span></span></h3>
           <div class="sk-panel">${panelHead(icon(t, 64, ROMAN[t.tier]), skillName(t), skillDesc(t), 'h4')}
             <div class="sk-list">
               ${n?.sections ? rows(mark({ heading: null, rows: base(n) }, prev)) : '<p class="sk-none">The rest of this skill panel is not recorded yet.</p>'}${boxes.length ? `
@@ -140,7 +143,12 @@ for (const t of roster) lines.set(t.familyId, [...(lines.get(t.familyId) ?? []),
 const ordered = [...lines.values()].map((l) => l.sort((a, b) => a.tier - b.tier));
 const lineAF = (line) => line.map((t) => numbers[t.slug]?.arenaFactor).filter(Boolean).at(-1);
 // What the search box reads for a line: names, skills, effect boxes, horde skills.
-const lineQ = (line) => [...new Set(line.flatMap((t) => [t.name, skillName(t),
+/* What a line is found by: the same words the drafter's search takes (names,
+   type, role, rarity, tier, etymology, skill text, the animal and nicknames),
+   plus the skill and section names here. */
+const lineQ = (line) => [...new Set(line.flatMap((t) => [t.name, t.slug.replace(/-/g, ' '), skillName(t),
+  t.type, t.role, t.rarity, `t${t.tier}`, t.family, t.etymology ?? '', t.skill ?? '',
+  ...(aliases[t.family] ?? []), ...(aliases[t.name] ?? []),
   ...(numbers[t.slug]?.sections ?? []).map((s) => s.heading ?? '')])
   .concat(Object.values(line[0].hordeSkills ?? hordeOverrides[line[0].family] ?? {}).filter((h) => h?.name).map((h) => h.name)))].join(' ').toLowerCase();
 const hordeDone = ordered.filter((l) => hordeNumbers[l[0].family]).length;
