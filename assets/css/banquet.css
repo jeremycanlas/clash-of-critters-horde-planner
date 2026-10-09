@@ -83,8 +83,9 @@
 
 .bq-mine summary { display: flex; align-items: center; cursor: pointer; list-style: none; }
 .bq-mine summary::-webkit-details-marker { display: none; }
-.bq-mine summary h2::after { content: ' ▾'; color: var(--text-mute); font-size: 12px; }
-.bq-mine details:not([open]) summary h2::after { content: ' ▸'; }
+.bq-mine__fold { font-size: 14px; font-weight: 600; color: var(--text-mute); min-height: 32px; display: inline-flex; align-items: center; }
+.bq-mine summary .bq-mine__fold::after { content: ' ▾'; font-size: 12px; white-space: pre; }
+.bq-mine details:not([open]) summary .bq-mine__fold::after { content: ' ▸'; }
 .bq-mine details[open] > :not(summary) { margin-top: var(--s2); }
 .bq-mine h2 .muted { font-weight: 400; font-size: 13px; }
 

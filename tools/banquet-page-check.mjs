@@ -386,6 +386,8 @@ try {
   assert.equal(await A.locator('#bq-my li', { hasText: '10000001' }).locator('.bq-mine__st').textContent(), 'needs a look');
   assert.ok(await A.locator('#bq-remind').isHidden(), 'no reminder while none of hers is not logged in');
   await A.locator('#bq-mine-fold').evaluate((d) => { d.open = false; });
+  assert.ok(await A.locator('#bq-add-uid').isVisible() && await A.locator('#bq-my').isHidden(), 'folded: the list goes, the Add box stays');
+  if (process.env.BANQUET_SHOTS) await A.locator('#bq-mine').screenshot({ path: `${process.env.BANQUET_SHOTS}/mine-folded.png` });
   await A.click('[data-mark="not-yet"][data-uid="10000001"]');
   await A.waitForSelector('#bq-remind:not([hidden])');
   assert.ok(await A.locator('#bq-mine-fold').evaluate((d) => d.open), 'one of hers turning not logged in opens Your UIDs');
