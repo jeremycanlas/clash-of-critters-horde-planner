@@ -25,8 +25,9 @@ import { pipeline } from 'node:stream/promises';
 import path from 'node:path';
 
 const WIKI = 'https://clashofcritters.wiki.gg';
-const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 ' +
-           '(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
+// Says what it is: since Oct 2026 wiki.gg challenges a browser's name from a
+// script (403 "Just a second...") and lets an honest tool through.
+const UA = 'clash-of-critters-horde-planner/1.0 (+https://github.com/jeremycanlas/clash-of-critters-horde-planner)';
 const ROOT = path.resolve(import.meta.dirname, '..');
 const THUMB_WIDTH = 200;
 const ICON_WIDTH = 128;

@@ -72,5 +72,10 @@
   "Blowfin": ["pufferfish", "fugu", "blowfish", "chef", "sushi"],
   "Glowfly": ["firefly", "lightning bug", "glowworm", "beetle"],
   "Poakie": ["pig", "pork", "boar", "toad", "bbq"],
-  "Budboo": ["venus flytrap", "flytrap", "plant", "ghost", "wraith"]
+  "Budboo": ["venus flytrap", "flytrap", "plant", "ghost", "wraith"],
+  "Cavyzap": ["guinea pig", "cavy", "rodent"],
+  "Snowcub": ["polar bear", "bear", "cub"],
+  "Ringtail": ["raccoon", "ringtail", "thief"],
+  "Dolphie": ["dolphin"],
+  "Popa": ["possum", "opossum"]
 }
