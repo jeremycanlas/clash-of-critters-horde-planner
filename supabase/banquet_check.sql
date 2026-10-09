@@ -47,6 +47,7 @@ end $$;
 \i supabase/migrations/040_banquet_mine_likes.sql
 \i supabase/migrations/041_banquet_lighter_load.sql
 \i supabase/migrations/042_banquet_leaders.sql
+\i supabase/migrations/043_banquet_nicknames.sql
 
 -- Real entries would skew the counts. Gone for this transaction only.
 delete from public.banquet_claims; delete from public.banquet_marks; delete from public.banquet_uids; delete from public.banquet_access; delete from public.banquet_events;
@@ -236,7 +237,7 @@ begin
   assert e -> 0 ->> 'kind' = 'clear' and e -> 0 ->> 'uid' = '10000003' and e -> 0 ->> 'by' = 'zz_a', 'the clear is newest';
   assert (select count(*) from jsonb_array_elements(e) x where x ->> 'kind' = 'claim' and x ->> 'uid' = '10000002') = 1, 'the claim is there';
   assert (select count(*) from jsonb_array_elements(e) x where x ->> 'kind' = 'unclaim' and x ->> 'uid' = '20000003') = 1, 'so is a take-back';
-  assert (select count(*) from jsonb_array_elements(e) x where x ->> 'kind' = 'post' and x ->> 'uid' = '20000001' and x ->> 'by' = 'u302') = 1, 'posts from Discord, by who posted';
+  assert (select count(*) from jsonb_array_elements(e) x where x ->> 'kind' = 'post' and x ->> 'uid' = '20000001' and x ->> 'by' = 'zz_b') = 1, 'posts from Discord, by who posted, under their name in the server (043)';
   assert (select count(*) from jsonb_array_elements(e) x where x ->> 'kind' = 'claim' and x ->> 'uid' = '20000002') = 1, 'a claim on a full one still counts';
   assert s::text not like '%grp%', 'still nothing says there are groups';
 
@@ -340,9 +341,9 @@ begin
   c := public.banquet_copies();
   p := c -> 'people' -> 0;
   assert p ->> 'name' = 'zz_copier' and (p ->> 'all_copied')::boolean and (p ->> 'copied')::int = 4, 'the copier is first, all four copied';
-  assert (select array_agg(distinct x ->> 'first_by' order by x ->> 'first_by') from jsonb_array_elements(p -> 'items') x) = '{u301,u302}',
-         'and whose they were, as posted in Discord';
-  assert not exists (select 1 from jsonb_array_elements(c -> 'people') x where x ->> 'name' = 'u302'), 'the one who posted first is not flagged';
+  assert (select array_agg(distinct x ->> 'first_by' order by x ->> 'first_by') from jsonb_array_elements(p -> 'items') x) = '{zz_a,zz_b}',
+         'and whose they were, under their names in the server (043)';
+  assert not exists (select 1 from jsonb_array_elements(c -> 'people') x where x ->> 'name' = 'zz_b'), 'the one who posted first is not flagged';
   assert (select count(*) from jsonb_array_elements(c -> 'both_groups') x where x ->> 'uid' = '55555555') = 0,
          '55555555 left Group 1 in the edit above, so it is in one group now';
 end $$;
@@ -688,6 +689,53 @@ do $$ declare l jsonb; begin
   assert jsonb_array_length(l -> 'groups') = 3 and (l -> 'groups' -> 1 ->> 'grp')::int = 2, 'a viewer: every group, numbered';
   assert l -> 'groups' -> 1 -> 'boards' -> 'scout' -> 'top' -> 0 ->> 'name' = 'zz_c', 'Group 2''s own boards';
 end $$;
+
+-- ---------------------------------------------------------------- server nicknames (043)
+-- Discord answers A's check with a nickname in this server: it becomes A's name
+-- everywhere, every round, and nobody else's of the same old name.
+reset role;
+update public.banquet_settings set guild_id = 'g1';
+insert into vault.secrets (name, secret) values ('banquet_bot_token', 't') on conflict (name) do nothing;
+create or replace function extensions.http(req extensions.http_request) returns extensions.http_response language sql as $$
+  select row(200, 'application/json', '{}'::extensions.http_header[],
+             jsonb_build_object('nick', 'Nyu', 'user', jsonb_build_object('global_name', 'vale'), 'roles', jsonb_build_array('r1'))::text)::extensions.http_response
+$$;
+update public.banquet_members set checked_at = now() - interval '11 minutes' where discord_id = '990000000000000301';
+insert into public.banquet_marks (round, grp, uid, state, by_name, discord_id)
+  values ('2020-01-02', 1, 20200003, 'full', 'zz_a', '990000000000000302');   -- B's mark, under A's old name
+set local role authenticated;
+select pg_temp.as_(1);
+do $$ begin assert public.banquet_check() = 'ok', 'checked'; end $$;
+reset role;
+do $$ begin
+  assert (select display from public.banquet_members where discord_id = '990000000000000301') = 'Nyu', 'the server nickname is the name';
+  assert not exists (select 1 from public.banquet_uids where discord_id = '990000000000000301' and by_name <> 'Nyu'), 'on their UIDs, every round';
+  assert not exists (select 1 from public.banquet_claims where discord_id = '990000000000000301' and by_name <> 'Nyu'), 'claims';
+  assert not exists (select 1 from public.banquet_events where discord_id = '990000000000000301' and by_name <> 'Nyu'), 'the activity log';
+  assert not exists (select 1 from public.banquet_likes where discord_id = '990000000000000301' and by_name <> 'Nyu'), 'likes';
+  assert exists (select 1 from public.banquet_marks where discord_id = '990000000000000301' and by_name = 'Nyu'), 'and their marks';
+  assert (select by_name from public.banquet_marks where round = '2020-01-02' and uid = 20200003) = 'zz_a', 'but not a mark of someone else''s by the same old name';
+end $$;
+-- No nickname in the server: their Discord display name.
+create or replace function extensions.http(req extensions.http_request) returns extensions.http_response language sql as $$
+  select row(200, 'application/json', '{}'::extensions.http_header[],
+             jsonb_build_object('nick', null, 'user', jsonb_build_object('global_name', 'vale'), 'roles', jsonb_build_array('r1'))::text)::extensions.http_response
+$$;
+update public.banquet_members set checked_at = now() - interval '11 minutes' where discord_id = '990000000000000301';
+set local role authenticated;
+select pg_temp.as_(1);
+do $$ begin perform public.banquet_check(); end $$;
+reset role;
+do $$ begin
+  assert (select display from public.banquet_members where discord_id = '990000000000000301') = 'vale', 'no nickname: the Discord name';
+end $$;
+-- Back as the rest of the checks expect it: no server set, Discord out of reach, A as zz_a.
+create or replace function extensions.http(req extensions.http_request) returns extensions.http_response
+  language sql as $$ select row(503, 'text/plain', '{}'::extensions.http_header[], 'local stand-in: no network')::extensions.http_response $$;
+update public.banquet_settings set guild_id = null;
+select public.banquet_rename('990000000000000301', 'zz_a');
+update public.banquet_members set display = 'zz_a', checked_at = now() where discord_id = '990000000000000301';
+set local role authenticated;
 
 -- ---------------------------------------------------------------- a stale yes expires
 reset role;
