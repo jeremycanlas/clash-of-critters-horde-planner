@@ -46,6 +46,7 @@ end $$;
 \i supabase/migrations/039_banquet_feed.sql
 \i supabase/migrations/040_banquet_mine_likes.sql
 \i supabase/migrations/041_banquet_lighter_load.sql
+\i supabase/migrations/042_banquet_leaders.sql
 
 -- Real entries would skew the counts. Gone for this transaction only.
 delete from public.banquet_claims; delete from public.banquet_marks; delete from public.banquet_uids; delete from public.banquet_access; delete from public.banquet_events;
@@ -617,6 +618,77 @@ do $$ begin assert public.banquet_check() = 'not-set-up', 'a no from 2 minutes a
 select pg_temp.as_(1);
 do $$ begin assert public.banquet_check() = 'ok', 'a yes from 5 minutes ago is remembered'; end $$;
 
+-- ---------------------------------------------------------------- leaderboards (042)
+-- A past gold rush of its own, reset at 2020-01-02 00:00 UTC, in Group 1: A is zz_a, B is zz_b.
+reset role;
+update public.banquet_members set checked_at = now() where discord_id in ('990000000000000301', '990000000000000304');
+insert into public.banquet_uids (round, grp, uid, discord_id, by_name, source, added_at) values
+  ('2020-01-02', 1, 20200001, '990000000000000301', 'zz_a', 'site', '2019-12-30'),
+  ('2020-01-02', 1, 20200001, '990000000000000302', 'zz_b', 'site', '2019-12-31'),  -- posted again later: A's
+  ('2020-01-02', 1, 20200002, '990000000000000302', 'zz_b', 'site', '2019-12-31'),
+  ('2020-01-02', 1, 20200003, '990000000000000302', 'zz_b', 'site', '2019-12-31');
+insert into public.banquet_claims (round, grp, uid, discord_id, by_name) values
+  ('2020-01-02', 1, 20200001, '990000000000000302', 'zz_b'),   -- B claims A's: A shared one
+  ('2020-01-02', 1, 20200002, '990000000000000302', 'zz_b'),   -- B claims B's own: nobody
+  ('2020-01-02', 1, 20200003, '990000000000000301', 'zz_a');   -- A claims B's: B shared one
+insert into public.banquet_events (round, grp, uid, kind, discord_id, by_name, at) values
+  ('2020-01-02', 1, 20200001, 'open', '990000000000000301', 'zz_a', '2020-01-02 00:10+00'),
+  ('2020-01-02', 1, 20200001, 'full', '990000000000000302', 'zz_b', '2020-01-02 00:20+00'),
+  ('2020-01-02', 1, 20200002, 'not-yet', '990000000000000301', 'zz_a', '2020-01-02 00:05+00'),
+  ('2020-01-02', 1, 20200002, 'clear', '990000000000000301', 'zz_a', '2020-01-02 00:07+00'),   -- Undo: A's does not count
+  ('2020-01-02', 1, 20200002, 'open', '990000000000000302', 'zz_b', '2020-01-02 00:30+00'),
+  ('2020-01-02', 1, 20200003, 'open', '990000000000000302', 'zz_b', '2020-01-02 02:00+00'),    -- after the first hour
+  ('2020-01-02', 2, 30200001, 'open', '990000000000000303', 'zz_c', '2020-01-02 00:01+00');    -- Group 2's
+insert into public.banquet_likes (grp, uid, likes, discord_id, by_name, at) values
+  (1, 20200001, 100, '990000000000000302', 'zz_b', '2019-12-31'),   -- B first
+  (1, 20200001, 150, '990000000000000301', 'zz_a', '2020-01-01'),
+  (1, 20200002, 0, '990000000000000301', 'zz_a', '2020-01-01 23:00+00'),
+  (1, 20200003, 50, '990000000000000302', 'zz_b', '2020-01-01 21:00+00'),
+  (1, 20200003, 50, '990000000000000302', 'zz_b', '2020-01-02 03:00+00');   -- after the reset: not before it
+set local role authenticated;
+select pg_temp.as_(1);
+do $$
+declare l jsonb; b jsonb;
+begin
+  l := public.banquet_leaders('2020-01-02');
+  assert jsonb_array_length(l -> 'groups') = 1 and not (l -> 'groups' -> 0 ? 'grp'), 'a member: their own group, unnamed by number';
+  b := l -> 'groups' -> 0 -> 'boards';
+  assert b -> 'scout' -> 'top' -> 0 ->> 'name' = 'zz_b' and (b -> 'scout' -> 'top' -> 0 ->> 'n')::int = 2,
+         'scout: B first to check two (A''s undone one is not A''s), got ' || (b -> 'scout')::text;
+  assert b -> 'scout' -> 'you' = '{"rank": 2, "n": 1}', 'and A sees their own place';
+  assert (b -> 'responder' -> 'people')::int = 2 and (select bool_and((x ->> 'rank')::int = 1 and (x ->> 'n')::int = 1)
+           from jsonb_array_elements(b -> 'responder' -> 'top') x), 'responder: one each in the first hour, tied first';
+  assert (select jsonb_object_agg(x ->> 'name', (x ->> 'n')::int) from jsonb_array_elements(b -> 'sharer' -> 'top') x) = '{"zz_a": 1, "zz_b": 1}',
+         'sharer: a UID first posted and claimed by someone else, got ' || (b -> 'sharer')::text;
+  assert (select jsonb_object_agg(x ->> 'name', (x ->> 'n')::int) from jsonb_array_elements(b -> 'likes' -> 'top') x) = '{"zz_a": 1, "zz_b": 2}',
+         'likes: the first to note each building before the reset, got ' || (b -> 'likes')::text;
+  assert position('99000000000000030' in l::text) = 0, 'no Discord ids in the answer';
+  assert (select bool_or((x ->> 'you')::boolean) from jsonb_array_elements(b -> 'scout' -> 'top') x), 'your own row says so';
+  assert (public.banquet_leaders(all_time => true) ->> 'round') is null, 'all time';
+end $$;
+-- Built once per 5 minutes: a new check shows only once the last build is that old.
+reset role;
+insert into public.banquet_events (round, grp, uid, kind, discord_id, by_name, at) values
+  ('2020-01-02', 1, 20200099, 'open', '990000000000000301', 'zz_a', '2020-01-02 00:40+00');
+set local role authenticated;
+select pg_temp.as_(1);
+do $$ begin
+  assert public.banquet_leaders('2020-01-02') -> 'groups' -> 0 -> 'boards' -> 'scout' -> 'you' ->> 'n' = '1', 'within 5 minutes: the last build';
+end $$;
+reset role;
+update public.banquet_leaders_cache set built_at = now() - interval '6 minutes';
+set local role authenticated;
+select pg_temp.as_(1);
+do $$ begin
+  assert public.banquet_leaders('2020-01-02') -> 'groups' -> 0 -> 'boards' -> 'scout' -> 'you' ->> 'n' = '2', 'older: built again';
+end $$;
+select pg_temp.as_(4);
+do $$ declare l jsonb; begin
+  l := public.banquet_leaders('2020-01-02');
+  assert jsonb_array_length(l -> 'groups') = 3 and (l -> 'groups' -> 1 ->> 'grp')::int = 2, 'a viewer: every group, numbered';
+  assert l -> 'groups' -> 1 -> 'boards' -> 'scout' -> 'top' -> 0 ->> 'name' = 'zz_c', 'Group 2''s own boards';
+end $$;
+
 -- ---------------------------------------------------------------- a stale yes expires
 reset role;
 update public.banquet_members set checked_at = now() - interval '31 minutes' where discord_id = '990000000000000301';
@@ -639,7 +711,7 @@ begin
   got := array(select p.proname::text from pg_proc p
                 where p.pronamespace = 'public'::regnamespace and p.proname like 'banquet%'
                   and has_function_privilege('authenticated', p.oid, 'execute') order by 1);
-  assert got = '{banquet_access_log,banquet_add,banquet_changes,banquet_check,banquet_claim,banquet_copies,banquet_edit,banquet_likes_set,banquet_mark,banquet_note_copy,banquet_remove,banquet_round,banquet_state}',
+  assert got = '{banquet_access_log,banquet_add,banquet_changes,banquet_check,banquet_claim,banquet_copies,banquet_edit,banquet_leaders,banquet_likes_set,banquet_mark,banquet_note_copy,banquet_remove,banquet_round,banquet_state}',
          'signed-in users can call exactly the page''s functions, got ' || got::text;
   assert not exists (select 1 from pg_proc p where p.pronamespace = 'public'::regnamespace and p.proname like 'banquet%'
                       and has_function_privilege('anon', p.oid, 'execute')), 'anonymous visitors can call nothing';

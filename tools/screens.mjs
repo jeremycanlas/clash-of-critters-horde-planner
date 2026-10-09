@@ -133,6 +133,7 @@ const PAGES = [
   { name: 'contribute', url: 'contribute.html', ready: '.cell' },
   { name: 'tracker', url: 'tracker.html', ready: '#tr-gate:not([hidden]), #tr-app:not([hidden])' },
   { name: 'banquet', url: 'banquet.html', ready: '#bq-gate:not([hidden]), #bq-app:not([hidden])' },
+  { name: 'banquet-leaders', url: 'banquet-leaders.html', ready: '#lb-gate:not([hidden]), #lb-app:not([hidden])' },
 ];
 
 // ------------------------------------------------------------------ harness

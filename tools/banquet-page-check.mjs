@@ -220,6 +220,16 @@ async function open(me, opts) {
     }
     // `flaky`: Discord does not answer that many times first, as on 7 Oct.
     if (fn === 'banquet_check') return json(me.flaky && me.flaky-- > 0 ? 'discord-down' : 'ok');
+    // Leaderboards (042): a yes from Discord over 30 minutes old is refused once, as the database does.
+    if (fn === 'banquet_leaders') {
+      if (me.staleLeaders && me.staleLeaders-- > 0) {
+        return route.fulfill({ status: 400, contentType: 'application/json', body: '{"code":"P0001","message":"Your access needs checking again. Reload the page."}' });
+      }
+      const b = { people: 2, you: { rank: 2, n: 3 }, top: [{ name: 'Ben', n: 5, rank: 1, you: false }, { name: me.name, n: 3, rank: 2, you: true }] };
+      return json({ round: body.all_time ? null : '2026-09-24', current: '2026-09-24', rounds: ['2026-09-24', '2026-09-17'],
+        groups: [{ name: 'Group 1', built_at: new Date().toISOString(),
+          boards: { scout: b, responder: { people: 0, you: null, top: [] }, sharer: b, likes: b } }] });
+    }
     if (fn === 'tracker_claim') return json(false);
     if (down) { if (['banquet_state', 'banquet_changes'].includes(fn)) tries++; return route.abort('internetdisconnected'); }
     if (fn === 'banquet_state') {
@@ -992,7 +1002,27 @@ try {
   await D.waitForTimeout(400);
   assert.deepEqual(await axe(D), [], 'axe, both servers');
 
-  assert.deepEqual([...ana.errors, ...flo.errors, ...cov.errors, ...eli.errors, ...vee.errors, ...bea.errors, ...out.errors, ...junk.errors, ...half.errors, ...duo.errors], [],
+  // ------------------------------------------------------------------ leaderboards
+  // From the banquet page's link, on a phone; a stale yes from Discord asked again once, unseen.
+  const lea = await open({ name: 'Lea', grp: 1, staleLeaders: 1 }, devices['iPhone SE']);
+  const L = lea.page;
+  assert.equal(await L.locator('#bq-leaders').getAttribute('href'), 'banquet-leaders.html', 'the banquet page links its leaderboards');
+  await L.click('#bq-leaders');
+  await L.waitForSelector('#lb-app:not([hidden])');
+  assert.equal(await L.locator('.lb-board').count(), 4, 'four boards');
+  assert.match(await L.locator('.lb-board').first().innerText(), /Scout[\s\S]*1\s*Ben\s*5[\s\S]*2\s*Lea\s*3[\s\S]*You: #2 of 2 · 3/, 'top names, and your place');
+  assert.equal(await L.locator('.lb-top li.is-you').first().textContent().then((t) => t.includes('Lea')), true, 'your own row lit');
+  assert.match(await L.locator('.lb-board').nth(1).innerText(), /Nobody yet[\s\S]*Not on this board yet/, 'an empty board says so');
+  const askedL = sent.filter((x) => x.who === 'Lea' && x.fn === 'banquet_leaders').length;
+  await L.selectOption('#lb-round', 'all');
+  await L.waitForFunction((n) => document.querySelector('#lb-round').value === 'all', askedL);
+  await L.waitForTimeout(300);
+  assert.deepEqual(sent.filter((x) => x.who === 'Lea' && x.fn === 'banquet_leaders').at(-1).body, { all_time: true }, 'All time asks for all time');
+  assert.ok(await L.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'no sideways scroll on a phone');
+  assert.deepEqual(await axe(L), [], 'axe, leaderboards');
+  if (process.env.BANQUET_SHOTS) await L.screenshot({ path: `${process.env.BANQUET_SHOTS}/leaders-phone.png`, fullPage: true });
+
+  assert.deepEqual([...ana.errors, ...flo.errors, ...cov.errors, ...eli.errors, ...vee.errors, ...bea.errors, ...out.errors, ...junk.errors, ...half.errors, ...duo.errors, ...lea.errors], [],
     'no script errors');
   console.log('banquet page: ok');
 } finally {

@@ -199,6 +199,7 @@ async function start() {
     toast(`${d.name}: ${(WHY[got] ?? [got])[0]}`, 'info');
   }
   showPrivateTab('banquet.html', code ? `?s=${code}` : ''); // a known code: dbs is empty otherwise
+  $('#bq-leaders').href = `banquet-leaders.html${location.search}`; // the same server's boards
   await load();
 
   /* Everyone else's claims and marks: what changed, every 10 s while you are
