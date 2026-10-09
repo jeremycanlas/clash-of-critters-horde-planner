@@ -48,6 +48,7 @@ end $$;
 \i supabase/migrations/041_banquet_lighter_load.sql
 \i supabase/migrations/042_banquet_leaders.sql
 \i supabase/migrations/043_banquet_nicknames.sql
+\i supabase/migrations/044_banquet_leaders_no_private.sql
 
 -- Real entries would skew the counts. Gone for this transaction only.
 delete from public.banquet_claims; delete from public.banquet_marks; delete from public.banquet_uids; delete from public.banquet_access; delete from public.banquet_events;
@@ -686,7 +687,7 @@ end $$;
 select pg_temp.as_(4);
 do $$ declare l jsonb; begin
   l := public.banquet_leaders('2020-01-02');
-  assert jsonb_array_length(l -> 'groups') = 3 and (l -> 'groups' -> 1 ->> 'grp')::int = 2, 'a viewer: every group, numbered';
+  assert jsonb_array_length(l -> 'groups') = 2 and (l -> 'groups' -> 1 ->> 'grp')::int = 2, 'a viewer: every group, numbered, but no private list (044), got ' || (select string_agg(coalesce(x ->> 'grp', '?'), ',') from jsonb_array_elements(l -> 'groups') x);
   assert l -> 'groups' -> 1 -> 'boards' -> 'scout' -> 'top' -> 0 ->> 'name' = 'zz_c', 'Group 2''s own boards';
 end $$;
 
