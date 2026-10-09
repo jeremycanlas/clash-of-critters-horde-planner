@@ -49,6 +49,7 @@ end $$;
 \i supabase/migrations/042_banquet_leaders.sql
 \i supabase/migrations/043_banquet_nicknames.sql
 \i supabase/migrations/044_banquet_leaders_no_private.sql
+\i supabase/migrations/045_banquet_follow_group.sql
 
 -- Real entries would skew the counts. Gone for this transaction only.
 delete from public.banquet_claims; delete from public.banquet_marks; delete from public.banquet_uids; delete from public.banquet_access; delete from public.banquet_events;
@@ -717,6 +718,41 @@ do $$ begin
   assert exists (select 1 from public.banquet_marks where discord_id = '990000000000000301' and by_name = 'Nyu'), 'and their marks';
   assert (select by_name from public.banquet_marks where round = '2020-01-02' and uid = 20200003) = 'zz_a', 'but not a mark of someone else''s by the same old name';
 end $$;
+-- Moved from Group 2 to Group 1 (045): their site UIDs this round go with them
+-- at the role check, one already there by hand is not doubled, and a Discord-read one stays.
+reset role;
+update public.banquet_members set groups = '{2}', checked_at = now() - interval '11 minutes' where discord_id = '990000000000000301';
+insert into public.banquet_uids (round, grp, uid, discord_id, by_name, source) values
+  (public.banquet_round(), 2, 45000001, '990000000000000301', 'Nyu', 'site'),
+  (public.banquet_round(), 2, 45000002, '990000000000000301', 'Nyu', 'site'),
+  (public.banquet_round(), 1, 45000002, '990000000000000301', 'Nyu', 'site'),
+  (public.banquet_round(), 2, 45000003, '990000000000000301', 'Nyu', 'discord');
+set local role authenticated;
+select pg_temp.as_(1);
+do $$ begin assert public.banquet_check() = 'ok', 'checked into Group 1'; end $$;
+reset role;
+do $$ begin
+  assert (select groups from public.banquet_members where discord_id = '990000000000000301') = '{1}', 'now Group 1';
+  assert (select count(*) from public.banquet_uids where round = public.banquet_round() and discord_id = '990000000000000301'
+            and uid in (45000001, 45000002) and grp = 1) = 2, 'site UIDs in the new group, the one there already once';
+  assert exists (select 1 from public.banquet_uids where uid = 45000003 and grp = 2) and not exists (select 1 from public.banquet_uids where uid = 45000003 and grp = 1),
+         'a Discord-read one stays';
+end $$;
+delete from public.banquet_uids where uid between 45000001 and 45000003;
+-- During Duneside (7 Oct) a copy, the old group keeps its cards; after it, a move.
+insert into public.banquet_uids (round, grp, uid, discord_id, by_name, source) values
+  ('2026-10-07', 2, 45000011, '990000000000000301', 'Nyu', 'site'),
+  ('2026-10-14', 2, 45000012, '990000000000000301', 'Nyu', 'site');
+do $$ begin
+  perform public.banquet_follow('990000000000000301', '{1}', '2026-10-07');
+  assert (select array_agg(grp order by grp) from public.banquet_uids where uid = 45000011) = '{1,2}', 'Duneside: copied';
+  perform public.banquet_follow('990000000000000301', '{1}', '2026-10-14');
+  assert (select array_agg(grp order by grp) from public.banquet_uids where uid = 45000012) = '{1}', 'after: moved';
+  assert public.banquet_follow('990000000000000301', '{1}', '2026-10-14') = 0, 'and a second time, nothing';
+  assert public.banquet_follow('990000000000000301', '{}', '2026-10-14') = 0, 'a role removed: their UIDs stay where they are';
+end $$;
+delete from public.banquet_uids where uid in (45000011, 45000012);
+
 -- No nickname in the server: their Discord display name.
 create or replace function extensions.http(req extensions.http_request) returns extensions.http_response language sql as $$
   select row(200, 'application/json', '{}'::extensions.http_header[],
