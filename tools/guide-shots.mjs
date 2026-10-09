@@ -57,7 +57,6 @@ const top = await page.locator('a[data-open]').first().getAttribute('href');
 await page.goto(`${site}/${top}`);
 await page.waitForSelector('#grid .cell, #grid [data-cell]', { timeout: 30000 });
 await page.waitForTimeout(800);
-await shot('drafter-top');
 // The field on its own, as "Just the grid" leaves it for a screenshot; any tap brings the rest back.
 await page.locator('.bench__clean[data-clean]').first().click();
 await page.waitForTimeout(800);
