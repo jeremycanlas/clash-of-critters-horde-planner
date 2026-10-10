@@ -957,7 +957,7 @@ function renderChosen() {
     <span class="contrib__art" data-type="${esc(t.type)}">${artHTML(t, { lazy: false })}</span>
     <span class="contrib__who">
       <b>${esc(t.name)}</b>
-      <span class="muted">${typeIcon(t.type)} ${esc(t.type)} · ${roleIcon(t.role)} ${esc(t.role)} · T${t.tier}</span>
+      <span class="muted">${typeIcon(t.type)} ${esc(t.type)} · ${t.role ? `${roleIcon(t.role)} ${esc(t.role)} · ` : ''}T${t.tier}</span>
     </span>`;
 }
 

@@ -106,6 +106,7 @@ function saveCurrent({ quiet = false } = {}) {
   const name = snap.name.trim() || autoName(now);
   const at = saves.findIndex((s) => s.name.toLowerCase() === name.toLowerCase());
 
+  const was = at === -1 ? null : saves[at];
   const entry = at === -1
     ? { id: newId(), name, savedAt: now, data: snap }
     : { ...saves[at], name, savedAt: now, data: snap };
@@ -117,7 +118,15 @@ function saveCurrent({ quiet = false } = {}) {
     toast('Could not save. Browser storage is full or blocked', 'error');
     return null;
   }
-  if (!quiet) toast(at === -1 ? `Saved "${name}"` : `Updated "${name}"`, 'ok');
+  // Same name, so the save it replaced is one press away: a new build under an old name was overwriting it.
+  if (!quiet && was) {
+    toast(`Updated "${name}"`, 'ok', { label: 'Undo', fn: () => {
+      saves = saves.map((s) => (s.id === was.id ? was : s));
+      write();
+      renderSaves();
+      toast(`"${name}" is back as it was`, 'ok');
+    } });
+  } else if (!quiet) toast(`Saved "${name}"`, 'ok');
   track('save-kept');
   renderSaves();
   return entry;

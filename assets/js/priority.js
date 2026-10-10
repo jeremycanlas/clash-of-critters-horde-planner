@@ -259,7 +259,8 @@ export function renderAdder() {
   const value = chosenLevel !== null ? chosenLevel : suggested === null ? '' : String(suggested);
 
   const levelSelect = adder.elements.level;
-  levelSelect.innerHTML = levelOptions(members, value === '' ? null : Number(value));
+  // "Any level" is cut to "Any le" beside Add step on a phone: there, the short label.
+  levelSelect.innerHTML = levelOptions(members, value === '' ? null : Number(value), { compact: matchMedia('(max-width: 480px)').matches });
   levelSelect.value = value;
 }
 

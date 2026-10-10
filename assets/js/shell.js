@@ -238,6 +238,17 @@ function setSheet(name, { fromPop = false } = {}) {
   }
 
   if (returnTo?.isConnected) returnTo.focus({ preventScroll: true });
+
+  /* Back from a sheet with the field still below the fold (on a phone the page
+     loads at its top, with the header and benches over most of the screen):
+     bring the field up, since that is what the sheet was changing. */
+  // Its bottom rows, where your base is and where placing starts, clear of the bench strip.
+  const field = $('#grid');
+  const dock = $('#dock') ?? $('#appbar');
+  if (field && dock && PHONE.matches) {
+    const hidden = field.getBoundingClientRect().bottom - (dock.getBoundingClientRect().top - 8);
+    if (hidden > 0) scrollBy({ top: hidden, behavior: 'smooth' });
+  }
   returnTo = null;
 }
 

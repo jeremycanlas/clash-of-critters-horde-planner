@@ -21,6 +21,11 @@ const NAME_KEY = 'coc.sharename';
 
 const dialog = $('#share');
 const preview = $('#share-preview');
+/* On a phone the picture is kept small so Download and Copy fit under it; a
+   tap shows it full width to check it before sending, another puts it back. */
+preview.addEventListener('click', () => {
+  if (matchMedia('(max-width: 760px)').matches) preview.closest('.share__preview').classList.toggle('is-big');
+});
 const nameField = $('#share-name');
 
 /**

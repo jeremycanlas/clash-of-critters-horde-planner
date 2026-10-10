@@ -502,9 +502,10 @@ export function buildGrid() {
       return;
     }
     // A mouse can drag a chip onto the exact cell it wants, so a click there is
-    // unambiguously "just put it somewhere". A thumb cannot, so on a phone the
-    // tap shows where it would land first and waits to be told yes.
-    if (!PHONE.matches) {
+    // unambiguously "just put it somewhere". A thumb cannot, so on a phone, or
+    // a tablet wide enough for the desktop layout, the tap shows where it would
+    // land first and waits to be told yes.
+    if (!THUMB.matches) {
       const result = store.autoPlace(slug, Number(player));
       if (!result.ok) toast(result.reason, 'error');
       return;
@@ -824,7 +825,7 @@ export function refreshPull() {
  * "what does this one actually reach" for someone who does not know the roster
  * by heart, which is most of the people this is for.
  */
-const PHONE = matchMedia('(max-width: 760px)');
+const THUMB = matchMedia('(max-width: 760px), (pointer: coarse)');
 
 /** @type {null | {slug: string, player: number, cell: number}} */
 let armed = null;
@@ -896,6 +897,8 @@ function commit(cell) {
   if (!armed) return;
   const { slug, player } = armed;
   disarm();
+  // Placed: the "tap the marked square" lesson is done, and it sat over the roster cards.
+  if (/^Tap (the marked square|again to place)/.test($('#toast').textContent)) $('#toast').classList.remove('is-shown');
   const result = store.place(slug, cell, player);
   if (!result.ok) toast(result.reason, 'error');
 }
@@ -1140,7 +1143,7 @@ export function renderGrid() {
             `aria-label="Plan a level-up for ${esc(t.name)}" title="Plan a level-up">+</button>`}
       </span>`;
     cell.setAttribute('aria-label',
-      `${where}${landed.has(i) ? ', dragged here by the boss' : ''}: ${t.name}, ${who}${t.type} ${t.role}, tier ${t.tier}, ${plan}${
+      `${where}${landed.has(i) ? ', dragged here by the boss' : ''}: ${t.name}, ${who}${t.type}${t.role ? ` ${t.role}` : ''}, tier ${t.tier}, ${plan}${
         seat ? `, step ${seat} of the plan` : ''}${swapNote}`);
   }
   renderRanges();
@@ -1361,7 +1364,7 @@ export function renderBench() {
                      data-switch-player="${player}" aria-pressed="${active}"
                      title="Plan for P${player}">P${player} bench</button>`
     : `<span class="summary__label">${gr ? 'Alternatives' : 'Bench'}</span>`}
-          <!--
+          ${''/*
             "4 left", not "3/15 brought, 2/15 placed".
             ==========================================
 
@@ -1374,7 +1377,7 @@ export function renderBench() {
             The full breakdown stays in the tooltip, and the placed count is now
             said in words under the formation's name where it belongs. Nothing is
             lost; one number is promoted and two stop shouting.
-          -->
+          */}
           <span class="bench__count"
                 title="${bench.length}${capOf(store.benchCap(), ' of ')} on the bench, ${
   bench.length - waiting.length} of ${store.fieldCap()} on the field">${

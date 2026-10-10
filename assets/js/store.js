@@ -1139,6 +1139,8 @@ export function clearField() {
 }
 
 export function clearAll() {
+  // The name too: the next Keep is a new formation, not an update of the save it was named after.
+  formation.name = '';
   formation.cells = Array(ALL_CELLS).fill(null);
   formation.bench = { 1: [], 2: [] };
   formation.plan = [];

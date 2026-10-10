@@ -38,8 +38,7 @@
     "Healer",
     "Specialist",
     "Support",
-    "Tank",
-    null
+    "Tank"
   ],
   "typeChart": {
     "Water": {

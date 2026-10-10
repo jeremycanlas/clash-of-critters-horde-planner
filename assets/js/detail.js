@@ -95,7 +95,7 @@ export function openDetail(slug) {
           <h2>${esc(t.name)}</h2>
           <div class="detail__tags">
             <span class="tag">${typeIcon(t.type)}${esc(t.type)}</span>
-            <span class="tag">${roleIcon(t.role)}${esc(t.role)}</span>
+            ${t.role ? `<span class="tag">${roleIcon(t.role)}${esc(t.role)}</span>` : ''}
             <span class="tag">T${t.tier} of ${t.stages}</span>
             <span class="tag">${esc(t.rarity)}</span>
             ${t.battleRow ? `<span class="tag">${esc(t.battleRow)} row</span>` : ''}

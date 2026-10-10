@@ -6913,7 +6913,8 @@ details.hint[open] > summary { margin-bottom: var(--s1); }
 @media (max-width: 760px) {
   /* About 580px of controls under the picture (measured on a 390 x 844 phone,
      Post to Community included); it gets the rest, never less than 160. */
-  .share__preview img { max-height: max(160px, calc(100svh - 580px)); }
+  .share__preview img { max-height: max(160px, calc(100svh - 580px)); cursor: zoom-in; }
+  .share__preview.is-big img { max-height: none; width: 100%; cursor: zoom-out; }
   .modal--share { padding: var(--s4); }
   .modal--share .share__preview { margin: var(--s2) 0; }
 }

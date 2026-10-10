@@ -685,7 +685,8 @@ async function main() {
   console.log(`  attack-range diagrams on hand: ${withRange}/${list.length}`);
 
   const types = ELEMENTS.slice().sort();
-  const roles = [...new Set(list.map((t) => t.role))].sort();
+  // A line the wiki has not given a role yet (Popa, Oct 2026) is not a role of its own.
+  const roles = [...new Set(list.map((t) => t.role).filter(Boolean))].sort();
 
   const ordered = list.map((t) => ({
     name: t.name, slug: t.slug, type: t.type, role: t.role, tier: t.tier,

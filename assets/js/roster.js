@@ -114,7 +114,8 @@ const SORTS = {
   default: () => 0,
   name: (a, b) => a.name.localeCompare(b.name),
   type: (a, b) => a.type.localeCompare(b.type) || a.name.localeCompare(b.name),
-  role: (a, b) => a.role.localeCompare(b.role) || a.name.localeCompare(b.name),
+  // No role yet (the wiki leaves some new lines blank) sorts last.
+  role: (a, b) => (a.role ?? '~').localeCompare(b.role ?? '~') || a.name.localeCompare(b.name),
   tier: (a, b) => a.tier - b.tier || a.name.localeCompare(b.name),
 };
 
@@ -1739,10 +1740,10 @@ function cardHTML(t, player) {
     clash ? ' is-swap' : ''}"
            role="listitem" tabindex="0" data-slug="${esc(t.slug)}" data-type="${t.type}"${
     clash ? ` data-switch-from="${esc(clash.slug)}"` : ''}
-           title="${esc(t.name)}: ${t.type} ${t.role}, T${t.tier}${
+           title="${esc(t.name)}: ${t.type}${t.role ? ` ${t.role}` : ''}, T${t.tier}${
     state_ ? `\n${state_}` : ''}${clash ? `\nTap to switch from ${clash.name}, keeping its plan` : ''}">
-        <!-- Last in the queue: 230 thumbnails will otherwise crowd out the
-             dozen sprites the field and the benches are showing right now. -->
+        ${''/* Last in the queue: 230 thumbnails will otherwise crowd out the
+             dozen sprites the field and the benches are showing right now. */}
         <div class="card__art">${effectMarks(t)}${artHTML(t, { observe: true, priority: 'low' })}</div>
         <div class="card__meta">
           ${patchMark(t)}<span class="card__tier">T${t.tier}</span>
@@ -1754,8 +1755,8 @@ function cardHTML(t, player) {
         <div class="card__name">${esc(t.name)}</div>
         ${clash ? `<span class="card__lock" aria-hidden="true">&#8646;</span>` : ''}
         ${clash ? `<span class="sr-only">Switch from ${esc(clash.name)}, keeping its plan</span>` : ''}
-        <!-- Focusable so the detail sheet, and "Place on the field" with it, is
-             reachable from the keyboard. -->
+        ${''/* Focusable so the detail sheet, and "Place on the field" with it, is
+             reachable from the keyboard. */}
         <button class="card__info" type="button"
                 aria-label="Details for ${esc(t.name)}">i</button>
       </div>`;
@@ -1775,7 +1776,7 @@ function applyCardState(card, t, player) {
   card.classList.toggle('is-deployed', placed);
   card.classList.toggle('is-swap', !!clash);
   if (clash) card.dataset.switchFrom = clash.slug; else delete card.dataset.switchFrom;
-  card.title = `${t.name}: ${t.type} ${t.role}, T${t.tier}${state_ ? `\n${state_}` : ''}${
+  card.title = `${t.name}: ${t.type}${t.role ? ` ${t.role}` : ''}, T${t.tier}${state_ ? `\n${state_}` : ''}${
     clash ? `\nTap to switch from ${clash.name}, keeping its plan` : ''}`;
 
   // The swap glyph and its screen-reader line live only on a clash.

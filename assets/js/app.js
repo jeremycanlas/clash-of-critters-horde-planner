@@ -719,7 +719,7 @@ function wireToolbar() {
     // with a link that no longer says so.
     const room = roomInHash(location.hash);
     history.replaceState(null, '', location.pathname + location.search + (room ? `#live=${room}` : ''));
-    toast('Cleared the field, both benches and the plan', 'info', undoTo(before));
+    toast('Cleared the field, both benches, the plan and the name', 'info', undoTo(before));
   });
 
   $('#btn-share').addEventListener('click', async () => {
