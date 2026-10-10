@@ -51,6 +51,8 @@ const shot = async (name, target = page) => {
 // The Community's top build: the gallery, then the build in the drafter.
 await page.goto(`${site}/community.html`);
 await page.waitForSelector('a[data-open]', { timeout: 30000 });
+// The first row of cards drawn, not "Drawing...".
+await page.waitForFunction(() => document.querySelectorAll('img.is-drawn').length >= 2, null, { timeout: 30000 }).catch(() => {});
 await shot('community');
 const top = await page.locator('a[data-open]').first().getAttribute('href');
 

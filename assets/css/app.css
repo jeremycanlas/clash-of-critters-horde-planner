@@ -6856,7 +6856,7 @@ body.is-live-down .formmenu > summary::before { background: transparent; box-sha
 /* A row of text is 19px tall; a thing you press needs 24. */
 details.hint > summary { list-style: none; cursor: pointer; padding: 4px 0; min-height: 24px; }
 /* A thumb's 44px where there is a thumb: the summary is the only thing to press. */
-@media (pointer: coarse) { details.hint > summary { min-height: 44px; display: flex; align-items: center; } }
+@media (pointer: coarse) { details.hint > summary { min-height: 44px; padding-block: 12px; box-sizing: border-box; } } /* not flex: it drops the spaces around a <b> */
 details.hint > summary::-webkit-details-marker { display: none; }
 details.hint { padding: 7px 10px; border-radius: var(--r-sm); background: var(--surface-2); }
 details.hint[open] { line-height: 1.55; }
