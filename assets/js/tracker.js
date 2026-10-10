@@ -232,6 +232,8 @@ function openEdit(uid) {
   $('#tr-f-delete').textContent = 'Delete player';
   $('#tr-f-error').hidden = true;
   $('#tr-edit').dataset.uid = r ? String(r.uid) : '';
+  // As it was when opened: saving checks nobody else has saved it since.
+  $('#tr-edit').dataset.at = r?.updated_at ?? '';
   $('#tr-f-history').hidden = !r || testMode;
   $('#tr-f-history').open = false;
   $('#tr-f-hist-list').innerHTML = '';
@@ -338,11 +340,17 @@ async function save(queue = false) {
 
   $('#tr-f-save').disabled = true;
   const got = existing
-    ? await rest(`/tracker_players?uid=eq.${uid}`, { method: 'PATCH', body, auth: true, headers: { prefer: 'return=representation' } })
+    /* Only if it is still the row you opened. Two people editing one player at
+       once used to lose whichever saved first, silently. */
+    ? await rest(`/tracker_players?uid=eq.${uid}${$('#tr-edit').dataset.at ? `&updated_at=eq.${encodeURIComponent($('#tr-edit').dataset.at)}` : ''}`,
+      { method: 'PATCH', body, auth: true, headers: { prefer: 'return=representation' } })
     : await rest('/tracker_players', { method: 'POST', body: { uid, ...body }, auth: true, headers: { prefer: 'return=representation' } });
   $('#tr-f-save').disabled = false;
   if (!got.ok) return fail(got.why);
   const saved = got.data?.[0];
+  if (!saved && existing && $('#tr-edit').dataset.at) {
+    return fail('Someone else saved this player while you had it open, so yours was not saved over theirs. Close this, reload the page to see their numbers, then edit again.');
+  }
   if (!saved) return fail('The database did not accept that. Your access may have changed; reload the page.');
   rows = existing ? rows.map((r) => (r.uid === uid ? saved : r)) : [...rows, saved];
   $('#tr-edit').close();
