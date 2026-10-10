@@ -14,8 +14,13 @@ export function esc(s) {
 export const glitterOn = { value: false };
 
 export function artOf(t) {
-  return (glitterOn.value && t.glitterImage) || t.image || null;
+  return webp((glitterOn.value && t.glitterImage) || t.image || null);
 }
+
+/* The site's own sprites as WebP (tools/normalize_images.py writes one beside
+   each PNG): about a quarter of the bytes. Anything else -- a custom Tatari's
+   picture from elsewhere -- is left as it is. */
+export const webp = (src) => src?.replace(/^(data\/images\/(?:tatari|glitter|zobo)\/[^/?#]+)\.png$/, '$1.webp') ?? null;
 
 /**
  * Sprite, or the name split across lines when the wiki has no art yet

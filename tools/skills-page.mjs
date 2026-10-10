@@ -34,7 +34,8 @@ const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '
 const badge = (name, alt = name) => !name ? '' : `<span class="badge" title="${esc(name)}"><img class="icon__art" src="data/images/icons/${esc(name.toLowerCase().replace(/[^a-z0-9]+/g, '-'))}.png" alt="${esc(alt)}" width="17" height="17"></span>`;
 // The roster card's meta row: tier, then type and role.
 const meta = (tierText, t, roleAlt = t.role) => `<span class="sk-meta"><span class="card__tier">${tierText}</span>${badge(t.type)}${badge(t.role, roleAlt)}</span>`;
-const art = (t, size) => `<img class="sk-art" src="${esc(t.image)}" alt="" width="${size}" height="${size}" loading="lazy" decoding="async">`;
+// The WebP beside each sprite (tools/normalize_images.py): a quarter of the PNG's bytes.
+const art = (t, size) => `<img class="sk-art" src="${esc((t.image ?? '').replace(/\.png$/, '.webp'))}" alt=""" width="${size}" height="${size}" loading="lazy" decoding="async">`;
 // The first number in a panel value, for sorting: "130%" 130, "4s After Dance Ends" 4.
 const num = (v) => { const m = /\d+(\.\d+)?/.exec(v ?? ''); return m ? Number(m[0]) : null; };
 // The wiki writes "???" for a skill it has not named yet (Cactobodhi, Armavolve on arrival).

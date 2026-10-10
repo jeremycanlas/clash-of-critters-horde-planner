@@ -93,6 +93,23 @@ def normalize(path, canvas_size, content, force=False):
     return (scale, before, canvas.size)
 
 
+# The site shows sprites as WebP: the same 200px art at about a quarter of the
+# bytes (a 200x200 sprite is ~45 KB as PNG, ~12 KB as WebP at quality 90).
+# The PNG stays the source the tools draw from (og.mjs, guide-images.mjs).
+WEBP_DIRS = ("tatari", "glitter", "zobo")
+WEBP_QUALITY = 90
+
+
+def write_webp(path):
+    """A WebP beside a sprite PNG, when it is missing or older. True if written."""
+    out = path.with_suffix(".webp")
+    if out.exists() and out.stat().st_mtime >= path.stat().st_mtime:
+        return False
+    with Image.open(path) as img:
+        img.save(out, "WEBP", quality=WEBP_QUALITY, method=6)
+    return True
+
+
 def shrink_range_diagrams():
     """PNG screenshot in, JPEG out, original deleted. @return (files, KB before, KB after)"""
     if not RANGE_DIR.is_dir():
@@ -139,6 +156,10 @@ def main():
                     upscaled.append((path.name, round(scale, 2)))
         print(f"  {directory.relative_to(ROOT).as_posix()}: {len(files)} files "
               f"-> {canvas_size}x{canvas_size}, artwork fits {content}px")
+        if directory.name in WEBP_DIRS:
+            made = sum(write_webp(p) for p in files)
+            if made:
+                print(f"    {made} WebP written for the site")
 
     count, kb_before, kb_after = shrink_range_diagrams()
     if count:

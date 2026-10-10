@@ -52,7 +52,7 @@ const keepLocal = () => {
 
 const status = (text) => { $('#tr-status').textContent = text; $('#tr-status').hidden = !text; };
 const icon = (f, size = 22) => (f.tatari
-  ? `<img src="data/images/tatari/${f.tatari}.png" alt="" width="${size}" height="${size}">`
+  ? `<img src="data/images/tatari/${f.tatari}.webp" alt="" width="${size}" height="${size}">`
   : '<span class="tr-berry" aria-hidden="true">●</span>');
 const when = (iso) => (iso ? new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : '');
 

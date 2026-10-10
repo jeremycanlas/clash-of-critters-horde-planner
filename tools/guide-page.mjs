@@ -32,7 +32,7 @@ const lines = Object.values(Object.groupBy(tatari, (t) => t.family)).map((ts) =>
 }).filter((l) => l.af != null);
 
 const tile = (l, value, sub = '') => `<li><a class="gd-tile" href="skills.html#${esc(l.first.slug)}">
-<img class="gd-tile__art" src="${esc(l.top.image)}" alt="" width="44" height="44" loading="lazy" decoding="async">
+<img class="gd-tile__art" src="${esc((l.top.image ?? '').replace(/\.png$/, '.webp'))}" alt="" width="44" height="44" loading="lazy" decoding="async">
 <span class="gd-tile__text"><span class="gd-tile__name">${esc(l.family)}${l.members.length > 1 ? ' line' : ''}</span>
 <span class="gd-tile__sub">${icon(l.top.type)}${icon(l.top.role)}${esc(sub || l.top.role)}</span></span>
 <span class="gd-tile__val">${esc(value)}</span></a></li>`;
