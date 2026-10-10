@@ -201,6 +201,7 @@ async function start() {
   showPrivateTab('banquet.html', code ? `?s=${code}` : ''); // a known code: dbs is empty otherwise
   $('#bq-leaders').href = `banquet-leaders.html${location.search}`; // the same server's boards
   await load();
+  loadNext();
 
   /* Everyone else's claims and marks: what changed, every 10 s while you are
      using the page, every minute once it has sat untouched for 10 minutes, every
@@ -284,6 +285,7 @@ function lift(d) {
     groups: own.map(up),
     names: Object.fromEntries(own.map((g) => [up(g), own.length === 1 ? d.name : `${d.name} · ${s.names?.[g] ?? `Group ${g}`}`])),
     private: (s.private ?? []).map(up),
+    admin: !!s.groups, // this server shows them every group: a viewer there, not a member of both
   };
 }
 
@@ -303,6 +305,7 @@ function merge(parts) {
     groups: parts.flatMap((p) => p.groups),
     names: Object.assign({}, ...parts.map((p) => p.names)),
     private: parts.flatMap((p) => p.private),
+    admin: parts.some((p) => p.admin),
     synced_at: synced[0] ?? null,
   };
 }
@@ -355,7 +358,7 @@ let lastFull = 0;
 let lastDrawn = 0;
 async function poll() {
   if (!state) return;
-  if (state.round !== state.current) return;
+  if (state.round !== state.current) { reached = Date.now(); return; } // a past round does not change
   if (ago_(lastFull) > 60 * 60 * 1000 || dbs.some((d) => !d.since)) return load(null, true);
   const got = await Promise.all(dbs.map((d) => ask(d, 'banquet_changes', { since: d.since })));
   if (got.some((x) => !x.ok)) return failed(); // keeps what is on screen; offline() says so after two minutes
@@ -372,7 +375,7 @@ async function poll() {
     for (const g of a.gone) byKey.delete(keyOf(g));
     for (const c of a.cards) byKey.set(keyOf(c), c);
     const groups = a.groups ? { groups: a.groups, names: a.names, private: a.private } : {};
-    changed ||= a.cards.length > 0 || a.gone.length > 0 || a.shared !== s.shared || a.total !== s.total
+    changed ||= a.cards.length > 0 || a.gone.length > 0 || a.shared !== s.shared || (a.total ?? s.total) !== s.total
       || !!a.covered !== !!s.covered || JSON.stringify(a.mine) !== JSON.stringify(s.mine)
       || (a.groups && JSON.stringify([a.groups, a.names, a.private]) !== JSON.stringify([s.groups, s.names, s.private]));
     // New log lines go on top of what is held; one sent twice (the 30 s overlap) is kept once.
@@ -382,7 +385,7 @@ async function poll() {
         .sort((x, y) => y.at.localeCompare(x.at)).slice(0, 200)
       : s.events;
     changed ||= events !== s.events;
-    d.state = { ...s, ...groups, banquets: [...byKey.values()], mine: a.mine, shared: a.shared, total: a.total,
+    d.state = { ...s, ...groups, banquets: [...byKey.values()], mine: a.mine, shared: a.shared, total: a.total ?? s.total,
       synced_at: a.synced_at, covered: a.covered, events };
     d.since = a.since;
   });
@@ -477,6 +480,43 @@ function offline() {
   $('#bq-stale').textContent = `This page has not reached the list for ${min} minutes, so what you see may be out of date. Check your connection.`;
 }
 
+// ------------------------------------------------------------------ the next gold rush
+
+/* When the next gold rush resets, once a viewer has set it (046). Asked once
+   per load: it changes a few times a month. */
+let next = null;
+async function loadNext() {
+  const got = await ask(dbs[0], 'banquet_next', {});
+  next = got.ok ? got.data : null;
+  renderNext();
+}
+function renderNext() {
+  const show = next && state && state.round === state.current;
+  $('#bq-next').hidden = !show;
+  if (show) {
+    const d = (t) => t.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' });
+    $('#bq-next').textContent = `Next gold rush: resets ${d(opens(next.round))}, ${yourTime(opens(next.round))} your time. `
+      + `UIDs go to it from ${yourTime(new Date(next.switch_at))}.`;
+  }
+  const box = $('#bq-next-date');
+  if (document.activeElement !== box) box.value = next?.round ?? '';
+  box.min = new Date(Date.now() + 3 * 864e5).toISOString().slice(0, 10);
+}
+// Set on every server this viewer sees all of; empty takes the set one back.
+$('#bq-next-save').addEventListener('click', async () => {
+  const r = $('#bq-next-date').value;
+  if (!r && !next) return;
+  const btn = $('#bq-next-save');
+  btn.disabled = true;
+  const got = await Promise.all(dbs.filter((d) => d.state?.groups).map((d) => ask(d, 'banquet_schedule_set',
+    r ? { r } : { r: next.round, remove: true })));
+  btn.disabled = false;
+  const bad = got.find((x) => !x.ok);
+  if (bad) { toast(bad.why, 'info'); return; }
+  toast(r ? `Next gold rush set: resets ${r}` : 'Next gold rush taken back');
+  loadNext();
+});
+
 // ------------------------------------------------------------------ render
 
 function render() {
@@ -528,24 +568,28 @@ function render() {
   const regroup = sig !== drawnGroups;
   drawnGroups = sig;
   const pick = $('#bq-add-grp');
-  pick.hidden = !state.groups || !!group;
+  pick.hidden = !state.groups || !!group || state.groups.length === 1;
   if (state.groups && regroup) {
     const was = pick.value;
     pick.innerHTML = `<option value="">${combined ? 'Server…' : 'Group…'}</option>${state.groups.map((g) => `<option value="${g}">${esc(nameOf(g))}</option>`).join('')}`;
     pick.value = state.groups.includes(Number(was)) ? was : '';
   }
 
-  const open = past || state.shared;
+  const open = state.shared; // a past round too: four of your own that gold rush (046)
   $('#bq-locked').hidden = open;
   // Covered: the group's list opens at the reset, however many you add.
   $('#bq-locked').textContent = state.covered
     ? `The list opens at the reset, ${yourTime(opens(state.round))} your time. Add your UIDs now: until then, only you see them.`
+    : past ? 'You did not add four UIDs of your own that gold rush, so its list stays closed.'
     : `${state.total} banquet${state.total === 1 ? '' : 's'} shared this round. `
       + `Add ${4 - n} more UID${4 - n === 1 ? '' : 's'} of your own to see them.`;
   $('#bq-list').hidden = !open;
   $('#bq-view').hidden = !state.groups || shot;
-  $('#bq-copies').hidden = !state.groups || shot || !!group;
-  $('#bq-access').hidden = !state.groups || shot || !!group;
+  // The both-servers link gives a member of both a group switch too; the panels for viewers stay theirs.
+  const admin = combined ? state.admin : !!state.groups;
+  $('#bq-shot').hidden = !admin;
+  $('#bq-copies').hidden = !admin || shot || !!group;
+  $('#bq-access').hidden = !admin || shot || !!group;
   const groups = $('#bq-groups');
   if (state.groups && regroup) {
     groups.innerHTML = [0, ...state.groups].map((g) => `<button class="segmented__btn" type="button" data-group="${g}"
@@ -556,6 +600,7 @@ function render() {
     : `What ${nameOf(group)} members see. Anything you press counts for ${nameOf(group)}.`;
   if (open) renderCards(past);
   renderLikesDue(open && !past);
+  renderNext();
   renderNews(open && !past);
   renderLog(open, past);
 }
@@ -765,7 +810,7 @@ const askRow = (b) => `<div class="bq-ask" role="group" aria-label="Full or not 
 
 // Within a status: yours already claimed last, then fewest claims, the likeliest to have room.
 const likesOf = (b) => (b.likes_before ?? b.likes_now)?.n ?? -1;
-const checkFirst = (b) => !b.full && (b.not_yet || likesOf(b) > 0);
+const checkFirst = (b) => !b.full && !b.claimed && (b.not_yet || likesOf(b) > 0);
 const byLikes = (a, b) => likesOf(b) - likesOf(a) || a.uid.localeCompare(b.uid);
 const ORDER = {
   claimable: (a, b) => a.claimed - b.claimed || a.claims - b.claims || a.uid.localeCompare(b.uid),
@@ -1062,7 +1107,7 @@ $('#bq-mine').addEventListener('submit', async (e) => {
   const uid = $('#bq-add-uid').value.trim();
   err.hidden = true;
   if (!/^[0-9]{8}$/.test(uid)) { err.textContent = 'A UID is 8 digits.'; err.hidden = false; return; }
-  const g = state.groups ? group || Number($('#bq-add-grp').value) || null : null;
+  const g = state.groups ? group || (state.groups.length === 1 ? state.groups[0] : Number($('#bq-add-grp').value)) || null : null;
   if (state.groups && !g) { err.textContent = combined ? 'Pick a server.' : 'Pick a group.'; err.hidden = false; return; }
   // Back in the box after every add, so the next one can be typed straight away.
   const again = () => $('#bq-add-uid').focus();
@@ -1225,8 +1270,6 @@ async function press(e) {
   const target = Number((claim ?? mark).dataset[claim ? 'claim' : 'uid']);
   const g = grpOf(btn);
   markSeen(li.dataset.key); // claimed or marked: seen, whatever Undo does next
-  const was = cardOf(li.dataset.key);
-  const prev = was?.full ? 'full' : was?.not_yet ? 'not-yet' : was?.open ? 'open' : null;
   const got = claim
     ? await call('banquet_claim', { target, claimed: on, g })
     : await call('banquet_mark', { target, state: on ? mark.dataset.mark : null, g });
@@ -1248,7 +1291,8 @@ async function press(e) {
     toast(to ? `Marked ${target} ${{ open: 'open', full: 'full', 'not-yet': 'not logged in' }[to]}` : `Took the mark off ${target}`, 'info', {
       label: 'Undo',
       fn: async () => {
-        await call('banquet_mark', { target, state: prev, g });
+        const back = await call('banquet_mark_undo', { target, g });
+        if (!back.ok) toast(back.why, 'info');
         fresh();
       },
     });

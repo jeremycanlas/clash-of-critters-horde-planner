@@ -70,7 +70,8 @@ async function load(pick) {
   }
   $('#lb-round').value = pick ?? first.current;
   const groups = ok.flatMap(([x, d]) => x.data.groups.map((g) => ({ ...g, server: dbs.length > 1 ? d.name : '' })));
-  $('#lb-groups').innerHTML = groups.map((g) => group(g, groups.length > 1)).join('');
+  $('#lb-groups').innerHTML = groups.map((g) => group(g, groups.length > 1)).join('')
+    || '<p class="muted lb-empty">There are no leaderboards for your lists: private lists do not have one.</p>';
   $('#lb-status').textContent = '';
   $('#lb-gate').hidden = true;
   $('#lb-app').hidden = false;

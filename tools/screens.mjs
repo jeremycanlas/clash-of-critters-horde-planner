@@ -710,14 +710,14 @@ async function checkControls(page, where, url, noise, events) {
     try {
       if (it.select) {
         if (!it.select.length) { presses--; return false; }
-        await loc.selectOption(it.select[0], { timeout: 2000 });
+        await loc.selectOption(it.select[0], { timeout: 5000 });
         // A choice read later (the level for the next Plan step) shows no
         // change until then; the value it now holds is the change.
         events.count++;
       } else if (it.file) {
         await loc.dispatchEvent('click');
       } else {
-        await loc.click({ timeout: 2000 });
+        await loc.click({ timeout: 5000 }); // 5 s: a toast or a drawer sliding shut can cover it for a moment on a busy machine
       }
     } catch (e) {
       /* Playwright's call log says why: covered by something, off screen,

@@ -50,6 +50,7 @@ end $$;
 \i supabase/migrations/043_banquet_nicknames.sql
 \i supabase/migrations/044_banquet_leaders_no_private.sql
 \i supabase/migrations/045_banquet_follow_group.sql
+\i supabase/migrations/046_banquet_review_fixes.sql
 
 -- Real entries would skew the counts. Gone for this transaction only.
 delete from public.banquet_claims; delete from public.banquet_marks; delete from public.banquet_uids; delete from public.banquet_access; delete from public.banquet_events;
@@ -774,6 +775,48 @@ select public.banquet_rename('990000000000000301', 'zz_a');
 update public.banquet_members set display = 'zz_a', checked_at = now() where discord_id = '990000000000000301';
 set local role authenticated;
 
+-- ---------------------------------------------------------------- review fixes (046)
+-- The schedule: the site switches to a gold rush two days before its reset.
+reset role;
+insert into public.banquet_schedule (round, switch_at) values ('2030-01-10', '2030-01-08 00:00+00');
+do $$ begin
+  assert public.banquet_round('2030-01-08 00:00+00') = '2030-01-10', 'switched two days ahead';
+  assert public.banquet_round('2030-01-07 23:59+00') < '2030-01-10', 'not before';
+end $$;
+delete from public.banquet_schedule where round = '2030-01-10';
+update public.banquet_members set checked_at = now() where discord_id in ('990000000000000301', '990000000000000304');
+set local role authenticated;
+select pg_temp.as_(1);
+do $$ begin
+  begin perform public.banquet_schedule_set(current_date + 10); raise exception 'a member set it';
+  exception when raise_exception then if sqlerrm = 'a member set it' then raise; end if; end;
+  -- A past round's list follows the four-UID rule: A posted one UID in the 2020 round.
+  assert not (public.banquet_state('2020-01-02') ->> 'shared')::boolean
+     and jsonb_array_length(public.banquet_state('2020-01-02') -> 'banquets') = 0, 'a past round is closed without four of your own';
+end $$;
+select pg_temp.as_(4);
+do $$ declare nx jsonb; begin
+  nx := public.banquet_schedule_set(current_date + 10);
+  assert nx ->> 'round' = (current_date + 10)::text, 'a viewer sets the next gold rush, got ' || nx::text;
+  assert (public.banquet_next() ->> 'switch_at')::timestamptz = ((current_date + 10)::timestamp at time zone 'UTC') - interval '2 days', 'two days before';
+  begin perform public.banquet_schedule_set(current_date + 1); raise exception 'too soon allowed';
+  exception when raise_exception then if sqlerrm = 'too soon allowed' then raise; end if; end;
+  assert public.banquet_schedule_set(current_date + 10, true) = 'null', 'and takes it back';
+end $$;
+-- Undo of a mark: the mark as it was, the press gone from the log.
+select pg_temp.as_(1);
+do $$ declare before_ int; c jsonb; begin
+  perform public.banquet_mark(10000004, 'open');
+  before_ := (select count(*) from jsonb_array_elements(public.banquet_state() -> 'events') x where x ->> 'uid' = '10000004');
+  perform public.banquet_mark(10000004, 'full');
+  perform public.banquet_mark_undo(10000004);
+  c := pg_temp.card(public.banquet_state(), '10000004');
+  assert c ->> 'full' is null and c -> 'open' ->> 'by' = 'zz_a', 'back to open, got ' || c::text;
+  assert (select count(*) from jsonb_array_elements(public.banquet_state() -> 'events') x where x ->> 'uid' = '10000004') = before_, 'the undone press is gone from the log';
+  -- What changed leaves the count out once the list is open to you.
+  assert public.banquet_changes(now() - interval '1 minute') -> 'total' = 'null', 'no recount when shared';
+end $$;
+
 -- ---------------------------------------------------------------- a stale yes expires
 reset role;
 update public.banquet_members set checked_at = now() - interval '31 minutes' where discord_id = '990000000000000301';
@@ -796,7 +839,7 @@ begin
   got := array(select p.proname::text from pg_proc p
                 where p.pronamespace = 'public'::regnamespace and p.proname like 'banquet%'
                   and has_function_privilege('authenticated', p.oid, 'execute') order by 1);
-  assert got = '{banquet_access_log,banquet_add,banquet_changes,banquet_check,banquet_claim,banquet_copies,banquet_edit,banquet_leaders,banquet_likes_set,banquet_mark,banquet_note_copy,banquet_remove,banquet_round,banquet_state}',
+  assert got = '{banquet_access_log,banquet_add,banquet_changes,banquet_check,banquet_claim,banquet_copies,banquet_edit,banquet_leaders,banquet_likes_set,banquet_mark,banquet_mark_undo,banquet_next,banquet_note_copy,banquet_remove,banquet_round,banquet_schedule_set,banquet_state}',
          'signed-in users can call exactly the page''s functions, got ' || got::text;
   assert not exists (select 1 from pg_proc p where p.pronamespace = 'public'::regnamespace and p.proname like 'banquet%'
                       and has_function_privilege('anon', p.oid, 'execute')), 'anonymous visitors can call nothing';

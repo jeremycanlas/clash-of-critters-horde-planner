@@ -44,6 +44,8 @@
         <span id="bq-when" class="muted bq-when"></span>
         <a id="bq-leaders" class="btn btn--quiet bq-leaders" href="banquet-leaders.html">Leaderboards</a>
       </div>
+      <!-- The next gold rush, once a viewer has set it (046): when it resets, and from when UIDs go to it. -->
+      <p id="bq-next" class="muted bq-next" hidden></p>
       <!-- Says when this page has stopped reaching the list. -->
       <p id="bq-stale" class="bq-stale" role="status" hidden></p>
       <!-- Untouched for an hour, the page stops asking until tapped (assets/js/banquet.js, tick). -->
@@ -58,6 +60,12 @@
         <span id="bq-view-note" class="muted"></span>
         <!-- Hides this bar, for screenshots; tapping the page title brings it back. -->
         <button id="bq-shot" class="btn btn--quiet bq-shot" type="button">Screenshot mode</button>
+        <!-- Viewers set the next gold rush: the site switches to it two days before its reset. -->
+        <div class="bq-next-set">
+          <label>Next reset <input id="bq-next-date" class="field" type="date" aria-describedby="bq-next-note"></label>
+          <button id="bq-next-save" class="btn btn--quiet" type="button">Set</button>
+          <span id="bq-next-note" class="muted">UIDs go to it from two days before.</span>
+        </div>
       </div>
 
       <!-- For those who see both groups, never in screenshot mode or As Group N:

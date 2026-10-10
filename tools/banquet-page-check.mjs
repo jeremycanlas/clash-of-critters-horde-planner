@@ -41,6 +41,8 @@ const db = {
   ],
   claims: [],
   marks: new Map([['1:60000137', { state: 'not-yet', by: 'Eli' }]]),
+  undo: new Map(), // per card, the mark before your last press, for Undo (046)
+  next: null,     // the next gold rush, once a viewer sets it
   events: [], // every claim and mark, as banquet_events keeps them
   groups: [1, 2, 3], // what a viewer of every group gets; a new Discord role adds one
   names: { 1: 'Group 1', 2: 'Group 2', 3: 'Private' },
@@ -261,10 +263,29 @@ async function open(me, opts) {
       db.likes.set(k, { ...db.likes.get(k), now: { n: body.n, by: me.name, at: new Date().toISOString() } });
       return ok();
     }
+    // Undo (046): the mark as it was before your last press, under its own name.
+    if (fn === 'banquet_mark_undo') {
+      const k = `${g}:${body.target}`;
+      const was = db.undo.get(k);
+      if (!was) return route.fulfill({ status: 400, contentType: 'application/json', body: '{"code":"P0001","message":"Someone has marked it since. Mark it again instead."}' });
+      if (was.mark) db.marks.set(k, was.mark); else db.marks.delete(k);
+      db.undo.delete(k);
+      db.events.splice(db.events.lastIndexOf(was.event), 1);
+      return ok();
+    }
+    if (fn === 'banquet_next') return json(db.next);
+    if (fn === 'banquet_schedule_set') {
+      if (!me.all) return route.fulfill({ status: 400, contentType: 'application/json', body: '{"code":"P0001","message":"Only those who see every group can set the gold rush."}' });
+      db.next = body.remove ? null : { round: body.r, switch_at: new Date(Date.parse(`${body.r}T00:00:00Z`) - 2 * 864e5).toISOString() };
+      return json(db.next);
+    }
     if (fn === 'banquet_mark') {
+      const k0 = `${g}:${body.target}`;
+      const ev = { grp: g, uid: String(body.target), kind: body.state ?? 'clear', by: me.name, at: new Date().toISOString() };
+      db.undo.set(k0, { mark: db.marks.get(k0), event: ev });
       if (body.state) db.marks.set(`${g}:${body.target}`, { state: body.state, by: me.name, at: new Date().toISOString() });
       else db.marks.delete(`${g}:${body.target}`);
-      db.events.push({ grp: g, uid: String(body.target), kind: body.state ?? 'clear', by: me.name, at: new Date().toISOString() });
+      db.events.push(ev);
       return ok();
     }
     return route.fulfill({ status: 404, body: '{}' });
@@ -498,7 +519,8 @@ try {
   assert.match(await A.locator('#toast').textContent(), /Marked 55555555 not logged in/);
   await A.click('#toast .toast__act');
   await A.waitForFunction(() => !document.querySelector('#bq-cards li[data-key=":55555555"]')?.classList.contains('is-notin'));
-  assert.deepEqual(lastSent('Ana', 'banquet_mark'), { target: 55555555, state: 'open', g: null }, 'Undo puts the mark back as it was (open)');
+  assert.deepEqual(lastSent('Ana', 'banquet_mark_undo'), { target: 55555555, g: null }, 'Undo asks for the mark as it was (046)');
+  assert.equal(db.marks.get('1:55555555')?.state, 'open', 'and it is open again');
   await A.click('#bq-cards [data-claim="20000001"]'); // and the claim off again, on its card
   await A.waitForFunction(() => document.querySelector('[data-claim="20000001"]')?.getAttribute('aria-pressed') === 'false');
   if (process.env.BANQUET_SHOTS) await A.locator('#bq-activity').screenshot({ path: `${process.env.BANQUET_SHOTS}/log-phone.png` });
@@ -1002,11 +1024,20 @@ try {
   await D.waitForTimeout(400);
   assert.deepEqual(await axe(D), [], 'axe, both servers');
 
+  // ------------------------------------------------------------------ the next gold rush (046)
+  // A viewer sets it; everyone's page then says when it resets and from when UIDs go to it.
+  await V.fill('#bq-next-date', '2026-12-30');
+  await V.click('#bq-next-save');
+  await V.waitForSelector('#bq-next:not([hidden])');
+  assert.match(await V.locator('#bq-next').textContent(), /Next gold rush: resets .*UIDs go to it from/);
+  assert.deepEqual(lastSent('Vee', 'banquet_schedule_set'), { r: '2026-12-30' }, 'set for the reset day');
+
   // ------------------------------------------------------------------ leaderboards
   // From the banquet page's link, on a phone; a stale yes from Discord asked again once, unseen.
   const lea = await open({ name: 'Lea', grp: 1, staleLeaders: 1 }, devices['iPhone SE']);
   const L = lea.page;
   assert.equal(await L.locator('#bq-leaders').getAttribute('href'), 'banquet-leaders.html', 'the banquet page links its leaderboards');
+  assert.ok(await L.locator('#bq-next').isVisible() && await L.locator('#bq-next-date').isHidden(), 'a member sees when, and cannot set it');
   await L.click('#bq-leaders');
   await L.waitForSelector('#lb-app:not([hidden])');
   assert.equal(await L.locator('.lb-board').count(), 4, 'four boards');

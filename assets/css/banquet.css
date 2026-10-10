@@ -78,6 +78,10 @@
 .bq-ask [data-ask-cancel] { grid-column: 1 / -1; min-height: 36px; }
 .bq-view { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); font-size: 13px; }
 .bq-shot { margin-left: auto; }
+.bq-shot[hidden], .bq-next[hidden] { display: none; }
+.bq-next { margin: 4px 0 0; font-size: 13px; }
+.bq-next-set { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; flex-basis: 100%; font-size: 14px; }
+.bq-next-set input { width: auto; font-size: 16px; }
 
 /* ---------------------------------------------------------------- phone and friends */
 
