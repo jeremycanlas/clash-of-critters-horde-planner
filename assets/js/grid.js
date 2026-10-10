@@ -412,7 +412,12 @@ export function buildGrid() {
 
   onBoard('dblclick', (e) => {
     const cell = e.target.closest('.cell');
-    if (cell) store.unplaceAt(Number(cell.dataset.cell));
+    if (!cell) return;
+    const n = Number(cell.dataset.cell);
+    const slug = store.formation.cells[n]?.slug;
+    const before = store.snapshot();
+    store.unplaceAt(n);
+    if (slug) undoable(`Took ${state.bySlug.get(slug)?.name ?? 'it'} off the field`, before);
   });
 
   onBoard('keydown', onKeydown);
@@ -498,7 +503,9 @@ export function buildGrid() {
     }
     const { slug, player } = chip.dataset;
     if (e.target.closest('[data-unbench]')) {
+      const before = store.snapshot();
       store.removeFromBench(slug, Number(player));
+      undoable(`Took ${state.bySlug.get(slug)?.name ?? 'it'} off the bench`, before);
       return;
     }
     // A mouse can drag a chip onto the exact cell it wants, so a click there is
@@ -891,6 +898,12 @@ function arm(slug, player) {
       ? 'Tap the marked square, or any other one'
       : 'Tap again to place it there, or tap the cell you want');
   }
+}
+
+/* A Tatari taken off is a double-tap away on a phone, and easy to do by
+   accident: what it took off, and the way to put it back. */
+function undoable(message, before) {
+  toast(message, 'info', { label: 'Undo', fn: () => { store.applySnapshot(before); toast('Put back'); } });
 }
 
 function commit(cell) {
