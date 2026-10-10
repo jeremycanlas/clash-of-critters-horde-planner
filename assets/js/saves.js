@@ -132,6 +132,23 @@ function saveCurrent({ quiet = false } = {}) {
   return entry;
 }
 
+/* A copy of a save under a name of its own ("… (copy)", "… (copy 2)"), on top
+   of the list: the way to try a variation and keep the original as it is. */
+function duplicateSave(id) {
+  const from = saves.find((s) => s.id === id);
+  if (!from) return;
+  const taken = new Set(saves.map((s) => s.name.toLowerCase()));
+  const base = from.name.replace(/ \(copy(?: \d+)?\)$/, ''); // a copy of a copy is "… (copy 2)"
+  let name = `${base} (copy)`;
+  for (let n = 2; taken.has(name.toLowerCase()); n++) name = `${base} (copy ${n})`;
+  const data = { ...structuredClone(from.data), name };
+  saves.unshift({ id: newId(), name, savedAt: Date.now(), data });
+  if (!write()) { saves = read(); toast('Could not save. Browser storage is full or blocked', 'error'); return; }
+  toast(`Saved a copy: "${name}". Load it to change it.`, 'ok');
+  track('save-duplicated');
+  renderSaves();
+}
+
 /**
  * Save what is on the field and hand the entry back, without saying so.
  *
@@ -218,6 +235,8 @@ function cardHTML(entry) {
       ${canPost ? `<button class="btn btn--tiny save__post" type="button"
               data-post="${esc(entry.id)}"
               title="Share this formation with other players">Post</button>` : ''}
+      <button class="save__x save__copy" type="button" data-dup="${esc(entry.id)}"
+              aria-label="Save a copy of ${esc(entry.name)}" title="Save a copy, to try a variation without changing this one">⧉</button>
       <button class="save__x" type="button" data-del="${esc(entry.id)}"
               aria-label="Delete ${esc(entry.name)}" title="Delete ${esc(entry.name)}">×</button>
     </li>`;
@@ -330,6 +349,8 @@ export function buildSaves(opts = {}) {
   $('#saves-list').addEventListener('click', (e) => {
     const del = e.target.closest('[data-del]');
     if (del) { deleteSave(del.dataset.del); return; }
+    const dup = e.target.closest('[data-dup]');
+    if (dup) { duplicateSave(dup.dataset.dup); return; }
     const share = e.target.closest('[data-post]');
     if (share) {
       const entry = saves.find((s) => s.id === share.dataset.post);

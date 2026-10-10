@@ -507,6 +507,7 @@ try {
   await gift.first().getByRole('button', { name: 'I claimed it, 20000001' }).click();
   await A.waitForSelector('#toast.is-shown');
   assert.deepEqual(lastSent('Ana', 'banquet_claim'), { target: 20000001, claimed: true, g: null }, 'I claimed it is the same claim as the card');
+  await A.waitForFunction(() => /You have claimed \d+ banquets? this gold rush/.test(document.querySelector('#bq-claimed')?.textContent ?? ''));
   await A.waitForFunction(() => document.querySelector('#bq-log li[data-key=":20000001"] .bq-log__state')?.textContent === 'You claimed it');
   assert.ok(!(await A.locator('#bq-log li[data-key=":20000001"]').first().evaluate((li) => li.classList.contains('is-claimable'))), 'claimed: no longer lit');
   // Not logged in from the log is the card's mark, and the line moves on.

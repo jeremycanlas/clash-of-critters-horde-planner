@@ -3584,6 +3584,10 @@ body.is-dragging-active {
 /* Post and × share one right-hand gutter, stacked, so neither can ever land on
    the meta line however long a formation's name or mode string gets. */
 .saves--posting .save__main { padding-right: 56px; }
+/* Copy sits left of ×, so the name always leaves room for both. */
+.save__main { padding-right: 56px; }
+.save__x.save__copy { right: 30px; font-size: 14px; }
+.save__x.save__copy:hover { color: var(--accent); }
 
 /* Deleting should be present but never the easiest thing to hit — same lesson
    the bench chips learned. Revealed by the pointer; always there for touch. */

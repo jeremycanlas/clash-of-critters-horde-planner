@@ -912,6 +912,10 @@ function renderCards(past) {
   $('#bq-run-start').hidden = past;
   $('#bq-run-start').disabled = !due;
   $('#bq-run-start').textContent = due ? `Start claim run · ${due} to go` : 'Claim run: nothing to check right now';
+  // Yours, in view: a gift each, so this is what this gold rush has given you so far.
+  const claimed = past ? 0 : state.banquets.filter((b) => b.claimed && (!b.grp || inView(b.grp))).length;
+  $('#bq-claimed').hidden = !claimed;
+  $('#bq-claimed').textContent = `You have claimed ${claimed} banquet${claimed === 1 ? '' : 's'} this gold rush.`;
   renderLast();
 }
 

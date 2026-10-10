@@ -372,3 +372,6 @@
   .bq-mine__uid > .btn { min-height: 36px; padding: 4px 9px; font-size: 13px; }
   .bq-mine__uid .bq-likes__add span { display: none; }
 }
+
+.bq-claimed { margin: 6px 0 0; font-size: 13px; }
+.bq-claimed[hidden] { display: none; }
