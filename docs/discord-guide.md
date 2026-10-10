@@ -98,7 +98,7 @@ Tap **Share** (bottom right on a phone):
 **Post to Community** (bottom of Share) puts your build in the public gallery. Sign in with Discord once.
 
 **Browse what others run:** https://jeremycanlas.github.io/clash-of-critters-horde-planner/community.html
-Filter by **Co-op**, **Gold Rush** or tier, then **Open** any build to load it into your drafter and make it yours.
+Filter by **Co-op**, **Gold Rush** or tier, or type a Tatari in **Uses** to see the builds that field it. **Open** any build to load it into your drafter and make it yours.
 
 https://jeremycanlas.github.io/clash-of-critters-horde-planner/assets/img/guide/discord/share-v1.png
 https://jeremycanlas.github.io/clash-of-critters-horde-planner/assets/img/guide/discord/community-v1.png
@@ -132,7 +132,7 @@ The biggest single hits at Lv 7:
 - **Tindercub** line: Flame Fists, **580%**
 - **Joeyo** line: Super Launch!, **525% × 7 hits**
 
-All 66 lines, with their numbers, on **Skill data**. Link one straight: https://jeremycanlas.github.io/clash-of-critters-horde-planner/skills.html#glowfly
+Every line's numbers are on **Skill data**. Link one straight: https://jeremycanlas.github.io/clash-of-critters-horde-planner/skills.html#glowfly
 
 https://jeremycanlas.github.io/clash-of-critters-horde-planner/assets/img/guide/discord/horde-lv7-v1.png
 https://jeremycanlas.github.io/clash-of-critters-horde-planner/assets/img/guide/discord/skills-v1.png
@@ -144,8 +144,10 @@ https://jeremycanlas.github.io/clash-of-critters-horde-planner/assets/img/guide/
 ## 6️⃣ Quick tips most people never find
 - **Search by animal or nickname.** Type `dolphin`, `possum`, `corgi` or `poop bug` in the Roster or on Skill data. It also takes type, role, tier and skill words: `water healer`, `t4 stun`
 - **Just the grid** hides everything but the field, so a normal screenshot comes out clean
+- **⧉ on a saved formation** keeps a copy, so you can try a variation without losing the original
+- **Took one off by accident?** Undo is right there in the message
 - **Export / Import** (Formation ▾) saves a formation as a file, handy for moving to another device
-- **Patch notes** shows every buff and nerf, Tatari by Tatari, and the drafter marks the ones that changed
+- **Patch notes** shows every buff and nerf and the newest Tatari, and the drafter marks the ones that changed
 - **Light or dark**: the sun button, top right
 
 That's everything. If this helped, a 👍 on the first post helps it reach more trainers. And tell me what you'd want the site to do next 👇
