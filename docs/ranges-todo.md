@@ -1,78 +1,65 @@
 # Attack ranges still to record
 
-`data/ranges.json` currently holds 72 of the 218 Tatari. This is what is missing
+`data/ranges.json` currently holds 74 of the 248 Tatari. This is what is missing
 and why, so nobody re-treads it. A Tatari absent from `ranges.json` shows no range
 in the app at all, which is deliberate: a wrong tile is worse than a missing one.
 
-## 1. No range screenshot exists (104)
+Counted from the data on 11 Oct 2026: re-count after a scrape rather than trusting
+these numbers.
 
-Nothing in `data/images/range/`, so there is nothing to read. These need somebody to
-open the Tatari in game and screenshot the range diagram.
+## 1. A range diagram is on hand, not yet read (43)
 
-- `Armorjaw` | `Beetleknight` | `Blowfin` | `Boltallion`
-- `Borelord` | `Budboo` | `Cactobloom` | `Cheerstella`
-- `Chefugu` | `Chomperwraith` | `Chronerva` | `Chrysolaria`
-- `Clangnaga` | `Cosmoram` | `Cragolin` | `Cratzar`
-- `Cribking` | `Crystalsnail` | `Dagondeep` | `Dazopus`
-- `Drilleroo` | `Droppit` | `Dumbopus` | `Ecstamira`
-- `Fishopus` | `Flameow` | `Frostluna` | `Frugantuan`
-- `Gemmapo` | `Gibber` | `Glideflip` | `Glimmerwing`
-- `Glowfly` | `Haplysia` | `Heliabloom` | `Hierotyrus`
-- `Hootlet` | `Humbleetle` | `Hychroma` | `Hyphoria`
-- `Hypnostrix` | `Ignitoad` | `Joeyo` | `Kaiseroo`
-- `Kangachamp` | `Kitjitsu` | `Lickflicker` | `Lilypo`
-- `Lollama` | `Lulupo` | `Luminastra` | `Magmusk`
-- `Magnedart` | `Maskfry` | `Meteorax` | `Momopo`
-- `Nekoflare` | `Newflamander` | `Nimbuzzy` | `Orchitoria`
-- `Ospisces` | `Pandagrand` | `Pandaroo` | `Pandarrior`
-- `Phantifox` | `Phosflare` | `Poakie` | `Ptooielama`
-- `Puffbelly` | `Pyrodaemon` | `Pyromaki` | `Pyroviathan`
-- `Ripplewing` | `Rockwu` | `Rubblet` | `Saberheart`
-- `Sealord` | `Searhog` | `Silversear` | `Sizzribb`
-- `Slobberlama` | `Snapshade` | `Solaflora` | `Somnrayna`
-- `Sonarbat` | `Souphog` | `Stormlion` | `Sulfunk`
-- `Surgehoof` | `Synthhog` | `Terracrawler` | `Terraton`
-- `Thornwisp` | `Tikowl` | `Trippet` | `Umbraveil`
-- `Voltazar` | `Voltreaver` | `Waddledo` | `Waveflutter`
-- `Weaverfang` | `Yawnelly` | `Zaplet` | `Zenscarab`
+`data/images/range/` has its screenshot. Reading the lit tiles off it into
+`ranges.json` is all that is left (tools/read-range-diagrams.py helps).
 
-### Lines with no diagram for any form (12)
-
-Worth grabbing first: right now these lines have no range data at any tier.
-
-- `Blowfin` | `Budboo` | `Drilleroo` | `Dumbopus`
-- `Flameow` | `Glowfly` | `Hootlet` | `Lollama`
-- `Maskfry` | `Momopo` | `Poakie` | `Zaplet`
-
-## 2. The diagram lights the whole board (8)
-
-Every tile of the field is highlighted. That may genuinely mean board-wide reach,
-and several of these are Support forms, but it could equally be a different UI
-state that got screenshotted. Needs confirming in game before writing 30-odd
-tiles into the data.
-
-- `Buddi` | `Cindermunk` | `Embertail` | `Fluffle`
-- `Fumekit` | `Galewether` | `Pyropup` | `Sunfleur`
-
-## 3. Cannot tell if the Tatari's own tile is lit (34)
-
-The shape itself is clear, but the sprite stands over the near edge of it and hides
-whether the tile underneath is part of the range. Getting this wrong shifts every
-offset by a row, so they are left out rather than guessed. Most are a straight lane
-or a small block; the question is only where the near end stops.
-
-- `Azurion` | `Bastogard` | `Blueflick` | `Cactoczar`
-- `Clawzor` | `Cribbler` | `Dewgrub` | `Donscarab`
-- `Dreadclaw` | `Flarevix` | `Frostique` | `Frugagon`
-- `Funglet` | `Gemsnail` | `Goonbug` | `Grillhog`
-- `Hothog` | `Jewelsnail` | `Ninjaguana` | `Puncharoo`
+- `Azurion` | `Bastogard` | `Blueflick` | `Buddi`
+- `Cactoczar` | `Cheerstella` | `Cindermunk` | `Clawzor`
+- `Cribbler` | `Dewgrub` | `Donscarab` | `Dreadclaw`
+- `Embertail` | `Flarevix` | `Fluffle` | `Frostique`
+- `Frugagon` | `Fumekit` | `Funglet` | `Galewether`
+- `Gemsnail` | `Goonbug` | `Grillhog` | `Hothog`
+- `Jewelsnail` | `Ninjaguana` | `Puncharoo` | `Pyropup`
 - `Rockfu` | `Seaswirl` | `Serrabloom` | `Shardsnail`
 - `Skinkoon` | `Souverelle` | `Stalkerix` | `Stoodbeak`
-- `Swaystroll` | `Taiglow` | `Tideon` | `Watchroo`
-- `Zapantler` | `Zapuni`
+- `Sunfleur` | `Swaystroll` | `Taiglow` | `Tideon`
+- `Watchroo` | `Zapantler` | `Zapuni`
 
-## Reading one off a diagram
+## 2. No range diagram exists (131)
 
-The Tatari stands at the bottom, lit tiles are what it reaches. Write the offsets as
-`[column, row]` from its own tile, negative rows towards the Zobos. Key it under
-`bySlug` by that form's own slug. Range is per-form, not per-line.
+Nothing in `data/images/range/`, so there is nothing to read. These need somebody to
+open the Tatari in game and screenshot the range diagram, or record it on the
+Record a range page.
+
+- `Anglerbear` | `Aquariel` | `Armavolve` | `Armorjaw`
+- `Beetleknight` | `Blastniff` | `Blechlama` | `Blizzgrizz`
+- `Blowfin` | `Blubbles` | `Boltallion` | `Borelord`
+- `Budboo` | `Cactobloom` | `Cactobodhi` | `Cavyzap`
+- `Chefugu` | `Chomperwraith` | `Chronerva` | `Chrysolaria`
+- `Cinderclaw` | `Clangnaga` | `Cosmoram` | `Cragolin`
+- `Cratzar` | `Cribking` | `Crystalsnail` | `Dagondeep`
+- `Dazopus` | `Dharmadder` | `Dolphie` | `Drilleroo`
+- `Droppit` | `Dumbopus` | `Ecstamira` | `Fishopus`
+- `Flameow` | `Frostluna` | `Frugantuan` | `Gemmapo`
+- `Gibber` | `Gigagnash` | `Glideflip` | `Glimmerwing`
+- `Glowfly` | `Haplysia` | `Heliabloom` | `Hierotyrus`
+- `Hippiehog` | `Hootlet` | `Humbleetle` | `Hychroma`
+- `Hyphoria` | `Hypnostrix` | `Ignitoad` | `Irisia`
+- `Joeyo` | `Kaiseroo` | `Kangachamp` | `Kitjitsu`
+- `Lickflicker` | `Lilypo` | `Lollama` | `Lordopus`
+- `Lulupo` | `Luminastra` | `Magmusk` | `Magnedart`
+- `Maskfry` | `Momopo` | `Morphanessa` | `Nekoflare`
+- `Newflamander` | `Nimbuzzy` | `Orchitoria` | `Ospisces`
+- `Pandagrand` | `Pandaroo` | `Pandarrior` | `Phantifox`
+- `Phantothief` | `Phosflare` | `Poakie` | `Polarpaw`
+- `Popa` | `Popafam` | `Popagrind` | `Popapouch`
+- `Ptooielama` | `Puffbelly` | `Pyrodaemon` | `Pyromaki`
+- `Pyroviathan` | `Ringtail` | `Ripplewing` | `Rizzler`
+- `Rockwu` | `Saberheart` | `Sealord` | `Searhog`
+- `Silversear` | `Sizzribb` | `Slobberlama` | `Snapshade`
+- `Snowcub` | `Solaflora` | `Somnrayna` | `Sonarbat`
+- `Souphog` | `Stormlion` | `Sulfunk` | `Surgehoof`
+- `Synthhog` | `Technocan` | `Terracrawler` | `Terraton`
+- `Thornwisp` | `Thunderpaw` | `Tikowl` | `Trippet`
+- `Umbraveil` | `Voltazar` | `Voltreaver` | `Waddledo`
+- `Waveflutter` | `Weaverfang` | `Wheekroller` | `Yawnelly`
+- `Zaplet` | `Zenscarab` | `Zorrock`

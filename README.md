@@ -488,7 +488,7 @@ access to run. Community does: it is the one page that talks to a service.
 
 | File | Contents |
 | --- | --- |
-| `data/tatari.json` | 218 Tatari: type, role, tier, evolution line, rarity, skill, flavour text, etymology |
+| `data/tatari.json` | 248 Tatari: type, role, tier, evolution line, rarity, skill, flavour text, etymology |
 | `data/meta.json` | type and role lists, the type-effectiveness chart, what each skill type does, counts, grid size, level cap |
 | `data/aliases.json` | community nicknames and the real animal each line is based on, for search |
 | `data/ranges.json` | attack ranges as tile offsets, measured off the diagrams and checked by eye |
@@ -530,7 +530,7 @@ later. "Brings a heal" and "could bring a heal at 5" are different picks.
 
 Two sources feed those markers and the field tallies, and the difference shows:
 
-- The **base skill** is tagged by the wiki itself, covering 203 of 218 Tatari.
+- The **base skill** is tagged by the wiki itself, covering 231 of 248 Tatari.
   You get these for free.
 - The **Horde level-up skills** at 3, 5 and 7 are only free text upstream, with
   no tags, so the same vocabulary is matched against the wording. These are
@@ -548,16 +548,16 @@ continuous healing" is a heal, not a Weaken.
 Two things are only partly documented upstream, and the app says so rather than
 pretending otherwise:
 
-- **Horde level-up skills** cover 55 of the 62 evolution lines (190 of 218
+- **Horde level-up skills** cover 66 of the 67 evolution lines (244 of 248
   Tatari). The mode's page lists them per line, since every form in a line learns
   the same three; the base skill differs per form and comes from the roster.
-- **Attack range** exists for 114 of 218 Tatari, and only as in-game screenshots
+- **Attack range** exists for 117 of 248 Tatari, and only as in-game screenshots
   with the reachable tiles lit up: photographs at assorted zooms with game UI on
   top. Those are shown as pictures on the detail sheet.
 
   The range *overlay* needs tiles rather than pictures, so `data/ranges.json`
   records them as offsets, keyed by the individual form. Range is per-form, and
-  evolving can change the shape and not just the reach. 72 of 218 are recorded.
+  evolving can change the shape and not just the reach. 74 of 248 are recorded.
 
   It sits behind the **Ranges (WIP)** toggle on the formation panel, off by
   default, because two thirds of the roster is still blank and a coverage map
