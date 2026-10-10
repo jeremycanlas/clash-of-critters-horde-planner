@@ -79,6 +79,8 @@ let loading = false;
 const LAYOUT_KEY = 'coc.community.layout.v1';
 const view = {
   sort: 'best', mode: '', patch: '', tier: '',
+  /** A line's family name: only formations fielding any member of it. See usesWhere(). */
+  uses: '',
   /** 'grid' scans, 'full' reads. See gridCardHTML() and cardHTML(). */
   layout: (() => { try { return localStorage.getItem(LAYOUT_KEY) === 'full' ? 'full' : 'grid'; } catch { return 'grid'; } })(),
   /** '' for everyone's, '1' for only what this browser posted. See mineWhere(). */
@@ -121,6 +123,16 @@ let peekToken = 0;
  * A formation holding a slug this roster does not know matches no tier at all,
  * and drops out of every tier filter rather than being guessed into one.
  */
+/*
+ * Builds that field a line: any of its members, so "Frostnip" finds the board
+ * with Frostluna on it. Asked of the database the way the tier filter is, as an
+ * overlap with the posted slugs.
+ */
+function usesWhere(family) {
+  const members = [...state.bySlug.values()].filter((t) => t.family === family).map((t) => t.slug);
+  return members.length ? `&slugs=ov.${encodeURIComponent(`{${members.join(',')}}`)}` : '';
+}
+
 function tierWhere(tier) {
   const n = Number(tier);
   if (!Number.isInteger(n) || n < 1 || n > 4) return '';
@@ -233,6 +245,7 @@ async function loadMore({ append = true } = {}) {
     view.mode ? `&mode=eq.${view.mode}` : '',
     view.patch ? `&patch_id=eq.${encodeURIComponent(view.patch)}` : '',
     tierWhere(view.tier),
+    view.uses ? usesWhere(view.uses) : '',
     view.mine ? mineWhere() : '',
   ].join('');
 
@@ -1307,7 +1320,9 @@ function sayIfEmpty() {
       + 'they are just not on this list.');
     return;
   }
-  say(view.mode || view.patch || view.tier
+  say(view.uses && !view.mode && !view.patch && !view.tier
+    ? `Nobody has posted a formation with the ${view.uses} line yet. Be the first: build one and Post to Community from Share.`
+    : view.mode || view.patch || view.tier || view.uses
     ? 'Nothing posted matches that yet. Try widening it.'
     : 'Nothing has been posted yet.');
 }
@@ -1319,8 +1334,19 @@ function showMine() {
   host.hidden = !(signedIn() ? (myIds?.length ?? 0) : posted().length);
 }
 
+/* Open on a wide screen, where they fit beside the list; folded on a phone,
+   saying how many are on so a filtered list never looks like the whole one. */
+function renderFilters() {
+  const box = $('#community-filters');
+  if (!box) return;
+  if (matchMedia('(min-width: 761px)').matches) box.open = true;
+  const on = [view.mode, view.tier, view.patch, view.mine, view.uses].filter(Boolean).length;
+  $('#filters-on').textContent = on ? `(${on} on)` : '';
+}
+
 async function refine(change) {
   Object.assign(view, change);
+  renderFilters();
   rows = [];
   total = null;
   forgetCache();
@@ -1431,6 +1457,33 @@ async function main() {
   $('#whoami').addEventListener('click', (e) => {
     if (e.target.closest('[data-signout]')) onSignOut();
   });
+
+  /* Uses: a Tatari by name, any of the 248, and the posts that field its line.
+     In the address too, so "see builds with Popafam" is a link. */
+  const usesBox = $('#uses-filter');
+  if (usesBox) {
+    $('#uses-names').innerHTML = [...state.bySlug.values()].filter((t) => !t.custom)
+      .sort((a, b) => a.name.localeCompare(b.name)).map((t) => `<option value="${esc(t.name)}"></option>`).join('');
+    const apply = () => {
+      const typed = usesBox.value.trim().toLowerCase();
+      const t = typed ? [...state.bySlug.values()].find((x) => x.name.toLowerCase() === typed) : null;
+      if (typed && !t) return; // still typing, or not a Tatari: nothing to filter by yet
+      const family = t?.family ?? '';
+      if (family === view.uses) return;
+      $('#uses-clear').hidden = !family;
+      const q = new URLSearchParams(location.search);
+      if (family) q.set('uses', t.slug); else q.delete('uses');
+      history.replaceState(null, '', `${location.pathname}${q.size ? `?${q}` : ''}${location.hash}`);
+      track('community-filtered');
+      refine({ uses: family });
+    };
+    usesBox.addEventListener('change', apply);
+    usesBox.addEventListener('input', () => { if (!usesBox.value.trim()) apply(); });
+    $('#uses-clear').addEventListener('click', () => { usesBox.value = ''; apply(); usesBox.focus(); });
+    const linkedUses = state.bySlug.get(new URLSearchParams(location.search).get('uses') ?? '');
+    if (linkedUses) { usesBox.value = linkedUses.name; view.uses = linkedUses.family; $('#uses-clear').hidden = false; }
+  }
+  renderFilters();
 
   $('#tier-filter').addEventListener('click', (e) => {
     const btn = e.target.closest('[data-tier]');

@@ -70,8 +70,12 @@
       -->
       <p class="hint">Formations other players have posted. Press one to read the whole card &mdash; the field,
         both benches and the level-up plan &mdash; or <b>Open</b> to load it into the drafter, where nothing you do is
-        saved back here. Almost nobody has voted, so <b>Best first</b> ranks what you can check for yourself: upvotes,
-        then a full field, a level-up plan, and the poster having said what it is for.</p>
+        saved back here.</p>
+      <details class="hint community__how">
+        <summary>How <b>Best first</b> ranks them</summary>
+        Almost nobody has voted, so it ranks what you can check for yourself: upvotes, then a full field, a
+        level-up plan, and the poster having said what it is for.
+      </details>
 
       <!--
         Two decisions, one row, never taller. Porting the drafter's three chip
@@ -91,6 +95,9 @@
           <button class="segmented__btn" type="button" data-layout="grid" aria-pressed="true">Grid</button>
           <button class="segmented__btn" type="button" data-layout="full" aria-pressed="false">Full cards</button>
         </div>
+        <details id="community-filters" class="community__filters">
+          <summary class="btn">Filters <span id="filters-on" class="muted"></span></summary>
+          <div class="community__controls">
         <div id="mode-filter" class="segmented" role="group" aria-label="Filter by number of players">
           <button class="segmented__btn" type="button" data-mode="" aria-pressed="true">All</button>
           <button class="segmented__btn" type="button" data-mode="solo" aria-pressed="false">Solo</button>
@@ -103,6 +110,16 @@
           the answer is a set of formations somebody at that stage of the game
           could actually field, rather than a T4 roster with one T2 in it.
         -->
+        <!-- A Tatari by name: the posts that field any member of its line. -->
+        <div class="community__uses">
+          <label for="uses-filter">Uses</label>
+          <input id="uses-filter" class="field" type="search" list="uses-names" autocomplete="off"
+            placeholder="Any Tatari, e.g. Popafam" aria-describedby="uses-note">
+          <button id="uses-clear" class="btn btn--quiet" type="button" hidden>Clear</button>
+          <datalist id="uses-names"></datalist>
+          <span id="uses-note" class="muted">Any tier of its line counts.</span>
+        </div>
+
         <div id="tier-filter" class="segmented" role="group" aria-label="Filter by the highest tier fielded">
           <button class="segmented__btn" type="button" data-tier="" aria-pressed="true">Any tier</button>
           <button class="segmented__btn" type="button" data-tier="1" aria-pressed="false">T1</button>
@@ -133,6 +150,8 @@
         <!-- Only rendered once the patches table has anything in it. A filter
              with no values can only disappoint. -->
         <div id="patch-filter" class="segmented" role="group" aria-label="Filter by game update" hidden></div>
+          </div>
+        </details>
       </div>
 
       <!--
