@@ -26,7 +26,7 @@
 .gd-lead { font-size: 16px; color: var(--text-dim); max-width: 62ch; }
 .gd-jump { display: flex; flex-wrap: wrap; gap: var(--s2); margin-top: var(--s1); }
 .gd-jump a {
-  display: inline-flex; align-items: center; min-height: 40px; padding: 0 var(--s3);
+  display: inline-flex; align-items: center; min-height: 44px; padding: 0 var(--s3);
   border: 1px solid var(--line); border-radius: 999px; background: var(--surface);
   color: var(--text); font-size: 14px; font-weight: 600; text-decoration: none;
 }

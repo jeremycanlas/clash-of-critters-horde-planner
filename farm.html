@@ -49,10 +49,12 @@
     <div class="farm__left">
     <div class="farm__inputs">
       <label class="farm__label"><span>Your score</span>
-        <input id="farm-score" class="field" inputmode="decimal" autocomplete="off" placeholder="e.g. 354 or 45k">
+        <input id="farm-score" class="field" inputmode="decimal" autocomplete="off" placeholder="e.g. 354 or 45k" aria-describedby="farm-score-bad">
+        <span id="farm-score-bad" class="farm__bad" hidden>Not a score: type a number like 354, 45k or 1.2M.</span>
       </label>
       <label class="farm__label"><span>Target score <span class="muted">(optional)</span></span>
-        <input id="farm-target" class="field" inputmode="decimal" autocomplete="off" placeholder="e.g. 1.2M">
+        <input id="farm-target" class="field" inputmode="decimal" autocomplete="off" placeholder="e.g. 1.2M" aria-describedby="farm-target-bad">
+        <span id="farm-target-bad" class="farm__bad" hidden>Not a score: type a number like 354, 45k or 1.2M.</span>
       </label>
     </div>
 

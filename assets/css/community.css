@@ -111,11 +111,11 @@ body.community { --dock-h: 0px; }
   color: var(--text-mute); font-size: 12.5px;
 }
 .community__shot.is-drawn + .community__shotwait { display: none; }
-.community__shotwrap.is-failed .community__shotwait::after {
+:is(.community__shotwrap, .community__thumbwrap).is-failed .community__shotwait::after {
   content: "Could not draw this one";
 }
-.community__shotwrap.is-failed .community__shotwait { font-size: 0; }
-.community__shotwrap.is-failed .community__shotwait::after { font-size: 12.5px; }
+:is(.community__shotwrap, .community__thumbwrap).is-failed .community__shotwait { font-size: 0; }
+:is(.community__shotwrap, .community__thumbwrap).is-failed .community__shotwait::after { font-size: 12.5px; }
 
 /* (.community__note went when the note moved onto the card itself. The picture
    carries it now, and the alt text carries it for anyone not looking at the

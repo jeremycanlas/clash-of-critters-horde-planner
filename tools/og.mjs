@@ -36,7 +36,7 @@ const CARDS = [
   {
     name: 'index',
     title: 'Horde Drafter',
-    line: 'Plan a Clash of Critters Horde Formation: 242 Tatari, both benches, the level-up order, and a picture to paste in chat.',
+    line: 'Plan a Clash of Critters Horde Formation: every Tatari, both benches, the level-up order, and a picture to paste in chat.',
     sprites: ['frugantuan', 'pandagrand', 'hypnostrix', 'dagondeep', 'haplysia'],
   },
   {
@@ -78,7 +78,7 @@ const CARDS = [
   {
     name: 'contribute',
     title: 'Record a range',
-    line: 'Contribute to the database of Tatari base skills and horde skills.',
+    line: 'Record attack ranges off the game, for the Tatari the wiki has no diagram of.',
     sprites: ['rockzilla', 'meteorax', 'hellhound', 'boltskipper', 'wobbler'],
   },
 ];

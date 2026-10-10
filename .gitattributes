@@ -1,0 +1,4 @@
+# Generated pages: written with LF, and checked byte for byte by
+# tools/skills-page.mjs --check and tools/guide-page.mjs --check.
+skills.html text eol=lf
+guide.html text eol=lf

@@ -52,7 +52,8 @@ ok('every line name is a real Tatari', headNotInRoster.length === 0,
  * read. If the wiki has since added a T4, this fails and names it.
  */
 const stale = [];
-for (const l of lines) {
+// Past seasons too: their notes are shown against the family as it is now.
+for (const l of [...lines, ...(book.history ?? []).flatMap((h) => h.lines ?? [])]) {
   const head = state.all.find((t) => t.name === l.line);
   if (!head) continue;
   const expected = (head.evolutionLine ?? [head.name])

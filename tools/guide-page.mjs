@@ -84,7 +84,8 @@ function hordeTop() {
     return { l: byFamily[fam], name: s?.name, df, count, cd: cdMin && cdMax ? `${num(cdMin)}–${num(cdMax)}s` : null };
   }).filter((h) => h.l && h.df).sort((a, b) => b.df - a.df || a.l.family.localeCompare(b.l.family));
   const learned = Object.keys(horde).length;
-  return `<p class="gd-facts">Every line learns three Horde Invasion skills, at Lv 3, 5 and 7. All ${learned} lines are on Skill data
+  const lineCount = new Set(tatari.map((t) => t.family)).size;
+  return `<p class="gd-facts">Every line learns three Horde Invasion skills, at Lv 3, 5 and 7. ${learned === lineCount ? `All ${lineCount}` : `${learned} of the ${lineCount}`} lines are on Skill data
 with their numbers. The biggest single hits at Lv 7, by Damage Factor:</p>
 <ol class="gd-tiles gd-tiles--wide">${hits.slice(0, 8).map((h) => tile(h.l, `${h.df}%${h.count ? ` × ${h.count}` : ''}`,
     `${h.name}${h.cd ? ` · every ${h.cd}` : ''}`)).join('')}</ol>

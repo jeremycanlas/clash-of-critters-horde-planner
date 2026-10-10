@@ -64,6 +64,13 @@ function markTiers(score, nextAt) {
 }
 
 function render() {
+  // Something typed that is not a score says so, rather than quietly counting as 0.
+  for (const id of ['farm-score', 'farm-target']) {
+    const box = $(`#${id}`);
+    const bad = !!box.value.trim() && parseScore(box.value) === null;
+    box.setAttribute('aria-invalid', String(bad));
+    $(`#${id}-bad`).hidden = !bad;
+  }
   const score = parseScore($('#farm-score').value) ?? 0;
   const target = parseScore($('#farm-target').value);
 

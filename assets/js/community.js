@@ -55,7 +55,8 @@ const PAGE = 10;
    phone two. Ten would be one flick. Sixty is every formation posted so far,
    which is what the sorts that rank the whole list need anyway. */
 const GRID_PAGE = 60;
-const pageSize = () => (view.layout === 'grid' ? GRID_PAGE : PAGE);
+// Best first and Like mine are ranked here, over everything: ten at a time ranked only the first ten.
+const pageSize = () => (view.layout === 'grid' || view.sort === 'best' || view.sort === 'match' ? GRID_PAGE : PAGE);
 
 const COLUMNS = 'id,name,note,mode,slugs,placed,steps,author_name,author_avatar,'
   + 'submitted_at,patch_id,score,snapshot';
@@ -769,12 +770,17 @@ function releaseShots() {
   drawn.clear();
 }
 
+/* The formation as posted, under the name it was posted with. The snapshot
+   keeps whatever the drafter's name box held when it was saved, often empty:
+   15 of the first 35 drew as "Untitled formation" under a titled post. */
+const titled = (row) => ({ ...(row.snapshot ?? {}), name: row.name || row.snapshot?.name || '' });
+
 async function paintShot(img) {
   const id = img.dataset.shot;
   if (!id || drawn.has(id)) return;
   drawn.set(id, '');                        // claim it before awaiting, so two
   const row = rows.find((r) => String(r.id) === String(id));  // observers cannot race
-  if (!row?.snapshot) return;
+  if (!row?.snapshot) { img.closest('.community__shotwrap, .community__thumbwrap')?.classList.add('is-failed'); return; }
 
   try {
     const canvas = await drawCard({
@@ -788,7 +794,7 @@ async function paintShot(img) {
        */
       /* In the grid it is the field alone: a thumbnail of the whole card is a
          picture of a card, not a picture of a formation. */
-      view: viewOf(row.snapshot), full: view.layout !== 'grid', stacked: stackedHere(), scale: 1,
+      view: viewOf(titled(row)), full: view.layout !== 'grid', stacked: stackedHere(), scale: 1,
       username: authorOf(row),
       avatar: row.author_avatar || '',
       note: row.note || '',
@@ -824,7 +830,7 @@ async function paintShot(img) {
     }
   } catch (err) {
     console.error(err);
-    img.closest('.community__shotwrap')?.classList.add('is-failed');
+    img.closest('.community__shotwrap, .community__thumbwrap')?.classList.add('is-failed');
   }
 }
 
@@ -997,7 +1003,7 @@ async function openPeek(id, { push = true } = {}) {
     // missing, so saving the picture from here credits the poster the way the
     // list already did.
     canvas = await drawCard({
-      view: viewOf(row.snapshot ?? {}), full: true, stacked: stackedHere(), scale: 2,
+      view: viewOf(titled(row)), full: true, stacked: stackedHere(), scale: 2,
       username: authorOf(row),
       avatar: row.author_avatar || '',
       note: row.note || '',

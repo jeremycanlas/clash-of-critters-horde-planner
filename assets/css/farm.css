@@ -72,3 +72,7 @@
   background: var(--surface);
 }
 @media (max-width: 900px) { .farm__right h2 { position: static; } }
+
+/* Said under the box when what is typed is not a score. */
+.farm__bad { color: var(--danger); font-size: 13px; }
+.farm__bad[hidden] { display: none; }

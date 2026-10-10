@@ -185,7 +185,7 @@
 .contribute .field-frame.is-everywhere .cell { cursor: not-allowed; }
 
 /* Sits beside the reach chips now, so it takes the row's own alignment. */
-.contrib__scope { flex: 0 1 auto; }
+.contrib__scope { flex: 0 1 auto; min-height: 24px; } /* the 24px floor for a target, on a desktop too */
 
 /*
  * Beyond the line. Hatched with the same stripes as the strip below it, so the

@@ -37,7 +37,11 @@ const meta = (tierText, t, roleAlt = t.role) => `<span class="sk-meta"><span cla
 const art = (t, size) => `<img class="sk-art" src="${esc(t.image)}" alt="" width="${size}" height="${size}" loading="lazy" decoding="async">`;
 // The first number in a panel value, for sorting: "130%" 130, "4s After Dance Ends" 4.
 const num = (v) => { const m = /\d+(\.\d+)?/.exec(v ?? ''); return m ? Number(m[0]) : null; };
-const skillName = (t) => numbers[t.slug]?.skill ?? (t.skill ?? '').split(':')[0];
+// The wiki writes "???" for a skill it has not named yet (Cactobodhi, Armavolve on arrival).
+const skillName = (t) => {
+  const n = (numbers[t.slug]?.skill ?? (t.skill ?? '').split(':')[0]).trim();
+  return !n || /^\?+$/.test(n) ? 'Name not known yet' : n;
+};
 const skillDesc = (t) => t.skill?.includes(':') ? t.skill.slice(t.skill.indexOf(':') + 1).trim() : '';
 
 /* The skill's own rows are the box with no heading. */
