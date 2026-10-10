@@ -6991,3 +6991,15 @@ details.hint[open] > summary { margin-bottom: var(--s1); }
   .topbar__title { min-width: 0; }
   .topbar__title h1 { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 }
+
+/* Patch notes: new Tatari, as sprites linking to their numbers. */
+.chnew { margin-bottom: var(--s5); }
+.chnew[hidden] { display: none; }
+.chnew__when { margin: var(--s3) 0 var(--s2); font-size: 14px; color: var(--text-dim); font-weight: 600; }
+.chnew__list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: var(--s2); }
+.chnew__item { display: grid; justify-items: center; gap: 2px; padding: var(--s2); min-height: 44px; text-align: center;
+  border: 1px solid var(--line); border-radius: var(--r-md, 10px); background: var(--surface); color: var(--text); text-decoration: none; }
+.chnew__item:hover { border-color: var(--accent); }
+.chnew__item img { width: 64px; height: 64px; }
+.chnew__name { font-weight: 700; font-size: 14px; }
+.chnew__meta { font-size: 12px; color: var(--text-mute); }

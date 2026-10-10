@@ -16,7 +16,7 @@
 import { load, state } from './data.js';
 import { applyPrefs } from './prefs.js';
 import { buildAnalytics, track } from './analytics.js';
-import { $, artHTML, esc } from './ui.js';
+import { $, artHTML, artOf, esc } from './ui.js';
 
 // Safe on import: it only reads localStorage and writes to <html>.
 applyPrefs();
@@ -175,6 +175,27 @@ function chipCard(entry) {
     </article>`;
 }
 
+/*
+ * New Tatari: each batch the site has added, newest first, as the sprite and a
+ * link to its numbers. Patch notes say what changed for the ones you have;
+ * this is the other half of "what is new", and it had no home.
+ */
+function renderArrivals(book) {
+  const box = $('#changes-new');
+  if (!box) return;
+  const batches = (book.arrivals ?? []).map((a) => ({ ...a, list: a.slugs.map((s) => state.bySlug.get(s)).filter(Boolean) }))
+    .filter((a) => a.list.length).slice(0, 2);
+  box.hidden = !batches.length;
+  const day = (d) => new Date(`${d}T00:00:00Z`).toLocaleDateString(undefined, { day: 'numeric', month: 'long', timeZone: 'UTC' });
+  box.innerHTML = !batches.length ? '' : `
+    <h2 class="chmode__head">New Tatari</h2>
+    ${batches.map((a) => `
+      <h3 class="chnew__when">Added ${day(a.on)}</h3>
+      <ul class="chnew__list">${a.list.map((t) => `<li><a class="chnew__item" href="skills.html#${esc(t.slug)}">
+        <img src="${esc(artOf(t) ?? '')}" alt="" width="64" height="64" loading="lazy" decoding="async"><span class="chnew__name">${esc(t.name)}</span>
+        <span class="chnew__meta">${esc(t.type)}${t.role ? ` · ${esc(t.role)}` : ''} · T${t.tier}</span></a></li>`).join('')}</ul>`).join('')}`;
+}
+
 function render(book) {
   const lines = book.lines ?? [];
   const patch = book.label || book.patch || '';
@@ -205,6 +226,7 @@ function render(book) {
    * only time this page needs to say anything in prose.
    */
   $('#changes-intro').textContent = '';
+  renderArrivals(book);
 
   /*
    * What the update did to the mode, before what it did to any Tatari.

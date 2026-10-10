@@ -42,6 +42,11 @@ ok('every entry carries at least one change', lines.every((l) => (l.changes ?? [
 const unknown = lines.flatMap((l) => (l.members ?? []).filter((s) => !state.bySlug.has(s)));
 ok('every member slug is a real Tatari', unknown.length === 0, unknown.join(', '));
 
+// New Tatari (arrivals): every slug a real one, so none silently drops off the page.
+const arrived = (book.arrivals ?? []).flatMap((a) => a.slugs);
+const strangers = arrived.filter((s) => !state.bySlug.has(s));
+ok('every new Tatari listed is in the roster', arrived.length > 0 && strangers.length === 0, strangers.join(', '));
+
 const headNotInRoster = lines.filter((l) => !state.all.some((t) => t.name === l.line));
 ok('every line name is a real Tatari', headNotInRoster.length === 0,
    headNotInRoster.map((l) => l.line).join(', '));
