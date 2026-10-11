@@ -10724,7 +10724,7 @@
   "name": "Popa",
   "slug": "popa",
   "type": "Rock",
-  "role": null,
+  "role": "Tank",
   "tier": 1,
   "family": "Popa",
   "familyId": 66,
@@ -10741,7 +10741,20 @@
   "etymology": null,
   "skill": "Popa Knows Best: Ponders possum life and carries Possum: DMG Reduction & Heal Reduction. Sometimes Plays Dead to continuously deal AoE damage nearby.",
   "description": "The outside world was almost within reach, but no matter what Popa tried, the window wouldn't budge. Nothing to do but stand tall, watch the sky grow dark, and jest let things be.",
-  "hordeSkills": null,
+  "hordeSkills": {
+   "level3": {
+    "name": "Possum Support",
+    "text": "Periodically recovers HP or heals the ally with lowest HP."
+   },
+   "level5": {
+    "name": "Possum Pane",
+    "text": "Generates 3 Windows and continuously deals small AoE damage in front of them."
+   },
+   "level7": {
+    "name": "Possum Hospitality",
+    "text": "Slacks off periodically to switch locations with 1 ally, granting them Your Turn: DMG Boost."
+   }
+  },
   "rangeImage": null,
   "skillTypes": [],
   "image": "data/images/tatari/popa.png",
@@ -10752,7 +10765,7 @@
   "name": "Popapouch",
   "slug": "popapouch",
   "type": "Rock",
-  "role": null,
+  "role": "Tank",
   "tier": 2,
   "family": "Popa",
   "familyId": 66,
@@ -10769,7 +10782,20 @@
   "etymology": null,
   "skill": "Pouch Trouble: Ponders possum life and carries Possum: DMG Reduction & Heal Reduction. Sometimes Plays Dead to continuously deal AoE damage nearby. Entrusts the baby to 1 ally, granting them Possum: ATK & DEF Boost.",
   "description": "The responsibility that comes with a baby isn't something that can be canceled or delayed. Whenever Popapouch wants to take a break, a gentle tug would serve as a reminder that this is a job for life.",
-  "hordeSkills": null,
+  "hordeSkills": {
+   "level3": {
+    "name": "Possum Support",
+    "text": "Periodically recovers HP or heals the ally with lowest HP."
+   },
+   "level5": {
+    "name": "Possum Pane",
+    "text": "Generates 3 Windows and continuously deals small AoE damage in front of them."
+   },
+   "level7": {
+    "name": "Possum Hospitality",
+    "text": "Slacks off periodically to switch locations with 1 ally, granting them Your Turn: DMG Boost."
+   }
+  },
   "rangeImage": null,
   "skillTypes": [],
   "image": "data/images/tatari/popapouch.png",
@@ -10780,7 +10806,7 @@
   "name": "Popagrind",
   "slug": "popagrind",
   "type": "Rock",
-  "role": null,
+  "role": "Tank",
   "tier": 3,
   "family": "Popa",
   "familyId": 66,
@@ -10797,7 +10823,20 @@
   "etymology": null,
   "skill": "The Grind Goes On: Ponders possum life and carries Possum: DMG Reduction & Heal Reduction. Sometimes Plays Dead to continuously deal AoE damage nearby. Entrusts the baby to 2 allies, granting them Possum: ATK & DEF Boost.",
   "description": "Whenever Popagrind hits the streets carrying the lil' ones, passing males would all turn to look. But this is nothing. Being a parent doesn't cost you your dignity, only your sleep- and raising two babies just...",
-  "hordeSkills": null,
+  "hordeSkills": {
+   "level3": {
+    "name": "Possum Support",
+    "text": "Periodically recovers HP or heals the ally with lowest HP."
+   },
+   "level5": {
+    "name": "Possum Pane",
+    "text": "Generates 3 Windows and continuously deals small AoE damage in front of them."
+   },
+   "level7": {
+    "name": "Possum Hospitality",
+    "text": "Slacks off periodically to switch locations with 1 ally, granting them Your Turn: DMG Boost."
+   }
+  },
   "rangeImage": null,
   "skillTypes": [],
   "image": "data/images/tatari/popagrind.png",
@@ -10808,7 +10847,7 @@
   "name": "Popafam",
   "slug": "popafam",
   "type": "Rock",
-  "role": null,
+  "role": "Tank",
   "tier": 4,
   "family": "Popa",
   "familyId": 66,
@@ -10825,7 +10864,20 @@
   "etymology": null,
   "skill": "All of the Fam: Ponders possum life and carries Possum: DMG Reduction & Heal Reduction. Sometimes Plays Dead to continuously deal AoE damage nearby. Entrusts the baby to 3 allies, granting them Possum: ATK & DEF Boost.",
   "description": "Before, hitting a dead end meant giving up. But now, Popafam knows to carry on no matter how many obstacles need to be faced. With time, come true understanding of your responsibility.",
-  "hordeSkills": null,
+  "hordeSkills": {
+   "level3": {
+    "name": "Possum Support",
+    "text": "Periodically recovers HP or heals the ally with lowest HP."
+   },
+   "level5": {
+    "name": "Possum Pane",
+    "text": "Generates 3 Windows and continuously deals small AoE damage in front of them."
+   },
+   "level7": {
+    "name": "Possum Hospitality",
+    "text": "Slacks off periodically to switch locations with 1 ally, granting them Your Turn: DMG Boost."
+   }
+  },
   "rangeImage": null,
   "skillTypes": [],
   "image": "data/images/tatari/popafam.png",

@@ -28,5 +28,20 @@
       "name": "Cascading Waves",
       "text": "Unleashes ocean waves that deal AoE damage and inflict Stun, while healing allies and granting Wavesong: ATK & DEF Boost."
     }
+  },
+  "_popa": "Read off the game (BlueStacks, Popa's Horde panel, scrolled to the end of each description) on 2026-10-11.",
+  "Popa": {
+    "level3": {
+      "name": "Possum Support",
+      "text": "Periodically recovers HP or heals the ally with lowest HP."
+    },
+    "level5": {
+      "name": "Possum Pane",
+      "text": "Generates 3 Windows and continuously deals small AoE damage in front of them."
+    },
+    "level7": {
+      "name": "Possum Hospitality",
+      "text": "Slacks off periodically to switch locations with 1 ally, granting them Your Turn: DMG Boost."
+    }
   }
 }

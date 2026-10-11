@@ -548,7 +548,7 @@ continuous healing" is a heal, not a Weaken.
 Two things are only partly documented upstream, and the app says so rather than
 pretending otherwise:
 
-- **Horde level-up skills** cover 66 of the 67 evolution lines (244 of 248
+- **Horde level-up skills** cover all 67 evolution lines (248 of 248
   Tatari). The mode's page lists them per line, since every form in a line learns
   the same three; the base skill differs per form and comes from the roster.
 - **Attack range** exists for 117 of 248 Tatari, and only as in-game screenshots

@@ -4779,5 +4779,78 @@
     ]
    ]
   }
+ },
+ "Popa": {
+  "level3": {
+   "name": "Possum Support",
+   "rows": [
+    [
+     "Healing Factor",
+     "15% HP"
+    ],
+    [
+     "Min Trigger Interval",
+     "4s"
+    ],
+    [
+     "Max Trigger Interval",
+     "6s"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "Possum Pane",
+   "rows": [
+    [
+     "Damage Factor",
+     "240%"
+    ],
+    [
+     "Damage Interval",
+     "2s"
+    ],
+    [
+     "Minimum Cooldown",
+     "12s"
+    ],
+    [
+     "Maximum Cooldown",
+     "18s"
+    ],
+    [
+     "Inherited HP",
+     "36%",
+     "Windows"
+    ],
+    [
+     "Max Duration",
+     "9s",
+     "Windows"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Possum Hospitality",
+   "rows": [
+    [
+     "Min Trigger Interval",
+     "16s"
+    ],
+    [
+     "Max Trigger Interval",
+     "24s"
+    ],
+    [
+     "Duration",
+     "15s",
+     "Your Turn: DMG Boost"
+    ],
+    [
+     "Boost Factor",
+     "50%",
+     "Your Turn: DMG Boost"
+    ]
+   ]
+  }
  }
 }

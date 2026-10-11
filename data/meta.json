@@ -17,8 +17,7 @@
       "Healer": 20,
       "Specialist": 20,
       "Support": 36,
-      "Tank": 26,
-      "null": 4
+      "Tank": 30
     },
     "byRarity": {
       "Common": 20,

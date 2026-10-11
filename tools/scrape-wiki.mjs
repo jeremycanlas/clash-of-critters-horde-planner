@@ -609,6 +609,30 @@ async function fetchIcons() {
 
 // ---------------------------------------------------------------- main
 
+/*
+ * What the game shows and the wiki's Tatari table leaves blank: read off the
+ * game, filled in only where the wiki has nothing, so the wiki still wins once
+ * it catches up (then delete the entry). Roles are per line, skills per Tatari.
+ * Popa: read on 2026-10-11 off Popa's own panel (shield badge: Tank).
+ */
+const FROM_GAME = {
+  roles: { Popa: 'Tank' },
+  skills: {
+    popa: 'Popa Knows Best: Ponders possum life and carries Possum: DMG Reduction & Heal Reduction. '
+      + 'Sometimes Plays Dead to continuously deal AoE damage nearby.',
+  },
+};
+function fillFromGame(list) {
+  const stale = [];
+  for (const t of list) {
+    const role = FROM_GAME.roles[t.family];
+    if (role) { if (t.role) stale.push(`${t.name} role`); else t.role = role; }
+    const skill = FROM_GAME.skills[t.slug];
+    if (skill) { if (t.skill) stale.push(`${t.name} skill`); else t.skill = skill; }
+  }
+  if (stale.length) console.warn(`  the wiki now has ${stale.join(', ')}: drop them from FROM_GAME`);
+}
+
 async function main() {
   const withImages = !process.argv.includes('--no-images');
 
@@ -623,6 +647,7 @@ async function main() {
   console.log(`  ${list.length} Tatari`);
 
   const families = groupFamilies(list);
+  fillFromGame(list);
   console.log(`  ${families} evolution families`);
 
   console.log('Fetching Horde Invasion skills...');
