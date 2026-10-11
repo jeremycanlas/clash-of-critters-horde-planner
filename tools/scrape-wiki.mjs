@@ -613,13 +613,16 @@ async function fetchIcons() {
  * What the game shows and the wiki's Tatari table leaves blank: read off the
  * game, filled in only where the wiki has nothing, so the wiki still wins once
  * it catches up (then delete the entry). Roles are per line, skills per Tatari.
- * Popa: read on 2026-10-11 off Popa's own panel (shield badge: Tank).
+ * Popa line: read on 2026-10-11 off the game's panels (shield badge: Tank).
  */
 const FROM_GAME = {
   roles: { Popa: 'Tank' },
   skills: {
     popa: 'Popa Knows Best: Ponders possum life and carries Possum: DMG Reduction & Heal Reduction. '
       + 'Sometimes Plays Dead to continuously deal AoE damage nearby.',
+    popapouch: "Pouch Trouble: Ponders possum life and carries Possum: DMG Reduction & Heal Reduction. Sometimes Plays Dead to continuously deal AoE damage nearby. Entrusts the baby to 1 ally, granting them Possum: ATK & DEF Boost.",
+    popagrind: "The Grind Goes On: Ponders possum life and carries Possum: DMG Reduction & Heal Reduction. Sometimes Plays Dead to continuously deal AoE damage nearby. Entrusts babies to 2 allies, granting them Possum: ATK & DEF Boost.",
+    popafam: "All for the Fam: Ponders possum life and carries Possum: DMG Reduction & Heal Reduction. Sometimes Plays Dead to continuously deal AoE damage nearby. Entrusts babies to 3 allies, granting them Possum: ATK & DEF Boost. Popafam carries Aura: Rock whenever on the field.",
   },
 };
 function fillFromGame(list) {
