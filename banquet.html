@@ -97,10 +97,11 @@
           <button id="bq-add" class="btn btn--primary" type="submit">Add UID</button>
         </div>
         <p id="bq-mine-error" class="tr-form__error" role="alert" hidden></p>
-        <details id="bq-mine-fold" open>
-        <summary><span class="bq-mine__fold">Your list</span></summary>
-        <!-- Yours that someone saw no icon on: the MVP has not logged in since the reset. -->
+        <!-- Yours that someone saw no icon on: the MVP has not logged in since the reset.
+             Outside the fold, so the list can stay folded and this still shows. -->
         <p id="bq-remind" class="bq-remind" hidden></p>
+        <details id="bq-mine-fold">
+        <summary><span class="bq-mine__fold">Your list</span></summary>
         <ul id="bq-my" class="bq-my"></ul>
         </details>
       </form>
@@ -115,7 +116,10 @@
           <button class="bq-tile" type="button" data-show="notin" aria-pressed="false"><span>Not logged in</span><b data-n="notin">0</b></button>
           <button class="bq-tile" type="button" data-show="full" aria-pressed="false"><span>Full</span><b data-n="full">0</b></button>
         </div>
-        <button id="bq-run-start" class="btn btn--primary bq-run-start" type="button" hidden></button>
+        <div class="bq-run-row">
+          <button id="bq-run-start" class="btn btn--primary bq-run-start" type="button" hidden></button>
+          <label id="bq-run-mine-label" class="bq-run-mine" hidden><input id="bq-run-mine" type="checkbox"> Only my UIDs</label>
+        </div>
         <!-- Your own count: how many of this gold rush's banquets you have claimed. -->
         <p id="bq-claimed" class="muted bq-claimed" hidden></p>
         <div class="bq-bar bq-bar--pinned">

@@ -118,9 +118,8 @@ function diff(before, after) {
   latest.unshift(...said.reverse().map((text) => ({ text, at })));
   latest.length = Math.min(latest.length, 20);
 }
-let folded = false; // Your UIDs is folded or not once, on arrival; after that it is yours
+let folded = false; // Your list is folded or not once, on arrival; after that it is yours
 let drawnGroups = ''; // the groups and names the View as buttons were last drawn from
-let wasAsleep = []; // your UIDs not logged in at the last render, so a new one opens the fold
 
 const status = (text) => { $('#bq-status').textContent = text; $('#bq-status').hidden = !text; };
 /* A round is one gold rush, named by its reset (00:00 UTC, 8am Manila): when
@@ -554,13 +553,10 @@ function render() {
     <button type="button" class="btn btn--quiet" data-remind="${asleep.join(', ')}">Copy a reminder</button>` : '';
   $('#bq-mine .bq-mine__actions').hidden = past;
   $('#bq-mine-n').textContent = mineShown.length ? `(${mineShown.length})` : '';
-  /* Folded on arrival when there is nothing left to do in it; never while it
-     is being used. One of yours not logged in is something to do: the
-     reminder to copy is in there, so it opens, on arrival or whenever one
-     newly turns not logged in. Folding it again after that is yours. */
-  if (!folded) { $('#bq-mine-fold').open = !!asleep.length || !!state.covered || !((past || state.shared) && mineShown.length); folded = true; }
-  else if (asleep.some((u) => !wasAsleep.includes(u))) $('#bq-mine-fold').open = true;
-  wasAsleep = asleep;
+  /* Folded on arrival unless it is empty, so a long list is not scrolled past
+     every visit (asked for on 11 Oct). The reminder sits outside it. Opening
+     it after that is yours. */
+  if (!folded) { $('#bq-mine-fold').open = !mineShown.length; folded = true; }
   /* The groups are Discord roles, and a role can be added or renamed while
      the page is open: the group buttons and the picker are redrawn whenever
      the set or a name changes, not only on the first answer. */
@@ -910,6 +906,7 @@ function renderCards(past) {
   if (typing) { const box = $('#bq-cards [data-likes-input]'); box?.focus(); box?.setSelectionRange(box.value.length, box.value.length); }
   const due = past ? 0 : runQueue().length;
   $('#bq-run-start').hidden = past;
+  $('#bq-run-mine-label').hidden = past || !state.mine.length;
   $('#bq-run-start').disabled = !due;
   $('#bq-run-start').textContent = due ? `Start claim run · ${due} to go` : 'Claim run: nothing to check right now';
   // Yours, in view: a gift each, so this is what this gold rush has given you so far.
@@ -937,8 +934,16 @@ const fromMine = (list) => {
   const at = Math.floor((cluster * list.length) / CLUSTERS);
   return [...list.slice(at), ...list.slice(0, at)];
 };
+// Only my UIDs: the run goes through your own banquets alone. Kept per browser.
+const RUNMINE = 'coc.banquet.runmine';
+try { $('#bq-run-mine').checked = localStorage.getItem(RUNMINE) === '1'; } catch { /* off */ }
+$('#bq-run-mine').addEventListener('change', (e) => {
+  try { if (e.target.checked) localStorage.setItem(RUNMINE, '1'); else localStorage.removeItem(RUNMINE); } catch { /* this visit only */ }
+  render();
+});
 function runQueue() {
-  const list = state.banquets.filter((b) => !b.grp || inView(b.grp));
+  const mine = $('#bq-run-mine').checked ? new Set(state.mine.map(keyOf)) : null;
+  const list = state.banquets.filter((b) => (!b.grp || inView(b.grp)) && (!mine || mine.has(keyOf(b))));
   const pick = (st, ok) => list.filter((b) => statusOf(b) === st && ok(b)).sort(ORDER[st]);
   return [...pick('claimable', (b) => !b.claimed), ...fromMine(pick('look', () => true)),
     ...fromMine(pick('notin', (b) => Date.now() - Date.parse(b.not_yet.at) >= RECHECK))].map(keyOf);

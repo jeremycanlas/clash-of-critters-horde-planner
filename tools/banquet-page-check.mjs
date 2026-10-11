@@ -421,10 +421,12 @@ try {
   if (process.env.BANQUET_SHOTS) await A.locator('#bq-mine').screenshot({ path: `${process.env.BANQUET_SHOTS}/mine-folded.png` });
   await A.click('[data-mark="not-yet"][data-uid="10000001"]');
   await A.waitForSelector('#bq-remind:not([hidden])');
-  assert.ok(await A.locator('#bq-mine-fold').evaluate((d) => d.open), 'one of hers turning not logged in opens Your UIDs');
+  assert.ok(!await A.locator('#bq-mine-fold').evaluate((d) => d.open), 'the reminder shows outside the folded list');
   await A.reload();
   await A.waitForSelector('#bq-list:not([hidden])');
-  assert.ok(await A.locator('#bq-remind').isVisible(), 'and it arrives open while one is, reminder in view');
+  assert.ok(!await A.locator('#bq-mine-fold').evaluate((d) => d.open), 'her list arrives folded');
+  assert.ok(await A.locator('#bq-remind').isVisible(), 'with the reminder in view');
+  await A.locator('#bq-mine-fold').evaluate((d) => { d.open = true; });
   assert.equal(await A.locator('#bq-my li', { hasText: '10000001' }).locator('.bq-mine__st').textContent(), 'not logged in');
   assert.match(await A.locator('#bq-remind').textContent(), /10000001 hasn't logged in since the reset/);
   await A.click('#bq-remind [data-remind]');
@@ -436,6 +438,11 @@ try {
   // The claim run: claimable ones you have not claimed, then unchecked ones; not
   // Eli's, checked 5 minutes ago. One at a time, copied, three answers and a skip.
   const due = Number((await A.locator('#bq-run-start').textContent()).match(/(\d+) to go/)[1]);
+  // Only my UIDs: the run through her own banquets alone, and back.
+  await A.check('#bq-run-mine');
+  const mineDue = Number((await A.locator('#bq-run-start').textContent()).match(/(\d+) to go/)?.[1] ?? 0);
+  assert.ok(mineDue >= 1 && mineDue < due, `only hers: ${mineDue} of ${due}`);
+  await A.uncheck('#bq-run-mine');
   assert.equal(due, Number(await A.locator('[data-n="claimable"]').textContent()) + Number(await A.locator('[data-n="look"]').textContent()),
     'claimable and unchecked, not one checked within the hour');
   await A.click('#bq-run-start');
