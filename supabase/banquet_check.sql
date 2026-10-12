@@ -51,6 +51,7 @@ end $$;
 \i supabase/migrations/044_banquet_leaders_no_private.sql
 \i supabase/migrations/045_banquet_follow_group.sql
 \i supabase/migrations/046_banquet_review_fixes.sql
+\i supabase/migrations/047_banquet_member_stats.sql
 
 -- Real entries would skew the counts. Gone for this transaction only.
 delete from public.banquet_claims; delete from public.banquet_marks; delete from public.banquet_uids; delete from public.banquet_access; delete from public.banquet_events;
@@ -693,6 +694,26 @@ do $$ declare l jsonb; begin
   assert l -> 'groups' -> 1 -> 'boards' -> 'scout' -> 'top' -> 0 ->> 'name' = 'zz_c', 'Group 2''s own boards';
 end $$;
 
+-- ---------------------------------------------------------------- member numbers (047)
+-- Viewers only: every member of each group, zeros too, no private list.
+do $$ declare s jsonb; one jsonb; begin
+  s := public.banquet_member_stats('2020-01-02');
+  assert (select array_agg((x ->> 'grp')::int order by 1) from jsonb_array_elements(s -> 'groups') x) = '{1,2}', 'groups 1 and 2, not the private list';
+  one := (select jsonb_object_agg(x ->> 'name', jsonb_build_array((x ->> 'uids')::int, (x ->> 'claims')::int, (x ->> 'checks')::int))
+            from jsonb_array_elements(s -> 'groups' -> 0 -> 'members') x);
+  assert one = '{"zz_a": [1, 1, 3], "zz_b": [3, 2, 3], "zz_v": [0, 0, 0], "zz_w": [0, 0, 0]}', 'Group 1: uids, claims, checks; got ' || one::text;
+  assert s -> 'groups' -> 0 -> 'members' -> 0 ->> 'name' = 'zz_b', 'busiest first';
+  assert (select x ->> 'checks' from jsonb_array_elements(s -> 'groups' -> 1 -> 'members') x where x ->> 'name' = 'zz_c') = '1', 'Group 2''s own';
+  assert position('99000000000000030' in s::text) = 0, 'no Discord ids in the answer';
+  assert (public.banquet_member_stats(all_time => true) ->> 'round') is null, 'all time';
+end $$;
+select pg_temp.as_(1);
+do $$ begin
+  begin perform public.banquet_member_stats(); raise exception 'member saw it';
+  exception when raise_exception then if sqlerrm = 'member saw it' then raise; end if; end;
+end $$;
+select pg_temp.as_(4);
+
 -- ---------------------------------------------------------------- server nicknames (043)
 -- Discord answers A's check with a nickname in this server: it becomes A's name
 -- everywhere, every round, and nobody else's of the same old name.
@@ -839,7 +860,7 @@ begin
   got := array(select p.proname::text from pg_proc p
                 where p.pronamespace = 'public'::regnamespace and p.proname like 'banquet%'
                   and has_function_privilege('authenticated', p.oid, 'execute') order by 1);
-  assert got = '{banquet_access_log,banquet_add,banquet_changes,banquet_check,banquet_claim,banquet_copies,banquet_edit,banquet_leaders,banquet_likes_set,banquet_mark,banquet_mark_undo,banquet_next,banquet_note_copy,banquet_remove,banquet_round,banquet_schedule_set,banquet_state}',
+  assert got = '{banquet_access_log,banquet_add,banquet_changes,banquet_check,banquet_claim,banquet_copies,banquet_edit,banquet_leaders,banquet_likes_set,banquet_mark,banquet_mark_undo,banquet_member_stats,banquet_next,banquet_note_copy,banquet_remove,banquet_round,banquet_schedule_set,banquet_state}',
          'signed-in users can call exactly the page''s functions, got ' || got::text;
   assert not exists (select 1 from pg_proc p where p.pronamespace = 'public'::regnamespace and p.proname like 'banquet%'
                       and has_function_privilege('anon', p.oid, 'execute')), 'anonymous visitors can call nothing';

@@ -44,6 +44,14 @@
       <p class="muted lb-note">Each UID counts once, for whoever did it first. A mark changed or undone within
         5 minutes does not count. Updated every 5 minutes.</p>
       <div id="lb-groups"></div>
+
+      <!-- Viewers only: everyone's numbers, per group, for the same gold rush (047). -->
+      <section id="lb-members" class="lb-members" hidden>
+        <h2>Members</h2>
+        <p class="muted lb-note">Every member who has signed in here, zeros included. Checks are UIDs they marked open,
+          full or not logged in. Tap a column to sort. Only viewers see this.</p>
+        <div id="lb-members-list"></div>
+      </section>
     </section>
 
     <p id="lb-status" class="muted tr-status" role="status" aria-live="polite">Loading…</p>

@@ -229,8 +229,17 @@ async function open(me, opts) {
       }
       const b = { people: 2, you: { rank: 2, n: 3 }, top: [{ name: 'Ben', n: 5, rank: 1, you: false }, { name: me.name, n: 3, rank: 2, you: true }] };
       return json({ round: body.all_time ? null : '2026-09-24', current: '2026-09-24', rounds: ['2026-09-24', '2026-09-17'],
-        groups: [{ name: 'Group 1', built_at: new Date().toISOString(),
+        groups: [{ name: 'Group 1', built_at: new Date().toISOString(), ...(me.all ? { grp: 1 } : {}),
           boards: { scout: b, responder: { people: 0, you: null, top: [] }, sharer: b, likes: b } }] });
+    }
+    // Member numbers (047): viewers only, as the database refuses anyone else.
+    if (fn === 'banquet_member_stats') {
+      if (!me.all) return route.fulfill({ status: 400, contentType: 'application/json', body: '{"code":"P0001","message":"Only viewers see the member numbers."}' });
+      return json({ round: '2026-09-24', groups: [{ grp: 1, name: 'Group 1', members: [
+        { name: 'Ben', member: true, uids: 4, claims: 9, checks: 12 },
+        { name: 'Zed', member: true, uids: 6, claims: 20, checks: 0 },
+        { name: 'Idle', member: true, uids: 0, claims: 0, checks: 0 },
+        { name: 'Gone', member: false, uids: 2, claims: 1, checks: 1 }] }] });
     }
     if (fn === 'tracker_claim') return json(false);
     if (down) { if (['banquet_state', 'banquet_changes'].includes(fn)) tries++; return route.abort('internetdisconnected'); }
@@ -1060,6 +1069,25 @@ try {
   assert.ok(await L.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'no sideways scroll on a phone');
   assert.deepEqual(await axe(L), [], 'axe, leaderboards');
   if (process.env.BANQUET_SHOTS) await L.screenshot({ path: `${process.env.BANQUET_SHOTS}/leaders-phone.png`, fullPage: true });
+  assert.ok(await L.locator('#lb-members').isHidden(), 'a member never sees the member numbers');
+  assert.equal(sent.filter((x) => x.who === 'Lea' && x.fn === 'banquet_member_stats').length, 0, 'nor asks for them');
+
+  // A viewer: everyone's numbers per group, sortable, copied for a sheet.
+  await V.goto(V.url().replace(/banquet\.html.*/, 'banquet-leaders.html'));
+  await V.waitForSelector('#lb-members:not([hidden]) .lb-mgroup');
+  assert.match(await V.locator('.lb-mgroup summary').textContent(), /Group 1 · 4 members, 1 did nothing/);
+  await V.click('.lb-mgroup summary');
+  const names = () => V.locator('.lb-mtable tbody tr td:first-child').allTextContents();
+  assert.deepEqual((await names()).map((t) => t.trim()), ['Ben', 'Gone (left)', 'Zed', 'Idle'], 'most checks first');
+  await V.click('[data-sort="claims"]');
+  assert.equal((await names())[0].trim(), 'Zed', 'sorted by claims');
+  assert.ok(await V.locator('.lb-mgroup').evaluate((d) => d.open), 'stays open when sorted');
+  await V.context().grantPermissions(['clipboard-read', 'clipboard-write']);
+  await V.click('[data-copy="0"]');
+  await V.waitForSelector('#toast.is-shown');
+  assert.match(await V.evaluate(() => navigator.clipboard.readText()), /^Member\tUIDs added\tClaims\tChecks\r?\nZed\t6\t20\t0\r?\n/, 'tab-separated, in the shown order');
+  assert.deepEqual(await axe(V), [], 'axe, member numbers');
+  if (process.env.BANQUET_SHOTS) await V.locator('#lb-members').screenshot({ path: `${process.env.BANQUET_SHOTS}/members.png` });
 
   assert.deepEqual([...ana.errors, ...flo.errors, ...cov.errors, ...eli.errors, ...vee.errors, ...bea.errors, ...out.errors, ...junk.errors, ...half.errors, ...duo.errors, ...lea.errors], [],
     'no script errors');

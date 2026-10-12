@@ -8,7 +8,7 @@
  */
 import { rest, signedIn, isConfigured } from './supabase.js';
 import { applyPrefs } from './prefs.js';
-import { $, esc } from './ui.js';
+import { $, esc, copyText, toast } from './ui.js';
 
 applyPrefs();
 
@@ -75,7 +75,66 @@ async function load(pick) {
   $('#lb-status').textContent = '';
   $('#lb-gate').hidden = true;
   $('#lb-app').hidden = false;
+  // Viewers' answers number their groups: they also get everyone's numbers (047).
+  const viewers = ok.filter(([x]) => x.data.groups.some((g) => 'grp' in g)).map(([, d]) => d);
+  $('#lb-members').hidden = !viewers.length;
+  if (viewers.length) await loadMembers(viewers, body);
 }
+
+// ------------------------------------------------------------------ members (viewers)
+
+const COLS = [['name', 'Member'], ['uids', 'UIDs added'], ['claims', 'Claims'], ['checks', 'Checks']];
+let stats = []; // [{ server, name, members: [{ name, member, uids, claims, checks }] }]
+let sortBy = 'checks';
+let opened = new Set(); // groups unfolded, kept across a round change
+
+async function loadMembers(viewers, body) {
+  const got = await Promise.all(viewers.map((d) => ask(d, 'banquet_member_stats', body)));
+  stats = got.flatMap((x, i) => (x.ok ? x.data.groups.map((g) => ({ ...g, server: viewers.length > 1 ? viewers[i].name : '' })) : []));
+  renderMembers();
+}
+
+// Ties go to whoever did more overall, then by name.
+const total = (m) => m.uids + m.claims + m.checks;
+const sorted = (list) => [...list].sort((a, b) => (sortBy === 'name'
+  ? a.name.localeCompare(b.name) : b[sortBy] - a[sortBy] || total(b) - total(a) || a.name.localeCompare(b.name)));
+const idle = (m) => !total(m);
+
+function renderMembers() {
+  $('#lb-members-list').innerHTML = stats.map((g, i) => {
+    const title = g.server ? `${g.server} · ${g.name}` : g.name;
+    const none = g.members.filter(idle).length;
+    return `<details class="panel lb-mgroup" data-i="${i}"${opened.has(title) ? ' open' : ''}>
+      <summary><b>${esc(title)}</b> <span class="muted">· ${g.members.length} member${g.members.length === 1 ? '' : 's'}${none ? `, ${none} did nothing` : ''}</span></summary>
+      <div class="lb-mtools"><button type="button" class="btn btn--quiet" data-copy="${i}">Copy for Sheets</button></div>
+      <div class="lb-mscroll"><table class="lb-mtable">
+        <thead><tr>${COLS.map(([k, label]) => `<th scope="col"${k === 'name' ? '' : ' class="is-n"'}
+          aria-sort="${k === sortBy ? (k === 'name' ? 'ascending' : 'descending') : 'none'}"><button type="button" data-sort="${k}">${label}</button></th>`).join('')}</tr></thead>
+        <tbody>${sorted(g.members).map((m) => `<tr class="${idle(m) ? 'is-idle' : ''}">
+          <td>${esc(m.name)}${m.member ? '' : ' <span class="muted">(left)</span>'}</td>
+          <td class="is-n">${m.uids}</td><td class="is-n">${m.claims}</td><td class="is-n">${m.checks}</td></tr>`).join('')
+          || '<tr><td colspan="4" class="muted">Nobody yet.</td></tr>'}</tbody>
+      </table></div>
+    </details>`;
+  }).join('') || '<p class="muted lb-empty">No groups to show.</p>';
+}
+
+$('#lb-members-list').addEventListener('toggle', (e) => {
+  const d = e.target.closest?.('details');
+  if (!d) return;
+  const title = d.querySelector('summary b').textContent;
+  if (d.open) opened.add(title); else opened.delete(title);
+}, true);
+$('#lb-members-list').addEventListener('click', async (e) => {
+  const sort = e.target.closest('[data-sort]');
+  if (sort) { sortBy = sort.dataset.sort; return renderMembers(); }
+  const copy = e.target.closest('[data-copy]');
+  if (!copy) return;
+  const g = stats[Number(copy.dataset.copy)];
+  const tsv = [COLS.map(([, label]) => label).join('\t'),
+    ...sorted(g.members).map((m) => [m.name + (m.member ? '' : ' (left)'), m.uids, m.claims, m.checks].join('\t'))].join('\n');
+  toast(await copyText(tsv) ? `Copied ${g.members.length} rows. Paste into a sheet.` : 'Could not copy.');
+});
 
 const minutes = (iso) => Math.max(0, Math.round((Date.now() - Date.parse(iso)) / 60000));
 
