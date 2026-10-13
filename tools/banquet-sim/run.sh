@@ -42,7 +42,7 @@ build() { # name, last migration
   q -d "$1" -f tools/banquet-sim/seed.sql >/dev/null
 }
 build sim_before 35
-build sim_after 39
+build sim_after 999   # every migration
 
 W=tools/banquet-sim
 bench() { # db, rate per second, scripts...
