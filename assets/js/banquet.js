@@ -1117,13 +1117,29 @@ const grpOf = (el) => (el.dataset.grp ? Number(el.dataset.grp) : null);
 $('#bq-mine').addEventListener('submit', async (e) => {
   e.preventDefault();
   const err = $('#bq-mine-error');
-  const uid = $('#bq-add-uid').value.trim();
+  const text = $('#bq-add-uid').value.trim();
+  // As the Discord reader finds them: 8 digits with no digit either side.
+  const uids = [...new Set(text.match(/(?<![0-9])[0-9]{8}(?![0-9])/g) ?? [])];
   err.hidden = true;
-  if (!/^[0-9]{8}$/.test(uid)) { err.textContent = 'A UID is 8 digits.'; err.hidden = false; return; }
+  if (!uids.length) { err.textContent = 'A UID is 8 digits.'; err.hidden = false; return; }
   const g = state.groups ? group || (state.groups.length === 1 ? state.groups[0] : Number($('#bq-add-grp').value)) || null : null;
   if (state.groups && !g) { err.textContent = combined ? 'Pick a server.' : 'Pick a group.'; err.hidden = false; return; }
   // Back in the box after every add, so the next one can be typed straight away.
   const again = () => $('#bq-add-uid').focus();
+  if (uids.length > 1) {
+    $('#bq-add').disabled = true;
+    const got = await call('banquet_add_many', { targets: uids.map(Number), g });
+    $('#bq-add').disabled = false;
+    again();
+    if (!got.ok) { err.textContent = got.why; err.hidden = false; return; }
+    $('#bq-add-uid').value = '';
+    for (const u of uids) markSeen(`${g ?? ''}:${u}`);
+    // Fewer than pasted: some were already in the list.
+    toast(`Added ${got.data} of ${uids.length} UIDs`);
+    fresh();
+    return;
+  }
+  const [uid] = uids;
   // Adding one you have already did nothing and said nothing, which reads as broken.
   if (state.mine.some((m) => m.uid === uid && (m.grp ?? null) === g)) {
     err.textContent = `${uid} is already in your list.`; err.hidden = false; $('#bq-add-uid').value = ''; again(); return;
@@ -1136,6 +1152,11 @@ $('#bq-mine').addEventListener('submit', async (e) => {
   $('#bq-add-uid').value = '';
   markSeen(`${g ?? ''}:${uid}`); // yours: not news to you
   fresh();
+});
+
+// Enter adds, as the one-line box did; a pasted list keeps its line breaks.
+$('#bq-add-uid').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); $('#bq-mine').requestSubmit(); }
 });
 
 /* Edit, for UIDs added here: the row becomes a box with the UID in it. Save

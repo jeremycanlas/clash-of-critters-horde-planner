@@ -285,6 +285,11 @@ async function open(me, opts) {
       const a = changesFor(me, state(me));
       return json(body.packed ? { ...a, cards: [], packed: [pack(a.cards, !!me.all, true)] } : a);
     }
+    if (fn === 'banquet_add_many') {
+      const fresh = body.targets.map(String).filter((u) => !db.uids.some((x) => x.grp === g && x.uid === u && x.who === me.name));
+      for (const u of fresh) db.uids.push({ grp: g, uid: u, who: me.name, source: 'site' });
+      return json(fresh.length);
+    }
     if (fn === 'banquet_add') { db.uids.push({ grp: g, uid: String(body.target), who: me.name, source: 'site' }); return ok(); }
     if (fn === 'banquet_claim') {
       db.claims = db.claims.filter((c) => !(c.grp === g && c.uid === String(body.target) && c.who === me.name));
@@ -958,6 +963,13 @@ try {
     <= document.querySelector('#bq-my').getBoundingClientRect().top), 'the box sits above the list, so adding never pushes it down');
   assert.ok(await C.locator('#bq-list').isHidden(), 'and the list stays covered past four');
   assert.match(await C.locator('#bq-locked').textContent(), /The list opens at the reset, .+ your time\. Add your UIDs now/, 'saying when it opens');
+  // A pasted Discord message, two lines: every UID in it, the 9-digit one and the one they have left out.
+  await C.fill('#bq-add-uid', 'Jacc | 24409281 posting: 91000006, 91000007\n91000001 and 123456789');
+  await C.press('#bq-add-uid', 'Enter');
+  await C.waitForSelector('#bq-my [data-copy="91000007"]');
+  assert.deepEqual(lastSent('Cov', 'banquet_add_many').targets, [24409281, 91000006, 91000007, 91000001], 'every 8-digit number in the paste, once each');
+  assert.match(await C.locator('#toast').textContent(), /Added 3 of 4 UIDs/, 'saying how many were new');
+  assert.equal(await C.inputValue('#bq-add-uid'), '', 'and the box is cleared');
   assert.deepEqual(await axe(C), [], 'axe, covered');
   // Covered, no cards: likes noted on your own UIDs, in Your UIDs.
   await C.locator('#bq-my li', { hasText: '91000001' }).locator('[data-mylikes]').click();

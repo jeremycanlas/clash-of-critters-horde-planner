@@ -100,7 +100,7 @@ const pct = (xs, p) => (xs.length ? xs[Math.min(xs.length - 1, Math.floor((p / 1
 function report(from, to, label) {
   const w = log.filter((x) => x.at >= from && x.at < to);
   const ms = w.map((x) => x.ms).sort((a, b) => a - b);
-  const bad = w.filter((x) => typeof x.status !== 'number' || x.status >= 500).length;
+  const bad = w.filter((x) => typeof x.status !== 'number' || x.status >= 400).length; // a 401 is a broken test, not a pass
   const secs = (to - from) / 1000;
   console.log(`${label.padEnd(10)} ${String(w.length).padStart(6)} req  ${(w.length / secs).toFixed(1).padStart(6)}/s  `
     + `failed ${String(bad).padStart(5)} (${(w.length ? (100 * bad) / w.length : 0).toFixed(1).padStart(5)}%)  `

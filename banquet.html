@@ -92,7 +92,9 @@
              the box stays put and the one just added is right below it. Only the
              list folds: the box stays open either way. -->
         <div class="bq-mine__actions">
-          <input id="bq-add-uid" class="field" inputmode="numeric" pattern="[0-9]{8}" maxlength="8" autocomplete="off" aria-label="Add a UID">
+          <!-- A box, not a field: a pasted Discord message or Excel column keeps its
+               line breaks, and every UID in it is added (050). -->
+          <textarea id="bq-add-uid" class="field" rows="1" autocomplete="off" placeholder="UID, or paste a list" aria-label="Add a UID, or paste a list of them"></textarea>
           <select id="bq-add-grp" class="field" aria-label="Which group" hidden></select>
           <button id="bq-add" class="btn btn--primary" type="submit">Add UID</button>
         </div>

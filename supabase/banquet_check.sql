@@ -54,6 +54,7 @@ end $$;
 \i supabase/migrations/047_banquet_member_stats.sql
 \i supabase/migrations/048_banquet_reads_from_switch.sql
 \i supabase/migrations/049_banquet_packed.sql
+\i supabase/migrations/050_banquet_add_many_likes_round.sql
 
 -- Real entries would skew the counts. Gone for this transaction only.
 delete from public.banquet_claims; delete from public.banquet_marks; delete from public.banquet_uids; delete from public.banquet_access; delete from public.banquet_events;
@@ -188,6 +189,14 @@ begin
   perform public.banquet_remove(70000000 + i) from generate_series(1, 30) i;
   s := public.banquet_state();
   assert jsonb_array_length(pg_temp.settled(s)) = 8, 'and removing them leaves the eight';
+
+  -- A pasted list: in one go, the example and short ones left out, twice is once.
+  assert public.banquet_add_many(array[70000001, 70000002, 70000002, 12345678, 1234567]) = 2, 'two of the pasted list are real UIDs';
+  assert public.banquet_add_many(array[70000001, 70000003]) = 1, 'one already yours: one added';
+  assert (select count(*) from jsonb_array_elements(public.banquet_state() -> 'mine')) = 7, 'and they are yours';
+  perform public.banquet_remove(70000000 + i) from generate_series(1, 3) i;
+  begin perform public.banquet_add_many(array(select 70000000 + i from generate_series(1, 301) i)::bigint[]); raise exception '301 added';
+  exception when raise_exception then if sqlerrm = '301 added' then raise; end if; end;
 
   begin perform public.banquet_add(12345678); raise exception 'the example added';
   exception when raise_exception then if sqlerrm = 'the example added' then raise; end if; end;
@@ -656,7 +665,9 @@ insert into public.banquet_likes (grp, uid, likes, discord_id, by_name, at) valu
   (1, 20200001, 150, '990000000000000301', 'zz_a', '2020-01-01'),
   (1, 20200002, 0, '990000000000000301', 'zz_a', '2020-01-01 23:00+00'),
   (1, 20200003, 50, '990000000000000302', 'zz_b', '2020-01-01 21:00+00'),
-  (1, 20200003, 50, '990000000000000302', 'zz_b', '2020-01-02 03:00+00');   -- after the reset: not before it
+  (1, 20200003, 50, '990000000000000302', 'zz_b', '2020-01-02 03:00+00'),   -- after the reset: B was first anyway
+  (1, 20200004, 10, '990000000000000301', 'zz_a', '2020-01-03'),            -- during the gold rush: its own (050)
+  (1, 20200005, 10, '990000000000000301', 'zz_a', '2020-01-09');            -- past its six days: the next one's
 set local role authenticated;
 select pg_temp.as_(1);
 do $$
@@ -672,8 +683,8 @@ begin
            from jsonb_array_elements(b -> 'responder' -> 'top') x), 'responder: one each in the first hour, tied first';
   assert (select jsonb_object_agg(x ->> 'name', (x ->> 'n')::int) from jsonb_array_elements(b -> 'sharer' -> 'top') x) = '{"zz_a": 1, "zz_b": 1}',
          'sharer: a UID first posted and claimed by someone else, got ' || (b -> 'sharer')::text;
-  assert (select jsonb_object_agg(x ->> 'name', (x ->> 'n')::int) from jsonb_array_elements(b -> 'likes' -> 'top') x) = '{"zz_a": 1, "zz_b": 2}',
-         'likes: the first to note each building before the reset, got ' || (b -> 'likes')::text;
+  assert (select jsonb_object_agg(x ->> 'name', (x ->> 'n')::int) from jsonb_array_elements(b -> 'likes' -> 'top') x) = '{"zz_a": 2, "zz_b": 2}',
+         'likes: the first to note each building in this gold rush, got ' || (b -> 'likes')::text;
   assert position('99000000000000030' in l::text) = 0, 'no Discord ids in the answer';
   assert (select bool_or((x ->> 'you')::boolean) from jsonb_array_elements(b -> 'scout' -> 'top') x), 'your own row says so';
   assert (public.banquet_leaders(all_time => true) ->> 'round') is null, 'all time';
@@ -867,7 +878,7 @@ begin
   got := array(select p.proname::text from pg_proc p
                 where p.pronamespace = 'public'::regnamespace and p.proname like 'banquet%'
                   and has_function_privilege('authenticated', p.oid, 'execute') order by 1);
-  assert got = '{banquet_access_log,banquet_add,banquet_changes,banquet_check,banquet_claim,banquet_copies,banquet_edit,banquet_leaders,banquet_likes_set,banquet_mark,banquet_mark_undo,banquet_member_stats,banquet_next,banquet_note_copy,banquet_remove,banquet_round,banquet_schedule_set,banquet_state}',
+  assert got = '{banquet_access_log,banquet_add,banquet_add_many,banquet_changes,banquet_check,banquet_claim,banquet_copies,banquet_edit,banquet_leaders,banquet_likes_set,banquet_mark,banquet_mark_undo,banquet_member_stats,banquet_next,banquet_note_copy,banquet_remove,banquet_round,banquet_schedule_set,banquet_state}',
          'signed-in users can call exactly the page''s functions, got ' || got::text;
   assert not exists (select 1 from pg_proc p where p.pronamespace = 'public'::regnamespace and p.proname like 'banquet%'
                       and has_function_privilege('anon', p.oid, 'execute')), 'anonymous visitors can call nothing';

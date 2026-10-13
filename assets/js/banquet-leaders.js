@@ -25,7 +25,7 @@ const BOARDS = [
   ['scout', 'Scout', 'First to check a UID: open, full or not logged in'],
   ['responder', 'First responder', 'First to find one open, in the hour after the reset'],
   ['sharer', 'Sharer', 'UIDs they shared first that someone else claimed from'],
-  ['likes', 'Likes noter', 'Buildings whose likes they noted first, before the reset'],
+  ['likes', 'Likes noter', 'Buildings whose likes they noted first, in this gold rush'],
 ];
 const ALL = 'all';
 
