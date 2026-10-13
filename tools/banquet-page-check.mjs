@@ -504,6 +504,8 @@ try {
   await A.waitForFunction(() => document.querySelector('#bq-run-step')?.textContent.startsWith('4 /'));
   const looked = await A.locator('.bq-run__uid').textContent();
   assert.match(await A.locator('.bq-run__about').textContent(), /not checked yet/);
+  assert.match(await A.locator('.bq-run__hint').textContent(), /0 likes means full/, 'no likes noted: the run says how to read a portrait');
+  if (process.env.BANQUET_SHOTS) await A.screenshot({ path: `${process.env.BANQUET_SHOTS}/run-hint-phone.png` });
   await A.click('[data-run="full"]');
   await A.waitForFunction((u) => document.querySelector('.bq-run__uid')?.textContent !== u, looked);
   const asleep = await A.locator('.bq-run__uid').textContent();

@@ -263,6 +263,7 @@
 .bq-run__uid.tr-copy { font-family: var(--font-mono); font-size: 34px; font-weight: 700; letter-spacing: 1px; padding: 2px 12px; }
 .bq-run__about { font-size: 13px; color: var(--text-dim); }
 .bq-run__ask { margin: 0; text-align: center; font-weight: 650; }
+.bq-run__hint { margin: 0; text-align: center; font-size: 13px; color: var(--text-dim); }
 .bq-run__answers { display: flex; flex-direction: column; gap: var(--s2); }
 .bq-run__btn {
   display: flex; align-items: center; gap: 14px; min-height: 64px; padding: 6px 16px;

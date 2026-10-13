@@ -1016,6 +1016,7 @@ function renderRun() {
       <span class="bq-run__about">${tagOf(b.grp)} ${b.claims ? `at least ${b.claims} of 50 gone` : 'no claims yet'} · ${seen}</span>
     </section>
     <p class="bq-run__ask">What did the game show?</p>
+    ${b.likes_before || b.likes_now ? '' : `<p class="bq-run__hint">No likes noted for it yet. A portrait with 0 likes means full. With more than 0 it may be left from last gold rush, so pick Not logged in.</p>`}
     <div class="bq-run__answers">
       <button type="button" class="bq-run__btn is-gift" data-run="gift">${icon('gift')}<span>Gift · I claimed it<small>Counts your claim, goes to the next</small></span></button>
       <button type="button" class="bq-run__btn is-full" data-run="full">${icon('full')}<span>Portrait · it's full<small>Takes it off everyone's list</small></span></button>
