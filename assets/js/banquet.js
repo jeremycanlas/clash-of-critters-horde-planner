@@ -678,7 +678,12 @@ function renderLog(on, past) {
    view still have none, and offers to show just those. */
 const DUE = 24 * 3600 * 1000;
 let onlyUnnoted = false;
-const unnoted = (b) => !b.likes_now;
+// Before the reset a count noted now lands as the round's "before", so that is
+// the one to look at there. ponytail: "fresh" is the 2 days the list is open
+// before its reset; read the schedule's switch time if that ever changes.
+const unnoted = (b) => (before(state.round)
+  ? !(b.likes_before && new Date(b.likes_before.at) >= opens(state.round) - 2 * 864e5)
+  : !b.likes_now);
 /* Likes: All, Has likes (more than 0: MVP before, so a portrait may be old),
    0 likes (never MVP before: a portrait there means full) or Not noted (nobody
    has looked). By the newest count, since the reset or before it. */

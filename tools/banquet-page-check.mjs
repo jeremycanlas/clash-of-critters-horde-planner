@@ -666,6 +666,14 @@ try {
   if (process.env.BANQUET_SHOTS) await A.screenshot({ path: `${process.env.BANQUET_SHOTS}/likes-due-phone.png` });
   await A.click('#bq-likes-due [data-unnoted]');
   assert.equal(await A.locator('#bq-cards li[data-key=":10000002"]').count(), 1, 'Show all brings them back');
+  // Before the reset, a count noted in the days just before it is this round's: noted, not missing.
+  await A.clock.setSystemTime(new Date('2026-09-23T22:00:00Z'));
+  await A.clock.runFor(16000);
+  await A.waitForFunction(() => /Reset in 2 h/.test(document.querySelector('#bq-likes-due')?.textContent));
+  assert.equal(await A.locator('#bq-cards li[data-key=":60000000"]').count(), 1, 'the building with 100 likes is in the list');
+  await A.click('#bq-likes-due [data-unnoted]');
+  assert.equal(await A.locator('#bq-cards li[data-key=":60000000"]').count(), 0, 'before the reset: noted the day before counts');
+  await A.click('#bq-likes-due [data-unnoted]');
   await A.clock.setSystemTime(realNow + 40000);
   await A.clock.runFor(16000);
   assert.equal(await A.locator('#bq-cards [data-likes-input]').count(), 0, 'Escape closes it');
