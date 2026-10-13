@@ -52,6 +52,7 @@ end $$;
 \i supabase/migrations/045_banquet_follow_group.sql
 \i supabase/migrations/046_banquet_review_fixes.sql
 \i supabase/migrations/047_banquet_member_stats.sql
+\i supabase/migrations/048_banquet_reads_from_switch.sql
 
 -- Real entries would skew the counts. Gone for this transaction only.
 delete from public.banquet_claims; delete from public.banquet_marks; delete from public.banquet_uids; delete from public.banquet_access; delete from public.banquet_events;
@@ -126,6 +127,9 @@ begin
   assert public.banquet_ack(1::smallint, 'c', 't', '[{"id": "1", "content": "257614831", "author": {"id": "2"}, "timestamp": "2026-10-06T00:00:00Z"}]', true, now()) = 0
          or exists (select 1 from public.banquet_settings where ack_up is not null), 'with no emojis set, nothing is answered and Discord is not asked';
   assert public.banquet_reads_from('2026-10-07') = '2026-10-06 00:00+08' and public.banquet_reads_from('2026-09-30') = '2026-09-30 00:00+00', 'a channel is read from Duneside''s switch, older rounds from their reset';
+  insert into public.banquet_schedule values ('2026-10-15', '2026-10-13 00:00+00') on conflict (round) do update set switch_at = excluded.switch_at;
+  assert public.banquet_reads_from('2026-10-15') = '2026-10-13 00:00+00', 'a scheduled gold rush is read from its switch, not its reset';
+  delete from public.banquet_schedule where round = '2026-10-15';
 end $$;
 
 -- ---------------------------------------------------------------- the channels
@@ -435,7 +439,9 @@ do $$
 declare c jsonb;
 begin
   c := pg_temp.card(public.banquet_state(), '10000001');
-  if now() >= public.banquet_round()::timestamp at time zone 'UTC' then
+  if now() >= public.banquet_round()::timestamp at time zone 'UTC' + interval '6 days' then -- no next gold rush set: past the round's window
+    assert (c -> 'likes_before' ->> 'n')::int = 100 and c -> 'likes_now' = 'null'::jsonb, 'past the round''s six days, a new count belongs to neither';
+  elsif now() >= public.banquet_round()::timestamp at time zone 'UTC' then
     assert (c -> 'likes_before' ->> 'n')::int = 100 and c -> 'likes_before' ->> 'by' = 'zz_b', 'the last count before the reset, not the one before it';
     assert (c -> 'likes_now' ->> 'n')::int = 150 and c -> 'likes_now' ->> 'by' = 'zz_a', 'and the last since';
   else -- before this round's reset, a count noted now is its "before"
