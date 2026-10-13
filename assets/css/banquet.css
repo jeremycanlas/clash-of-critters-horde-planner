@@ -20,7 +20,8 @@
 .bq-src { font-size: 12px; color: var(--text-mute); }
 .bq-mine__actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); }
 .bq-mine__actions[hidden], .bq-mine select[hidden], .bq-view[hidden] { display: none; }
-.bq-mine__actions textarea { width: 10em; resize: vertical; min-height: 2.4em; font-size: 15px; font-variant-numeric: tabular-nums; }
+/* Grows with a pasted list (where the browser can), up to about eight lines. */
+.bq-mine__actions textarea { width: 18em; resize: vertical; field-sizing: content; min-height: 2.4em; max-height: 12em; font-size: 15px; font-variant-numeric: tabular-nums; }
 .bq-mine .tr-form__error { margin: 0; }
 
 /* Only ever drawn for someone who sees both groups. */

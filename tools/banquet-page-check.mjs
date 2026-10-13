@@ -609,7 +609,7 @@ try {
   assert.deepEqual(await axe(A), [], 'axe, the Full question');
   await A.setViewportSize({ width: 320, height: 640 });
   assert.equal(await A.evaluate(() => innerWidth), 320, 'the question fits a 320px phone: it does not widen the page');
-  if (process.env.BANQUET_SHOTS) { await deeCard.scrollIntoViewIfNeeded(); await A.screenshot({ path: `${process.env.BANQUET_SHOTS}/likes-ask-phone.png` }); }
+  if (process.env.BANQUET_SHOTS) { await deeCard.scrollIntoViewIfNeeded().catch(() => {}); await A.screenshot({ path: `${process.env.BANQUET_SHOTS}/likes-ask-phone.png` }); }
   await A.setViewportSize(devices['iPhone SE'].viewport);
   await deeCard.locator('.bq-ask [data-mark="not-yet"]').click();
   await A.waitForFunction(() => document.querySelector('#bq-cards li[data-key=":60000000"]')?.classList.contains('is-notin'));
@@ -643,7 +643,7 @@ try {
   await A.fill('#bq-cards [data-likes-input]', '7');
   await A.setViewportSize({ width: 320, height: 640 });
   assert.equal(await A.evaluate(() => innerWidth), 320, 'the likes box fits a 320px phone');
-  if (process.env.BANQUET_SHOTS) { await ana2.scrollIntoViewIfNeeded(); await A.screenshot({ path: `${process.env.BANQUET_SHOTS}/likes-box-320.png` }); }
+  if (process.env.BANQUET_SHOTS) { await ana2.scrollIntoViewIfNeeded().catch(() => {}); await A.screenshot({ path: `${process.env.BANQUET_SHOTS}/likes-box-320.png` }); }
   await A.setViewportSize(devices['iPhone SE'].viewport);
   await A.clock.runFor(16000);
   await A.waitForTimeout(200);
@@ -731,6 +731,10 @@ try {
   assert.equal(await V.locator('[data-group="3"]').textContent(), 'Private', 'it has its own button');
   assert.deepEqual(await V.locator('#bq-cards li[data-key]').evaluateAll((ls) => ls.map((l) => l.dataset.key)), ['3:39900001'], 'and only its banquets');
   assert.match(await V.locator('#bq-view-note').textContent(), /only the people added to it/);
+  if (process.env.BANQUET_SHOTS) {
+    await V.fill('#bq-add-uid', 'Jacc | 24409281 posting: 39900007, 39900008\n39900009');
+    await V.screenshot({ path: `${process.env.BANQUET_SHOTS}/paste-pc.png` });
+  }
   await V.fill('#bq-add-uid', '39900002');
   await V.click('#bq-add');
   await V.waitForTimeout(300);
@@ -965,6 +969,7 @@ try {
   assert.match(await C.locator('#bq-locked').textContent(), /The list opens at the reset, .+ your time\. Add your UIDs now/, 'saying when it opens');
   // A pasted Discord message, two lines: every UID in it, the 9-digit one and the one they have left out.
   await C.fill('#bq-add-uid', 'Jacc | 24409281 posting: 91000006, 91000007\n91000001 and 123456789');
+  if (process.env.BANQUET_SHOTS) await C.screenshot({ path: `${process.env.BANQUET_SHOTS}/paste-phone.png` });
   await C.press('#bq-add-uid', 'Enter');
   await C.waitForSelector('#bq-my [data-copy="91000007"]');
   assert.deepEqual(lastSent('Cov', 'banquet_add_many').targets, [24409281, 91000006, 91000007, 91000001], 'every 8-digit number in the paste, once each');
