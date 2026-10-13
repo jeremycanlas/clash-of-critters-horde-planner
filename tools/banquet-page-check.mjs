@@ -101,6 +101,28 @@ function changesFor(me, full) {
     mine: full.mine, cards, gone, events_new: full.events, synced_at: full.synced_at, ...(full.covered ? { covered: true } : {}),
     ...(full.groups ? { groups: full.groups, names: full.names, private: full.private } : {}) };
 }
+// As the database packs the list when the page asks (049), so the page is
+// checked through its unpacking. The second server's answers stay unpacked.
+function pack(cards, w, o) {
+  const n = [...new Set(cards.flatMap((c) => [...c.entered_by, ...c.claimed_by, c.full, c.not_yet?.by, c.open?.by,
+    c.likes_before?.by, c.likes_now?.by]).filter((x) => x != null))].sort();
+  const b = Math.floor(Date.parse('2026-09-15T00:00:00Z') / 1000);
+  const t = (x) => (x ? Math.floor(Date.parse(x) / 1000) - b : 0);
+  const ix = (x) => n.indexOf(x);
+  const c = cards.map((x) => {
+    const v = [Number(x.uid), ...(w ? [x.grp] : []), ...(o ? [(x.claimed ? 1 : 0) + (x.mine_site ? 2 : 0)] : []),
+      t(x.posted), x.entered_by.map(ix), x.claimed_by.length ? x.claimed_by.map(ix) : 0,
+      x.full ? [ix(x.full), t(x.full_at)] : 0,
+      x.not_yet ? [ix(x.not_yet.by), t(x.not_yet.at)] : 0, x.open ? [ix(x.open.by), t(x.open.at)] : 0,
+      x.likes_before ? [x.likes_before.n, ix(x.likes_before.by), t(x.likes_before.at)] : 0,
+      x.likes_now ? [x.likes_now.n, ix(x.likes_now.by), t(x.likes_now.at)] : 0];
+    while (v.length > 1 && v.at(-1) === 0) v.pop();
+    return v;
+  });
+  return { n, b, w, o, c };
+}
+let packedAsked = 0; // answers sent packed
+
 let down = false; // the database unreachable, for the offline check
 let tries = 0;    // refreshes sent while it was
 const NOT_YET_AT = new Date(Date.now() - 5 * 60e3).toISOString();
@@ -251,12 +273,18 @@ async function open(me, opts) {
       const key = (b) => ({ uid: b.uid, ...(b.grp != null ? { grp: b.grp } : {}) });
       const bare = full.banquets.map(({ claimed, mine_site, ...b }) => b);
       const stale = bare.length ? [{ ...bare[0], claims: 99, claimed_by: [] }] : [];
+      const list = [...stale, ...bare, { uid: '99999998', posted: bare[0]?.posted ?? null, entered_by: ['Gone'], claims: 0, claimed_by: [] }];
+      if (body.packed) packedAsked++;
       return json({ ...full, since: new Date().toISOString(),
-        banquets: [...stale, ...bare, { uid: '99999998', posted: bare[0]?.posted ?? null, entered_by: ['Gone'], claims: 0, claimed_by: [] }],
+        ...(body.packed ? { banquets: [], packed: [pack(list.slice(0, 2), !!me.all, false), pack(list.slice(2), !!me.all, false)] } : { banquets: list }),
         gone: [{ uid: '99999998' }],
         my_claims: full.banquets.filter((b) => b.claimed).map(key), my_site: full.banquets.filter((b) => b.mine_site).map(key) });
     }
-    if (fn === 'banquet_changes') return json(body.since ? changesFor(me, state(me)) : { reload: true });
+    if (fn === 'banquet_changes') {
+      if (!body.since) return json({ reload: true });
+      const a = changesFor(me, state(me));
+      return json(body.packed ? { ...a, cards: [], packed: [pack(a.cards, !!me.all, true)] } : a);
+    }
     if (fn === 'banquet_add') { db.uids.push({ grp: g, uid: String(body.target), who: me.name, source: 'site' }); return ok(); }
     if (fn === 'banquet_claim') {
       db.claims = db.claims.filter((c) => !(c.grp === g && c.uid === String(body.target) && c.who === me.name));
@@ -1091,6 +1119,7 @@ try {
 
   assert.deepEqual([...ana.errors, ...flo.errors, ...cov.errors, ...eli.errors, ...vee.errors, ...bea.errors, ...out.errors, ...junk.errors, ...half.errors, ...duo.errors, ...lea.errors], [],
     'no script errors');
+  assert.ok(packedAsked > 0, 'the page asks for the list packed (049), and everything above ran through unpacking it');
   console.log('banquet page: ok');
 } finally {
   await browser.close();

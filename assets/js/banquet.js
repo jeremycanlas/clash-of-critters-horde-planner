@@ -24,6 +24,7 @@
 import { rest, signIn, signOut, signedIn, readCallback, isConfigured, whoAmI } from './supabase.js';
 import { applyPrefs } from './prefs.js';
 import { showPrivateTab } from './site-nav.js';
+import { unpack } from './banquet-pack.js';
 import { $, $$, esc, copyText, toast } from './ui.js';
 
 applyPrefs();
@@ -246,7 +247,9 @@ function touched() {
   lastActive = Date.now();
   if (paused) { paused = false; $('#bq-paused').hidden = true; tick(true); }
 }
-const every = () => (document.hidden ? 3 * 60 * 1000 : away() > IDLE_AFTER ? 60 * 1000 : ACTIVE);
+// While in use, as often as the database says: slower when a crowd has the page open (049).
+let active = ACTIVE;
+const every = () => (document.hidden ? 3 * 60 * 1000 : away() > IDLE_AFTER ? 60 * 1000 : active);
 async function tick(now = false) {
   if (!state || paused) return; // no list yet: the first load failed and said so
   if (away() > PAUSE_AFTER) { paused = true; $('#bq-paused').hidden = false; return; }
@@ -325,14 +328,14 @@ function settle(a) {
 /* `quiet` is the timer's: a failed refresh keeps what is on screen, where a
    failed load someone asked for says so. */
 async function load(round = null, quiet = false) {
-  const got = await Promise.all(dbs.map((d) => ask(d, 'banquet_state', { r: round })));
+  const got = await Promise.all(dbs.map((d) => ask(d, 'banquet_state', { r: round, packed: true })));
   const bad = got.find((x) => !x.ok);
   if (bad) return quiet ? failed() : gate('Could not load the banquets', bad.why, true);
   reached = Date.now();
   failures = 0;
   const before = state;
   dbs.forEach((d, i) => {
-    d.state = settle(got[i].data);
+    d.state = settle(unpack(got[i].data, 'banquets'));
     d.since = d.state.since; // what changed is asked from here
   });
   lastFull = Date.now();
@@ -359,16 +362,17 @@ async function poll() {
   if (!state) return;
   if (state.round !== state.current) { reached = Date.now(); return; } // a past round does not change
   if (ago_(lastFull) > 60 * 60 * 1000 || dbs.some((d) => !d.since)) return load(null, true);
-  const got = await Promise.all(dbs.map((d) => ask(d, 'banquet_changes', { since: d.since })));
+  const got = await Promise.all(dbs.map((d) => ask(d, 'banquet_changes', { since: d.since, packed: true })));
   if (got.some((x) => !x.ok)) return failed(); // keeps what is on screen; offline() says so after two minutes
   reached = Date.now();
   failures = 0;
+  active = Math.max(ACTIVE, ...got.map((x) => (x.data.every ?? 0) * 1000));
   if (got.some((x, i) => x.data.reload || x.data.current !== dbs[i].state.current
       || (x.data.shared && !dbs[i].state.shared))) return load(null, true);
   const before = state;
   let changed = false;
   dbs.forEach((d, i) => {
-    const a = got[i].data;
+    const a = unpack(got[i].data, 'cards');
     const s = d.state;
     const byKey = new Map(s.banquets.map((b) => [keyOf(b), b]));
     for (const g of a.gone) byKey.delete(keyOf(g));

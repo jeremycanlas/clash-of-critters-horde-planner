@@ -18,8 +18,8 @@ $$;
 do $$
 declare f text;
 begin
-  foreach f in array array['public.banquet_state(date, text)', 'public.banquet_check()', 'public.banquet_claim(bigint, boolean, smallint)',
-                           'public.banquet_mark(bigint, text, smallint)', 'public.banquet_changes(timestamptz, date)'] loop
+  foreach f in array array['public.banquet_state(date, text)', 'public.banquet_state(date, text, boolean)', 'public.banquet_next()', 'public.banquet_check()', 'public.banquet_claim(bigint, boolean, smallint)',
+                           'public.banquet_mark(bigint, text, smallint)', 'public.banquet_changes(timestamptz, date)', 'public.banquet_changes(timestamptz, date, boolean)'] loop
     if to_regprocedure(f) is not null then execute format('grant execute on function %s to anon', f); end if;
   end loop;
 end $$;

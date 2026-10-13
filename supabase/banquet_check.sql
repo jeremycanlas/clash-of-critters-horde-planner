@@ -53,6 +53,7 @@ end $$;
 \i supabase/migrations/046_banquet_review_fixes.sql
 \i supabase/migrations/047_banquet_member_stats.sql
 \i supabase/migrations/048_banquet_reads_from_switch.sql
+\i supabase/migrations/049_banquet_packed.sql
 
 -- Real entries would skew the counts. Gone for this transaction only.
 delete from public.banquet_claims; delete from public.banquet_marks; delete from public.banquet_uids; delete from public.banquet_access; delete from public.banquet_events;

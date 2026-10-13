@@ -6,7 +6,8 @@
 // Each person is one open tab, arriving at a random moment in the first minute
 // (as at a reset):
 //   before   the page as it was on 7 Oct: the whole list every 15 s
-//   after    the page now: the whole list on opening, what changed every 10 s
+//   after    the page now: role check, the whole list packed (049) and the next
+//            gold rush on opening, then what changed every 10 s
 // and both claim and mark now and then (about one person in 50 per round of
 // asking). Every 30 s it prints how many requests there were, how many failed,
 // and how long they took, with how busy the database's API connections were.
@@ -19,7 +20,7 @@ if (P.url.includes('bjcumuhpblevbiqzzmli')) throw new Error('refusing: that is t
 const [mode = 'after', people = '80', minutes = '3'] = process.argv.slice(2);
 const N = Number(people);
 const END = Date.now() + Number(minutes) * 60_000;
-const RAMP = 60_000;
+const RAMP = Number(process.env.LOADTEST_RAMP ?? 60) * 1000; // arriving over this many seconds
 const GROUPS = { 1: [20000001, 966], 2: [30000001, 1241], 4: [50000001, 1432] };
 
 // Who: the 3 viewers, then members spread over the 1,200 (40% Group 1, 30% Group 2, rest MVPgoats).
@@ -56,10 +57,13 @@ async function tab(user) {
   await sleep(Math.random() * RAMP);
   let hash = null;
   let since = null;
-  const first = await rpc(user, 'banquet_state', {});
+  // As the page opens: the role check, the whole list (packed since 049), the next gold rush.
+  if (mode === 'after') await rpc(user, 'banquet_check', {});
+  const first = await rpc(user, 'banquet_state', mode === 'after' ? { packed: true } : {});
+  if (mode === 'after') await rpc(user, 'banquet_next', {});
   hash = first?.hash ?? null;
   since = first?.since ?? null;
-  const every = mode === 'before' ? 15_000 : 10_000;
+  let every = mode === 'before' ? 15_000 : 10_000;
   // After a failure the page now leaves about 20 s, 40 s, 80 s, up to 5 minutes (as before: every 10 s).
   let failures = mode === 'after' && !first ? 1 : 0;
   while (Date.now() < END) {
@@ -77,9 +81,10 @@ async function tab(user) {
       a = await rpc(user, 'banquet_state', { known: hash });
       if (a?.hash) hash = a.hash;
     } else {
-      a = await rpc(user, 'banquet_changes', { since });
+      a = await rpc(user, 'banquet_changes', { since, packed: true });
     }
     if (a?.since) since = a.since;
+    if (a?.every) every = a.every * 1000; // the page asks as often as the database says (049)
     if (mode === 'after') failures = a ? 0 : failures + 1;
   }
 }
@@ -103,7 +108,7 @@ function report(from, to, label) {
     + `db ${busy.at(-1) ?? '-'}`);
 }
 
-console.log(`mode ${mode}, ${N} people, ${minutes} min (arriving over the first minute)`);
+console.log(`mode ${mode}, ${N} people, ${minutes} min (arriving over the first ${RAMP / 1000} s)`);
 const start = Date.now();
 let last = start;
 const ticker = setInterval(() => { const now = Date.now(); report(last, now, `${Math.round((now - start) / 1000)}s`); last = now; }, 30_000);
