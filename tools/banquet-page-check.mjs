@@ -172,7 +172,7 @@ const browser = await chromium.launch();
 async function open(me, opts) {
   const ctx = await browser.newContext({ ...opts, colorScheme: me.scheme ?? 'dark' });
   await ctx.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: `http://127.0.0.1:${PORT}` });
-  // Each person their own sign-in ID, which is what puts them in a claim-run cluster.
+  // Each person their own sign-in ID, which is what sets where their claim run starts.
   await ctx.addInitScript((id) => localStorage.setItem('coc.community.v1', JSON.stringify({ refresh_token: 'x', uid: id, name: 'x' })), me.name);
   await ctx.route(/supabase\.co/, async (route) => {
     const u = new URL(route.request().url());
@@ -998,8 +998,7 @@ try {
   down = false;
 
   // ------------------------------------------------------------------ claim-run clusters
-  // Ana is cluster 1 of 4 and starts the unchecked UIDs at the top; Eli is cluster 3
-  // and starts half way along, wrapping round. Both get every one.
+  // Eli starts the unchecked UIDs at a point of their own, from their sign-in, wrapping round, and gets every one.
   const eli = await open({ name: 'Eli', grp: 1 }, { viewport: { width: 1280, height: 900 } });
   const E = eli.page;
   await E.click('[data-show="look"]'); // in their own order: on All, those with likes sit in Check first
@@ -1016,8 +1015,10 @@ try {
     await E.click('[data-run="skip"]');
     await E.waitForFunction((was) => document.querySelector('#bq-run-step')?.textContent !== was, step);
   }
-  const at = Math.floor((2 * looks.length) / 4);
-  assert.deepEqual(eliRan.slice(claimN), [...looks.slice(at), ...looks.slice(0, at)], 'cluster 3 starts half way along the unchecked ones');
+  const hash = [...'Eli'].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 0);
+  const share = (Math.imul(hash, 0x9e3779b1) >>> 0) / 2 ** 32;
+  const at = Math.floor(share * looks.length);
+  assert.deepEqual(eliRan.slice(claimN), [...looks.slice(at), ...looks.slice(0, at)], `Eli starts ${at} along the unchecked ones`);
   assert.deepEqual([...eliRan.slice(claimN)].sort(), [...looks].sort(), 'and still gets every one');
   await E.click('#bq-run-close');
 

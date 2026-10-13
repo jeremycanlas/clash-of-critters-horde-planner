@@ -927,15 +927,16 @@ function renderCards(past) {
    nobody has checked; then those not logged in when last checked, once that
    was an hour ago or more. */
 const RECHECK = 60 * 60 * 1000;
-/* Clusters, so people checking at once do not all start at the same UID: each
-   person is one of four, fixed by their sign-in, and the unchecked lists (Needs a
-   look, Not logged in) start a quarter further along for each and wrap round.
-   Everyone still gets every UID; Claimable stays most room first for all, since
-   everyone claims every one of those anyway. */
-const CLUSTERS = 4;
-const cluster = [...(whoAmI()?.uid ?? '')].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 0) % CLUSTERS;
+/* A start point of your own, so people checking at once do not all start at
+   the same UID: fixed by your sign-in, the unchecked lists (Needs a look, Not
+   logged in) start that far along and wrap round. Four shared start points put
+   two of ten people on the same order every time (14 Oct). Everyone still gets
+   every UID; Claimable stays most room first for all, since everyone claims
+   every one of those anyway. */
+const hash = [...(whoAmI()?.uid ?? '')].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 0);
+const share = (Math.imul(hash, 0x9e3779b1) >>> 0) / 2 ** 32; // mixed: short IDs spread too
 const fromMine = (list) => {
-  const at = Math.floor((cluster * list.length) / CLUSTERS);
+  const at = Math.floor(share * list.length);
   return [...list.slice(at), ...list.slice(0, at)];
 };
 // Only my UIDs: the run goes through your own banquets alone. Kept per browser.
