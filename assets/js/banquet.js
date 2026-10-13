@@ -1008,15 +1008,16 @@ function renderRun() {
     return;
   }
   const st = statusOf(b);
+  const noted = (b.likes_now ?? b.likes_before)?.n;
   const seen = st === 'claimable' ? `gift seen ${b.open ? since(b.open.at) : ''}`
     : st === 'notin' ? `no icon ${since(b.not_yet.at)}, by ${esc(b.not_yet.by)}` : 'not checked yet';
   $('#bq-run-body').innerHTML = `<section class="bq-run__card" data-key="${keyOf(b)}">
       <span id="bq-run-copied" class="bq-run__copied" role="status">Copying…</span>
       <button type="button" class="tr-copy bq-run__uid" data-copy="${b.uid}" title="Copy UID">${b.uid}</button>
-      <span class="bq-run__about">${tagOf(b.grp)} ${b.claims ? `at least ${b.claims} of 50 gone` : 'no claims yet'} · ${seen}</span>
+      <span class="bq-run__about">${tagOf(b.grp)} ${b.claims ? `at least ${b.claims} of 50 gone` : 'no claims yet'} · ${seen}${noted == null ? '' : ` · ${noted} likes`}</span>
     </section>
     <p class="bq-run__ask">What did the game show?</p>
-    ${b.likes_before || b.likes_now ? '' : `<p class="bq-run__hint">No likes noted for it yet. A portrait with 0 likes means full. With more than 0 it may be left from last gold rush, so pick Not logged in.</p>`}
+    ${noted != null ? '' : `<p class="bq-run__hint">No likes noted for it yet. A portrait with 0 likes means full. With more than 0 it may be left from last gold rush, so pick Not logged in.</p>`}
     <div class="bq-run__answers">
       <button type="button" class="bq-run__btn is-gift" data-run="gift">${icon('gift')}<span>Gift · I claimed it<small>Counts your claim, goes to the next</small></span></button>
       <button type="button" class="bq-run__btn is-full" data-run="full">${icon('full')}<span>Portrait · it's full<small>Takes it off everyone's list</small></span></button>

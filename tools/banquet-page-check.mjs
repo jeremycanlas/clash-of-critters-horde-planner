@@ -677,6 +677,9 @@ try {
     await A.click('[data-run="skip"]');
     await A.waitForFunction((s) => document.querySelector('#bq-run-step')?.textContent !== s, at);
   }
+  assert.match(await A.locator('.bq-run__about').textContent(), / · 100 likes$/, 'likes noted: the run shows the count');
+  assert.equal(await A.locator('.bq-run__hint').count(), 0, 'likes noted: no hint');
+  if (process.env.BANQUET_SHOTS) await A.screenshot({ path: `${process.env.BANQUET_SHOTS}/run-likes-phone.png` });
   await A.click('[data-run="full"]');
   await A.waitForSelector('[data-run="full!"]');
   assert.match(await A.locator('.bq-run__about').textContent(), /100 likes, MVP 2× before/);
