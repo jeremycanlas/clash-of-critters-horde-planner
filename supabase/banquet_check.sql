@@ -55,6 +55,7 @@ end $$;
 \i supabase/migrations/048_banquet_reads_from_switch.sql
 \i supabase/migrations/049_banquet_packed.sql
 \i supabase/migrations/050_banquet_add_many_likes_round.sql
+\i supabase/migrations/052_banquet_leaders_everyone.sql
 
 -- Real entries would skew the counts. Gone for this transaction only.
 delete from public.banquet_claims; delete from public.banquet_marks; delete from public.banquet_uids; delete from public.banquet_access; delete from public.banquet_events;
@@ -711,6 +712,21 @@ do $$ declare l jsonb; begin
   assert jsonb_array_length(l -> 'groups') = 2 and (l -> 'groups' -> 1 ->> 'grp')::int = 2, 'a viewer: every group, numbered, but no private list (044), got ' || (select string_agg(coalesce(x ->> 'grp', '?'), ',') from jsonb_array_elements(l -> 'groups') x);
   assert l -> 'groups' -> 1 -> 'boards' -> 'scout' -> 'top' -> 0 ->> 'name' = 'zz_c', 'Group 2''s own boards';
 end $$;
+
+-- Every name on a board, not ten (052). Undone after, so the numbers below are unchanged.
+reset role;
+do $$ begin
+  begin
+    insert into public.banquet_events (round, grp, uid, kind, discord_id, by_name, at)
+    select '2020-01-02', 2, 30200100 + i, 'open', (990000000000000400 + i)::text, 'zz_' || i, '2020-01-02 00:01+00'
+      from generate_series(1, 12) i;
+    assert jsonb_array_length(public.banquet_leaders_build('2020-01-02', 2::smallint) -> 'scout' -> 'top') = 13, 'all 13 scouts listed';
+    raise exception 'undo';
+  exception when raise_exception then if sqlerrm <> 'undo' then raise; end if;
+  end;
+end $$;
+set local role authenticated;
+select pg_temp.as_(4);
 
 -- ---------------------------------------------------------------- member numbers (047)
 -- Viewers only: every member of each group, zeros too, no private list.

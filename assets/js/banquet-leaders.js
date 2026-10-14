@@ -2,7 +2,7 @@
  * Banquet leaderboards: four boards per group, for one gold rush or all of
  * them, from banquet_leaders() (supabase/migrations/042). The database builds
  * each group's boards at most every 5 minutes and hands everyone that build,
- * so this page asks once on opening and never again on its own.
+ * so this page asks on opening and again every 5 minutes while it is on screen.
  *
  * The servers and the link codes are the banquet page's (assets/js/banquet.js).
  */
@@ -172,4 +172,6 @@ async function start() {
 }
 
 $('#lb-round').addEventListener('change', (e) => load(e.target.value));
+// A hidden tab asks nothing; it catches up when it is looked at again.
+setInterval(() => { if (!document.hidden && !$('#lb-app').hidden) load($('#lb-round').value); }, 5 * 60 * 1000);
 start();
