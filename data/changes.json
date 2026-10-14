@@ -783,7 +783,18 @@
           "Con Man's Code: ATK Stolen 5% → 4%, ATK Boost on return 15% → 24%"
         ]
       }
-    ]
+    ],
+    "mode": {
+      "groups": [
+        {
+          "title": "Coming",
+          "items": [
+            "Dewgrub nerf incoming",
+            "New Grass Tatari"
+          ]
+        }
+      ]
+    }
   },
   "history": [
     {
