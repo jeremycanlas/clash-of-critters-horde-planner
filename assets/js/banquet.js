@@ -955,8 +955,10 @@ function runQueue() {
   const mine = $('#bq-run-mine').checked ? new Set(state.mine.map(keyOf)) : null;
   const list = state.banquets.filter((b) => (!b.grp || inView(b.grp)) && (!mine || mine.has(keyOf(b))));
   const pick = (st, ok) => list.filter((b) => statusOf(b) === st && ok(b)).sort(ORDER[st]);
-  return [...pick('claimable', (b) => !b.claimed), ...fromMine(pick('look', () => true)),
-    ...fromMine(pick('notin', (b) => mine || Date.now() - Date.parse(b.not_yet.at) >= RECHECK))].map(keyOf);
+  const look = pick('look', () => true);
+  // Nothing unchecked left: every not logged in one, however recently checked (14 Oct).
+  return [...pick('claimable', (b) => !b.claimed), ...fromMine(look),
+    ...fromMine(pick('notin', (b) => mine || !look.length || Date.now() - Date.parse(b.not_yet.at) >= RECHECK))].map(keyOf);
 }
 let run = null; // { queue: ["grp:uid"], i, tally }
 const cardOf = (k) => state.banquets.find((b) => keyOf(b) === k);

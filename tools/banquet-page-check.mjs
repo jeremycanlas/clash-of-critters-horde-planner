@@ -861,6 +861,19 @@ try {
   await V.waitForFunction(() => document.querySelector('#bq-run-step')?.textContent === 'done');
   assert.ok(ran.length === g2 && ran.every((k) => k.startsWith('2:')), `As Group 2, the run is Group 2's only: ${ran}`);
   await V.click('#bq-run-close');
+  // Nothing unchecked left in the view: the not logged in ones join the run, just checked or not.
+  const unchecked = await V.evaluate(() => [...document.querySelectorAll('#bq-cards li[data-key^="2:"]:not(.is-notin):not(.is-full):not(.is-claimable)')].map((li) => li.dataset.key));
+  for (const k of unchecked) {
+    await V.click(`#bq-cards li[data-key="${k}"] [data-mark="not-yet"]`);
+    await V.waitForFunction((key) => document.querySelector(`#bq-cards li[data-key="${key}"]`)?.classList.contains('is-notin'), k);
+  }
+  const asleepNow = await V.locator('#bq-cards li[data-key^="2:"].is-notin').count();
+  assert.ok(asleepNow > 0 && Number(await V.locator('[data-n="look"]').textContent()) === 0, `Group 2 all checked, ${asleepNow} not logged in`);
+  assert.match((await V.locator('#bq-run-start').textContent()).replace(/[^0-9a-z]+/gi, ' '), new RegExp(` ${asleepNow + Number(await V.locator('[data-n="claimable"]').textContent())} to go`),
+    'every not logged in one is back in the run');
+  for (const k of unchecked) db.marks.delete(k); // as they were, for what follows
+  await V.clock.fastForward(61_000);
+  await V.waitForFunction((ks) => ks.every((k) => !document.querySelector(`#bq-cards li[data-key="${k}"]`)?.classList.contains('is-notin')), unchecked);
   await V.click('[data-group="0"]');
 
   // ------------------------------------------------------------------ Ana sees Vee's work, on her own
