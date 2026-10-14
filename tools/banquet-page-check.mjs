@@ -573,6 +573,13 @@ try {
   await A.waitForFunction(() => !document.querySelector('#bq-cards li[data-key=":55555555"]')?.classList.contains('is-notin'));
   assert.deepEqual(lastSent('Ana', 'banquet_mark_undo'), { target: 55555555, g: null }, 'Undo asks for the mark as it was (046)');
   assert.equal(db.marks.get('1:55555555')?.state, 'open', 'and it is open again');
+  // Only my UIDs: your own not logged in ones stay in the run, however recently checked (14 Oct).
+  assert.ok(await A.locator('#bq-cards li[data-key=":10000002"]').evaluate((li) => li.classList.contains('is-notin')), 'found not logged in just now');
+  await A.check('#bq-run-mine');
+  const mineRun = await A.locator('#bq-run-start').textContent();
+  const mineKeys = await A.evaluate(() => [...document.querySelectorAll('#bq-cards li[data-key]')].filter((li) => /^:1000000[123]$/.test(li.dataset.key)).map((li) => li.dataset.key + ' ' + li.className));
+  assert.match(mineRun.replace(/[^0-9a-z]+/gi, ' '), / 2 to go/, `her own not logged in one is still in her run (1 without it): ${mineRun} | ${mineKeys}`);
+  await A.uncheck('#bq-run-mine');
   await A.click('#bq-cards [data-claim="20000001"]'); // and the claim off again, on its card
   await A.waitForFunction(() => document.querySelector('[data-claim="20000001"]')?.getAttribute('aria-pressed') === 'false');
   if (process.env.BANQUET_SHOTS) await A.locator('#bq-activity').screenshot({ path: `${process.env.BANQUET_SHOTS}/log-phone.png` });

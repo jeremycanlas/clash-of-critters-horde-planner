@@ -930,7 +930,7 @@ function renderCards(past) {
 /* One UID at a time, already copied, and what the game showed for it. In
    order: claimable ones you have not claimed, most room first; then those
    nobody has checked; then those not logged in when last checked, once that
-   was an hour ago or more. */
+   was an hour ago or more (your own: any time, they are yours to chase). */
 const RECHECK = 60 * 60 * 1000;
 /* A start point of your own, so people checking at once do not all start at
    the same UID: fixed by your sign-in, the unchecked lists (Needs a look, Not
@@ -956,7 +956,7 @@ function runQueue() {
   const list = state.banquets.filter((b) => (!b.grp || inView(b.grp)) && (!mine || mine.has(keyOf(b))));
   const pick = (st, ok) => list.filter((b) => statusOf(b) === st && ok(b)).sort(ORDER[st]);
   return [...pick('claimable', (b) => !b.claimed), ...fromMine(pick('look', () => true)),
-    ...fromMine(pick('notin', (b) => Date.now() - Date.parse(b.not_yet.at) >= RECHECK))].map(keyOf);
+    ...fromMine(pick('notin', (b) => mine || Date.now() - Date.parse(b.not_yet.at) >= RECHECK))].map(keyOf);
 }
 let run = null; // { queue: ["grp:uid"], i, tally }
 const cardOf = (k) => state.banquets.find((b) => keyOf(b) === k);
