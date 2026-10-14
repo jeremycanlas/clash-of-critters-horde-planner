@@ -381,6 +381,421 @@
       }
     ]
   },
+  "preview": {
+    "_note": [
+      "Season 3, read off Pioneer Server screenshots rather than published notes.",
+      "The Pioneer Server is the test build and its numbers may not be what ships.",
+      "",
+      "Voltfawn's level 7 is Bolt Cleaver in the game and Super Bolt on the wiki;",
+      "the wiki name is kept so the level badge resolves. Two old values had no",
+      "tooltip open (Con Man's Code ATK Boost, Gem Resonance Crystallized Chance)",
+      "and come from horde-numbers.json. The screen lists a second adjusted Tatari",
+      "that none of the screenshots open, so it is missing here."
+    ],
+    "patch": "2026-10-14",
+    "label": "Season 3",
+    "by": "DrKnight | WiKiBacon (Discord)",
+    "provisional": true,
+    "lines": [
+      {
+        "line": "Frostnip",
+        "direction": "buff",
+        "members": [
+          "frostnip",
+          "frostpaw",
+          "frostique",
+          "frostluna"
+        ],
+        "changes": [
+          "Ice Burst: Freeze Chance 45% → 60%",
+          "Frost Path: Freeze Chance 45% → 60%"
+        ]
+      },
+      {
+        "line": "Frugling",
+        "direction": "buff",
+        "members": [
+          "frugling",
+          "frugatoad",
+          "frugagon",
+          "frugantuan"
+        ],
+        "changes": [
+          "Quick Slice: Duration 6s → 8s",
+          "Fruit Rain: Duration 3s → 4s"
+        ]
+      },
+      {
+        "line": "Voltfawn",
+        "direction": "buff",
+        "members": [
+          "voltfawn",
+          "sparkdoe",
+          "zapantler",
+          "magnedart"
+        ],
+        "changes": [
+          "Bolt Trigger: Trigger Chance 20% → 30%",
+          "Super Bolt: Paralysis Chance 45% → 60%"
+        ]
+      },
+      {
+        "line": "Sparkit",
+        "direction": "buff",
+        "members": [
+          "sparkit",
+          "firefox",
+          "flarevix",
+          "phantifox"
+        ],
+        "changes": [
+          "Flame Sprout: Min Trigger Interval 3s → 2s, Max Trigger Interval 5s → 4s"
+        ]
+      },
+      {
+        "line": "Goonbug",
+        "direction": "buff",
+        "members": [
+          "goonbug",
+          "capobeetle",
+          "donscarab",
+          "beetleknight"
+        ],
+        "changes": [
+          "Vital Fumes: ATK Boost 15% → 20%"
+        ]
+      },
+      {
+        "line": "Punchimp",
+        "direction": "buff",
+        "members": [
+          "punchimp",
+          "rockfu",
+          "rockwu",
+          "rockong"
+        ],
+        "changes": [
+          "Barricade: Duration 3s → 4s",
+          "Staff Cyclone: Damage Factor 180% → 190%"
+        ]
+      },
+      {
+        "line": "Voltkit",
+        "direction": "buff",
+        "members": [
+          "voltkit",
+          "voltling",
+          "voltverine",
+          "voltreaver"
+        ],
+        "changes": [
+          "Target Lock: Damage Factor 100% → 120%",
+          "Bolt Slash: Damage Factor 600% → 720%"
+        ]
+      },
+      {
+        "line": "Waddledo",
+        "direction": "buff",
+        "members": [
+          "waddledo",
+          "swaystroll",
+          "stoodbeak",
+          "glideflip"
+        ],
+        "changes": [
+          "Ice Strike: Damage Factor 200% → 240%"
+        ]
+      },
+      {
+        "line": "Pandaroo",
+        "direction": "buff",
+        "members": [
+          "pandaroo",
+          "pandaroot",
+          "pandarrior",
+          "pandagrand"
+        ],
+        "changes": [
+          "Bambattle: Generate Count 24 → 30"
+        ]
+      },
+      {
+        "line": "Sparkeet",
+        "direction": "buff",
+        "members": [
+          "sparkeet",
+          "buzzbeak",
+          "toucanzam",
+          "technocan"
+        ],
+        "changes": [
+          "Full Charge: Minimum Cooldown 15s → 12s, Maximum Cooldown 30s → 24s"
+        ]
+      },
+      {
+        "line": "Souphog",
+        "direction": "buff",
+        "members": [
+          "souphog",
+          "grillhog",
+          "hothog",
+          "searhog"
+        ],
+        "changes": [
+          "Free Snacks: Max Trigger Interval 10s → 8s"
+        ]
+      },
+      {
+        "line": "Sackling",
+        "direction": "buff",
+        "members": [
+          "sackling",
+          "jarachnid",
+          "terracrawler",
+          "weaverfang"
+        ],
+        "changes": [
+          "Spider Lair: Damage Factor 240% → 270%, Inherited HP 8% → 12%"
+        ]
+      },
+      {
+        "line": "Shardsnail",
+        "direction": "buff",
+        "members": [
+          "shardsnail",
+          "gemsnail",
+          "jewelsnail",
+          "crystalsnail"
+        ],
+        "changes": [
+          "Gem Burst: Damage Factor 140% → 160%",
+          "Gem Resonance: Damage Factor 180% → 200%, Crystallized Chance 20% → 30%"
+        ]
+      },
+      {
+        "line": "Humbug",
+        "direction": "buff",
+        "members": [
+          "humbug",
+          "humbleetle",
+          "zenscarab",
+          "hierotyrus"
+        ],
+        "changes": [
+          "Boom Ball: Damage Factor 125% → 160%"
+        ]
+      },
+      {
+        "line": "Fluffle",
+        "direction": "buff",
+        "members": [
+          "fluffle",
+          "nimbuzzy",
+          "galewether",
+          "cosmoram"
+        ],
+        "changes": [
+          "Cloud Crash: Cloud Damage Factor 200% → 240%",
+          "Grim Skies: Dark Cloud Damage Factor 220% → 240%"
+        ]
+      },
+      {
+        "line": "Fumekit",
+        "direction": "buff",
+        "members": [
+          "fumekit",
+          "sulfunk",
+          "magmusk",
+          "blastniff"
+        ],
+        "changes": [
+          "Firework Frenzy: Minimum Cooldown 18s → 12s, Maximum Cooldown 22s → 18s"
+        ]
+      },
+      {
+        "line": "Taptail",
+        "direction": "buff",
+        "members": [
+          "taptail",
+          "rattlecoil",
+          "clangnaga",
+          "dharmadder"
+        ],
+        "changes": [
+          "Karmic Gains: Launch Quantity 8 → 10"
+        ]
+      },
+      {
+        "line": "Kittazap",
+        "direction": "buff",
+        "members": [
+          "kittazap",
+          "nekowatt",
+          "voltazar",
+          "thunderpaw"
+        ],
+        "changes": [
+          "Golden Charity: Targets 2 → 3"
+        ]
+      },
+      {
+        "line": "Flameow",
+        "direction": "buff",
+        "members": [
+          "flameow",
+          "nekoflare",
+          "silversear",
+          "cinderclaw"
+        ],
+        "changes": [
+          "More Jewels: Damage Factor 20% → 150%"
+        ]
+      },
+      {
+        "line": "Drilleroo",
+        "direction": "buff",
+        "members": [
+          "drilleroo",
+          "cragolin",
+          "borelord",
+          "armavolve"
+        ],
+        "changes": [
+          "Crowd Crusher: Base Shield 7% → 10% of HP, Bonus Shield 1% → 1.5% of HP per enemy"
+        ]
+      },
+      {
+        "line": "Momopo",
+        "direction": "buff",
+        "members": [
+          "momopo",
+          "lulupo",
+          "lilypo",
+          "gemmapo"
+        ],
+        "changes": [
+          "Pink Protection: Base Prevention Count 4 → 6, Extra Preventions 1 → 2 per evolution"
+        ]
+      },
+      {
+        "line": "Glowfly",
+        "direction": "buff",
+        "members": [
+          "glowfly",
+          "phosflare",
+          "glimmerwing",
+          "luminastra"
+        ],
+        "changes": [
+          "Luminous Bolt: Periodic Heal 2.5% → 3% of target HP, Burst Heal 7.5% → 9% of target HP"
+        ]
+      },
+      {
+        "line": "Snowcub",
+        "direction": "buff",
+        "members": [
+          "snowcub",
+          "polarpaw",
+          "blizzgrizz",
+          "anglerbear"
+        ],
+        "changes": [
+          "Always Cola: Total Trigger Chance 30% → 40%"
+        ]
+      },
+      {
+        "line": "Popa",
+        "direction": "buff",
+        "members": [
+          "popa",
+          "popapouch",
+          "popagrind",
+          "popafam"
+        ],
+        "changes": [
+          "Possum Support: Healing Factor 15% → 20%"
+        ]
+      },
+      {
+        "line": "Manteeny",
+        "direction": "nerf",
+        "members": [
+          "manteeny",
+          "stalkerix",
+          "serrabloom",
+          "orchitoria"
+        ],
+        "changes": [
+          "Petal Blades: Damage Factor 220% → 180%",
+          "Wild Slashes: Damage Factor 80% → 70%"
+        ]
+      },
+      {
+        "line": "Maskfry",
+        "direction": "nerf",
+        "members": [
+          "maskfry",
+          "ospisces",
+          "armorjaw",
+          "dagondeep"
+        ],
+        "changes": [
+          "Primordial Boon: Shield Factor 40% → 28% of HP"
+        ]
+      },
+      {
+        "line": "Poakie",
+        "direction": "nerf",
+        "members": [
+          "poakie",
+          "sizzribb",
+          "lickflicker",
+          "ignitoad"
+        ],
+        "changes": [
+          "Croaker Chant: Minimum Cooldown 14s → 16s, Maximum Cooldown 20s → 22s",
+          "Oil Onsen: Ignition Damage Factor 50% → 40%, Extra Damage Factor 450% → 400%"
+        ]
+      },
+      {
+        "line": "Budboo",
+        "direction": "nerf",
+        "members": [
+          "budboo",
+          "snapshade",
+          "thornwisp",
+          "chomperwraith"
+        ],
+        "changes": [
+          "Bitter Bane: AoE Damage Factor 100% → 80%"
+        ]
+      },
+      {
+        "line": "Ringtail",
+        "direction": "adjusted",
+        "members": [
+          "ringtail",
+          "rizzler",
+          "zorrock",
+          "phantothief"
+        ],
+        "changes": [
+          "Con Man's Code: ATK Stolen 5% → 4%, ATK Boost on return 15% → 24%"
+        ]
+      }
+    ],
+    "mode": {
+      "groups": [
+        {
+          "title": "Coming",
+          "items": [
+            "A new Tatari in a banana-peel hood, Grass element, name not shown yet. Its Horde Invasion skills: Fresh Peel (regular), Poison Play (level 3), Showstopper (level 5) and Banana Bash (level 7).",
+            "The Season Update screen lists a second adjusted Tatari that the screenshots do not open, so its numbers are not here yet."
+          ]
+        }
+      ]
+    }
+  },
   "history": [
     {
       "patch": "2026-08-26",
