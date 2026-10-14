@@ -858,9 +858,9 @@ try {
     ran.push(await V.locator('.bq-run__card').getAttribute('data-key'));
     await V.click('[data-run="skip"]');
   }
-  await V.waitForFunction(() => document.querySelector('#bq-run-step')?.textContent === 'done');
+  await V.waitForFunction(() => document.querySelector('#bq-run-step')?.textContent === '');
   assert.ok(ran.length === g2 && ran.every((k) => k.startsWith('2:')), `As Group 2, the run is Group 2's only: ${ran}`);
-  await V.click('#bq-run-close');
+  await V.click('[data-run="list"]');
   // Nothing unchecked left in the view: the not logged in ones join the run, just checked or not.
   const unchecked = await V.evaluate(() => [...document.querySelectorAll('#bq-cards li[data-key^="2:"]:not(.is-notin):not(.is-full):not(.is-claimable)')].map((li) => li.dataset.key));
   for (const k of unchecked) {

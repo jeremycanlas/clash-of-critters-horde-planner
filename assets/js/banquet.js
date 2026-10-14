@@ -985,7 +985,7 @@ function renderRun() {
   const total = run.queue.length;
   const b = run.i < total ? cardOf(run.queue[run.i]) : null;
   const t = run.tally;
-  $('#bq-run-step').textContent = b ? `${run.i + 1} / ${total}` : 'done';
+  $('#bq-run-step').textContent = b ? `${run.i + 1} / ${total}` : '';
   $('#bq-run-bar').style.width = `${total ? Math.round((Math.min(run.i, total) / total) * 100) : 100}%`;
   /* The tally as the answers' own icons, each with its count: one line on the
      narrowest phone, where the words ran to three. The words stay, for a
@@ -997,7 +997,8 @@ function renderRun() {
         <h3>${total ? 'Run finished' : 'Nothing to check right now'}</h3>
         <p>${total ? `You claimed ${t.gift}, spotted ${t.full} full and ${t.notin} not logged in.`
           : 'Every banquet is claimed by you, full, or was checked less than an hour ago.'}</p>
-        <button type="button" class="btn" data-run="again">Run it again</button>
+        <button type="button" class="btn" data-run="list">Back to the list</button>
+        <button type="button" class="btn btn--quiet" data-run="again">Run it again</button>
       </section>`;
     return;
   }
@@ -1099,6 +1100,7 @@ $('#bq-run-body').addEventListener('click', async (e) => {
   if (!btn || !run) return;
   let what = btn.dataset.run;
   if (what === 'again') return startRun();
+  if (what === 'list') return $('#bq-run').close();
   const k = run.queue[run.i];
   const b = cardOf(k);
   // A portrait on a building that had a banquet before: ask, it may only be the old one.
