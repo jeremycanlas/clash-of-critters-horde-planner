@@ -2342,7 +2342,10 @@ body[data-switching="true"] .cell[data-zobo] { box-shadow: none; cursor: default
   color: var(--warn, var(--accent));
   font-size: 11px; line-height: 1;
 }
-.roster[data-zobo-view="waves"] { display: block; }
+/* The waves run their full length and the page scrolls, rather than a box of
+   boxes scrolling inside a scrolling page. The phone sheet keeps its own scroll
+   (.panel--roster .roster, later in the file). */
+.roster[data-zobo-view="waves"] { display: block; max-height: none; overflow-y: visible; }
 /*
  * One box per wave, read across then down: the layout of the boss order picture
  * shared on Discord, so the site and the picture are the same thing. A grid, so
