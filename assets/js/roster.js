@@ -1121,9 +1121,9 @@ ${esc(z.skill.name)}` : ''}">
         <div class="card__meta">
           ${z.boss && !weak ? '<span class="card__boss" title="Boss">★</span>' : ''}
           ${z.type ? typeIcon(z.type) : ''}
-          ${weak ? `<span class="card__weak" title="Weak to ${weak}">›${typeIcon(weak)}</span>` : ''}
         </div>
-        <div class="card__name">${esc(z.name)}</div>
+        <div class="card__name">${esc(weak ? z.name.replace(/ Zobo$/, '') : z.name)}</div>
+        ${weak ? `<div class="card__weak">Weak to ${typeIcon(weak)}</div>` : ''}
       </div>`;
 }
 
@@ -1133,8 +1133,8 @@ ${esc(z.skill.name)}` : ''}">
  * The roster answers "what is this one". This answers "what is coming", which is
  * the question you have while drafting and the one a list sorted by element can
  * never answer -- the order is the whole content, so the order has to be the
- * layout. A number down the left and the boss beside it, which is how it was
- * given to us and how anybody reads a schedule.
+ * layout. One box per wave, read across and down like the boss order picture
+ * shared on Discord, so the site and the picture read the same way.
  *
  * The same cards as the roster, deliberately: same size, same drag onto the
  * field, same badge. A stage that sends two puts both in the row, because the
@@ -1177,18 +1177,27 @@ function renderWaves(keep) {
       <button class="segmented__btn" type="button" role="tab" data-season="${i}"
         aria-selected="${o === order}">${esc(o.label)}${o.provisional ? ' <span class="chtab__flag">preview</span>' : ''}</button>`).join('')}
     </div>` : '';
-  const tiles = TYPES.filter((t) => by[t]).map((t) => `
+  /* The infographic's tiles: how many each element beats, at which waves (the
+     hardest in red), and how many of those are in the hardest waves. */
+  const tiles = TYPES.filter((t) => by[t]).sort((a, b) => by[b].length - by[a].length).map((t) => `
     <button class="wavebeat" type="button" data-beat="${t}" data-type="${t}" aria-pressed="${waveBeat.value === t}"
-      title="Show only the waves ${t} beats">${typeIcon(t)}<b>${by[t].length}</b>
-      <span>${by[t].filter((n) => n >= HARD_FROM).length} in ${HARD_FROM}-${count}</span></button>`).join('');
+      title="Show only the waves ${t} beats">${typeIcon(t)}
+      <span class="wavebeat__n"><b>${by[t].length}</b> ${t}</span>
+      <span class="wavebeat__w">Waves ${[...new Set(by[t])].map((n) => (n >= HARD_FROM ? `<em>${n}</em>` : n)).join(', ')}</span>
+      <span class="wavebeat__hard"><b>${by[t].filter((n) => n >= HARD_FROM).length}</b> in waves ${HARD_FROM} to ${count}</span></button>`).join('');
+  const credits = order.by ? `
+    <dl class="wavehead__credits">
+      <div><dt>Boss lineup</dt><dd>${esc(order.by)}</dd></div>
+      ${order.images ? `<div><dt>Boss images</dt><dd>${esc(order.images)}</dd></div>` : ''}
+    </dl>` : '';
   const team = !field.size
     ? 'Put Tatari on the field to see which waves they beat.'
     : `Your field beats <b>${count - missed.size} of ${count}</b> waves.${
       Object.entries(missing).map(([k, s]) => ` Missing ${k}: ${[...s].join(', ')}.`).join('')}`;
   const head = `
     <div class="wavehead">
-      ${seasons}
-      <p class="wavehead__cap">Bosses each element beats, and how many of them are in the hardest waves. Tap one to show only its waves.</p>
+      <div class="wavehead__top">${seasons}${credits}</div>
+      <p class="wavehead__cap"><b>What to bring:</b> the bosses each element beats. <em>Red</em> marks waves ${HARD_FROM} to ${count}, the hardest. Tap one to show only its waves.</p>
       <div class="wavehead__beats" aria-label="Bosses each element beats; press one to show only its waves">${tiles}</div>
       <p class="wavehead__team${field.size && !missed.size ? ' is-all' : ''}">${team}</p>
     </div>`;
@@ -1200,32 +1209,17 @@ function renderWaves(keep) {
       .filter((z) => z && keep(z) && (!waveBeat.value || weakTo(z) === waveBeat.value));
     if (!here.length) continue;
     shown += here.length;
-    if (n >= HARD_FROM && !rows.some((r) => r.includes('wavehard'))) {
-      rows.push(`<p class="wavehard">Hardest: waves ${HARD_FROM} to ${count}</p>`);
-    }
     const open = field.size && here.some((z) => !beaten(z));
     rows.push(`
       <div class="waverow${open ? ' is-open' : ''}" role="listitem">
-        <span class="waverow__n" aria-hidden="true">${n}</span>
-        <span class="sr-only">Stage ${n} of ${count}${open ? ', nothing on your field beats it' : ''}</span>
+        <div class="waverow__head">Wave <span class="waverow__n">${n}</span>${
+  open ? '<span class="waverow__open" title="Nothing on your field beats this wave">Not covered</span>' : ''}</div>
+        <span class="sr-only">of ${count}${open ? ', nothing on your field beats it' : ''}</span>
         <div class="waverow__cards">${here.map((z) => zoboCard(z, { weak: weakTo(z) })).join('')}</div>
-        ${open ? '<span class="waverow__open" title="Nothing on your field beats this wave" aria-hidden="true">✗</span>' : ''}
       </div>`);
   }
-  /*
-   * The columns get a box of their own inside the roster rather than being the
-   * roster.
-   *
-   * A multi-column box with a height on it is a fragmentainer: it fills each
-   * column to that height and then makes another column, sideways, for ever. The
-   * roster has `max-height` and scrolls, so putting the columns directly on it
-   * laid 25 stages out in seven columns, ran three of them off the right-hand
-   * edge and gave the page a horizontal scrollbar. With the columns on an inner
-   * box of no fixed height, the count comes from the width, the box grows as tall
-   * as the balanced columns need, and the roster scrolls it the ordinary way.
-   */
   return { head, html: rows.length ? `<div class="wavecols">${rows.join('')}</div>` : '',
-    rows: rows.filter((r) => r.includes('waverow')).length, shown, order };
+    rows: rows.length, shown, order };
 }
 
 function renderZobos() {
@@ -1277,12 +1271,10 @@ function renderZobos() {
   const credit = $('#boss-order-credit');
   if (credit) {
     const o = built?.order;
-    const show = waves && !!o?.by;
+    // The credits are boxes above the waves now; this only carries the preview's caveat.
+    const show = waves && !!o?.provisional;
     credit.hidden = !show;
-    credit.textContent = show
-      ? `${o.label} boss order: lineup by ${o.by}${o.images ? `, new boss pictures by ${o.images}` : ''}.${
-        o.provisional ? ' Read off the Pioneer Server, so the live game may differ.' : ''}`
-      : '';
+    credit.textContent = show ? `${o.label} is read off the Pioneer Server, so the live game may differ.` : '';
   }
 
   $('#roster-count').textContent = count;

@@ -1829,28 +1829,15 @@ await runGroup('the Zobo tab reads as a wave list as well as a roster', async ()
   eq('it starts at stage 1', numbers[0], 1);
 
   /*
-   * And it reads DOWN each column before moving right, which is what the list
-   * was asked for and the only reason it is CSS columns rather than a grid.
-   *
-   * Checked by geometry, because that is the only place the difference lives:
-   * the markup is the same 25 entries in the same order either way, so a grid
-   * flowing across would pass every check above and still be the wrong list.
-   * Column 1 must hold 1..k and column 2 must start after column 1 ends.
+   * And it reads ACROSS, then down, like the boss order picture: the first two
+   * boxes sit side by side. Checked by geometry, because the markup is the same
+   * 25 entries in the same order either way.
    */
-  const cols = new Map();
-  for (const r of rows) {
-    const left = Math.round(r.getBoundingClientRect().left);
-    if (!cols.has(left)) cols.set(left, []);
-    cols.get(left).push(Number(r.querySelector('.waverow__n').textContent));
-  }
-  const ordered = [...cols.entries()].sort((a, b) => a[0] - b[0]).map(([, ns]) => ns);
-  if (ordered.length < 2) {
-    skip('the list reads down each column', `only ${ordered.length} column at this width`);
+  const [r1, r2] = rows.slice(0, 2).map((r) => r.getBoundingClientRect());
+  if (r2 && r2.left > r1.left) {
+    ok('waves 1 and 2 sit side by side, read across', Math.abs(r1.top - r2.top) < 2, `${r1.top} vs ${r2.top}`);
   } else {
-    const runsDown = ordered.every((ns, i) =>
-      i === 0 || Math.min(...ns) > Math.max(...ordered[i - 1]));
-    ok('every stage in a column comes after every stage in the column left of it',
-       runsDown, ordered.map((ns) => `[${ns[0]}-${ns[ns.length - 1]}]`).join(' '));
+    skip('the list reads across', 'one box per line at this width');
   }
 
   /* A boss the run sends twice is in two entries, not one. */

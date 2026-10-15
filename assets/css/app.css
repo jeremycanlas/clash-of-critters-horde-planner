@@ -2342,96 +2342,106 @@ body[data-switching="true"] .cell[data-zobo] { box-shadow: none; cursor: default
   color: var(--warn, var(--accent));
   font-size: 11px; line-height: 1;
 }
-/*
- * The wave list: "1 - Two-Headed", "2 - Goonch", down to 25.
- *
- * Read down a column and then over to the next, the way the list was drawn and
- * the way anybody reads a running order. That is CSS columns rather than grid:
- * grid fills across before it fills down, and making it go the other way means
- * telling it how many rows to make, which no panel that has to fit a phone and a
- * desktop can know. Multicol takes a column WIDTH and works the rest out, which
- * is the same question stated the way it can actually be answered.
- *
- * Two layouts came before this one. One stage per row down a single column
- * wasted nine tenths of the panel and made a glanceable list into a page and a
- * half of scrolling. Then a wrapping grid, which read across instead of down.
- *
- * 180px, not narrower: it is what a stage sending two bosses needs (a number,
- * then two 78px cards), and every column in a multicol is the same width. The 22
- * single-boss stages carry some empty space to the right for it, which is the
- * cheaper of the two costs -- the alternative is a pair that stacks, and a
- * stacked pair reads as two stages that have lost their numbers.
- */
 .roster[data-zobo-view="waves"] { display: block; }
+/*
+ * One box per wave, read across then down: the layout of the boss order picture
+ * shared on Discord, so the site and the picture are the same thing. A grid, so
+ * the count of boxes per line comes from the width -- five on a desktop panel,
+ * two on a phone.
+ */
 .wavecols {
-  columns: 180px;
-  column-gap: var(--s3);
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: var(--s2);
 }
 .waverow {
   display: grid;
-  grid-template-columns: 2.5ch auto;
-  align-items: center;
+  grid-template-rows: auto 1fr;
   gap: var(--s2);
   min-width: 0;
-  /* A stage split down the middle by a column break would put its number in one
-     column and its boss in the next. */
-  break-inside: avoid;
-  padding-bottom: var(--s2);
+  padding: var(--s2);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-md);
+  background: var(--surface);
 }
-.waverow__n {
-  justify-self: end;
+.waverow__head {
+  display: flex; align-items: baseline; gap: 6px;
   color: var(--text-mute);
-  font-size: 13px; font-weight: 700;
-  /* So 1 and 25 sit on the same right edge and the numbers read as a column. */
-  font-variant-numeric: tabular-nums;
+  font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
 }
-/* A stage that sends two puts both in the one entry, side by side. The column is
-   sized so they fit without wrapping; see the note above. */
-.waverow__cards { display: flex; gap: var(--s1); min-width: 0; }
-.waverow__cards .card--zobo { width: 78px; flex: none; }
-/* Wave 25 sends three: narrower cards keep the row inside its 180px column. */
-.waverow__cards:has(> :nth-child(3)) .card--zobo { width: 52px; }
-.waverow__cards:has(> :nth-child(3)) .card__name { font-size: 9px; }
-/* A wave nothing on your field beats: the number and a cross say so. */
-.waverow.is-open { grid-template-columns: 2.5ch auto auto; justify-content: start; }
-.waverow.is-open .waverow__n, .waverow__open { color: var(--danger); }
-.waverow__open { font-weight: 800; }
-/* What a boss is weak to, after its own element on the card. */
-.card__weak { display: inline-flex; align-items: center; gap: 1px; color: var(--text-mute); font-size: 10px; }
+.waverow__n { color: var(--text); font-size: 20px; letter-spacing: 0; font-variant-numeric: tabular-nums; }
+.waverow__cards { display: flex; flex-wrap: wrap; gap: var(--s1); justify-content: center; align-content: end; min-width: 0; }
+.waverow__cards .card--zobo { flex: 1 1 0; min-width: 0; max-width: 120px; }
+/* Three in one wave: two over one, as on the picture. */
+.waverow__cards:has(> :nth-child(3)) .card--zobo { flex: 0 0 calc(50% - var(--s1) / 2); }
+.waverow__cards .card__name { white-space: normal; }
+/* What a boss is weak to, under its name, as on the picture. */
+.card__weak {
+  display: flex; align-items: center; justify-content: center; gap: 4px;
+  margin-top: 4px; padding-top: 4px;
+  border-top: 1px solid var(--line-soft);
+  color: var(--text-mute);
+  font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+  white-space: nowrap;
+}
+/* A wave nothing on your field beats. */
+.waverow.is-open { border-color: color-mix(in srgb, var(--danger) 60%, transparent); }
+.waverow.is-open .waverow__n { color: var(--danger); }
+.waverow__open {
+  margin-left: auto;
+  padding: 2px 7px; border-radius: 999px;
+  background: color-mix(in srgb, var(--danger) 22%, transparent);
+  color: var(--danger);
+  font-size: 10px; letter-spacing: .04em;
+}
 
 /*
- * Above the wave list: the season, the five elements as counts that double as a
- * filter, and what the field you have built beats. The tiles filter by what
- * BEATS a boss, which is a different question from the element chips above
- * (what the boss IS), so they are a control of their own rather than more chips.
+ * Above the waves: the season, the credits, and the five elements as the
+ * picture's "What to bring" tiles. The tiles filter by what BEATS a boss, a
+ * different question from the element chips above (what the boss IS), so they
+ * are a control of their own rather than more chips.
  */
 .wavehead { display: grid; gap: var(--s2); margin-bottom: var(--s3); }
-.wavehead__beats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--s1); }
+.wavehead__top { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: var(--s2); }
+.wavehead__credits { display: flex; flex-wrap: wrap; gap: var(--s1); margin: 0; }
+.wavehead__credits > div {
+  padding: 5px 12px;
+  border: 1px solid var(--line-soft); border-left: 3px solid var(--accent);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+}
+.wavehead__credits dt { color: var(--text-mute); font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.wavehead__credits dd { margin: 2px 0 0; font-size: 14px; font-weight: 700; white-space: nowrap; }
+.wavehead__cap { margin: 0; font-size: 12.5px; color: var(--text-dim); }
+.wavehead__cap b { color: var(--text); }
+.wavehead__cap em, .wavebeat__w em { color: var(--danger); font-style: normal; font-weight: 800; }
+.wavehead__beats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--s1); }
 .wavebeat {
-  display: flex; flex-direction: column; align-items: center; gap: 2px;
-  padding: 6px 2px;
-  border: 1px solid var(--line-soft);
+  display: grid; grid-template-columns: auto 1fr; column-gap: 8px; align-items: center;
+  padding: 8px 10px;
+  border: 1px solid var(--line-soft); border-left: 3px solid var(--type-color);
   border-radius: var(--r-sm);
   background: color-mix(in srgb, var(--type-color) 13%, transparent);
   color: var(--text);
-  font: inherit;
+  font: inherit; text-align: left;
   cursor: pointer;
 }
-.wavebeat b { font-size: 16px; line-height: 1; }
-.wavebeat span { font-size: 10.5px; color: var(--text-mute); white-space: nowrap; }
-.wavebeat:hover { border-color: color-mix(in srgb, var(--type-color) 55%, var(--line)); }
+.wavebeat > .badge { grid-row: 1 / 4; }
+.wavebeat__n { font-size: 12px; color: var(--text-dim); }
+.wavebeat__n b { font-size: 20px; color: var(--text); }
+.wavebeat__w { font-size: 11px; color: var(--text-mute); line-height: 1.35; }
+.wavebeat__hard {
+  justify-self: start; margin-top: 4px;
+  padding: 1px 8px; border-radius: 999px;
+  background: color-mix(in srgb, var(--danger) 22%, transparent);
+  color: var(--danger);
+  font-size: 11px; font-weight: 700;
+}
+.wavebeat__hard b { color: var(--text); }
+.wavebeat:hover { border-color: color-mix(in srgb, var(--type-color) 55%, var(--line)); border-left-color: var(--type-color); }
 .wavebeat[aria-pressed="true"] { border-color: var(--type-color); box-shadow: inset 0 0 0 1px var(--type-color); }
-.wavehead__cap { margin: 0 0 calc(var(--s1) * -1); font-size: 12px; color: var(--text-mute); }
 .wavehead__team { margin: 0; font-size: 13px; color: var(--text-dim); }
 .wavehead__team.is-all { color: var(--ok); }
-.wavehard {
-  margin: var(--s1) 0 var(--s2);
-  padding-top: var(--s1);
-  border-top: 1px solid color-mix(in srgb, var(--danger) 50%, transparent);
-  color: var(--danger);
-  font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
-  break-inside: avoid; break-after: avoid;
-}
 /* Every boss filtered out of every stage. Says which of the two it is -- no
    match at all -- rather than leaving an empty panel that reads as broken. */
 .roster__empty {
