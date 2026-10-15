@@ -1853,12 +1853,12 @@ await runGroup('the Zobo tab reads as a wave list as well as a roster', async ()
        runsDown, ordered.map((ns) => `[${ns[0]}-${ns[ns.length - 1]}]`).join(' '));
   }
 
-  /* A boss the run sends three times is in three entries, not one. */
-  const goonch = rows.filter((r) => r.querySelector('.card--zobo[data-slug="goonch-zobo"]'))
+  /* A boss the run sends twice is in two entries, not one. */
+  const sandworm = rows.filter((r) => r.querySelector('.card--zobo[data-slug="sandworm-zobo"]'))
     .map((r) => Number(r.querySelector('.waverow__n').textContent));
   /* Joined, not eq: this suite's eq is Object.is, which no two arrays satisfy. */
   eq('a boss sent more than once appears at every stage that sends it',
-     goonch.join(','), '2,7,16');
+     sandworm.join(','), '15,25');
 
   /* And a stage that sends two is one entry holding both. */
   const fifteen = rows.find((r) => r.querySelector('.waverow__n').textContent === '15');
@@ -1880,6 +1880,25 @@ await runGroup('the Zobo tab reads as a wave list as well as a roster', async ()
     ok('and every stage still shown has a card in it',
        left.every((r) => r.querySelector('.card--zobo')));
     await click(fire, 460);
+  }
+
+  /* The element tiles narrow it to what that element BEATS, and press again to undo. */
+  const water = $('.wavebeat[data-beat="Water"]');
+  if (water) {
+    await click(water, 460);
+    const weak = $$('.waverow .card__weak .badge').map((b) => b.dataset.type);
+    ok('a pressed tile keeps only bosses weak to it', weak.length > 0 && weak.every((t) => t === 'Water'), weak.join(','));
+    await click($('.wavebeat[data-beat="Water"]'), 420);
+    eq('pressing it again brings every stage back', $$('.waverow').length, rows.length);
+  }
+
+  /* The preview season is its own tab, with its new bosses drawn but not draggable onto the board. */
+  const preview = $('[data-season="1"]');
+  if (preview) {
+    await click(preview, 520);
+    const eight = $$('.waverow').find((r) => r.querySelector('.waverow__n').textContent === '8');
+    eq('the preview tab shows its own lineup', eight?.querySelector('.card--zobo')?.dataset.slug, 'driver-zobo');
+    await click($('[data-season="0"]'), 460);
   }
 
   /* Back to the roster reading, and the wave layout must not follow it. */

@@ -460,6 +460,22 @@ export function buildFilters(onChange, { onPick = bringToBench } = {}) {
   // Clicking does whatever the host page wants. Dragging is for putting it
   // somewhere specific on the field.
   $('#roster').addEventListener('click', (e) => {
+    // The Waves view's own controls: which season, and which element's waves.
+    const season = e.target.closest('[data-season]');
+    if (season) {
+      waveSeason.value = Number(season.dataset.season);
+      waveBeat.value = null;
+      try { localStorage.setItem(WAVE_SEASON_KEY, String(waveSeason.value)); } catch { /* private */ }
+      onChange();
+      return;
+    }
+    const beat = e.target.closest('[data-beat]');
+    if (beat) {
+      waveBeat.value = waveBeat.value === beat.dataset.beat ? null : beat.dataset.beat;
+      onChange();
+      return;
+    }
+
     /* A chip card is a different kind of card in the same grid, so it is
        answered before anything that assumes a slug. */
     const chipCard = e.target.closest('.card--chip');
@@ -1063,6 +1079,17 @@ try {
   if (localStorage.getItem(ZOBO_VIEW_KEY) === 'waves') zoboView.value = 'waves';
 } catch { /* private mode */ }
 
+/* Which season the Waves view shows (an index into state.bossOrders), and the
+   element whose waves it is narrowed to. Remembered like the view itself. */
+const WAVE_SEASON_KEY = 'coc.zobos.season';
+export const waveSeason = { value: 0 };
+export const waveBeat = { value: null };
+try {
+  waveSeason.value = Math.max(0, Number(localStorage.getItem(WAVE_SEASON_KEY)) || 0);
+} catch { /* private mode */ }
+// The run's last six waves, the ones that decide it.
+const HARD_FROM = 20;
+
 /**
  * The Zobo list.
  *
@@ -1083,17 +1110,18 @@ try {
  * also sat on top of the art it was labelling. The stage belongs to the stage,
  * which is the row, not to the boss.
  */
-function zoboCard(z) {
+function zoboCard(z, { weak = null } = {}) {
   return `
       <div class="card card--zobo" role="listitem" tabindex="0"
            data-slug="${esc(z.slug)}"${z.type ? ` data-type="${z.type}"` : ''}
            title="${esc(z.name)}${z.type ? `, ${z.type}` : ''}${z.boss ? ', Boss' : ''}${
-  z.skill?.name ? `
+  weak ? `, weak to ${weak}` : ''}${z.skill?.name ? `
 ${esc(z.skill.name)}` : ''}">
         <div class="card__art">${artHTML(z, { observe: true, priority: 'low' })}</div>
         <div class="card__meta">
-          ${z.boss ? '<span class="card__boss" title="Boss">★</span>' : ''}
+          ${z.boss && !weak ? '<span class="card__boss" title="Boss">★</span>' : ''}
           ${z.type ? typeIcon(z.type) : ''}
+          ${weak ? `<span class="card__weak" title="Weak to ${weak}">›${typeIcon(weak)}</span>` : ''}
         </div>
         <div class="card__name">${esc(z.name)}</div>
       </div>`;
@@ -1118,17 +1146,70 @@ ${esc(z.skill.name)}` : ''}">
  * rather than ignoring as "this view is the whole list".
  */
 function renderWaves(keep) {
+  const orders = state.bossOrders;
+  const order = orders[Math.min(waveSeason.value, orders.length - 1)];
+  const count = order.stages.length;
+  const zobo = (slug) => state.zoboBySlug.get(slug) ?? state.previewZobos.get(slug);
+  const weakTo = (z) => state.meta.typeChart?.[z.type]?.weakTo ?? null;
+
+  /* The field, both players' in co-op. Not the bench: once ten are down it
+     cannot come on, so it beats nothing. */
+  const field = new Set(store.players().flatMap((p) => store.placedFor(p))
+    .map((o) => state.bySlug.get(o.slug)?.type).filter(Boolean));
+  const beaten = (z) => !weakTo(z) || field.has(weakTo(z));
+
+  /* Tallied over the whole season, not the filtered view: the tiles are the
+     season at a glance, and pressing one is how you narrow it. */
+  const by = {};
+  const missing = {};
+  order.stages.forEach((slugs, i) => {
+    for (const z of slugs.map(zobo).filter(Boolean)) {
+      const k = weakTo(z);
+      if (!k) continue;
+      (by[k] ??= []).push(i + 1);
+      if (field.size && !field.has(k)) (missing[k] ??= new Set()).add(i + 1);
+    }
+  });
+  const missed = new Set(Object.values(missing).flatMap((s) => [...s]));
+
+  const seasons = orders.length > 1 ? `
+    <div class="segmented wavehead__seasons" role="tablist" aria-label="Which season">${orders.map((o, i) => `
+      <button class="segmented__btn" type="button" role="tab" data-season="${i}"
+        aria-selected="${o === order}">${esc(o.label)}${o.provisional ? ' <span class="chtab__flag">preview</span>' : ''}</button>`).join('')}
+    </div>` : '';
+  const tiles = TYPES.filter((t) => by[t]).map((t) => `
+    <button class="wavebeat" type="button" data-beat="${t}" data-type="${t}" aria-pressed="${waveBeat.value === t}"
+      title="Show only the waves ${t} beats">${typeIcon(t)}<b>${by[t].length}</b>
+      <span>${by[t].filter((n) => n >= HARD_FROM).length} in ${HARD_FROM}-${count}</span></button>`).join('');
+  const team = !field.size
+    ? 'Put Tatari on the field to see which waves they beat.'
+    : `Your field beats <b>${count - missed.size} of ${count}</b> waves.${
+      Object.entries(missing).map(([k, s]) => ` Missing ${k}: ${[...s].join(', ')}.`).join('')}`;
+  const head = `
+    <div class="wavehead">
+      ${seasons}
+      <p class="wavehead__cap">Bosses each element beats, and how many of them are in the hardest waves. Tap one to show only its waves.</p>
+      <div class="wavehead__beats" aria-label="Bosses each element beats; press one to show only its waves">${tiles}</div>
+      <p class="wavehead__team${field.size && !missed.size ? ' is-all' : ''}">${team}</p>
+    </div>`;
+
   const rows = [];
   let shown = 0;
-  for (let n = 1; n <= state.bossStageCount; n += 1) {
-    const here = state.zobos.filter((z) => state.bossStages.get(z.slug)?.includes(n) && keep(z));
+  for (let n = 1; n <= count; n += 1) {
+    const here = order.stages[n - 1].map(zobo)
+      .filter((z) => z && keep(z) && (!waveBeat.value || weakTo(z) === waveBeat.value));
     if (!here.length) continue;
     shown += here.length;
+    if (n >= HARD_FROM && !rows.some((r) => r.includes('wavehard'))) {
+      rows.push(`<p class="wavehard">Hardest: waves ${HARD_FROM} to ${count}</p>`);
+    }
+    const open = field.size && here.some((z) => !beaten(z));
     rows.push(`
-      <div class="waverow" role="listitem">
+      <div class="waverow${open ? ' is-open' : ''}" role="listitem">
         <span class="waverow__n" aria-hidden="true">${n}</span>
-        <span class="sr-only">Stage ${n} of ${state.bossStageCount}</span>
-        <div class="waverow__cards">${here.map(zoboCard).join('')}</div>
+        <span class="sr-only">Stage ${n} of ${count}${open ? ', nothing on your field beats it' : ''}</span>
+        <div class="waverow__cards">${here.map((z) => zoboCard(z, { weak: weakTo(z) })).join('')}</div>
+        ${open ? '<span class="waverow__open" title="Nothing on your field beats this wave" aria-hidden="true">✗</span>' : ''}
       </div>`);
   }
   /*
@@ -1143,7 +1224,8 @@ function renderWaves(keep) {
    * box of no fixed height, the count comes from the width, the box grows as tall
    * as the balanced columns need, and the roster scrolls it the ordinary way.
    */
-  return { html: `<div class="wavecols">${rows.join('')}</div>`, rows: rows.length, shown };
+  return { head, html: rows.length ? `<div class="wavecols">${rows.join('')}</div>` : '',
+    rows: rows.filter((r) => r.includes('waverow')).length, shown, order };
 }
 
 function renderZobos() {
@@ -1154,15 +1236,16 @@ function renderZobos() {
     if (filters.types.size && !filters.types.has(z.type)) return false;
     return !q || z._search.includes(q.toLowerCase());
   };
-  const waves = zoboView.value === 'waves' && state.bossStageCount > 0;
+  const waves = zoboView.value === 'waves' && state.bossOrders.length > 0;
 
   let count;
+  let built = null;
   if (waves) {
-    const built = renderWaves(keep);
+    built = renderWaves(keep);
     host.dataset.zoboView = 'waves';
-    host.innerHTML = built.html
-      || '<p class="roster__empty">No boss matches that, so no stage does either.</p>';
-    count = `${built.rows} of ${state.bossStageCount} stages`;
+    host.innerHTML = built.head + (built.html
+      || '<p class="roster__empty">No boss matches that, so no stage does either.</p>');
+    count = `${built.rows} of ${built.order.stages.length} stages`;
   } else {
     const list = state.zobos.filter(keep);
     host.innerHTML = list.map(zoboCard).join('');
@@ -1175,6 +1258,8 @@ function renderZobos() {
      and the cards are inside them. */
   for (const card of host.querySelectorAll('.card--zobo')) {
     const slug = card.dataset.slug;
+    // A preview season's new boss is drawn, but cannot go on the field yet.
+    if (!state.zoboBySlug.has(slug)) continue;
     draggable(
       card,
       () => ({ slug, player: 0, from: 'roster', kind: 'zobo' }),
@@ -1191,11 +1276,12 @@ function renderZobos() {
      roster reading carries nothing of the boss order any more. */
   const credit = $('#boss-order-credit');
   if (credit) {
-    const show = waves && !!state.bossOrderBy;
+    const o = built?.order;
+    const show = waves && !!o?.by;
     credit.hidden = !show;
     credit.textContent = show
-      ? `The order a Horde run sends its bosses in, worked out and shared by ${
-        state.bossOrderBy}.`
+      ? `${o.label} boss order: lineup by ${o.by}${o.images ? `, new boss pictures by ${o.images}` : ''}.${
+        o.provisional ? ' Read off the Pioneer Server, so the live game may differ.' : ''}`
       : '';
   }
 

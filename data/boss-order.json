@@ -1,6 +1,10 @@
 {
-  "_readme": "The order the bosses arrive in a Horde Invasion run, stage 1 to 25. Each entry is the boss or bosses that stage sends, by slug. A boss can appear at more than one stage, and a stage can send two.",
-  "by": "cotard_urn",
+  "_readme": [
+    "The order the bosses arrive in a Horde Invasion run, stage 1 to 25. Each entry is the boss or bosses that stage sends, by slug. A boss can appear at more than one stage, and a stage can send two or three.",
+    "The top level is the live season and is the only one the rest of the app reads. `preview` is the next season, read off the Pioneer Server: it has its own tab in the Waves view and nothing else. Its new bosses live in its own `zobos` list rather than in zobos.json, so they never reach the Zobo roster or the field before the season ships."
+  ],
+  "label": "Season 2",
+  "by": "the Clash of Critters Wiki",
   "stages": [
     ["two-headed-zobo"],
     ["goonch-zobo"],
@@ -8,7 +12,7 @@
     ["shaman-zobo"],
     ["roadhog-zobo"],
     ["popstar-zobo"],
-    ["goonch-zobo"],
+    ["hydro-zobo"],
     ["tipsy-zobo"],
     ["knight-zobo"],
     ["climber-zobo"],
@@ -16,8 +20,8 @@
     ["sailor-zobo"],
     ["chef-zobo"],
     ["botanical-zobo"],
-    ["sandworm-zobo", "golf-zobo"],
-    ["goonch-zobo"],
+    ["golf-zobo", "sandworm-zobo"],
+    ["harpoon-zobo"],
     ["forge-zobo"],
     ["pharaoh-zobo"],
     ["clown-zobo"],
@@ -26,6 +30,46 @@
     ["garden-zobo"],
     ["volcano-zobo"],
     ["laser-zobo"],
-    ["tipsy-zobo", "sandworm-zobo"]
-  ]
+    ["tipsy-zobo", "sandworm-zobo", "botanical-zobo"]
+  ],
+  "preview": {
+    "label": "Season 3",
+    "provisional": true,
+    "by": "tsugii and Toren_VIII",
+    "images": "Artiar",
+    "stages": [
+      ["totem-zobo"],
+      ["forge-zobo"],
+      ["hydro-zobo"],
+      ["manager-zobo"],
+      ["laser-zobo"],
+      ["chef-zobo"],
+      ["climber-zobo"],
+      ["driver-zobo"],
+      ["harpoon-zobo"],
+      ["shaman-zobo", "clown-zobo"],
+      ["sandworm-zobo"],
+      ["brainfreeze-zobo"],
+      ["captain-zobo"],
+      ["tire-zobo"],
+      ["hammer-zobo", "baron-zobo"],
+      ["golf-zobo"],
+      ["yeti-zobo"],
+      ["botanical-zobo"],
+      ["volcano-zobo"],
+      ["sailor-zobo", "pharaoh-zobo"],
+      ["knight-zobo"],
+      ["shocker-zobo"],
+      ["tipsy-zobo"],
+      ["roadhog-zobo"],
+      ["garden-zobo", "goonch-zobo", "popstar-zobo"]
+    ],
+    "zobos": [
+      { "name": "Driver Zobo", "slug": "driver-zobo", "type": "Lightning", "image": "data/images/zobo/driver-zobo.png" },
+      { "name": "Brainfreeze Zobo", "slug": "brainfreeze-zobo", "type": "Water", "image": "data/images/zobo/brainfreeze-zobo.png" },
+      { "name": "Tire Zobo", "slug": "tire-zobo", "type": "Grass", "image": "data/images/zobo/tire-zobo.png" },
+      { "name": "Hammer Zobo", "slug": "hammer-zobo", "type": "Fire", "image": "data/images/zobo/hammer-zobo.png" },
+      { "name": "Baron Zobo", "slug": "baron-zobo", "type": "Rock", "image": "data/images/zobo/baron-zobo.png" }
+    ]
+  }
 }

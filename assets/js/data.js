@@ -57,6 +57,10 @@ export const state = {
   bossOrderBy: null,
   /** @type {number} how many stages the order covers, 0 when it is not loaded */
   bossStageCount: 0,
+  /** @type {{label: string, by: string|null, images?: string|null, provisional?: boolean, stages: string[][]}[]} live first, then the preview */
+  bossOrders: [],
+  /** @type {Map<string, object>} the preview season's new bosses, drawn on its tab only */
+  previewZobos: new Map(),
 };
 
 /**
@@ -259,6 +263,25 @@ export async function load() {
       state.bossStages.get(slug).push(i + 1);
     }
   });
+  /*
+   * Every season the Waves view can show: the live one, then the preview. The
+   * preview's new bosses are kept apart in previewZobos, so they can be drawn on
+   * its tab and nowhere else -- not the roster, not the field.
+   */
+  const preview = Array.isArray(bossOrder?.preview?.stages) ? bossOrder.preview : null;
+  state.bossOrders = [
+    stages.length ? { label: bossOrder.label ?? 'Live', by: state.bossOrderBy, stages } : null,
+    preview ? { label: preview.label, by: preview.by ?? null, images: preview.images ?? null,
+      provisional: true, stages: preview.stages } : null,
+  ].filter(Boolean);
+  state.previewZobos = new Map((preview?.zobos ?? []).map((z) => [z.slug, { ...z, kind: 'zobo', boss: true }]));
+  // The order is the authority on who is a boss: the wiki's notes miss some it sends.
+  for (const o of state.bossOrders) {
+    for (const slug of o.stages.flat()) {
+      const z = state.zoboBySlug.get(slug);
+      if (z && !z.boss) { z.boss = true; z._search += ' boss'; }
+    }
+  }
   reindex();
   return state;
 }

@@ -2389,6 +2389,49 @@ body[data-switching="true"] .cell[data-zobo] { box-shadow: none; cursor: default
    sized so they fit without wrapping; see the note above. */
 .waverow__cards { display: flex; gap: var(--s1); min-width: 0; }
 .waverow__cards .card--zobo { width: 78px; flex: none; }
+/* Wave 25 sends three: narrower cards keep the row inside its 180px column. */
+.waverow__cards:has(> :nth-child(3)) .card--zobo { width: 52px; }
+.waverow__cards:has(> :nth-child(3)) .card__name { font-size: 9px; }
+/* A wave nothing on your field beats: the number and a cross say so. */
+.waverow.is-open { grid-template-columns: 2.5ch auto auto; justify-content: start; }
+.waverow.is-open .waverow__n, .waverow__open { color: var(--danger); }
+.waverow__open { font-weight: 800; }
+/* What a boss is weak to, after its own element on the card. */
+.card__weak { display: inline-flex; align-items: center; gap: 1px; color: var(--text-mute); font-size: 10px; }
+
+/*
+ * Above the wave list: the season, the five elements as counts that double as a
+ * filter, and what the field you have built beats. The tiles filter by what
+ * BEATS a boss, which is a different question from the element chips above
+ * (what the boss IS), so they are a control of their own rather than more chips.
+ */
+.wavehead { display: grid; gap: var(--s2); margin-bottom: var(--s3); }
+.wavehead__beats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--s1); }
+.wavebeat {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 6px 2px;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-sm);
+  background: color-mix(in srgb, var(--type-color) 13%, transparent);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+.wavebeat b { font-size: 16px; line-height: 1; }
+.wavebeat span { font-size: 10.5px; color: var(--text-mute); white-space: nowrap; }
+.wavebeat:hover { border-color: color-mix(in srgb, var(--type-color) 55%, var(--line)); }
+.wavebeat[aria-pressed="true"] { border-color: var(--type-color); box-shadow: inset 0 0 0 1px var(--type-color); }
+.wavehead__cap { margin: 0 0 calc(var(--s1) * -1); font-size: 12px; color: var(--text-mute); }
+.wavehead__team { margin: 0; font-size: 13px; color: var(--text-dim); }
+.wavehead__team.is-all { color: var(--ok); }
+.wavehard {
+  margin: var(--s1) 0 var(--s2);
+  padding-top: var(--s1);
+  border-top: 1px solid color-mix(in srgb, var(--danger) 50%, transparent);
+  color: var(--danger);
+  font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  break-inside: avoid; break-after: avoid;
+}
 /* Every boss filtered out of every stage. Says which of the two it is -- no
    match at all -- rather than leaving an empty panel that reads as broken. */
 .roster__empty {

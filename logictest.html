@@ -557,14 +557,14 @@ await group('boss order: every stage names a real boss, and every boss has a sta
   const unknown = [...named].filter((s) => !state.zoboBySlug.has(s));
   eq('every slug in it is a Zobo the app knows', unknown, []);
   const notBoss = [...named].filter((s) => state.zoboBySlug.get(s) && !state.zoboBySlug.get(s).boss);
-  eq('and every one of them is a boss', notBoss, []);
+  eq('and every one of them is a boss (the order makes it one)', notBoss, []);
 
   const missing = state.zobos.filter((z) => z.boss && !named.has(z.slug)).map((z) => z.slug);
   eq('no boss is left without a stage', missing, []);
 
   /* A boss the run sends more than once keeps all of them. */
-  eq('Goonch is sent three times, and all three survive the lookup',
-    state.bossStages.get('goonch-zobo'), [2, 7, 16]);
+  eq('Sandworm is sent twice, and both survive the lookup',
+    state.bossStages.get('sandworm-zobo'), [15, 25]);
   /* And a stage that sends two puts the same number on both cards. */
   ok('a stage that sends two bosses numbers both of them',
     state.bossStages.get('sandworm-zobo')?.includes(15)
@@ -576,6 +576,15 @@ await group('boss order: every stage names a real boss, and every boss has a sta
   const reachable = new Set([...state.bossStages.values()].flat());
   eq('every stage from 1 to 25 is on at least one card',
     [...Array(stages.length)].map((_, i) => i + 1).filter((n) => !reachable.has(n)), []);
+
+  /* The preview season: its own tab, its own new bosses, and nothing past that. */
+  const pv = file.preview;
+  eq('the preview is the second season and is flagged', [state.bossOrders.length, state.bossOrders[1]?.provisional], [2, true]);
+  eq('the preview run is 25 stages too', pv.stages.length, 25);
+  const pvUnknown = [...new Set(pv.stages.flat())].filter((s) => !state.zoboBySlug.has(s) && !state.previewZobos.has(s));
+  eq('every preview slug is a Zobo or one of its own new bosses', pvUnknown, []);
+  const leaked = [...state.previewZobos.keys()].filter((s) => state.zoboBySlug.has(s) || state.bossStages.has(s));
+  eq('a preview boss never reaches the roster or the live order', leaked, []);
 });
 
 await group('share link: a flex square travels, which it never used to', () => {
