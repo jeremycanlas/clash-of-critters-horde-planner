@@ -2342,58 +2342,88 @@ body[data-switching="true"] .cell[data-zobo] { box-shadow: none; cursor: default
   color: var(--warn, var(--accent));
   font-size: 11px; line-height: 1;
 }
-/* The waves run their full length and the page scrolls, rather than a box of
-   boxes scrolling inside a scrolling page. The phone sheet keeps its own scroll
-   (.panel--roster .roster, later in the file). */
-.roster[data-zobo-view="waves"] { display: block; max-height: none; overflow-y: visible; }
 /*
- * One box per wave, read across then down: the layout of the boss order picture
- * shared on Discord, so the site and the picture are the same thing. A grid, so
- * the count of boxes per line comes from the width -- five on a desktop panel,
- * two on a phone.
+ * The waves view is sized to show all 25 on one screen beside the field, on a
+ * 1080p desktop: the search and filters step aside (the element tiles are this
+ * view's filter), the header is three short lines, and the wave number sits
+ * beside its bosses rather than over them. The phone sheet keeps its own
+ * scroll (.panel--roster .roster, later in the file).
  */
+.roster[data-zobo-view="waves"] { display: block; max-height: none; overflow-y: visible; container-type: inline-size; }
+.panel--roster:has(#roster[data-zobo-view="waves"]) .filters { display: none; }
+
+/* Above the waves: season and credits, what each element beats, your field. */
+.wavehead { display: grid; gap: 6px; margin-bottom: var(--s2); }
+.wavehead__top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px var(--s3); }
+.wavehead__credits { margin: 0; font-size: 11.5px; color: var(--text-mute); }
+.wavehead__credits b { color: var(--text-dim); }
+.wavehead__beats { display: grid; grid-template-columns: auto repeat(5, minmax(0, 1fr)); gap: 6px; }
+.wavehead__cap {
+  align-self: center; width: 4.5em;
+  color: var(--text-mute);
+  font-size: 10px; font-weight: 700; letter-spacing: .06em; line-height: 1.25; text-transform: uppercase;
+  cursor: help;
+}
+.wavehead__cap em, .wavebeat__w em, .wavehead__team em { color: var(--danger); font-style: normal; font-weight: 800; }
+/* What an element BEATS, a different question from the element chips (what a
+   boss IS), so these are a control of their own. */
+.wavebeat {
+  display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 6px; align-items: center;
+  min-width: 0;
+  padding: 5px 8px;
+  border: 1px solid var(--line-soft); border-left: 3px solid var(--type-color);
+  border-radius: var(--r-sm);
+  background: color-mix(in srgb, var(--type-color) 13%, transparent);
+  color: var(--text);
+  font: inherit; text-align: left;
+  cursor: pointer;
+}
+.wavebeat > .badge { grid-row: 1 / 3; }
+.wavebeat__n { display: flex; align-items: baseline; gap: 4px; font-size: 12px; color: var(--text-dim); white-space: nowrap; }
+.wavebeat__n b { font-size: 16px; color: var(--text); }
+.wavebeat__hard {
+  margin-left: auto;
+  padding: 0 6px; border-radius: 999px;
+  background: color-mix(in srgb, var(--danger) 22%, transparent);
+  color: var(--danger);
+  font-size: 10px; font-weight: 700;
+}
+.wavebeat__w { font-size: 10.5px; color: var(--text-mute); line-height: 1.3; }
+.wavebeat:hover { border-color: color-mix(in srgb, var(--type-color) 55%, var(--line)); border-left-color: var(--type-color); }
+.wavebeat[aria-pressed="true"] { border-color: var(--type-color); box-shadow: inset 0 0 0 1px var(--type-color); }
+.wavehead__team { margin: 0; font-size: 12.5px; color: var(--text-dim); }
+.wavehead__team.is-all { color: var(--ok); }
+
+/* One box per wave, read across then down like the boss order picture. */
 .wavecols {
   display: grid;
-  /* Five across a desktop panel, three on a phone. */
-  grid-template-columns: repeat(auto-fill, minmax(min(150px, 30%), 1fr));
+  /* Five across, as on the picture: wave 1 to 5 is the first line at any
+     desktop width. Three on a phone (the media query below). */
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 6px;
 }
-/*
- * Compact on purpose: 25 boxes of full-size cards ran the panel twice the
- * height of the field beside it. Small art, the name, and what the boss is
- * weak to under the name -- not on the art, whose tint is the boss's OWN
- * element, so the two never sit together where they could be confused.
- */
 .waverow {
-  display: grid;
-  grid-template-rows: auto 1fr;
-  gap: 4px;
+  display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 4px;
   min-width: 0;
-  padding: 6px;
+  padding: 5px;
   border: 1px solid var(--line-soft);
   border-radius: var(--r-md);
   background: var(--surface);
 }
-.waverow__head {
-  display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 6px;
-  color: var(--text-mute);
-  font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+.waverow__n { color: var(--text); font-size: 15px; font-weight: 800; font-variant-numeric: tabular-nums; }
+/* A wave nothing on your field beats. */
+.waverow.is-open {
+  border-color: color-mix(in srgb, var(--danger) 60%, transparent);
+  background: color-mix(in srgb, var(--danger) 7%, var(--surface));
 }
-.waverow__n { color: var(--text); font-size: 15px; letter-spacing: 0; font-variant-numeric: tabular-nums; }
-.waverow__cards { display: flex; gap: 4px; justify-content: center; align-content: start; min-width: 0; }
-.waverow__cards .card--zobo { flex: 1 1 0; min-width: 0; max-width: 72px; padding: 3px; }
+.waverow.is-open .waverow__n { color: var(--danger); }
+.waverow__cards { display: flex; gap: 4px; justify-content: center; align-items: start; min-width: 0; }
+.waverow__cards .card--zobo { flex: 1 1 0; min-width: 0; max-width: 66px; padding: 3px; }
 .waverow__cards .card__meta { display: none; }
 .waverow__cards .card__art { grid-template-rows: 1fr; padding: 4px; }
-.waverow__cards .card__name {
-  margin-top: 3px;
-  font-size: 10.5px; line-height: 1.15;
-  white-space: normal;
-}
-/* Three in one wave leaves each card ~45px: one line of name, and the weak-to
-   element as its icon alone (the card's title still says it in words). */
-.waverow__cards:has(> :nth-child(3)) .card__name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.waverow__cards:has(> :nth-child(3)) .card__weak { font-size: 0; }
-/* What a boss is weak to, under its name. */
+.waverow__cards .card__name { margin-top: 3px; font-size: 10.5px; line-height: 1.15; white-space: normal; }
+/* What a boss is weak to, under its name -- not on the art, whose tint is the
+   boss's OWN element. */
 .card__weak {
   display: flex; align-items: center; justify-content: center; gap: 3px;
   margin-top: 2px;
@@ -2402,65 +2432,19 @@ body[data-switching="true"] .cell[data-zobo] { box-shadow: none; cursor: default
   white-space: nowrap;
 }
 .card__weak .badge { width: 13px; height: 13px; }
-/* A wave nothing on your field beats. */
-.waverow.is-open { border-color: color-mix(in srgb, var(--danger) 60%, transparent); }
-.waverow.is-open .waverow__n { color: var(--danger); }
-.waverow__open {
-  margin-left: auto;
-  padding: 2px 7px; border-radius: 999px;
-  background: color-mix(in srgb, var(--danger) 22%, transparent);
-  color: var(--danger);
-  font-size: 10px; letter-spacing: .04em;
-  white-space: nowrap;
+/* Three in one wave leaves each card ~44px: one line of name, and the weak-to
+   element as its icon alone (the card's title still says it in words). */
+.waverow__cards:has(> :nth-child(3)) .card__name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.waverow__cards:has(> :nth-child(3)) .card__weak { font-size: 0; }
+/* By the panel's width, not the screen's: a tablet's two columns leave it as
+   narrow as a phone. */
+@container (max-width: 700px) {
+  .wavehead__beats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .wavehead__cap { grid-column: 1 / -1; width: auto; }
+  /* Too narrow for the number beside three bosses: it goes back on top. */
+  .waverow { grid-template-columns: minmax(0, 1fr); }
+  .wavecols { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
-
-/*
- * Above the waves: the season, the credits, and the five elements as the
- * picture's "What to bring" tiles. The tiles filter by what BEATS a boss, a
- * different question from the element chips above (what the boss IS), so they
- * are a control of their own rather than more chips.
- */
-.wavehead { display: grid; gap: var(--s2); margin-bottom: var(--s3); }
-.wavehead__top { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: var(--s2); }
-.wavehead__credits { display: flex; flex-wrap: wrap; gap: var(--s1); margin: 0; }
-.wavehead__credits > div {
-  padding: 5px 12px;
-  border: 1px solid var(--line-soft); border-left: 3px solid var(--accent);
-  border-radius: var(--r-sm);
-  background: var(--surface);
-}
-.wavehead__credits dt { color: var(--text-mute); font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
-.wavehead__credits dd { margin: 2px 0 0; font-size: 14px; font-weight: 700; white-space: nowrap; }
-.wavehead__cap { margin: 0; font-size: 12.5px; color: var(--text-dim); }
-.wavehead__cap b { color: var(--text); }
-.wavehead__cap em, .wavebeat__w em { color: var(--danger); font-style: normal; font-weight: 800; }
-.wavehead__beats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--s1); }
-.wavebeat {
-  display: grid; grid-template-columns: auto 1fr; column-gap: 8px; align-items: center;
-  padding: 8px 10px;
-  border: 1px solid var(--line-soft); border-left: 3px solid var(--type-color);
-  border-radius: var(--r-sm);
-  background: color-mix(in srgb, var(--type-color) 13%, transparent);
-  color: var(--text);
-  font: inherit; text-align: left;
-  cursor: pointer;
-}
-.wavebeat > .badge { grid-row: 1 / 4; }
-.wavebeat__n { font-size: 12px; color: var(--text-dim); }
-.wavebeat__n b { font-size: 20px; color: var(--text); }
-.wavebeat__w { font-size: 11px; color: var(--text-mute); line-height: 1.35; }
-.wavebeat__hard {
-  justify-self: start; margin-top: 4px;
-  padding: 1px 8px; border-radius: 999px;
-  background: color-mix(in srgb, var(--danger) 22%, transparent);
-  color: var(--danger);
-  font-size: 11px; font-weight: 700;
-}
-.wavebeat__hard b { color: var(--text); }
-.wavebeat:hover { border-color: color-mix(in srgb, var(--type-color) 55%, var(--line)); border-left-color: var(--type-color); }
-.wavebeat[aria-pressed="true"] { border-color: var(--type-color); box-shadow: inset 0 0 0 1px var(--type-color); }
-.wavehead__team { margin: 0; font-size: 13px; color: var(--text-dim); }
-.wavehead__team.is-all { color: var(--ok); }
 /* Every boss filtered out of every stage. Says which of the two it is -- no
    match at all -- rather than leaving an empty panel that reads as broken. */
 .roster__empty {

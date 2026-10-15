@@ -728,6 +728,12 @@ async function checkControls(page, where, url, noise, events) {
         .filter((l) => /intercepts pointer events|outside of the viewport|not stable|not visible/.test(l)).pop();
       if (why && /<label[^>]*> intercepts/.test(why)) {
         await loc.dispatchEvent('click').catch(() => {});
+      } else if (depth > 0 && why && /intercepts pointer events/.test(why)) {
+        /* Under the drawer the press before it opened (the Saved drawer over
+           the roster's view switch). Nobody reaches it until that closes, the
+           same as a control behind a modal; at depth 0 a cover is still a fail. */
+        presses--;
+        return false;
       } else if (why && /not visible/.test(why)) {
         /* Playwright's idea of visible is stricter than a person's (a sliver
            mid-transition counts as hidden). Off-screen controls are the

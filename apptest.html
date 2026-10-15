@@ -1853,21 +1853,9 @@ await runGroup('the Zobo tab reads as a wave list as well as a roster', async ()
   eq('a stage that sends two is one entry with both in it',
      at15.join(','), 'golf-zobo,sandworm-zobo');
 
-  /*
-   * Filtering the wave list answers a question the roster cannot: not "which
-   * bosses are Fire" but "when do the Fire ones turn up". A stage left with no
-   * boss drops out rather than showing as an empty row.
-   */
-  const fire = $$('#filter-types .chip').find((c) => c.dataset.type === 'Fire');
-  if (fire) {
-    await click(fire, 520);
-    const left = $$('.waverow');
-    ok('filtering leaves only the stages that still send something',
-       left.length > 0 && left.length < rows.length, `${rows.length} -> ${left.length}`);
-    ok('and every stage still shown has a card in it',
-       left.every((r) => r.querySelector('.card--zobo')));
-    await click(fire, 460);
-  }
+  /* The search and filters step aside so all 25 fit beside the field; the
+     element tiles below are this view's filter. */
+  eq('the search and filters are out of the way', getComputedStyle($('.filters')).display, 'none');
 
   /* The element tiles narrow it to what that element BEATS, and press again to undo. */
   const water = $('.wavebeat[data-beat="Water"]');

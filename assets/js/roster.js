@@ -1110,7 +1110,8 @@ const HARD_FROM = 20;
  * also sat on top of the art it was labelling. The stage belongs to the stage,
  * which is the row, not to the boss.
  */
-function zoboCard(z, { weak = null } = {}) {
+// weak: what it is weak to, in the wave view (null there when it has no element).
+function zoboCard(z, { weak } = {}) {
   return `
       <div class="card card--zobo" role="listitem" tabindex="0"
            data-slug="${esc(z.slug)}"${z.type ? ` data-type="${z.type}"` : ''}
@@ -1122,7 +1123,7 @@ ${esc(z.skill.name)}` : ''}">
           ${z.boss && !weak ? '<span class="card__boss" title="Boss">★</span>' : ''}
           ${z.type ? typeIcon(z.type) : ''}
         </div>
-        <div class="card__name">${esc(weak ? z.name.replace(/ Zobo$/, '') : z.name)}</div>
+        <div class="card__name">${esc(weak !== undefined ? z.name.replace(/ Zobo$/, '') : z.name)}</div>
         ${weak ? `<div class="card__weak">Weak to ${typeIcon(weak)}</div>` : ''}
       </div>`;
 }
@@ -1140,10 +1141,9 @@ ${esc(z.skill.name)}` : ''}">
  * field, same badge. A stage that sends two puts both in the row, because the
  * row is the stage and not the boss.
  *
- * Filters still apply -- a stage keeps only the bosses that pass, and a stage
- * left with none drops out. Filtering to Fire and reading off "8, 17, 23, 25" is
- * a better answer than the roster gives, so the filters are worth honouring here
- * rather than ignoring as "this view is the whole list".
+ * The search and the filters are hidden here and ignored, so all 25 fit on one
+ * screen beside the field. The element tiles are this view's filter: what an
+ * element BEATS is the question here, not what a boss IS.
  */
 function renderWaves(keep) {
   const orders = state.bossOrders;
@@ -1182,23 +1182,21 @@ function renderWaves(keep) {
   const tiles = TYPES.filter((t) => by[t]).sort((a, b) => by[b].length - by[a].length).map((t) => `
     <button class="wavebeat" type="button" data-beat="${t}" data-type="${t}" aria-pressed="${waveBeat.value === t}"
       title="Show only the waves ${t} beats">${typeIcon(t)}
-      <span class="wavebeat__n"><b>${by[t].length}</b> ${t}</span>
-      <span class="wavebeat__w">Waves ${[...new Set(by[t])].map((n) => (n >= HARD_FROM ? `<em>${n}</em>` : n)).join(', ')}</span>
-      <span class="wavebeat__hard"><b>${by[t].filter((n) => n >= HARD_FROM).length}</b> in waves ${HARD_FROM} to ${count}</span></button>`).join('');
+      <span class="wavebeat__n"><b>${by[t].length}</b> ${t}<span class="wavebeat__hard"
+        title="In waves ${HARD_FROM} to ${count}, the hardest">${by[t].filter((n) => n >= HARD_FROM).length} late</span></span>
+      <span class="wavebeat__w">${[...new Set(by[t])].map((n) => (n >= HARD_FROM ? `<em>${n}</em>` : n)).join(', ')}</span></button>`).join('');
   const credits = order.by ? `
-    <dl class="wavehead__credits">
-      <div><dt>Boss lineup</dt><dd>${esc(order.by)}</dd></div>
-      ${order.images ? `<div><dt>Boss images</dt><dd>${esc(order.images)}</dd></div>` : ''}
-    </dl>` : '';
+    <p class="wavehead__credits">Lineup <b>${esc(order.by)}</b>${
+  order.images ? ` · Images <b>${esc(order.images)}</b>` : ''}</p>` : '';
   const team = !field.size
     ? 'Put Tatari on the field to see which waves they beat.'
-    : `Your field beats <b>${count - missed.size} of ${count}</b> waves.${
+    : `Your field beats <b>${count - missed.size} of ${count}</b> waves.${missed.size ? ' <em>Red boxes</em> are not covered.' : ''}${
       Object.entries(missing).map(([k, s]) => ` Missing ${k}: ${[...s].join(', ')}.`).join('')}`;
   const head = `
     <div class="wavehead">
       <div class="wavehead__top">${seasons}${credits}</div>
-      <p class="wavehead__cap"><b>What to bring:</b> the bosses each element beats. <em>Red</em> marks waves ${HARD_FROM} to ${count}, the hardest. Tap one to show only its waves.</p>
-      <div class="wavehead__beats" aria-label="Bosses each element beats; press one to show only its waves">${tiles}</div>
+      <div class="wavehead__beats" role="group" aria-label="What to bring: the waves each element beats, red for waves ${HARD_FROM} to ${count}. Press one to show only its waves">
+        <span class="wavehead__cap" title="The waves each element beats. Red: waves ${HARD_FROM} to ${count}, the hardest. Tap one to show only its waves.">What to bring</span>${tiles}</div>
       <p class="wavehead__team${field.size && !missed.size ? ' is-all' : ''}">${team}</p>
     </div>`;
 
@@ -1211,9 +1209,8 @@ function renderWaves(keep) {
     shown += here.length;
     const open = field.size && here.some((z) => !beaten(z));
     rows.push(`
-      <div class="waverow${open ? ' is-open' : ''}" role="listitem">
-        <div class="waverow__head">Wave <span class="waverow__n">${n}</span>${
-  open ? '<span class="waverow__open" title="Nothing on your field beats this wave">Not covered</span>' : ''}</div>
+      <div class="waverow${open ? ' is-open' : ''}" role="listitem"${open ? ' title="Nothing on your field beats this wave"' : ''}>
+        <div class="waverow__head"><span class="sr-only">Wave </span><span class="waverow__n">${n}</span></div>
         <span class="sr-only">of ${count}${open ? ', nothing on your field beats it' : ''}</span>
         <div class="waverow__cards">${here.map((z) => zoboCard(z, { weak: weakTo(z) })).join('')}</div>
       </div>`);
@@ -1235,7 +1232,7 @@ function renderZobos() {
   let count;
   let built = null;
   if (waves) {
-    built = renderWaves(keep);
+    built = renderWaves(() => true);
     host.dataset.zoboView = 'waves';
     host.innerHTML = built.head + (built.html
       || '<p class="roster__empty">No boss matches that, so no stage does either.</p>');
