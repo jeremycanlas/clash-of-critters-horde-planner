@@ -2354,39 +2354,54 @@ body[data-switching="true"] .cell[data-zobo] { box-shadow: none; cursor: default
  */
 .wavecols {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: var(--s2);
+  /* Five across a desktop panel, three on a phone. */
+  grid-template-columns: repeat(auto-fill, minmax(min(150px, 30%), 1fr));
+  gap: 6px;
 }
+/*
+ * Compact on purpose: 25 boxes of full-size cards ran the panel twice the
+ * height of the field beside it. Small art, the name, and what the boss is
+ * weak to under the name -- not on the art, whose tint is the boss's OWN
+ * element, so the two never sit together where they could be confused.
+ */
 .waverow {
   display: grid;
   grid-template-rows: auto 1fr;
-  gap: var(--s2);
+  gap: 4px;
   min-width: 0;
-  padding: var(--s2);
+  padding: 6px;
   border: 1px solid var(--line-soft);
   border-radius: var(--r-md);
   background: var(--surface);
 }
 .waverow__head {
-  display: flex; align-items: baseline; gap: 6px;
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 6px;
   color: var(--text-mute);
-  font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
 }
-.waverow__n { color: var(--text); font-size: 20px; letter-spacing: 0; font-variant-numeric: tabular-nums; }
-.waverow__cards { display: flex; flex-wrap: wrap; gap: var(--s1); justify-content: center; align-content: end; min-width: 0; }
-.waverow__cards .card--zobo { flex: 1 1 0; min-width: 0; max-width: 120px; }
-/* Three in one wave: two over one, as on the picture. */
-.waverow__cards:has(> :nth-child(3)) .card--zobo { flex: 0 0 calc(50% - var(--s1) / 2); }
-.waverow__cards .card__name { white-space: normal; }
-/* What a boss is weak to, under its name, as on the picture. */
+.waverow__n { color: var(--text); font-size: 15px; letter-spacing: 0; font-variant-numeric: tabular-nums; }
+.waverow__cards { display: flex; gap: 4px; justify-content: center; align-content: start; min-width: 0; }
+.waverow__cards .card--zobo { flex: 1 1 0; min-width: 0; max-width: 72px; padding: 3px; }
+.waverow__cards .card__meta { display: none; }
+.waverow__cards .card__art { grid-template-rows: 1fr; padding: 4px; }
+.waverow__cards .card__name {
+  margin-top: 3px;
+  font-size: 10.5px; line-height: 1.15;
+  white-space: normal;
+}
+/* Three in one wave leaves each card ~45px: one line of name, and the weak-to
+   element as its icon alone (the card's title still says it in words). */
+.waverow__cards:has(> :nth-child(3)) .card__name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.waverow__cards:has(> :nth-child(3)) .card__weak { font-size: 0; }
+/* What a boss is weak to, under its name. */
 .card__weak {
-  display: flex; align-items: center; justify-content: center; gap: 4px;
-  margin-top: 4px; padding-top: 4px;
-  border-top: 1px solid var(--line-soft);
+  display: flex; align-items: center; justify-content: center; gap: 3px;
+  margin-top: 2px;
   color: var(--text-mute);
-  font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+  font-size: 8.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
   white-space: nowrap;
 }
+.card__weak .badge { width: 13px; height: 13px; }
 /* A wave nothing on your field beats. */
 .waverow.is-open { border-color: color-mix(in srgb, var(--danger) 60%, transparent); }
 .waverow.is-open .waverow__n { color: var(--danger); }
@@ -2396,6 +2411,7 @@ body[data-switching="true"] .cell[data-zobo] { box-shadow: none; cursor: default
   background: color-mix(in srgb, var(--danger) 22%, transparent);
   color: var(--danger);
   font-size: 10px; letter-spacing: .04em;
+  white-space: nowrap;
 }
 
 /*
