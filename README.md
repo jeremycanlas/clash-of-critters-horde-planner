@@ -67,6 +67,22 @@ field, HAVE above LF.
 
 ## Changelog
 
+### 1.9.8
+
+#### Changes:
+- Boss waves: the drafter's Waves view has a Season 2 tab (the wiki's lineup) and a Season 3 preview read off the Pioneer Server, with its five new bosses. It is laid out like the boss order picture: one box per wave, what each boss is weak to, and What to bring tiles that count the bosses each element beats, mark waves 20 to 25 and filter the list.
+- The Waves view says how many waves the Tatari on your field beat, which elements are missing, and marks the waves nothing on the field covers.
+- Patch notes: a Season 3 preview tab with 29 evolution lines' old and new numbers, and a New Tatari section.
+- Banquets: a claim run you can steer, an activity log, likes, four statuses, pasting a whole list of UIDs, and leaderboards that list everyone and refresh every 5 minutes.
+- A Guide page on getting the most out of the Horde Drafter.
+- Community: find builds that use a Tatari. Saved formations get a copy button and no cap of 40.
+- Undo after taking a Tatari off the field or bench. The Popa line and six new Tatari from the wiki, with their skill numbers.
+- Sprites are WebP, so pages load about a third of the picture bytes.
+
+#### Bug Fixes:
+- A finished claim run has a Back to the list button.
+- The tracker never saves on top of someone else's change.
+
 ### 1.9.7
 
 #### Changes:
