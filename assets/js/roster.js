@@ -1101,8 +1101,8 @@ const HARD_FROM = 20;
    for a friend's run and don't want their own marked). hard: waves
    HARD_FROM onward only. */
 const FIELD_CHECK_KEY = 'coc.zobos.fieldcheck';
-export const waveFlags = { field: true, hard: false };
-try { waveFlags.field = localStorage.getItem(FIELD_CHECK_KEY) !== '0'; } catch { /* private mode */ }
+export const waveFlags = { field: false, hard: false };
+try { waveFlags.field = localStorage.getItem(FIELD_CHECK_KEY) === '1'; } catch { /* private mode */ }
 
 /**
  * The Zobo list.
@@ -1196,9 +1196,9 @@ function renderWaves(keep) {
   const tiles = TYPES.filter((t) => by[t]).sort((a, b) => by[b].length - by[a].length).map((t) => `
     <button class="wavebeat" type="button" data-beat="${t}" data-type="${t}" aria-pressed="${waveBeat.value === t}"
       title="Show only the waves ${t} beats">${typeIcon(t)}
-      <span class="wavebeat__n"><b>${by[t].length}</b> ${t}<span class="wavebeat__hard"
-        title="In waves ${HARD_FROM} to ${count}, the hardest">${by[t].filter((n) => n >= HARD_FROM).length} late</span></span>
-      <span class="wavebeat__w">${[...new Set(by[t])].map((n) => (n >= HARD_FROM ? `<em>${n}</em>` : n)).join(', ')}</span></button>`).join('');
+      <span class="wavebeat__n"><b>${by[t].length}</b> ${t}</span>
+      <span class="wavebeat__w">${[...new Set(by[t])].map((n) => (n >= HARD_FROM ? `<em>${n}</em>` : n)).join(', ')}</span>
+      <span class="wavebeat__hard"><b>${by[t].filter((n) => n >= HARD_FROM).length}</b> in waves ${HARD_FROM} to ${count}</span></button>`).join('');
   const credits = order.by ? `
     <p class="wavehead__credits">Lineup <b>${esc(order.by)}</b>${
   order.images ? ` · Images <b>${esc(order.images)}</b>` : ''}</p>` : '';
