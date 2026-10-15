@@ -2403,7 +2403,7 @@ body[data-switching="true"] .cell[data-zobo] { box-shadow: none; cursor: default
   gap: 6px;
 }
 .waverow {
-  display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 4px;
+  display: grid; grid-template-columns: 16px minmax(0, 1fr); gap: 2px;
   min-width: 0;
   padding: 5px;
   border: 1px solid var(--line-soft);
@@ -2418,10 +2418,26 @@ body[data-switching="true"] .cell[data-zobo] { box-shadow: none; cursor: default
 }
 .waverow.is-open .waverow__n { color: var(--danger); }
 .waverow__cards { display: flex; gap: 4px; justify-content: center; align-items: start; min-width: 0; }
-.waverow__cards .card--zobo { flex: 1 1 0; min-width: 0; max-width: 66px; padding: 3px; }
+/* No frame of its own: the wave box is the frame, so the art can fill it. */
+.waverow__cards .card--zobo { flex: 1 1 0; min-width: 0; max-width: 96px; padding: 0; border: 0; background: none; }
+.waverow__cards .card--zobo:hover { background: none; }
 .waverow__cards .card__meta { display: none; }
-.waverow__cards .card__art { grid-template-rows: 1fr; padding: 4px; }
+.waverow__cards .card__art { grid-template-rows: 1fr; padding: 3px; }
 .waverow__cards .card__name { margin-top: 3px; font-size: 10.5px; line-height: 1.15; white-space: normal; }
+/* One boss: art on the left, name and weakness beside it, so a single boss
+   fills the box's width instead of standing in the middle of it. Wide panels
+   only: on a phone-narrow one there is no room beside the art. */
+@container (min-width: 701px) {
+  .waverow__cards:not(:has(> :nth-child(2))) .card--zobo {
+    max-width: none;
+    grid-template-columns: minmax(0, 80px) minmax(0, 1fr); grid-template-rows: 1fr 1fr;
+    column-gap: 8px; align-items: center;
+    text-align: left;
+  }
+  .waverow__cards:not(:has(> :nth-child(2))) .card__art { grid-row: 1 / 3; }
+  .waverow__cards:not(:has(> :nth-child(2))) .card__name { grid-column: 2; grid-row: 1; align-self: end; margin: 0; font-size: 12px; }
+  .waverow__cards:not(:has(> :nth-child(2))) .card__weak { grid-column: 2; grid-row: 2; align-self: start; justify-content: flex-start; }
+}
 /* What a boss is weak to, under its name -- not on the art, whose tint is the
    boss's OWN element. */
 .card__weak {
