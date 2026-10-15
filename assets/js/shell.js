@@ -177,6 +177,7 @@ function setSheet(name, { fromPop = false } = {}) {
 
   if (name && !returnTo) returnTo = document.activeElement;
   open = name;
+  if (!name) fillCell = null;
 
   if (name) document.body.dataset.sheet = name;
   else delete document.body.dataset.sheet;
@@ -282,6 +283,29 @@ export function peekSheet(on = true) {
 
 export function closeSheet() {
   setSheet(null);
+}
+
+/*
+ * Square first, on a phone: tap an empty square and the roster opens on the
+ * search (the Zobo list for a square beyond the line), and what you tap goes
+ * on that square. The other order (tap a
+ * Tatari, then a square) still works; this one is for when you know where
+ * before you know who. Closing the sheet forgets the square.
+ */
+let fillCell = null;
+export function pickFor(cell, list = 'tatari') {
+  setSheet('roster');
+  fillCell = cell;
+  const tab = $(`#roster-tabs [data-list="${list}"]`);
+  if (tab?.getAttribute('aria-selected') !== 'true') tab?.click();
+  $('#search')?.focus();
+  toast(`Pick a ${list === 'zobos' ? 'Zobo' : 'Tatari'} for that square`);
+}
+/** The square waiting for a pick, once: reading it clears it. */
+export function takeFillCell() {
+  const c = fillCell;
+  fillCell = null;
+  return c;
 }
 
 /**

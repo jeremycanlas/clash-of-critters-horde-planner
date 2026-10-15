@@ -13,7 +13,7 @@ import { swapTap, swapLetter } from './swaps.js';
 import { $, artHTML, esc, roleIcon, typeIcon, toast } from './ui.js';
 import { draggable, dropZone } from './dnd.js';
 import { quickAddStep } from './priority.js';
-import { peekSheet } from './shell.js';
+import { peekSheet, pickFor } from './shell.js';
 import { coveredFrom, coverage, hasRange } from './range.js';
 import { effectsOf, GROUP_LABELS, helpFor } from './effects.js';
 
@@ -384,11 +384,17 @@ export function buildGrid() {
       return;
     }
 
-    // With a chip armed, the field is a picker: the tapped cell wins over the
-    // one the preview suggested.
-    if (!armed) return;
     const cell = e.target.closest('.cell');
     if (!cell) return;
+    /* Nothing armed, on a phone, and the square is empty: open the roster to
+       fill it (see pickFor). */
+    if (!armed) {
+      const i = Number(cell.dataset.cell);
+      if (PHONE.matches && !store.formation.cells[i]) pickFor(i, cell.classList.contains('cell--enemy') ? 'zobos' : 'tatari');
+      return;
+    }
+    // With a chip armed, the field is a picker: the tapped cell wins over the
+    // one the preview suggested.
     commit(Number(cell.dataset.cell));
   });
 
@@ -833,6 +839,8 @@ export function refreshPull() {
  * by heart, which is most of the people this is for.
  */
 const THUMB = matchMedia('(max-width: 760px), (pointer: coarse)');
+// Where the field and the roster are separate sheets.
+const PHONE = matchMedia('(max-width: 760px)');
 
 /** @type {null | {slug: string, player: number, cell: number}} */
 let armed = null;

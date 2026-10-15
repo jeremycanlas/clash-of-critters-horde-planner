@@ -4266,7 +4266,8 @@ body.is-dragging-active {
     box-shadow: 0 -8px 28px -12px rgb(0 0 0 / .55);
     transform: translateY(101%);
     visibility: hidden;
-    transition: transform 220ms var(--ease-out), visibility 220ms var(--ease-out);
+    /* Hidden only once it has slid away... */
+    transition: transform 220ms var(--ease-out), visibility 0s linear 220ms;
   }
   /* The grab bar. Decoration would be a bad reason for it; it is here because a
      sheet with no handle reads as a panel that was always there. */
@@ -4284,6 +4285,10 @@ body.is-dragging-active {
   body[data-sheet="summary"]  #summary {
     transform: none;
     visibility: visible;
+    /* ...but visible the moment it opens, so focus can go into it in the same
+       tap (a sheet still hidden at that instant refused focus, and iOS only
+       raises the keyboard for a focus made inside the tap). */
+    transition: transform 220ms var(--ease-out), visibility 0s;
   }
 
   /*

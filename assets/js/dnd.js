@@ -22,9 +22,11 @@ let swallowFrom = null;
  * @param {() => any} getPayload      describes what is being dragged
  * @param {() => string} getGhostHTML floating preview markup
  */
-export function draggable(el, getPayload, getGhostHTML) {
+export function draggable(el, getPayload, getGhostHTML, { mouseOnly = false } = {}) {
   el.addEventListener('pointerdown', (e) => {
     if (e.button !== 0 && e.pointerType === 'mouse') return;
+    // A card a finger only taps: holding it to drag stole the start of a scroll.
+    if (mouseOnly && e.pointerType !== 'mouse') return;
     if (e.target.closest('button')) return;          // let the info/remove buttons work
     const payload = getPayload();
     if (!payload) return;

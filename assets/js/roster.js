@@ -9,7 +9,7 @@ import { TYPES, ROLES } from './icons.js';
 import { $, artHTML, esc, typeIcon, roleIcon, toast, glitterOn, BLANK_PIXEL } from './ui.js';
 import { draggable, dropZone } from './dnd.js';
 import { openDetail } from './detail.js';
-import { measureDock, peekSheet } from './shell.js';
+import { closeSheet, measureDock, peekSheet, takeFillCell } from './shell.js';
 import {
   effectGroupsOf, effectsOf, helpFor, GROUP_LABELS,
   bringsTypeBy, bringsEffectBy, groupOf,
@@ -525,14 +525,26 @@ export function buildFilters(onChange, { onPick = bringToBench } = {}) {
       return;
     }
 
+    // An empty square tapped first on a phone: this card goes there.
+    const into = takeFillCell();
+
     if (card.classList.contains('card--zobo')) {
       const z = state.zoboBySlug.get(card.dataset.slug);
       if (!z) return;
-      const cell = store.firstFreeZoboCell();
+      const cell = into ?? store.firstFreeZoboCell();
       if (cell === null) { toast('No empty tile for it', 'error'); return; }
       const result = store.place(z.slug, cell);
       if (!result.ok) { toast(result.reason, 'error'); return; }
       toast(`${z.name} on the field`);
+      if (into !== null) closeSheet();
+      return;
+    }
+
+    if (into !== null) {
+      const result = store.place(card.dataset.slug, into, store.formation.activePlayer);
+      if (!result.ok) { toast(result.reason, 'error'); return; }
+      closeSheet();
+      toast(`${state.bySlug.get(card.dataset.slug)?.name ?? card.dataset.slug} on the field`);
       return;
     }
 
@@ -1280,7 +1292,9 @@ function renderZobos() {
         const z = state.zoboBySlug.get(slug);
         return `<span class="token token--zobo"${z.type ? ` data-type="${z.type}"` : ''}>${
           artHTML(z, { lazy: false })}</span>`;
-      }
+      },
+      // Tap to place on a touch screen; holding to drag fought the list's scroll.
+      { mouseOnly: true }
     );
   }
   revealLazyArt();

@@ -1797,11 +1797,11 @@ await runGroup('picking with the roster half up', async () => {
 
   const before = count('#appbar-field');
 
-  /* Opened, not toggled: a group before this one may have left it open, and
-     toggling would have closed it -- after which tapping a card still benches
-     one (the cards are in the DOM) and nothing peeks, which is exactly right
-     and would read here as a broken feature. */
-  if (D.body.dataset.sheet !== 'roster') await click(barBtn('roster'), 340);
+  /* Closed, then opened: a group before this one may have left a sheet up --
+     including the roster opened by tapping an empty square, which is waiting
+     to fill that square and would take this pick there instead. */
+  if (D.body.dataset.sheet) await click(barBtn(D.body.dataset.sheet), 340);
+  await click(barBtn('roster'), 340);
   ok('the roster is open to pick from', D.body.dataset.sheet === 'roster');
   // Earlier groups leave the roster on another list; a Zobo goes straight to
   // the field and never benches, so this group would be testing nothing.
@@ -1840,6 +1840,25 @@ await runGroup('picking with the roster half up', async () => {
   // Put the field back as it was found: the groups after this one start from
   // an empty board, and a suite that depends on its own order is a suite that
   // fails for the wrong reason.
+  await click($('#btn-clear-field'), 360);
+});
+
+await runGroup('square first: tap an empty square, then who goes there', async () => {
+  /* The other order: the square, then the roster opens on the search, and the
+     Tatari tapped goes on that square rather than the first free one. */
+  if (D.body.dataset.sheet) await click(barBtn(D.body.dataset.sheet), 340);
+  const empty = $$('.cell:not(.cell--enemy)').filter((c) => !c.querySelector('.token'));
+  const square = empty[3];
+  if (!square) { skip('square first', 'no empty square'); return; }
+  await click(square, 380);
+  eq('the roster opens', D.body.dataset.sheet, 'roster');
+  eq('on the search', D.activeElement?.id, 'search');
+  const card = $$('.panel--roster .card').find((c) => !c.classList.contains('is-benched') && !c.dataset.switchFrom);
+  await click(card, 380);
+  // Re-read: the field re-renders, so the square is a new element now.
+  ok('the Tatari lands on the square that was tapped',
+     $(`.cell[data-cell="${square.dataset.cell}"]`).children.length > 0, card?.dataset.slug);
+  ok('and the roster gets out of the way', !D.body.dataset.sheet);
   await click($('#btn-clear-field'), 360);
 });
 
