@@ -1867,6 +1867,25 @@ await runGroup('the Zobo tab reads as a wave list as well as a roster', async ()
     eq('pressing it again brings every stage back', $$('.waverow').length, rows.length);
   }
 
+  /* Hard waves only: 20 to 25, and back. */
+  const hard = $('[data-wave-flag="hard"]');
+  if (hard) {
+    await click(hard, 460);
+    const ns = $$('.waverow').map((r) => Number(r.querySelector('.waverow__n').textContent));
+    eq('hard waves only shows waves 20 to 25', ns.join(','), '20,21,22,23,24,25');
+    await click($('[data-wave-flag="hard"]'), 420);
+    eq('and pressing it again brings every stage back', $$('.waverow').length, rows.length);
+  }
+
+  /* The field check switched off marks nothing, and on again as it was. */
+  const check = $('[data-wave-flag="field"]');
+  if (check) {
+    await click(check, 460);
+    eq('with the field check off no wave is marked', $$('.waverow.is-open').length, 0);
+    await click($('[data-wave-flag="field"]'), 420);
+    eq('and the check is back on', $('[data-wave-flag="field"]').getAttribute('aria-pressed'), 'true');
+  }
+
   /* The preview season is its own tab, with its new bosses drawn but not draggable onto the board. */
   const preview = $('[data-season="1"]');
   if (preview) {

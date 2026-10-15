@@ -469,6 +469,14 @@ export function buildFilters(onChange, { onPick = bringToBench } = {}) {
       onChange();
       return;
     }
+    const flag = e.target.closest('[data-wave-flag]');
+    if (flag) {
+      const k = flag.dataset.waveFlag;
+      waveFlags[k] = !waveFlags[k];
+      if (k === 'field') try { localStorage.setItem(FIELD_CHECK_KEY, waveFlags.field ? '1' : '0'); } catch { /* private */ }
+      onChange();
+      return;
+    }
     const beat = e.target.closest('[data-beat]');
     if (beat) {
       waveBeat.value = waveBeat.value === beat.dataset.beat ? null : beat.dataset.beat;
@@ -1089,6 +1097,12 @@ try {
 } catch { /* private mode */ }
 // The run's last six waves, the ones that decide it.
 const HARD_FROM = 20;
+/* field: check the waves against your field (remembered; some plan a field
+   for a friend's run and don't want their own marked). hard: waves
+   HARD_FROM onward only. */
+const FIELD_CHECK_KEY = 'coc.zobos.fieldcheck';
+export const waveFlags = { field: true, hard: false };
+try { waveFlags.field = localStorage.getItem(FIELD_CHECK_KEY) !== '0'; } catch { /* private mode */ }
 
 /**
  * The Zobo list.
@@ -1154,8 +1168,8 @@ function renderWaves(keep) {
 
   /* The field, both players' in co-op. Not the bench: once ten are down it
      cannot come on, so it beats nothing. */
-  const field = new Set(store.players().flatMap((p) => store.placedFor(p))
-    .map((o) => state.bySlug.get(o.slug)?.type).filter(Boolean));
+  const field = new Set(waveFlags.field ? store.players().flatMap((p) => store.placedFor(p))
+    .map((o) => state.bySlug.get(o.slug)?.type).filter(Boolean) : []);
   const beaten = (z) => !weakTo(z) || field.has(weakTo(z));
 
   /* Tallied over the whole season, not the filtered view: the tiles are the
@@ -1188,21 +1202,29 @@ function renderWaves(keep) {
   const credits = order.by ? `
     <p class="wavehead__credits">Lineup <b>${esc(order.by)}</b>${
   order.images ? ` · Images <b>${esc(order.images)}</b>` : ''}</p>` : '';
-  const team = !field.size
+  const flags = `
+    <div class="chips chips--text wavehead__flags" role="group" aria-label="Wave options">
+      <button class="chip" type="button" data-wave-flag="field" aria-pressed="${waveFlags.field}"
+        title="Mark the waves nothing on your field beats">Check my field</button>
+      <button class="chip" type="button" data-wave-flag="hard" aria-pressed="${waveFlags.hard}"
+        title="Show only waves ${HARD_FROM} to ${count}">Hard waves only</button>
+    </div>`;
+  const team = !waveFlags.field ? ''
+    : !field.size
     ? 'Put Tatari on the field to see which waves they beat.'
     : `Your field beats <b>${count - missed.size} of ${count}</b> waves.${missed.size ? ' <em>Red boxes</em> are not covered.' : ''}${
       Object.entries(missing).map(([k, s]) => ` Missing ${k}: ${[...s].join(', ')}.`).join('')}`;
   const head = `
     <div class="wavehead">
-      <div class="wavehead__top">${seasons}${credits}</div>
+      <div class="wavehead__top">${seasons}${flags}${credits}</div>
       <div class="wavehead__beats" role="group" aria-label="What to bring: the waves each element beats, red for waves ${HARD_FROM} to ${count}. Press one to show only its waves">
         <span class="wavehead__cap" title="The waves each element beats. Red: waves ${HARD_FROM} to ${count}, the hardest. Tap one to show only its waves.">What to bring</span>${tiles}</div>
-      <p class="wavehead__team${field.size && !missed.size ? ' is-all' : ''}">${team}</p>
+      ${team ? `<p class="wavehead__team${field.size && !missed.size ? ' is-all' : ''}">${team}</p>` : ''}
     </div>`;
 
   const rows = [];
   let shown = 0;
-  for (let n = 1; n <= count; n += 1) {
+  for (let n = waveFlags.hard ? HARD_FROM : 1; n <= count; n += 1) {
     const here = order.stages[n - 1].map(zobo)
       .filter((z) => z && keep(z) && (!waveBeat.value || weakTo(z) === waveBeat.value));
     if (!here.length) continue;

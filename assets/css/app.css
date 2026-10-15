@@ -2355,6 +2355,7 @@ body[data-switching="true"] .cell[data-zobo] { box-shadow: none; cursor: default
 /* Above the waves: season and credits, what each element beats, your field. */
 .wavehead { display: grid; gap: 6px; margin-bottom: var(--s2); }
 .wavehead__top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px var(--s3); }
+.wavehead__flags { flex-wrap: wrap; gap: 6px; margin-right: auto; }
 .wavehead__credits { margin: 0; font-size: 11.5px; color: var(--text-mute); }
 .wavehead__credits b { color: var(--text-dim); }
 .wavehead__beats { display: grid; grid-template-columns: auto repeat(5, minmax(0, 1fr)); gap: 6px; }
