@@ -6964,6 +6964,13 @@ details.hint[open] > summary { margin-bottom: var(--s1); }
   background: transparent; color: var(--text); box-shadow: none;
   border-bottom-color: var(--accent);
 }
+/* Sized as the panel's main choice: it swaps the whole list, so it has to read
+   before the Roster/Waves and Cards/List switches beside it, which only change
+   how that list is shown. Those step down to match. */
+#roster-tabs { gap: var(--s2); }
+#roster-tabs .segmented__btn { font-size: 15px; font-weight: 700; padding: 6px 2px 7px; border-bottom-width: 3px; color: var(--text-mute); }
+@media (max-width: 760px) { #roster-tabs .segmented__btn { font-size: 14px; } }
+#sec-roster .panel__views .segmented__btn { font-size: 11.5px; padding: 3px var(--s2); font-weight: 600; }
 /* Cards / List is a view setting, so it gets the quiet selected state. */
 .panel__views .segmented__btn[aria-selected="true"],
 .panel__views .segmented__btn[aria-selected="true"]:hover {
