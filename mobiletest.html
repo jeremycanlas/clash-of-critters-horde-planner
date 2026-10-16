@@ -1862,6 +1862,20 @@ await runGroup('square first: tap an empty square, then who goes there', async (
   await click($('#btn-clear-field'), 360);
 });
 
+await runGroup('a link to the boss lineup', async () => {
+  localStorage.removeItem('coc.zobos.view');
+  const f = frameFor('index.html');
+  f.ready = new Promise((resolve) => f.addEventListener('load', resolve, { once: true }));
+  f.src = `index.html?waves=3&run=${runs++}`;
+  await f.ready;
+  const d = f.contentDocument;
+  await until(() => d.querySelector('#roster[data-zobo-view="waves"]'), 'the Waves view');
+  eq('?waves=3 opens on the Zobos tab', d.querySelector('#roster-tabs [aria-selected="true"]')?.dataset.list, 'zobos');
+  ok('on Season 3', /Season 3/.test(d.querySelector('[data-season][aria-selected="true"]')?.textContent ?? ''));
+  eq('and is not remembered', f.contentWindow.localStorage.getItem('coc.zobos.view'), null);
+  f.remove();
+});
+
 localStorage.clear();
 for (const [k, v] of Object.entries(saved)) localStorage.setItem(k, v);
 

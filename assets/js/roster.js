@@ -307,6 +307,15 @@ export function buildFilters(onChange, { onPick = bringToBench } = {}) {
 
   /* The Zobo tab's two readings. Same control as the chips' above, on purpose:
      one list, two ways of asking about it. */
+  /* `?waves` opens straight on the lineup, `?waves=3` on Season 3's. Asked for
+     by the link, so neither the tab nor the season is remembered. */
+  const linked = new URLSearchParams(location.search).get('waves');
+  if (linked !== null && state.bossOrders.length) {
+    showing.value = 'zobos';
+    zoboView.value = 'waves';
+    waveSeason.value = Math.max(0, state.bossOrders.findIndex((o) => o.label === `Season ${linked}`));
+  }
+
   const zoboHost = $('#zobo-view');
   if (zoboHost) {
     const draw = () => {
@@ -331,6 +340,9 @@ export function buildFilters(onChange, { onPick = bringToBench } = {}) {
 
   const tabs = $('#roster-tabs');
   if (tabs) {
+    for (const b of tabs.children) {
+      if (b.dataset.list) b.setAttribute('aria-selected', String(b.dataset.list === showing.value));
+    }
     tabs.addEventListener('click', (e) => {
       const btn = e.target.closest('.segmented__btn');
       if (!btn || btn.dataset.list === showing.value) return;
