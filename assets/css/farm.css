@@ -32,6 +32,7 @@
 .farm__label .field { font-size: 16px; } /* 16px or iOS zooms on focus */
 
 .farm__panel h2 { margin: 0 0 var(--s3); font-size: 15px; }
+.farm__checked { font-size: 12.5px; font-weight: 400; }
 
 .farm__prizes {
   list-style: none; margin: 0; padding: 0;
