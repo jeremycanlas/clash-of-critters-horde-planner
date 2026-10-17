@@ -76,6 +76,13 @@ const CARDS = [
     sprites: ['frugagon', 'pandarrior', 'tideon', 'chronerva', 'maskfry'],
   },
   {
+    name: 'zobo',
+    title: 'Zobo Shooter rewards',
+    line: 'Type your score: every prize you have earned and what the next tier pays, all 70 tiers up to 100,000K.',
+    // A path is used as it is: the Zobos themselves, not Tatari.
+    sprites: ['data/images/zobo/captain-zobo.png', 'data/images/zobo/bombard-zobo.png', 'data/images/zobo/cowboy-zobo.png', 'data/images/zobo/clown-zobo.png', 'data/images/zobo/firehead-zobo.png'],
+  },
+  {
     name: 'contribute',
     title: 'Record a range',
     line: 'Record attack ranges off the game, for the Tatari the wiki has no diagram of.',
@@ -142,7 +149,7 @@ const page = await browser.newPage({ viewport: { width: 1200, height: 630 }, dev
 
 for (const card of CARDS) {
   if (only.length && !only.some((o) => card.name.includes(o))) continue;
-  const sprites = card.sprites.map((slug) => `${base}/data/images/tatari/${slug}.png`);
+  const sprites = card.sprites.map((s) => (s.includes('/') ? `${base}/${s}` : `${base}/data/images/tatari/${s}.png`));
   await page.setContent(html(card, sprites), { waitUntil: 'networkidle' });
   await page.waitForTimeout(300);                    // webfonts, then draw
   const file = path.join(OUT, `${card.name}.png`);

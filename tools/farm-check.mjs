@@ -4,6 +4,16 @@ import { readFileSync } from 'node:fs';
 import { parseScore, earned, nextTier, gain } from '../assets/js/farm-math.js';
 
 const farm = JSON.parse(readFileSync(new URL('../data/farm.json', import.meta.url)));
+const zobo = JSON.parse(readFileSync(new URL('../data/zobo.json', import.meta.url)));
+
+// Zobo Shooter runs on the same sums, with a list that simply ends.
+assert.equal(zobo.tiers.length, 70);
+assert.ok(zobo.tiers.every(([at], i) => i === 0 || at > zobo.tiers[i - 1][0]), 'zobo tiers ascending');
+for (const [, prizes] of zobo.tiers) for (const k of Object.keys(prizes)) assert.ok(zobo.items[k], k);
+assert.deepEqual(earned(zobo, 47556000).wishbox, 5 + 5 + 3 + 2, 'wishboxes by 47,556K: 36M, 24M, 8M, 2.8M');
+assert.deepEqual(nextTier(zobo, 47556000), { at: 52000000, prizes: { pinball: 180, candy: 3102000, pill: 100 } });
+assert.equal(nextTier(zobo, 100000000), null, 'past the last tier there is nothing next');
+assert.equal(earned(zobo, 1e9).pinball, earned(zobo, 100000000).pinball, 'and nothing more to earn');
 
 assert.equal(farm.tiers.length, 100);
 assert.ok(farm.tiers.every(([at], i) => i === 0 || at > farm.tiers[i - 1][0]), 'tiers ascending');

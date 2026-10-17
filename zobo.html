@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <!-- viewport-fit=cover, or env(safe-area-inset-*) resolves to 0 on iOS and every
+     safe-area rule in app.css silently does nothing. -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Horde Drafter: Zobo Shooter rewards</title>
+  <meta name="description"
+    content="Type your Clash of Critters Zobo Shooter score and see every reward it has paid out, what the next tier gives, and what a target score would add.">
+  <!--
+    The card a pasted link shows in Discord, Messages and every other app that
+    unfurls a URL. Every link to this tool is pasted into a chat, and a link
+    with no card is a grey line of text among pictures. Absolute URLs, because
+    a scraper does not resolve relative ones. Redraw the pictures with
+    tools/og.mjs after a redesign; they are generated from the site's own
+    tokens and sprites so they cannot drift into being a different product.
+  -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Horde Drafter">
+  <meta property="og:title" content="Zobo Shooter rewards">
+  <meta property="og:description" content="Type your score: every prize you have earned and what the next tier pays, all 70 tiers up to 100,000K.">
+  <meta property="og:url" content="https://jeremycanlas.github.io/clash-of-critters-horde-planner/zobo.html">
+  <meta property="og:image" content="https://jeremycanlas.github.io/clash-of-critters-horde-planner/assets/img/og/zobo.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Zobo Shooter rewards, on the Horde Drafter site">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='19' font-size='20'>🐾</text></svg>">
+  <link rel="stylesheet" href="assets/css/app.css">
+  <link rel="stylesheet" href="assets/css/site-nav.css">
+  <link rel="stylesheet" href="assets/css/farm.css">
+</head>
+
+<!-- The Cozy Farm calculator (farm.js), pointed at this event's list. -->
+<body class="farm" data-rewards="data/zobo.json">
+
+  <header class="topbar">
+    <div class="topbar__title">
+      <h1>Zobo Shooter rewards</h1>
+      <span class="topbar__sub">Horde&nbsp;Drafter</span>
+    </div>
+  </header>
+
+  <nav id="site-tabs" class="sitetabs" aria-label="Horde Drafter pages"></nav>
+
+  <main class="farm__main">
+    <div class="farm__left">
+    <div class="farm__inputs">
+      <label class="farm__label"><span>Your score</span>
+        <input id="farm-score" class="field" inputmode="decimal" autocomplete="off" placeholder="e.g. 47,556K or 47.5M" aria-describedby="farm-score-bad">
+        <span id="farm-score-bad" class="farm__bad" hidden>Not a score: type a number like 354, 45k or 1.2M.</span>
+      </label>
+      <label class="farm__label"><span>Target score <span class="muted">(optional)</span></span>
+        <input id="farm-target" class="field" inputmode="decimal" autocomplete="off" placeholder="e.g. 60M" aria-describedby="farm-target-bad">
+        <span id="farm-target-bad" class="farm__bad" hidden>Not a score: type a number like 354, 45k or 1.2M.</span>
+      </label>
+    </div>
+
+    <section class="panel farm__panel">
+      <h2 id="farm-next-head">Next tier</h2>
+      <div id="farm-next"></div>
+    </section>
+
+    <section class="panel farm__panel" id="farm-gain-panel" hidden>
+      <h2 id="farm-gain-head">Reaching your target adds</h2>
+      <div id="farm-gain"></div>
+    </section>
+
+    <section class="panel farm__panel">
+      <h2 id="farm-earned-head">Earned so far</h2>
+      <div id="farm-earned"></div>
+    </section>
+
+    </div>
+
+    <!-- Its own scroller, so it is reachable by keyboard and named for a reader. -->
+    <section class="panel farm__panel farm__right" tabindex="0" role="region" aria-label="Every reward tier">
+      <h2>All rewards</h2>
+      <ol id="farm-all" class="farm__tiers"></ol>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <span>Fan-made, unofficial.</span>
+    <span class="muted">The 70 tiers were read off the in-game reward list and checked by eye
+      against every screen. The list ends at 100,000K (100M).</span>
+  </footer>
+
+  <script type="module" src="assets/js/farm.js"></script>
+  <script type="module" src="assets/js/site-nav.js"></script>
+</body>
+
+</html>

@@ -129,6 +129,7 @@ const PAGES = [
   { name: 'changes', url: 'changes.html', ready: '#changes-body *' },
   { name: 'chips', url: 'chips.html', ready: '.chipcard, .chipspage__none' },
   { name: 'farm', url: 'farm.html', ready: '#farm-all li' },
+  { name: 'zobo', url: 'zobo.html', ready: '#farm-all li' },
   { name: 'skills', url: 'skills.html', ready: '#sk-list li' },
   { name: 'guide', url: 'guide.html', ready: '.gd-tile' },
   { name: 'contribute', url: 'contribute.html', ready: '.cell' },

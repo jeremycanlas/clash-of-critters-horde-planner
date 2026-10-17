@@ -19,6 +19,7 @@ const PAGES = [
   { href: 'skills.html', name: 'Skill data' },
   { href: 'chips.html', name: 'Chips' },
   { href: 'farm.html', name: 'Cozy Farm' },
+  { href: 'zobo.html', name: 'Zobo Shooter' },
   { href: 'contribute.html', name: 'Record a range', add: true },
 ];
 

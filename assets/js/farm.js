@@ -12,7 +12,8 @@ import { parseScore, earned, nextTier, gain } from './farm-math.js';
 applyPrefs();
 buildAnalytics();
 
-const farm = await (await fetch('data/farm.json')).json();
+/* The same calculator serves any score-reward list: the page names its data. */
+const farm = await (await fetch(document.body.dataset.rewards ?? 'data/farm.json')).json();
 const ORDER = Object.keys(farm.items);
 const num = (n) => n.toLocaleString('en-US');
 
@@ -43,11 +44,11 @@ $('#farm-all').innerHTML = farm.tiers.map(([at, prizes]) => `
   <li class="farm__tier" data-at="${at}">
     <span class="farm__reach">Reach ${num(at)}</span>
     <span class="farm__chips">${chipsHTML(prizes)}</span>
-  </li>`).join('') + `
+  </li>`).join('') + (farm.overflow ? `
   <li class="farm__tier farm__tier--bonus">
     <span class="farm__reach">Every ${num(farm.overflow.every)} after that</span>
     <span class="farm__chips">${chipsHTML(farm.overflow.bonus)}</span>
-  </li>`;
+  </li>` : '');
 
 function markTiers(score, nextAt) {
   for (const li of document.querySelectorAll('#farm-all [data-at]')) {
@@ -75,9 +76,9 @@ function render() {
   const target = parseScore($('#farm-target').value);
 
   const next = nextTier(farm, score);
-  $('#farm-next-head').textContent = `Next tier: ${num(next.at)} (${num(next.at - score)} to go)`;
-  $('#farm-next').innerHTML = prizesHTML(next.prizes);
-  markTiers(score, next.at);
+  $('#farm-next-head').textContent = next ? `Next tier: ${num(next.at)} (${num(next.at - score)} to go)` : 'Every tier reached';
+  $('#farm-next').innerHTML = next ? prizesHTML(next.prizes) : '<p class="muted">Nothing left to earn on this list.</p>';
+  markTiers(score, next?.at);
 
   const tiers = farm.tiers.filter(([at]) => score >= at).length;
   $('#farm-earned-head').textContent = `Earned so far: ${tiers} of ${farm.tiers.length} tiers`;

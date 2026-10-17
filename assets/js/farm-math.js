@@ -19,6 +19,7 @@ function add(into, prizes, times = 1) {
 }
 
 function overflowCount(farm, score) {
+  if (!farm.overflow) return 0; // a list that simply ends
   const last = farm.tiers.at(-1)[0];
   return score > last ? Math.floor((score - last) / farm.overflow.every) : 0;
 }
@@ -27,13 +28,14 @@ function overflowCount(farm, score) {
 export function earned(farm, score) {
   const total = {};
   for (const [at, prizes] of farm.tiers) if (score >= at) add(total, prizes);
-  return add(total, farm.overflow.bonus, overflowCount(farm, score));
+  return farm.overflow ? add(total, farm.overflow.bonus, overflowCount(farm, score)) : total;
 }
 
 /** The next thing a score will unlock: {at, prizes}. Never runs out, the bonus repeats. */
 export function nextTier(farm, score) {
   const tier = farm.tiers.find(([at]) => at > score);
   if (tier) return { at: tier[0], prizes: tier[1] };
+  if (!farm.overflow) return null; // every tier reached
   const at = farm.tiers.at(-1)[0] + (overflowCount(farm, score) + 1) * farm.overflow.every;
   return { at, prizes: farm.overflow.bonus };
 }
