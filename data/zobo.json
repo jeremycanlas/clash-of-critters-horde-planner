@@ -1,5 +1,5 @@
 {
-  "_note": "Zobo Shooter score rewards, read off the in-game reward list by tools outside this repo (E:/caches/coc-arena/zobo.py) on 2026-10-17 and checked by eye against every screen. Each tier pays once when your score reaches it; the list ends at 100,000K.",
+  "_note": "Zobo Shooter score rewards, read off the in-game reward list by tools outside this repo (E:/caches/coc-arena/zobo.py) on 2026-10-17 and checked by eye against every screen. Each tier pays once when your score reaches it. Past the last tier (100,000K), every `every` extra points pays `bonus`.",
   "items": {
     "candy": "Candy",
     "pinball": "Pinballs",
@@ -8,7 +8,14 @@
     "wishbox": "Wishboxes",
     "pack-blue": "Blue card packs",
     "pack-pink": "Pink card packs",
-    "pack-gold": "Gold card packs"
+    "pack-gold": "Gold card packs",
+    "glitter-fruit": "Glitter fruits"
+  },
+  "overflow": {
+    "every": 1000000,
+    "bonus": {
+      "glitter-fruit": 1
+    }
   },
   "tiers": [
     [200000, {"pinball": 30, "candy": 258000}],

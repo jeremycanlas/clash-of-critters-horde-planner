@@ -78,7 +78,7 @@ const CARDS = [
   {
     name: 'zobo',
     title: 'Zobo Shooter rewards',
-    line: 'Type your score: every prize you have earned and what the next tier pays, all 70 tiers up to 100,000K.',
+    line: 'Type your score: every prize you have earned and what the next tier pays, all 70 tiers, and the glitter fruit past 100,000K.',
     // A path is used as it is: the Zobos themselves, not Tatari.
     sprites: ['data/images/zobo/captain-zobo.png', 'data/images/zobo/bombard-zobo.png', 'data/images/zobo/cowboy-zobo.png', 'data/images/zobo/clown-zobo.png', 'data/images/zobo/firehead-zobo.png'],
   },
