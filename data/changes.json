@@ -785,7 +785,7 @@
       },
       {
         "line": "Dewgrub",
-        "direction": "buff",
+        "direction": "adjusted",
         "members": [
           "dewgrub",
           "ripplewing",
@@ -794,7 +794,8 @@
         ],
         "changes": [
           "Aqua Flutter: Damage Factor 50% → 200%",
-          "Torrential Flutter: Cooldown 16-20s → 12-18s, Damage Factor 20% → 100%, Sleep Chance 12% → 50%"
+          "Torrential Flutter: Cooldown 16-20s → 12-18s, Damage Factor 20% → 100%, Sleep Chance 12% → 50%",
+          "Somno-Shot · Rippling Shot: Adjacent allies’ Horde skills inflict Slow and Sleep → no longer (their regular skills still do)"
         ]
       }
     ],
@@ -804,7 +805,6 @@
           "title": "Changed",
           "items": [
             "Horde Invasion skills were rebalanced for some Tatari and their evolutions. The full list is in the game’s Horde Invasion interface.",
-            "Waveflutter’s Somno-Shot and Morphanessa’s Rippling Shot still let adjacent allies’ regular skills inflict Slow and Sleep, but no longer their Horde Invasion skills.",
             "Improved the text descriptions and stat details of some Horde Invasion skills."
           ]
         },

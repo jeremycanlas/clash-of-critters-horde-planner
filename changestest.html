@@ -130,7 +130,8 @@ const split = (l) => l.changes.flatMap((c) => {
     .map((s) => s.name).sort((a, b) => b.length - a.length);
   const norm = (x) => x.toLowerCase().replace(/[^a-z0-9]/g, '');
   const name = skills.find((n) => norm(c).startsWith(norm(n)));
-  const rest = (name ? c.slice(name.length) : c).replace(/^\s*:\s*/, '');
+  const named = name ?? (c.includes(':') ? c.slice(0, c.indexOf(':')) : null);
+  const rest = (named ? c.slice(named.length) : c).replace(/^\s*:\s*/, '');
   return rest.split(/,\s+/);
 });
 

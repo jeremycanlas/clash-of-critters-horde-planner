@@ -83,6 +83,8 @@ export function movement(part) {
   const [before, after] = part.split('→');
   if (after === undefined) return null;
   const num = (x) => { const m = x.match(/-?\d+(?:\.\d+)?/); return m ? parseFloat(m[0]) : null; };
+  // A thing switched off: "... -> no longer". Said in words, so read as words.
+  if (/^\s*(no|none)\b/i.test(after)) return 'down';
   const a = num(before);
   const b = num(after);
   if (a === null || b === null || a === b) return null;
@@ -112,7 +114,9 @@ function line(entry) {
 
   const changes = (entry.changes ?? []).map((text) => {
     const skill = levelOf(head, text);
-    const rest = skill ? text.slice(skill.name.length).replace(/^\s*:\s*/, '') : text;
+    // Not one of the line's Horde skills (a regular skill, say): the part before the colon still names it.
+    const named = skill?.name ?? (text.includes(':') ? text.slice(0, text.indexOf(':')) : null);
+    const rest = named ? text.slice(named.length).replace(/^\s*:\s*/, '') : text;
     /*
      * One stat per line. The notes pack several into a sentence -- "Damage 160%
      * -> 200%, extra bomb 40% -> 55%, Blind 30% -> 40%" -- and read as prose
@@ -132,7 +136,7 @@ function line(entry) {
       <li class="chline__change">
         <span class="chline__skill">
           ${skill ? `<span class="chline__lv" title="Taught at horde level ${skill.level}"
-            >L${skill.level}</span>` : ''}${esc(skill ? skill.name : text)}
+            >L${skill.level}</span>` : ''}${esc(named ?? text)}
         </span>
         <ul class="chline__stats">${stats}</ul>
       </li>`;
