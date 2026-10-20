@@ -238,8 +238,17 @@ function countOf(contentRange) {
 
 const SESSION_KEY = 'coc.community.v1';
 
-/** The access token, in memory only. Short-lived, and refreshed from the store. */
+/* The access token. Kept with the session too, so a reload does not ask the
+   sign-in service for a new one: at the 8:00 reset everyone reloads at once,
+   and the sign-in service gave out before the database did (21 Oct). It grants
+   no more than the refresh token kept beside it. In memory as well, for a
+   browser that keeps nothing. */
 let live = { jwt: '', until: 0 };
+function held() {
+  const s = session();
+  if (s?.jwt && s.until > live.until) live = { jwt: s.jwt, until: s.until };
+  return live;
+}
 
 function session() {
   try { return JSON.parse(localStorage.getItem(SESSION_KEY) ?? 'null'); } catch { return null; }
@@ -274,6 +283,7 @@ function remember(payload) {
   };
   keepSession({
     refresh_token: payload.refresh_token,
+    ...live,
     uid: payload.user?.id ?? session()?.uid ?? '',
     name: payload.user ? nameOf(payload.user) : session()?.name ?? '',
     avatar: payload.user?.user_metadata?.avatar_url ?? session()?.avatar ?? null,
@@ -369,10 +379,25 @@ async function refreshProfile() {
    which would sign the visitor out. */
 let refreshing = null;
 export function token() {
-  if (live.jwt && Date.now() < live.until) return Promise.resolve({ ok: true, jwt: live.jwt });
+  if (held().jwt && Date.now() < live.until) return Promise.resolve({ ok: true, jwt: live.jwt });
   refreshing ??= refresh().finally(() => { refreshing = null; });
   return refreshing;
 }
+
+/* Renewed ahead of the 8:00 reset (00:00 UTC): a token that would run out in
+   the half hour after it is renewed 5 to 20 minutes before, at a moment of this
+   page's own so not everyone at once, and the rush needs nothing from the
+   sign-in service. A tab asleep then renews when it wakes, as before. */
+const AHEAD = (5 + Math.random() * 15) * 60e3;
+function renewAhead() {
+  if (!signedIn()) return;
+  const now = Date.now();
+  const reset = Math.ceil(now / 864e5) * 864e5;
+  if (reset - now > AHEAD || held().until >= reset + 30 * 60e3) return;
+  refreshing ??= refresh().finally(() => { refreshing = null; });
+}
+setInterval(renewAhead, 60e3);
+document.addEventListener('visibilitychange', renewAhead);
 
 async function refresh() {
 
@@ -436,7 +461,7 @@ async function refresh() {
  * with.
  */
 export function signOut() {
-  const jwt = live.jwt;
+  const jwt = held().jwt;
   live = { jwt: '', until: 0 };
   try { localStorage.removeItem(SESSION_KEY); } catch { /* nothing to drop */ }
 

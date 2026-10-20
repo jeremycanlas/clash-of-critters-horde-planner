@@ -173,7 +173,11 @@ async function open(me, opts) {
   const ctx = await browser.newContext({ ...opts, colorScheme: me.scheme ?? 'dark' });
   await ctx.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: `http://127.0.0.1:${PORT}` });
   // Each person their own sign-in ID, which is what sets where their claim run starts.
-  await ctx.addInitScript((id) => localStorage.setItem('coc.community.v1', JSON.stringify({ refresh_token: 'x', uid: id, name: 'x' })), me.name);
+  // On every load, as a sign-in would leave it, keeping an access token the page kept.
+  await ctx.addInitScript((id) => {
+    const s = JSON.parse(localStorage.getItem('coc.community.v1') ?? 'null');
+    localStorage.setItem('coc.community.v1', JSON.stringify({ jwt: s?.jwt, until: s?.until, refresh_token: 'x', uid: id, name: 'x' }));
+  }, me.name);
   await ctx.route(/supabase\.co/, async (route) => {
     const u = new URL(route.request().url());
     const body = route.request().postDataJSON?.() ?? {};
@@ -181,6 +185,7 @@ async function open(me, opts) {
     const ok = () => route.fulfill({ status: 204 });
     // `authFlaky`: the sign-in service busy that many times first, as a reset can make it.
     if (u.pathname.endsWith('/auth/v1/token')) {
+      me.renewed = (me.renewed ?? 0) + 1;
       if (me.authFlaky && me.authFlaky-- > 0) return route.fulfill({ status: 503, body: 'busy' });
       return json({ access_token: 't', refresh_token: 'x', expires_in: 3600 });
     }
@@ -1084,6 +1089,32 @@ try {
   // The sign-in service busy twice: still signed in, and in.
   const ivy = await open({ name: 'Ivy', grp: 1, authFlaky: 2 }, devices['iPhone SE']); // waits for the list itself
   assert.ok(await ivy.page.evaluate(() => !!localStorage.getItem('coc.community.v1')), 'the session kept');
+
+  // The access token is kept: a reload asks the sign-in service nothing (21 Oct).
+  const renMe = { name: 'Ren', grp: 1 };
+  const ren = await open(renMe, devices['iPhone SE']);
+  const R = ren.page;
+  const firstAsks = renMe.renewed;
+  assert.ok(firstAsks >= 1, 'a first load renews');
+  await R.reload();
+  await R.waitForSelector('#bq-app:not([hidden])');
+  assert.equal(renMe.renewed, firstAsks, 'a reload does not');
+  // A token that would run out in the reset's first half hour is renewed before 8:00.
+  const reset = Math.ceil(Date.now() / 864e5) * 864e5 + 864e5;
+  await R.clock.setSystemTime(reset - 25 * 60e3);
+  await R.evaluate((until) => {
+    const s = JSON.parse(localStorage.getItem('coc.community.v1'));
+    localStorage.setItem('coc.community.v1', JSON.stringify({ ...s, until }));
+  }, reset + 10 * 60e3);
+  await R.clock.runFor(4 * 60e3);
+  assert.equal(renMe.renewed, firstAsks, 'not yet, 21 minutes out');
+  await R.clock.runFor(17 * 60e3);
+  assert.equal(renMe.renewed, firstAsks + 1, 'renewed once, 5 to 20 minutes before the reset');
+  assert.ok(await R.evaluate(() => JSON.parse(localStorage.getItem('coc.community.v1')).until) > reset + 30 * 60e3,
+    'and good past the rush');
+  await R.clock.runFor(5 * 60e3);
+  assert.equal(renMe.renewed, firstAsks + 1, 'and only once');
+  await R.context().close();
 
   // ------------------------------------------------------------------ claim-run clusters
   // Eli starts the unchecked UIDs at a point of their own, from their sign-in, wrapping round, and gets every one.
