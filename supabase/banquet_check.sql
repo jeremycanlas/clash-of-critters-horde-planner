@@ -949,6 +949,7 @@ begin
     'no Discord recheck for a member let in, around a reset';
   assert pg_get_functiondef('public.banquet_sync()'::regprocedure) like '%paused for the reset%', 'the reader rests at the reset';
   assert exists (select 1 from cron.job where jobname = 'banquet-warm'), 'warmed every minute around the reset';
+  assert pg_get_functiondef('public.banquet_leaders(date, boolean)'::regprocedure) like '%None built yet%', 'leaderboards: one build (056)';
 end $$;
 delete from public.banquet_schedule where round = '2030-01-10';
 

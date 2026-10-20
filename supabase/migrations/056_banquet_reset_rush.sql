@@ -22,6 +22,8 @@
 --    A role taken away is noticed at the first check after that.
 -- 4. The Discord reader (the second server's, every 15 s) skips 7:50 to 8:45
 --    Manila on a reset day; the posts it skipped are read on the next run.
+-- 5. The leaderboards had the same gap as 1: with none built yet, every
+--    request built its own. Now one does and the rest wait for it.
 --
 -- The second server: the same file through setup-server.sh's moved() rewrite.
 
@@ -118,5 +120,23 @@ begin
   if d not like '%' || was || '%' then raise exception 'banquet_sync: no token line to pause after'; end if;
   execute replace(d, was, was || '
   if public.banquet_near_reset(interval ''10 minutes'', interval ''45 minutes'') then return ''paused for the reset''; end if;');
+end;
+$$;
+
+-- 5.
+do $$
+declare
+  d text := pg_get_functiondef('public.banquet_leaders(date, boolean)'::regprocedure);
+  was text := '    select * into c from public.banquet_leaders_cache x where x.round = key_ and x.grp = g;
+';
+begin
+  if d like '%None built yet%' then return; end if;
+  if d not like '%' || was || '%' then raise exception 'banquet_leaders: no cache read to wait after'; end if;
+  execute replace(d, was, was || '    if c.built_at is null then
+      -- None built yet: wait for whoever is building it, then take theirs.
+      perform pg_advisory_xact_lock(hashtext(''banquet_leaders''), g);
+      select * into c from public.banquet_leaders_cache x where x.round = key_ and x.grp = g;
+    end if;
+');
 end;
 $$;
