@@ -13,6 +13,7 @@
 do $$
 declare d text := pg_get_functiondef('public.banquet_check()'::regprocedure);
 begin
+  if d not like '%interval ''24 hours''%' and d like '%interval ''7 days''%' then return; end if; -- already run
   if d not like '%interval ''24 hours''%' then raise exception 'banquet_check: no 24-hour fallback to change'; end if;
   execute replace(d, 'interval ''24 hours''', 'interval ''7 days''');
 end;
