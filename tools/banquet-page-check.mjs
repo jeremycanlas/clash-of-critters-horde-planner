@@ -500,8 +500,34 @@ try {
   assert.deepEqual(lastSent('Ana', 'banquet_note_copy'), { target: 10000001, g: null }, 'the copy is noted, as a tap would be');
   assert.deepEqual(await axe(A), [], 'axe, claim run');
   if (process.env.BANQUET_SHOTS) await A.screenshot({ path: `${process.env.BANQUET_SHOTS}/run-phone.png` });
+  // On a phone, one line of what is going on sits at the foot of the run (20 Oct thread).
+  assert.match(await A.locator('#bq-run-feed').innerText(), /\d+ claimable/, 'the activity, in one line');
   await A.click('[data-run="gift"]');
+  // Claimed: the run stays on it, the UID still the one copied for the group chat,
+  // with Next and Undo, and nothing copied over it (20 Oct thread).
+  await A.locator('.bq-run__card.is-claimed').waitFor();
+  assert.equal(await A.locator('.bq-run__uid').textContent(), '10000001', 'stays on the one claimed');
+  assert.equal(await A.evaluate(() => navigator.clipboard.readText()), '10000001', 'the clipboard still holds it');
+  const until = async (ok, why) => {
+    for (let i = 0; i < 60 && !ok(); i++) await A.waitForTimeout(50);
+    assert.ok(ok(), why);
+  };
+  await until(() => db.claims.some((c) => c.who === 'Ana' && c.uid === '10000001'), 'the claim is sent at once');
+  assert.deepEqual(await axe(A), [], 'axe, claimed screen');
+  if (process.env.BANQUET_SHOTS) await A.screenshot({ path: `${process.env.BANQUET_SHOTS}/run-claimed-phone.png` });
+  // Undo: the claim taken back, and the same UID to answer again.
+  await A.click('[data-run="undo"]');
+  await A.locator('[data-run="gift"]').waitFor();
+  assert.equal(await A.locator('.bq-run__uid').textContent(), '10000001', 'Undo goes back to the same UID');
+  await until(() => !db.claims.some((c) => c.who === 'Ana' && c.uid === '10000001'), 'and takes the claim back');
+  // Keys: G claims, Enter goes on, copying the next.
+  await A.keyboard.press('g');
+  await A.locator('.bq-run__card.is-claimed').waitFor();
+  await until(() => db.claims.some((c) => c.who === 'Ana' && c.uid === '10000001'), 'G claims it');
+  await A.keyboard.press('Enter');
   await A.waitForFunction(() => document.querySelector('.bq-run__uid')?.textContent === '20000001');
+  await A.waitForFunction(() => /Copied/.test(document.querySelector('#bq-run-copied')?.textContent));
+  assert.equal(await A.evaluate(() => navigator.clipboard.readText()), '20000001', 'Next copies the next one');
   await A.click('[data-run="skip"]');
   await A.waitForFunction(() => document.querySelector('.bq-run__uid')?.textContent === '55555555');
   await A.click('[data-run="skip"]');
@@ -1070,6 +1096,8 @@ try {
   assert.ok(looks.length >= 4, `enough unchecked to split, got ${looks.length}`);
   await E.click('#bq-run-start');
   await E.waitForSelector('#bq-run[open] .bq-run__uid');
+  if (process.env.BANQUET_SHOTS) await E.screenshot({ path: `${process.env.BANQUET_SHOTS}/run-desktop.png` });
+  assert.ok(await E.locator('[data-run="skip"] .bq-run__key').isVisible(), 'keys shown on a computer');
   const eliRan = [];
   for (let i = 0; i < claimN + looks.length; i++) {
     const step = await E.locator('#bq-run-step').textContent();
@@ -1200,6 +1228,24 @@ try {
   assert.deepEqual([...ana.errors, ...flo.errors, ...cov.errors, ...eli.errors, ...vee.errors, ...bea.errors, ...out.errors, ...junk.errors, ...half.errors, ...duo.errors, ...lea.errors], [],
     'no script errors');
   assert.ok(packedAsked > 0, 'the page asks for the list packed (049), and everything above ran through unpacking it');
+  // Twenty claimed: the most one account can, so the run stops offering the gift.
+  for (const uid of new Set(db.uids.filter((u) => u.grp === 1).map((u) => u.uid))) {
+    if (db.claims.filter((c) => c.who === 'Ana').length >= 20) break;
+    if (!db.claims.some((c) => c.who === 'Ana' && c.uid === uid)) db.claims.push({ grp: 1, uid, who: 'Ana' });
+  }
+  await A.reload();
+  await A.waitForSelector('#bq-app:not([hidden])');
+  await A.waitForFunction(() => /the most one account can/.test(document.querySelector('#bq-claimed')?.textContent), null, { timeout: 5000 })
+    .catch(async () => assert.fail(`twenty claimed: ${await A.locator('#bq-claimed').textContent()} | ${db.claims.filter((c) => c.who === 'Ana').length} in the db`));
+  assert.ok(await A.locator('#bq-run-start').isEnabled(), 'still something to check at 20');
+  await A.click('#bq-run-start');
+  await A.waitForSelector('#bq-run[open] .bq-run__uid');
+  assert.equal(await A.locator('[data-run="gift"]').count(), 0, 'no gift past 20');
+  assert.doesNotMatch(await A.locator('.bq-run__about').textContent(), /gift seen/, 'and no claimable ones in the run: checks only');
+  assert.match(await A.locator('.bq-run__limit').textContent(), /the most one account can/, 'and it says why');
+  assert.equal(await A.locator('[data-run="full"]').count(), 1, 'full and not logged in still there');
+  if (process.env.BANQUET_SHOTS) await A.screenshot({ path: `${process.env.BANQUET_SHOTS}/run-limit-phone.png` });
+  await A.click('#bq-run-close');
   console.log('banquet page: ok');
 } finally {
   await browser.close();

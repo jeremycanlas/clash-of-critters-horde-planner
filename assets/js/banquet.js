@@ -955,7 +955,10 @@ function renderCards(past) {
   // Yours, in view: a gift each, so this is what this gold rush has given you so far.
   const claimed = past ? 0 : state.banquets.filter((b) => b.claimed && (!b.grp || inView(b.grp))).length;
   $('#bq-claimed').hidden = !claimed;
-  $('#bq-claimed').textContent = `You have claimed ${claimed} banquet${claimed === 1 ? '' : 's'} this gold rush.`;
+  $('#bq-claimed').textContent = past || mine20() < LIMIT
+    ? `You have claimed ${claimed} banquet${claimed === 1 ? '' : 's'} this gold rush.`
+    : `You have claimed ${mine20()}, the most one account can this gold rush. Checking buildings for full or not logged in still helps everyone else.`;
+  renderRunFeed();
   renderLast();
 }
 
@@ -985,13 +988,19 @@ $('#bq-run-mine').addEventListener('change', (e) => {
   try { if (e.target.checked) localStorage.setItem(RUNMINE, '1'); else localStorage.removeItem(RUNMINE); } catch { /* this visit only */ }
   render();
 });
+/* The game lets one account claim 20 banquets a gold rush (20 Oct thread:
+   "once the 20 claim limit hits"). Past it the run stops offering the gift,
+   and keeps asking full or not logged in, which still helps everyone else. */
+const LIMIT = 20;
+const mine20 = () => state.banquets.filter((b) => b.claimed).length;
 function runQueue() {
   const mine = $('#bq-run-mine').checked ? new Set(state.mine.map(keyOf)) : null;
   const list = state.banquets.filter((b) => (!b.grp || inView(b.grp)) && (!mine || mine.has(keyOf(b))));
   const pick = (st, ok) => list.filter((b) => statusOf(b) === st && ok(b)).sort(ORDER[st]);
   const look = pick('look', () => true);
   // Nothing unchecked left: every not logged in one, however recently checked (14 Oct).
-  return [...pick('claimable', (b) => !b.claimed), ...fromMine(look),
+  // At the 20-claim limit a gift is no use to you, so the run is checks only.
+  return [...(mine20() < LIMIT ? pick('claimable', (b) => !b.claimed) : []), ...fromMine(look),
     ...fromMine(pick('notin', (b) => mine || !look.length || Date.now() - Date.parse(b.not_yet.at) >= RECHECK))].map(keyOf);
 }
 let run = null; // { queue: ["grp:uid"], i, tally }
@@ -1015,7 +1024,12 @@ const icon = (k, size = 26) => `<svg width="${size}" height="${size}" viewBox="0
   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[k]}</svg>`;
 
 const TALLY = [['gift', 'claimed'], ['full', 'full'], ['notin', 'not logged in'], ['skip', 'skipped']];
+/* Keys, for a run docked beside an emulator: the page only hears them while
+   the browser window is the one in front. Shown on the buttons on a computer. */
+const KEYS = { gift: 'G', full: 'F', notin: 'N', skip: 'S', next: 'Enter', undo: 'U', back: 'B' };
+const kbd = (what) => `<kbd class="bq-run__key" aria-hidden="true">${KEYS[what]}</kbd>`;
 function renderRun() {
+  renderRunFeed();
   const total = run.queue.length;
   const b = run.i < total ? cardOf(run.queue[run.i]) : null;
   const t = run.tally;
@@ -1036,6 +1050,22 @@ function renderRun() {
       </section>`;
     return;
   }
+  /* Claimed: the run stays on it. The UID is still what was copied, so it can
+     go straight into the in-game group chat; Next copies the next one, and
+     Undo takes the claim back (20 Oct thread: a mis-tap after dozens of UIDs,
+     and the next UID pasted into the group instead of the one claimed). */
+  if (run.done) {
+    $('#bq-run-body').innerHTML = `<section class="bq-run__card is-claimed" data-key="${keyOf(b)}">
+        <span class="bq-run__copied is-ok" role="status">${icon('claim', 15)} Claimed</span>
+        <button type="button" class="tr-copy bq-run__uid" data-copy="${b.uid}" title="Copy UID">${b.uid}</button>
+        <span class="bq-run__about">Share it in your in-game group so others can claim it too. Tap the number to copy it again.</span>
+      </section>
+      <div class="bq-run__answers">
+        <button type="button" class="bq-run__btn is-gift" data-run="next">${icon('skip')}<span>Next UID<small>${run.i + 1 < total ? 'Copies the next one for the game&#39;s search' : 'That was the last one'}</small></span>${kbd('next')}</button>
+      </div>
+      <button type="button" class="btn btn--quiet bq-run__skip" data-run="undo">${icon('unclaim', 16)} Undo, I did not claim it ${kbd('undo')}</button>`;
+    return;
+  }
   if (run.ask) {
     $('#bq-run-body').innerHTML = `<section class="bq-run__card" data-key="${keyOf(b)}">
         <button type="button" class="tr-copy bq-run__uid" data-copy="${b.uid}" title="Copy UID">${b.uid}</button>
@@ -1043,10 +1073,10 @@ function renderRun() {
       </section>
       <p class="bq-run__ask">The portrait stays up until its MVP logs in. How many likes now?</p>
       <div class="bq-run__answers">
-        <button type="button" class="bq-run__btn is-full" data-run="full!">${icon('full')}<span>${fullAt(b)} or more · it's full<small>Takes it off everyone's list</small></span></button>
-        <button type="button" class="bq-run__btn is-notin" data-run="notin">${icon('notin')}<span>Still ${baseOf(b).n} · not logged in<small>Its poster gets a reminder to send</small></span></button>
+        <button type="button" class="bq-run__btn is-full" data-run="full!">${icon('full')}<span>${fullAt(b)} or more · it's full<small>Takes it off everyone's list</small></span>${kbd('full')}</button>
+        <button type="button" class="bq-run__btn is-notin" data-run="notin">${icon('notin')}<span>Still ${baseOf(b).n} · not logged in<small>Its poster gets a reminder to send</small></span>${kbd('notin')}</button>
       </div>
-      <button type="button" class="btn btn--quiet bq-run__skip" data-run="back">Back</button>`;
+      <button type="button" class="btn btn--quiet bq-run__skip" data-run="back">Back ${kbd('back')}</button>`;
     return;
   }
   const st = statusOf(b);
@@ -1061,15 +1091,33 @@ function renderRun() {
     <p class="bq-run__ask">What did the game show?</p>
     ${noted != null ? '' : `<p class="bq-run__hint">No likes noted for it yet. A portrait with 0 likes means full. With more than 0 it may be left from last gold rush, so pick Not logged in.</p>`}
     <div class="bq-run__answers">
-      <button type="button" class="bq-run__btn is-gift" data-run="gift">${icon('gift')}<span>Gift · I claimed it<small>Counts your claim, goes to the next</small></span></button>
-      <button type="button" class="bq-run__btn is-full" data-run="full">${icon('full')}<span>Portrait · it's full<small>Takes it off everyone's list</small></span></button>
-      <button type="button" class="bq-run__btn is-notin" data-run="notin">${icon('notin')}<span>Nothing · not logged in<small>Its poster gets a reminder to send</small></span></button>
+      ${mine20() < LIMIT
+        ? `<button type="button" class="bq-run__btn is-gift" data-run="gift">${icon('gift')}<span>Gift · I claimed it<small>Counts your claim, then share it in your group</small></span>${kbd('gift')}</button>`
+        : `<p class="bq-run__limit">You have claimed ${mine20()}, the most one account can this gold rush. You can still help: mark it full or not logged in, or skip it.</p>`}
+      <button type="button" class="bq-run__btn is-full" data-run="full">${icon('full')}<span>Portrait · it's full<small>Takes it off everyone's list</small></span>${kbd('full')}</button>
+      <button type="button" class="bq-run__btn is-notin" data-run="notin">${icon('notin')}<span>Nothing · not logged in<small>Its poster gets a reminder to send</small></span>${kbd('notin')}</button>
     </div>
-    <button type="button" class="btn btn--quiet bq-run__skip" data-run="skip">Skip for now</button>`;
+    <button type="button" class="btn btn--quiet bq-run__skip" data-run="skip">Skip for now ${kbd('skip')}</button>`;
+}
+
+/* On a phone the run is the whole screen, so the list's "what is going on"
+   is out of sight: one line of it at the bottom, which opens the activity
+   below the list (20 Oct thread). Claimable is the count still open to you. */
+function renderRunFeed() {
+  const el = $('#bq-run-feed');
+  if (!el) return;
+  const on = !!(run && state && !$('#bq-run').classList.contains('bq-run--float'));
+  el.hidden = !on;
+  if (!on) return;
+  const open = state.banquets.filter((b) => (!b.grp || inView(b.grp)) && statusOf(b) === 'claimable' && !b.claimed).length;
+  const last = latest.find((l) => Date.now() - l.at < 30 * 60 * 1000);
+  const min = last ? Math.floor((Date.now() - last.at) / 60000) : 0;
+  el.innerHTML = `<b>${open} claimable</b><span class="bq-run__feedtext">${last ? `${esc(last.text)} · ${min < 1 ? 'just now' : `${min} min ago`}` : 'See what everyone is doing'}</span><span aria-hidden="true">›</span>`;
 }
 
 // The next one still due, shown and copied for the game's search.
 async function nextInRun() {
+  run.done = null;
   do run.i++; while (run.i < run.queue.length && !stillDue(run.queue[run.i]));
   renderRun();
   const k = run.queue[run.i];
@@ -1135,24 +1183,73 @@ $('#bq-run-body').addEventListener('click', async (e) => {
   let what = btn.dataset.run;
   if (what === 'again') return startRun();
   if (what === 'list') return $('#bq-run').close();
+  // Next: on from a claim, copying the next one while the tap still counts as one.
+  if (what === 'next') return nextInRun();
   const k = run.queue[run.i];
   const b = cardOf(k);
+  if (what === 'undo') {
+    if (!run.done || !b) return;
+    run.done = null;
+    run.tally.gift = Math.max(0, run.tally.gift - 1);
+    renderRun();
+    const got = await call('banquet_claim', { target: Number(b.uid), claimed: false, g: b.grp ?? null });
+    toast(got.ok ? `Took back your claim on ${b.uid}` : `${b.uid}: ${got.why}`, 'info');
+    return fresh();
+  }
   // A portrait on a building that had a banquet before: ask, it may only be the old one.
   if (what === 'full' && b && hadOne(b)) { run.ask = true; return renderRun(); }
   if (what === 'back') { run.ask = false; return renderRun(); }
+  if (what === 'gift' && mine20() >= LIMIT) return;
   run.ask = false;
   if (what === 'full!') what = 'full';
   run.tally[what]++;
   markSeen(k);
-  // On to the next first: the copy has to happen while the tap still counts as one.
-  nextInRun();
+  if (what === 'gift') {
+    // Stays on it: the claim is shown, with Next and Undo (see renderRun).
+    run.done = k;
+    renderRun();
+  } else {
+    // On to the next first: the copy has to happen while the tap still counts as one.
+    nextInRun();
+  }
   if (what === 'skip' || !b) return;
   const g = b.grp ?? null;
   const target = Number(b.uid);
   const got = what === 'gift' ? await call('banquet_claim', { target, claimed: true, g })
     : await call('banquet_mark', { target, state: what === 'full' ? 'full' : 'not-yet', g });
   if (!got.ok) toast(`${b.uid}: ${got.why}`, 'info');
+  // A mark moves on at once, so a mis-tap gets its way back here, as on the cards.
+  else if (what !== 'gift') {
+    const tallied = what;
+    toast(`Marked ${b.uid} ${what === 'full' ? 'full' : 'not logged in'}`, 'info', {
+      label: 'Undo',
+      fn: async () => {
+        const back = await call('banquet_mark_undo', { target, g });
+        if (!back.ok) toast(back.why, 'info');
+        else if (run) { run.tally[tallied] = Math.max(0, run.tally[tallied] - 1); renderRun(); }
+        fresh();
+      },
+    });
+  }
   fresh();
+});
+
+// Keys while the run is open, unless something is being typed.
+addEventListener('keydown', (e) => {
+  if (!run || !$('#bq-run').open || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.target.closest?.('input, textarea, select, [contenteditable]')) return;
+  const key = e.key.length === 1 ? e.key.toUpperCase() : e.key;
+  if (key === 'Enter' && e.target.closest?.('button, a')) return; // Enter on a focused button presses that button
+  const what = Object.keys(KEYS).find((w) => KEYS[w] === key) ?? (key === 'ArrowRight' ? 'next' : null);
+  const btn = what && ($(`#bq-run-body [data-run="${what}"]`) ?? (what === 'full' ? $('#bq-run-body [data-run="full!"]') : null));
+  if (!btn) return;
+  e.preventDefault();
+  btn.click();
+});
+$('#bq-run-feed').addEventListener('click', () => {
+  $('#bq-run').close();
+  const a = $('#bq-activity');
+  if (a && !a.hidden) { a.open = true; a.scrollIntoView({ block: 'start' }); }
 });
 
 // ------------------------------------------------------------------ actions

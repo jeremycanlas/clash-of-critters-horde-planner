@@ -279,6 +279,19 @@
 .bq-run__btn:hover { filter: brightness(1.06); }
 .bq-run__btn:focus-visible, .bq-run__skip:focus-visible { outline: 2px solid var(--accent-ink-on); outline-offset: 2px; }
 .bq-run__skip { align-self: center; min-height: 44px; }
+/* The claimed screen (20 Oct thread): the claim stays on screen until Next. */
+.bq-run__copied.is-ok { display: inline-flex; align-items: center; gap: 5px; color: color-mix(in srgb, var(--ok) 75%, var(--text)); background: color-mix(in srgb, var(--ok) 14%, transparent); }
+.bq-run__card.is-claimed { border-color: color-mix(in srgb, var(--ok) 45%, var(--line)); }
+.bq-run__limit { margin: 0; padding: var(--s3); border-radius: 12px; font-size: 14px; color: var(--text); background: color-mix(in srgb, var(--ok) 10%, var(--surface-2)); border: 1px solid color-mix(in srgb, var(--ok) 35%, var(--line)); }
+/* Keys: only where there is a keyboard to press them on. */
+.bq-run__key { display: none; margin-left: auto; padding: 1px 7px; border-radius: 6px; border: 1px solid currentColor; background: transparent; color: inherit; box-shadow: none; font: 600 12px var(--font-mono); opacity: .75; }
+@media (hover: hover) and (pointer: fine) { .bq-run__key { display: inline-block; } .bq-run__skip .bq-run__key { margin-left: 8px; } }
+.bq-run__skip { display: inline-flex; align-items: center; gap: 6px; }
+/* The one line of activity at the foot of the run on a phone. */
+.bq-run__feed { display: flex; align-items: center; gap: var(--s2); width: 100%; min-height: 44px; padding: 6px var(--s3); border-radius: 12px; border: 1px solid var(--line); background: var(--surface-2); color: var(--text); font: inherit; font-size: 13px; text-align: left; cursor: pointer; }
+.bq-run__feed[hidden] { display: none; }
+.bq-run__feed b { flex: none; color: color-mix(in srgb, var(--ok) 75%, var(--text)); }
+.bq-run__feedtext { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-dim); }
 .bq-run__tally { display: flex; justify-content: center; gap: var(--s4); margin: auto 0 0; font-size: 13px; }
 /* Each answer's icon in its status colour, the count beside it in the text colour. */
 .bq-run__t { display: inline-flex; align-items: center; gap: 5px; }
