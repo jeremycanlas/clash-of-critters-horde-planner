@@ -8,7 +8,7 @@ of the tries. Every response here says no-store.
 This is only about the app's *files*. Saved formations live in localStorage,
 which is a different store: no cache header touches it and no reload clears it.
 """
-import functools, http.server, os, socket, sys
+import functools, http.server, io, os, socket, sys
 
 PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8123
 
@@ -23,6 +23,25 @@ class H(http.server.SimpleHTTPRequestHandler):
         self.send_header('Cache-Control', 'no-store, must-revalidate')
         self.send_header('Pragma', 'no-cache')
         super().end_headers()
+
+    # A Windows checkout has CRLF line endings: a byte a line that the live site,
+    # serving the repo's LF, never sends. Hand text out as LF so the screen
+    # sweep's weight budgets measure what a phone actually downloads.
+    TEXT = ('.html', '.css', '.js', '.mjs', '.json', '.svg')
+
+    def send_head(self):
+        path = self.translate_path(self.path)
+        if os.path.isdir(path):
+            path = os.path.join(path, 'index.html')
+        if not path.endswith(self.TEXT) or not os.path.isfile(path):
+            return super().send_head()
+        with open(path, 'rb') as f:
+            body = f.read().replace(b'\r\n', b'\n')
+        self.send_response(200)
+        self.send_header('Content-Type', self.guess_type(path))
+        self.send_header('Content-Length', str(len(body)))
+        self.end_headers()
+        return io.BytesIO(body)
 
 
 def lan_ip():
