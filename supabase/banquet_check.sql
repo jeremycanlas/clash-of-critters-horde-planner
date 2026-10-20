@@ -56,6 +56,8 @@ end $$;
 \i supabase/migrations/049_banquet_packed.sql
 \i supabase/migrations/050_banquet_add_many_likes_round.sql
 \i supabase/migrations/052_banquet_leaders_everyone.sql
+\i supabase/migrations/054_banquet_check_grace_week.sql
+\i supabase/migrations/055_banquet_likes_from_discord.sql
 
 -- Real entries would skew the counts. Gone for this transaction only.
 delete from public.banquet_claims; delete from public.banquet_marks; delete from public.banquet_uids; delete from public.banquet_access; delete from public.banquet_events;
@@ -146,6 +148,31 @@ select public.banquet_apply(public.banquet_round(), 1::smallint, jsonb_build_arr
   pg_temp.msg('m5', '990000000000000301', '`10000001` again')));
 select public.banquet_apply(public.banquet_round(), 2::smallint, jsonb_build_array(
   pg_temp.msg('w1', '990000000000000303', E'30000001 30000002 30000003 55555555')));
+
+-- Likes posted with a UID (055): one UID and "N likes" on a line. A line with
+-- two UIDs, or a UID this group never posted, is left alone; read twice, noted once.
+select public.banquet_likes_read(1::smallint, jsonb_build_array(
+  pg_temp.msg('l1', '990000000000000301', E'10000001 100 likes
+10000002 | 20000001 50 likes
+10000003 50likes'),
+  pg_temp.msg('l2', '990000000000000302', '88888888 50 likes'),
+  pg_temp.msg('l3', '990000000000000399', '20000002 0 likes', true)));
+select public.banquet_likes_read(1::smallint, jsonb_build_array(
+  pg_temp.msg('l1', '990000000000000301', E'10000001 100 likes
+10000002 | 20000001 50 likes
+10000003 50likes')));
+do $$
+begin
+  assert (select array_agg(uid || ':' || likes order by uid) from public.banquet_likes
+           where grp = 1 and discord_id = '990000000000000301') = array['10000001:100', '10000003:50'],
+    'likes read from a post: one UID per line, once';
+  assert not exists (select 1 from public.banquet_likes where uid in (10000002, 20000001, 88888888, 20000002)),
+    'no count for two UIDs on a line, an unposted UID, or a bot';
+  assert pg_get_functiondef('public.banquet_sync()'::regprocedure) like '%banquet_likes_read(g.grp, msgs)%',
+    'the reader reads likes';
+  assert pg_get_functiondef('public.banquet_check()'::regprocedure) not like '%24 hours%', 'a week of grace (054)';
+end $$;
+delete from public.banquet_likes; -- the likes checks further down start from none
 
 set local role authenticated;
 
