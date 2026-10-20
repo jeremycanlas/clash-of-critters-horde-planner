@@ -79,6 +79,9 @@ export function buildShell() {
 
   watchDock();
   buildCleanView();
+
+  // The Boss waves tab links to ?waves; on a phone the wave list is in the roster sheet.
+  if (PHONE.matches && new URLSearchParams(location.search).has('waves')) setSheet('roster');
 }
 
 /**

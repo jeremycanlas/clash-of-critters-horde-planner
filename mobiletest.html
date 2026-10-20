@@ -1873,6 +1873,7 @@ await runGroup('a link to the boss lineup', async () => {
   eq('?waves=3 opens on the Zobos tab', d.querySelector('#roster-tabs [aria-selected="true"]')?.dataset.list, 'zobos');
   ok('on Season 3', /Season 3/.test(d.querySelector('[data-season][aria-selected="true"]')?.textContent ?? ''));
   eq('and is not remembered', f.contentWindow.localStorage.getItem('coc.zobos.view'), null);
+  if (f.contentWindow.matchMedia('(max-width: 760px)').matches) eq('a phone opens the roster sheet on it', d.body.dataset.sheet, 'roster');
   f.remove();
 });
 
