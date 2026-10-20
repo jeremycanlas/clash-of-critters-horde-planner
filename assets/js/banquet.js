@@ -753,8 +753,13 @@ const reminder = (uids) => `Your MVP banquet has not opened yet (UID ${uids}). `
    had a banquet before (50 or more) gets asked about before Full is believed:
    the same count as before is not logged in yet, fifty more is full. */
 const PER = 50;
-const hadOne = (b) => (b.likes_before?.n ?? 0) >= PER;
-const fullAt = (b) => b.likes_before.n + PER;
+/* What a portrait is measured against: the count before the reset, unless
+   someone has since noted fewer. Likes never go down, so fewer means the
+   count before was wrong (100 noted, 50 on the building; 20 Oct thread). */
+const baseOf = (b) => (b.likes_now && b.likes_before && b.likes_now.n < b.likes_before.n ? b.likes_now : b.likes_before);
+const fixed = (b) => baseOf(b) !== b.likes_before;
+const hadOne = (b) => (baseOf(b)?.n ?? 0) >= PER;
+const fullAt = (b) => baseOf(b).n + PER;
 const times = (n) => Math.floor(n / PER);
 let likesFor = null; // "grp:uid" whose likes box is open
 let likesDraft = '';
@@ -807,9 +812,10 @@ const likesAdd = (b, past) => (past || b.likes_before || b.likes_now ? ''
   : `<button type="button" class="btn btn--quiet bq-likes__add" data-likes="${keyOf(b)}" aria-label="Note the likes on ${b.uid}" title="Note the likes on its building">${icon('heart', 15)}<span>Likes</span></button>`);
 // The question Full waits on, for a building that had a banquet before.
 const askRow = (b) => `<div class="bq-ask" role="group" aria-label="Full or not logged in">
-    <p>Before the reset this building had <b>${b.likes_before.n}</b> likes. The portrait stays up until its MVP logs in. What does it show now?</p>
+    <p>${fixed(b) ? `This building has <b>${baseOf(b).n}</b> likes, corrected from the ${b.likes_before.n} noted before the reset.`
+      : `Before the reset this building had <b>${b.likes_before.n}</b> likes.`} The portrait stays up until its MVP logs in. What does it show now?</p>
     <button type="button" class="btn" data-mark="full" data-sure data-uid="${b.uid}"${grpAttr(b.grp)}>${fullAt(b)} or more · Full</button>
-    <button type="button" class="btn" data-mark="not-yet" data-sure data-uid="${b.uid}"${grpAttr(b.grp)}>Still ${b.likes_before.n} · Not logged in</button>
+    <button type="button" class="btn" data-mark="not-yet" data-sure data-uid="${b.uid}"${grpAttr(b.grp)}>Still ${baseOf(b).n} · Not logged in</button>
     <button type="button" class="btn btn--quiet" data-ask-cancel>Cancel</button>
   </div>`;
 
@@ -1005,12 +1011,12 @@ function renderRun() {
   if (run.ask) {
     $('#bq-run-body').innerHTML = `<section class="bq-run__card" data-key="${keyOf(b)}">
         <button type="button" class="tr-copy bq-run__uid" data-copy="${b.uid}" title="Copy UID">${b.uid}</button>
-        <span class="bq-run__about">${tagOf(b.grp)} before the reset: ${b.likes_before.n} likes, MVP ${times(b.likes_before.n)}× before</span>
+        <span class="bq-run__about">${tagOf(b.grp)} ${fixed(b) ? `corrected to ${baseOf(b).n} likes` : `before the reset: ${b.likes_before.n} likes`}, MVP ${times(baseOf(b).n)}× before</span>
       </section>
       <p class="bq-run__ask">The portrait stays up until its MVP logs in. How many likes now?</p>
       <div class="bq-run__answers">
         <button type="button" class="bq-run__btn is-full" data-run="full!">${icon('full')}<span>${fullAt(b)} or more · it's full<small>Takes it off everyone's list</small></span></button>
-        <button type="button" class="bq-run__btn is-notin" data-run="notin">${icon('notin')}<span>Still ${b.likes_before.n} · not logged in<small>Its poster gets a reminder to send</small></span></button>
+        <button type="button" class="bq-run__btn is-notin" data-run="notin">${icon('notin')}<span>Still ${baseOf(b).n} · not logged in<small>Its poster gets a reminder to send</small></span></button>
       </div>
       <button type="button" class="btn btn--quiet bq-run__skip" data-run="back">Back</button>`;
     return;
@@ -1367,7 +1373,7 @@ async function saveLikes(btn) {
   const mark = (to) => () => call('banquet_mark', { target, state: to, g }).then(() => fresh());
   const now = b && state.round === state.current && hadOne(b) && !b.full;
   if (now && n >= fullAt(b)) toast(`${target}: ${n} likes, so it is full`, 'info', { label: 'Mark full', fn: mark('full') });
-  else if (now && n === b.likes_before.n && !b.not_yet) toast(`${target}: still ${n}, not logged in yet`, 'info', { label: 'Mark not logged in', fn: mark('not-yet') });
+  else if (now && n === baseOf(b).n && !b.not_yet) toast(`${target}: still ${n}, not logged in yet`, 'info', { label: 'Mark not logged in', fn: mark('not-yet') });
   else toast(`Noted ${n} likes on ${target}`);
   fresh();
 }

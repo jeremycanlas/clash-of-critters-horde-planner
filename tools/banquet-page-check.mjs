@@ -600,6 +600,22 @@ try {
   if (before274) db.marks.set('1:60000274', before274); else db.marks.delete('1:60000274');
   await A.locator('body').dispatchEvent('pointerdown');
   await A.clock.runFor(11_000);
+  // Corrected down since the reset (100 noted, 50 on the building): the question goes by 50 (20 Oct thread).
+  const likes274 = db.likes.get('1:60000274');
+  db.likes.set('1:60000274', { ...likes274, now: { n: 50, by: 'Eli', at: new Date().toISOString() } });
+  db.marks.set('1:60000274', { state: 'open', by: 'Eli', at: new Date().toISOString() });
+  await A.locator('body').dispatchEvent('pointerdown');
+  await A.clock.runFor(11_000);
+  await liked.getByRole('button', { name: 'Full: 60000274' }).click();
+  await liked.locator('.bq-ask').waitFor();
+  const askedFixed = (await liked.locator('.bq-ask').innerText()).replace(/\s+/g, ' ');
+  assert.match(askedFixed, /50 likes, corrected from the 100/, `the corrected count, not the one before the reset: ${askedFixed}`);
+  assert.match(askedFixed, /100 or more · Full.*Still 50 · Not logged in/, `measured from 50: ${askedFixed}`);
+  await liked.locator('[data-ask-cancel]').click();
+  db.likes.set('1:60000274', likes274);
+  if (before274) db.marks.set('1:60000274', before274); else db.marks.delete('1:60000274');
+  await A.locator('body').dispatchEvent('pointerdown');
+  await A.clock.runFor(11_000);
   assert.ok(await A.locator('#bq-activity').evaluate((d) => d.getBoundingClientRect().top > document.querySelector('#bq-cards').getBoundingClientRect().bottom - 1),
     'on a phone, below the list');
   assert.equal(await A.evaluate(() => document.documentElement.scrollWidth - innerWidth), 0, 'the tiles fit a phone');
