@@ -155,23 +155,42 @@ const grpAttr = (g) => (g ? ` data-grp="${g}"` : '');
 const WHY = {
   'no-role': ['This page is for one Discord server', 'Your Discord account does not have the role for it. Ask in the server.'],
   'not-set-up': ['Not set up yet', 'The owner has not finished connecting this page to Discord.'],
-  'discord-down': ['Could not reach Discord', 'Discord did not answer. Try again in a minute.'],
+  'discord-down': ['Could not reach Discord', 'Discord did not answer. Trying again by itself, no need to sign in again.'],
+  busy: ['The site is busy right now', 'Trying again by itself, no need to sign in again. Everyone arrives at the reset at once.'],
   'signed-out': ['This page is private', 'Sign in with Discord to see it.'],
 };
 
 /* Discord, or the way to it, sometimes does not answer for a few seconds, and
-   the database can be busy: asked again up to three times before saying so. */
+   the database can be busy: asked again up to four times before saying so,
+   each a little early or late so pages that failed together do not all come
+   back together. A busy answer is 'busy', never a reason to sign in again. */
+const jitter = (ms) => ms * (0.75 + Math.random() / 2);
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 async function check(d) {
   let said;
-  for (let i = 0; i < 4; i++) {
-    if (i) await new Promise((r) => setTimeout(r, 1500 * i));
+  for (let i = 0; i < 5; i++) {
+    if (i) await wait(jitter(1500 * 2 ** (i - 1)));
     const got = await ask(d, 'banquet_check', {});
-    said = got.ok ? got.data : got.why;
-    if (got.ok && said !== 'discord-down') return said;
-    if (!got.ok && !/busy|reach/i.test(said)) return said; // a real answer, not a moment's overload
+    if (got.ok && got.data !== 'discord-down') return got.data;
+    said = got.ok ? got.data : got.busy || /busy|reach/i.test(got.why) ? 'busy' : got.why;
+    if (said !== 'busy' && said !== 'discord-down') return said; // a real answer, not a moment's overload
   }
   return said;
 }
+// The gate for a moment's overload: says so, and tries again by itself.
+let retryIn = 0;
+function retrySoon(then) {
+  retryIn = Math.min(60, Math.max(10, retryIn * 2 || 10));
+  const at = Date.now() + jitter(retryIn * 1000);
+  const tick_ = () => {
+    const left = Math.ceil((at - Date.now()) / 1000);
+    if (left > 0) { status(`Trying again in ${left} s…`); setTimeout(tick_, 1000); return; }
+    status('Trying again…');
+    then();
+  };
+  tick_();
+}
+const passing = (got) => got === 'busy' || got === 'discord-down';
 
 async function start() {
   const back = readCallback();
@@ -192,8 +211,11 @@ async function start() {
   if (shut.length === dbs.length) {
     const [got, d] = shut[0];
     const [head, text] = WHY[got] ?? ['Could not check your access', got];
-    return gate(combined ? `${d.name}: ${head}` : head, text, got === 'signed-out' || !WHY[got]);
+    gate(combined ? `${d.name}: ${head}` : head, text, got === 'signed-out');
+    if (passing(got)) retrySoon(start);
+    return;
   }
+  retryIn = 0;
   for (const [got, d] of shut) {
     dbs.splice(dbs.indexOf(d), 1);
     toast(`${d.name}: ${(WHY[got] ?? [got])[0]}`, 'info');
@@ -233,7 +255,7 @@ let lastActive = Date.now();
 let lastAsk = 0;
 let paused = false;
 /* Refreshes in a row that got no answer, and how long to leave it after the
-   last: about 20 s, 40 s, 80 s, up to 5 minutes, each a little early or late
+   last: about 20 s, 40 s, 80 s, then every 90 s at most (5 minutes until 21 Oct: pages kept waiting long after the 14 Oct rush was over), each a little early or late
    so the tabs that failed together do not all come back together. A database
    that is struggling then gets room to recover, where every tab asking again
    every 10 s kept it buried (the load test on 8 Oct). */
@@ -241,7 +263,7 @@ let failures = 0;
 let backoff = 0;
 function failed() {
   failures++;
-  backoff = Math.min(5 * 60 * 1000, 20 * 1000 * 2 ** (failures - 1) * (0.75 + Math.random() / 2));
+  backoff = Math.min(90 * 1000, 20 * 1000 * 2 ** (failures - 1) * (0.75 + Math.random() / 2));
 }
 function touched() {
   lastActive = Date.now();
@@ -330,7 +352,13 @@ function settle(a) {
 async function load(round = null, quiet = false) {
   const got = await Promise.all(dbs.map((d) => ask(d, 'banquet_state', { r: round, packed: true })));
   const bad = got.find((x) => !x.ok);
-  if (bad) return quiet ? failed() : gate('Could not load the banquets', bad.why, true);
+  if (bad && quiet) return failed();
+  if (bad && bad.busy) {
+    gate(...WHY.busy, false);
+    return retrySoon(() => load(round));
+  }
+  if (bad) return gate('Could not load the banquets', bad.why, bad.status === 401);
+  retryIn = 0;
   reached = Date.now();
   failures = 0;
   const before = state;

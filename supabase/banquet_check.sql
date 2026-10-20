@@ -58,6 +58,7 @@ end $$;
 \i supabase/migrations/052_banquet_leaders_everyone.sql
 \i supabase/migrations/054_banquet_check_grace_week.sql
 \i supabase/migrations/055_banquet_likes_from_discord.sql
+\i supabase/migrations/056_banquet_reset_rush.sql
 
 -- Real entries would skew the counts. Gone for this transaction only.
 delete from public.banquet_claims; delete from public.banquet_marks; delete from public.banquet_uids; delete from public.banquet_access; delete from public.banquet_events;
@@ -930,6 +931,26 @@ begin
                            or not c.relrowsecurity)), 'every table closed, with row security on';
   assert not has_table_privilege('authenticated', 'vault.decrypted_secrets', 'select'), 'the bot token stays in the vault';
 end $$;
+
+-- The reset rush (056). A gold rush that resets 2030-01-10 00:00 UTC.
+reset role;
+insert into public.banquet_schedule (round, switch_at) values ('2030-01-10', '2030-01-08 00:00+00');
+do $$
+begin
+  assert public.banquet_near_reset(interval '10 minutes', interval '45 minutes', '2030-01-09 23:55+00'), '5 min before: near';
+  assert not public.banquet_near_reset(interval '10 minutes', interval '45 minutes', '2030-01-09 23:45+00'), '15 min before: not';
+  assert public.banquet_near_reset(interval '10 minutes', interval '45 minutes', '2030-01-10 00:44+00'), '44 min after: near';
+  assert not public.banquet_near_reset(interval '10 minutes', interval '45 minutes', '2030-01-10 00:46+00'), '46 min after: not';
+  delete from public.banquet_snap;
+  perform public.banquet_warm();
+  assert (select count(*) from public.banquet_snap where round = public.banquet_round() and packed is not null)
+       = 2 * (select count(*) from public.banquet_groups), 'warmed: every group, both copies';
+  assert pg_get_functiondef('public.banquet_check()'::regprocedure) like '%banquet_near_reset(interval ''45 minutes''%',
+    'no Discord recheck for a member let in, around a reset';
+  assert pg_get_functiondef('public.banquet_sync()'::regprocedure) like '%paused for the reset%', 'the reader rests at the reset';
+  assert exists (select 1 from cron.job where jobname = 'banquet-warm'), 'warmed every minute around the reset';
+end $$;
+delete from public.banquet_schedule where round = '2030-01-10';
 
 \echo banquet: ok
 rollback;

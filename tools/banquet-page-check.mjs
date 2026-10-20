@@ -179,7 +179,11 @@ async function open(me, opts) {
     const body = route.request().postDataJSON?.() ?? {};
     const json = (d) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(d) });
     const ok = () => route.fulfill({ status: 204 });
-    if (u.pathname.endsWith('/auth/v1/token')) return json({ access_token: 't', refresh_token: 'x', expires_in: 3600 });
+    // `authFlaky`: the sign-in service busy that many times first, as a reset can make it.
+    if (u.pathname.endsWith('/auth/v1/token')) {
+      if (me.authFlaky && me.authFlaky-- > 0) return route.fulfill({ status: 503, body: 'busy' });
+      return json({ access_token: 't', refresh_token: 'x', expires_in: 3600 });
+    }
     const fn = u.pathname.split('/').pop();
     const headers = route.request().headers();
     const schema = headers['content-profile'] ?? headers['accept-profile'] ?? 'public';
@@ -973,14 +977,14 @@ try {
   await A.waitForTimeout(500);
   assert.ok(await A.locator('#bq-stale').isHidden(), 'back online, the connection warning goes');
 
-  // Failing in a row, it leaves longer each time: about 20 s, 40 s, 80 s, up to 5 minutes, not every 10 s.
+  // Failing in a row, it leaves longer each time: about 20 s, 40 s, 80 s, then every 90 s, not every 10 s.
   await A.locator('body').dispatchEvent('pointerdown');
   down = true;
   tries = 0;
   await A.clock.runFor(10 * 60_000);
   await A.waitForTimeout(300);
   const t0 = tries;
-  assert.ok(t0 >= 4 && t0 <= 8, `ten minutes unreachable: ${t0} tries, not 60`);
+  assert.ok(t0 >= 5 && t0 <= 11, `ten minutes unreachable: ${t0} tries, not 60`);
   down = false;
   await A.clock.runFor(5 * 60_000 + 10_000);
   await A.waitForTimeout(500);
@@ -1038,13 +1042,22 @@ try {
   assert.ok(await C.locator('#bq-list').isHidden(), 'and the list stays covered');
 
   // ------------------------------------------------------------------ a first load that fails
+  // Busy, not refused (14 Oct reset): no Sign in button, and it loads by itself once the database answers.
   down = true;
   const dee = await open({ name: 'Dee', grp: 1, expectGate: true }, devices['iPhone SE']);
-  assert.match(await dee.page.locator('#bq-gate-head').textContent(), /Could not load/);
+  assert.match(await dee.page.locator('#bq-gate-head').textContent(), /busy/);
+  assert.ok(await dee.page.locator('#bq-signin').isHidden(), 'no Sign in button for a busy database');
   await dee.page.clock.fastForward(65_000);
   await dee.page.waitForTimeout(300);
   assert.deepEqual(dee.errors, [], 'the refresh timer stays quiet with no list');
   down = false;
+  await dee.page.clock.fastForward(65_000);
+  await dee.page.locator('#bq-app').waitFor({ state: 'visible', timeout: 5000 })
+    .catch(() => assert.fail('back by itself once the database answers'));
+
+  // The sign-in service busy twice: still signed in, and in.
+  const ivy = await open({ name: 'Ivy', grp: 1, authFlaky: 2 }, devices['iPhone SE']); // waits for the list itself
+  assert.ok(await ivy.page.evaluate(() => !!localStorage.getItem('coc.community.v1')), 'the session kept');
 
   // ------------------------------------------------------------------ claim-run clusters
   // Eli starts the unchecked UIDs at a point of their own, from their sign-in, wrapping round, and gets every one.

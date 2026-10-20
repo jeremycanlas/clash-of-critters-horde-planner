@@ -86,7 +86,7 @@ export function isConfigured() {
  *   `profile` is the schema to ask instead of public: a second Discord
  *   server's banquets live in one of their own (tools/setup-server.sh).
  * @returns {Promise<{ok: true, data: any, total: number|null}
- *                 | {ok: false, why: string, status: number}>}
+ *                 | {ok: false, why: string, status: number, busy?: boolean}>}
  */
 export async function rest(path, opts = {}) {
   const { method = 'GET', body, headers = {}, cache = false, auth = false, signal, profile } = opts;
@@ -105,7 +105,7 @@ export async function rest(path, opts = {}) {
   let bearer = CONFIG.anonKey;
   if (auth) {
     const got = await token();
-    if (!got.ok) return { ok: false, why: got.why, status: 401 };
+    if (!got.ok) return { ok: false, why: got.why, status: got.busy ? 503 : 401, busy: !!got.busy };
     bearer = got.jwt;
   }
 
@@ -128,10 +128,15 @@ export async function rest(path, opts = {}) {
   } catch (err) {
     // Abort is the caller changing its mind, not a failure worth wording.
     if (err?.name === 'AbortError') return { ok: false, why: '', status: 0 };
-    return { ok: false, why: 'Could not reach the community list.', status: 0 };
+    return { ok: false, why: 'Could not reach the community list.', status: 0, busy: true };
   }
 
-  if (!res.ok) return { ok: false, why: await reasonFor(res, method), status: res.status };
+  // busy: worth asking again in a moment (overloaded, timed out, or a gateway
+  // that gave up), as against an answer that will be the same next time.
+  if (!res.ok) {
+    return { ok: false, why: await reasonFor(res, method), status: res.status,
+      busy: res.status === 429 || res.status >= 500 };
+  }
 
   let data = null;
   if (res.status !== 204) {
@@ -357,7 +362,7 @@ async function refreshProfile() {
 
 /**
  * A usable access token, refreshing it if the one in memory has gone stale.
- * @returns {Promise<{ok: true, jwt: string} | {ok: false, why: string}>}
+ * @returns {Promise<{ok: true, jwt: string} | {ok: false, why: string, busy?: boolean}>}
  */
 /* One refresh at a time: the nav's Players check and a page's own call can both
    find the token stale on load, and a refresh token spent twice can be refused,
@@ -382,9 +387,15 @@ async function refresh() {
       body: JSON.stringify({ refresh_token: held.refresh_token }),
     });
   } catch {
-    return { ok: false, why: 'Could not reach the community list.' };
+    return { ok: false, why: 'Could not reach the community list.', busy: true };
   }
 
+  // Busy (429) or down for a moment (5xx): the session is still good, so it is
+  // kept and asked about again later. Signing out here is what turned a busy
+  // minute at the 14 Oct reset into everyone signing in again at once.
+  if (res.status === 429 || res.status >= 500) {
+    return { ok: false, why: 'The sign-in service is busy. Trying again in a moment.', busy: true };
+  }
   if (!res.ok) {
     // A refused refresh is a session that has ended, not a transient failure —
     // holding onto it would make every later attempt fail the same way.
