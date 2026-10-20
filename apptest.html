@@ -1367,6 +1367,7 @@ await runGroup('the roster cannot spill past its grid', async () => {
   /* The same question on the Zobo tab, which draws from the same card markup and
      so inherits the same failure if that markup ever grows something. */
   await click($('#roster-tabs [data-list="zobos"]'), 400);
+  await click($('#zobo-view [data-view="roster"]'), 400);   // the tab opens on Waves
   const zobos = $$('.panel--roster .card--zobo');
   if (!zobos.length) {
     skip('a Zobo card cannot outgrow itself either', 'no Zobos in this copy');

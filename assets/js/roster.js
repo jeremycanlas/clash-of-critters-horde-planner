@@ -1106,9 +1106,10 @@ export const showing = { value: 'tatari' };
  * stranger on a tab they did not ask for is answering a question nobody asked.
  */
 const ZOBO_VIEW_KEY = 'coc.zobos.view';
-export const zoboView = { value: 'roster' };
+// Waves first: the boss order is what most people open this tab for.
+export const zoboView = { value: 'waves' };
 try {
-  if (localStorage.getItem(ZOBO_VIEW_KEY) === 'waves') zoboView.value = 'waves';
+  if (localStorage.getItem(ZOBO_VIEW_KEY) === 'roster') zoboView.value = 'roster';
 } catch { /* private mode */ }
 
 /* Which season the Waves view shows (an index into state.bossOrders), and the

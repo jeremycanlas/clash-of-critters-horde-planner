@@ -14,6 +14,7 @@ import { theme as storedTheme, setTheme } from './prefs.js';
 const PAGES = [
   { href: 'index.html', name: 'Drafter' },
   { href: 'guide.html', name: 'Guide' },
+  { href: 'index.html?waves', name: 'Boss waves', short: 'Bosses' },
   { href: 'community.html', name: 'Community formations', short: 'Community' },
   { href: 'changes.html', name: 'Patch notes' },
   { href: 'skills.html', name: 'Skill data' },

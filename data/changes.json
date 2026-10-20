@@ -787,12 +787,32 @@
     "mode": {
       "groups": [
         {
+          "title": "Changed",
+          "items": [
+            "Horde Invasion skills were rebalanced for some Tatari and their evolutions. The full list is in the game’s Horde Invasion interface.",
+            "Waveflutter’s Somno-Shot and Morphanessa’s Rippling Shot still let adjacent allies’ regular skills inflict Slow and Sleep, but no longer their Horde Invasion skills.",
+            "Some Horde Invasion skills of Dewgrub and its evolutions were buffed.",
+            "Improved the text descriptions and stat details of some Horde Invasion skills."
+          ]
+        },
+        {
+          "title": "Fixed",
+          "items": [
+            "Drilleroo’s Where To? (and its evolutions’) sometimes moved other allies outside the deployment area."
+          ]
+        },
+        {
           "title": "Coming",
           "items": [
-            "Dewgrub nerf incoming",
             "New Grass Tatari"
           ]
         }
+      ],
+      "chips": [
+        { "chip": "AFK", "direction": "buff", "change": "Energizers obtained 300 → 400" },
+        { "chip": "First-Aid Kit", "direction": "nerf", "change": "HP recovered 15% → 12%" },
+        { "chip": "Lawn Care", "direction": "nerf", "change": "Max HP damage 40% → 35%" },
+        { "chip": "Mission Reset", "direction": "nerf", "change": "Energizers obtained 200 → 180" }
       ]
     }
   },
