@@ -1245,6 +1245,7 @@ function renderWaves(keep) {
       <div class="wavehead__beats" role="group" aria-label="What to bring: the waves each element beats, red for waves ${HARD_FROM} to ${count}. Press one to show only its waves">
         <span class="wavehead__cap" title="The waves each element beats. Red: waves ${HARD_FROM} to ${count}, the hardest. Tap one to show only its waves.">What to bring</span>${tiles}</div>
       ${team ? `<p class="wavehead__team${field.size && !missed.size ? ' is-all' : ''}">${team}</p>` : ''}
+      ${order.provisional ? `<p class="roster__note">${esc(order.label)} is read off the Pioneer Server, so the live game may differ.</p>` : ''}
     </div>`;
 
   const rows = [];
@@ -1312,16 +1313,6 @@ function renderZobos() {
   }
   revealLazyArt();
 
-  /* Credited where the work is shown, which is now only the wave list: the
-     roster reading carries nothing of the boss order any more. */
-  const credit = $('#boss-order-credit');
-  if (credit) {
-    const o = built?.order;
-    // The credits are boxes above the waves now; this only carries the preview's caveat.
-    const show = waves && !!o?.provisional;
-    credit.hidden = !show;
-    credit.textContent = show ? `${o.label} is read off the Pioneer Server, so the live game may differ.` : '';
-  }
 
   $('#roster-count').textContent = count;
 }

@@ -1892,7 +1892,10 @@ await runGroup('the Zobo tab reads as a wave list as well as a roster', async ()
   /* The preview season is its own tab, with its new bosses drawn but not draggable onto the board. */
   const preview = $('[data-season="1"]');
   if (preview) {
+    const y = () => Math.round($('[data-season="0"]').getBoundingClientRect().top);
+    const before = y();
     await click(preview, 520);
+    eq('the season buttons stay put when the season changes', y(), before);
     const eight = $$('.waverow').find((r) => r.querySelector('.waverow__n').textContent === '8');
     eq('the preview tab shows its own lineup', eight?.querySelector('.card--zobo')?.dataset.slug, 'driver-zobo');
     await click($('[data-season="0"]'), 460);
