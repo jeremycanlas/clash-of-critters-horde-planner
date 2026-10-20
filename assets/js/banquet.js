@@ -957,7 +957,7 @@ function renderCards(past) {
   $('#bq-claimed').hidden = !claimed;
   $('#bq-claimed').textContent = past || mine20() < LIMIT
     ? `You have claimed ${claimed} banquet${claimed === 1 ? '' : 's'} this gold rush.`
-    : `You have claimed ${mine20()}, the most one account can this gold rush. Checking buildings for full or not logged in still helps everyone else.`;
+    : `You have claimed ${mine20()} this gold rush. The game may stop one account at ${LIMIT}: once it does, mark the rest full or not logged in, which still helps everyone else.`;
   renderRunFeed();
   renderLast();
 }
@@ -989,8 +989,8 @@ $('#bq-run-mine').addEventListener('change', (e) => {
   render();
 });
 /* The game lets one account claim 20 banquets a gold rush (20 Oct thread:
-   "once the 20 claim limit hits"). Past it the run stops offering the gift,
-   and keeps asking full or not logged in, which still helps everyone else. */
+   "once the 20 claim limit hits"). Only shown, not enforced: the game update
+   that brings it was not in yet on 21 Oct, and the game stops a claim itself. */
 const LIMIT = 20;
 const mine20 = () => state.banquets.filter((b) => b.claimed).length;
 function runQueue() {
@@ -999,8 +999,7 @@ function runQueue() {
   const pick = (st, ok) => list.filter((b) => statusOf(b) === st && ok(b)).sort(ORDER[st]);
   const look = pick('look', () => true);
   // Nothing unchecked left: every not logged in one, however recently checked (14 Oct).
-  // At the 20-claim limit a gift is no use to you, so the run is checks only.
-  return [...(mine20() < LIMIT ? pick('claimable', (b) => !b.claimed) : []), ...fromMine(look),
+  return [...pick('claimable', (b) => !b.claimed), ...fromMine(look),
     ...fromMine(pick('notin', (b) => mine || !look.length || Date.now() - Date.parse(b.not_yet.at) >= RECHECK))].map(keyOf);
 }
 let run = null; // { queue: ["grp:uid"], i, tally }
@@ -1091,9 +1090,8 @@ function renderRun() {
     <p class="bq-run__ask">What did the game show?</p>
     ${noted != null ? '' : `<p class="bq-run__hint">No likes noted for it yet. A portrait with 0 likes means full. With more than 0 it may be left from last gold rush, so pick Not logged in.</p>`}
     <div class="bq-run__answers">
-      ${mine20() < LIMIT
-        ? `<button type="button" class="bq-run__btn is-gift" data-run="gift">${icon('gift')}<span>Gift · I claimed it<small>Counts your claim, then share it in your group</small></span>${kbd('gift')}</button>`
-        : `<p class="bq-run__limit">You have claimed ${mine20()}, the most one account can this gold rush. You can still help: mark it full or not logged in, or skip it.</p>`}
+      ${mine20() < LIMIT ? '' : `<p class="bq-run__limit">You have claimed ${mine20()}. The game may stop you at ${LIMIT}: if it does, mark this full or not logged in, or skip it.</p>`}
+      <button type="button" class="bq-run__btn is-gift" data-run="gift">${icon('gift')}<span>Gift · I claimed it<small>Counts your claim, then share it in your group</small></span>${kbd('gift')}</button>
       <button type="button" class="bq-run__btn is-full" data-run="full">${icon('full')}<span>Portrait · it's full<small>Takes it off everyone's list</small></span>${kbd('full')}</button>
       <button type="button" class="bq-run__btn is-notin" data-run="notin">${icon('notin')}<span>Nothing · not logged in<small>Its poster gets a reminder to send</small></span>${kbd('notin')}</button>
     </div>
@@ -1199,7 +1197,6 @@ $('#bq-run-body').addEventListener('click', async (e) => {
   // A portrait on a building that had a banquet before: ask, it may only be the old one.
   if (what === 'full' && b && hadOne(b)) { run.ask = true; return renderRun(); }
   if (what === 'back') { run.ask = false; return renderRun(); }
-  if (what === 'gift' && mine20() >= LIMIT) return;
   run.ask = false;
   if (what === 'full!') what = 'full';
   run.tally[what]++;

@@ -1228,21 +1228,20 @@ try {
   assert.deepEqual([...ana.errors, ...flo.errors, ...cov.errors, ...eli.errors, ...vee.errors, ...bea.errors, ...out.errors, ...junk.errors, ...half.errors, ...duo.errors, ...lea.errors], [],
     'no script errors');
   assert.ok(packedAsked > 0, 'the page asks for the list packed (049), and everything above ran through unpacking it');
-  // Twenty claimed: the most one account can, so the run stops offering the gift.
+  // Twenty claimed: the game may stop you there, so it says so, but the gift stays (21 Oct).
   for (const uid of new Set(db.uids.filter((u) => u.grp === 1).map((u) => u.uid))) {
     if (db.claims.filter((c) => c.who === 'Ana').length >= 20) break;
     if (!db.claims.some((c) => c.who === 'Ana' && c.uid === uid)) db.claims.push({ grp: 1, uid, who: 'Ana' });
   }
   await A.reload();
   await A.waitForSelector('#bq-app:not([hidden])');
-  await A.waitForFunction(() => /the most one account can/.test(document.querySelector('#bq-claimed')?.textContent), null, { timeout: 5000 })
+  await A.waitForFunction(() => /may stop one account at 20/.test(document.querySelector('#bq-claimed')?.textContent), null, { timeout: 5000 })
     .catch(async () => assert.fail(`twenty claimed: ${await A.locator('#bq-claimed').textContent()} | ${db.claims.filter((c) => c.who === 'Ana').length} in the db`));
   assert.ok(await A.locator('#bq-run-start').isEnabled(), 'still something to check at 20');
   await A.click('#bq-run-start');
   await A.waitForSelector('#bq-run[open] .bq-run__uid');
-  assert.equal(await A.locator('[data-run="gift"]').count(), 0, 'no gift past 20');
-  assert.doesNotMatch(await A.locator('.bq-run__about').textContent(), /gift seen/, 'and no claimable ones in the run: checks only');
-  assert.match(await A.locator('.bq-run__limit').textContent(), /the most one account can/, 'and it says why');
+  assert.equal(await A.locator('[data-run="gift"]').count(), 1, 'the gift stays past 20: shown, not enforced');
+  assert.match(await A.locator('.bq-run__limit').textContent(), /may stop you at 20/, 'and it says so');
   assert.equal(await A.locator('[data-run="full"]').count(), 1, 'full and not logged in still there');
   if (process.env.BANQUET_SHOTS) await A.screenshot({ path: `${process.env.BANQUET_SHOTS}/run-limit-phone.png` });
   await A.click('#bq-run-close');
