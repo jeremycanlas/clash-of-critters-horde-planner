@@ -100,6 +100,60 @@ export function movement(part) {
  * buffed", and a reader hunting for the sprite they actually field should find
  * it without knowing which T1 it grows from.
  */
+/*
+ * The whole skill, as the game's card shows it, with what this season moved
+ * marked. data/horde-numbers.json holds every row as it is recorded today; the
+ * notes hold old and new for the rows that moved. A moved row is matched by name
+ * (the notes sometimes put the effect in front: "Thin Ice Shield Chance" is the
+ * card's "Ice Shield Chance"), and one that matches nothing is added at the end
+ * rather than dropped, so the card never hides a change.
+ */
+let hordeNumbers = {};
+let openAll = false;
+const normName = (x) => x.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+
+/*
+ * One skill as the game's card has it: what it does, then every row in the
+ * game's order, a group per effect. The rows this update moved carry an arrow
+ * and their old number; everything else is marked as the rest, which the closed
+ * card hides. Rows are matched to the stored card by name (the notes sometimes
+ * put the effect in front: "Thin Ice Shield Chance" is the card's "Ice Shield
+ * Chance"); one that matches nothing is added at the end, so no change is hidden.
+ */
+function skillCard(rows, parts, text) {
+  const moved = parts.map((p) => [p, p.match(/^(.*\S)\s+(\S+)\s*→\s*(.+)$/)])
+    .map(([p, m]) => (m && /\d/.test(m[2]) ? { name: m[1], from: m[2], to: m[3], move: movement(p) ?? '' }
+      : { name: p, move: movement(p) ?? '' }))
+    .map((m) => ({ ...m, used: false }));
+  const claim = (label) => {
+    const n = normName(label);
+    const hit = moved.find((m) => !m.used && m.to && normName(m.name) === n)
+      ?? moved.find((m) => !m.used && m.to && (normName(m.name).endsWith(n) || n.endsWith(normName(m.name))))
+      // "Follow-Up Damage" is the card's "Follow-Up Damage Factor", "Max Control Targets" its "Max Control".
+      ?? moved.find((m) => !m.used && m.to && (normName(m.name).startsWith(n) || n.startsWith(normName(m.name))));
+    if (hit) hit.used = true;
+    return hit;
+  };
+  const row = (label, value, m) => `<div class="sk-row${m ? ' chfull__moved' : ' chfull__rest'}"${m?.move ? ` data-move="${m.move}"` : ''}><dt>${
+    esc(label)}</dt><dd>${m?.to ? `<span class="sk-was">${esc(m.from)} →</span> <b>${esc(m.to)}</b>` : esc(value ?? '')}</dd></div>`;
+  const groups = [];
+  for (const [label, value, box] of rows ?? []) {
+    const m = claim(label);
+    const r = { html: row(label, String(value).replace(/[↑↓]/g, ''), m), moved: !!m };
+    if (groups.at(-1)?.box === (box ?? null)) groups.at(-1).rows.push(r);
+    else groups.push({ box: box ?? null, rows: [r] });
+  }
+  const extra = moved.filter((m) => !m.used).map((m) => ({ html: row(m.name, '', m), moved: true }));
+  if (extra.length) groups.push({ box: null, rows: extra });
+  const dl = (g) => `<dl class="sk-rows">${g.rows.map((r) => r.html).join('')}</dl>`;
+  return `
+      ${text ? `<p class="sk-desc chfull__rest">${esc(text)}</p>` : ''}
+      <div class="sk-list">${groups.map((g) => (g.box ? `
+        <section class="sk-box${g.rows.some((r) => r.moved) ? '' : ' chfull__rest'}"><h5 class="sk-box__title">${esc(g.box)}</h5>${dl(g)}</section>`
+    : dl(g))).join('')}</div>`;
+}
+
 function line(entry) {
   const members = (entry.members ?? [])
     .map((slug) => state.bySlug.get(slug))
@@ -114,36 +168,28 @@ function line(entry) {
 
   const changes = (entry.changes ?? []).map((text) => {
     const skill = levelOf(head, text);
-    // Not one of the line's Horde skills (a regular skill, say): the part before the colon still names it.
-    const named = skill?.name ?? (text.includes(':') ? text.slice(0, text.indexOf(':')) : null);
-    const rest = named ? text.slice(named.length).replace(/^\s*:\s*/, '') : text;
-    /*
-     * One stat per line. The notes pack several into a sentence -- "Damage 160%
-     * -> 200%, extra bomb 40% -> 55%, Blind 30% -> 40%" -- and read as prose
-     * that way, which is the wrong shape for something scanned. Split on the
-     * comma and each number gets its own row and its own verdict.
-     */
-    const stats = rest.split(/,\s+/).map((part) => {
-      const move = movement(part);
-      return `
-        <li class="chstat" ${move ? `data-move="${move}"` : ''}>
-          <span class="chstat__mark" aria-hidden="true"></span>
-          <span class="chstat__text">${esc(part)}</span>
-        </li>`;
-    }).join('');
-
-    return `
-      <li class="chline__change">
-        <span class="chline__skill">
-          ${skill ? `<span class="chline__lv" title="Taught at horde level ${skill.level}"
-            >L${skill.level}</span>` : ''}${esc(named ?? text)}
-        </span>
-        <ul class="chline__stats">${stats}</ul>
-      </li>`;
+    // A skill the wiki names differently still leads with its own name: "Bubble Bop: ...".
+    const named = !skill && text.match(/^([^:]+):\s*(.+)$/);
+    const rest = skill ? text.slice(skill.name.length).replace(/^\s*:\s*/, '') : named ? named[2] : text;
+    const lv = skill ? `level${skill.level}` : null;
+    const table = lv && hordeNumbers[entry.line]?.[lv]?.rows;
+    // One stat per row: the notes pack several into a sentence, split on the comma.
+    const card = skillCard(table, rest.split(/,\s+/), table && head?.hordeSkills?.[lv]?.text);
+    const top = `
+          <div class="chskill__head">
+            ${skill ? `<span class="chline__lv" title="Taught at horde level ${skill.level}">L${skill.level}</span>` : ''}
+            <h4 class="chskill__name">${esc(skill ? skill.name : named ? named[1] : entry.line)}</h4>
+          </div>`;
+    // Without a stored card there is nothing more to open: the moved rows are the whole of it.
+    return table ? `
+      <li class="chskill"><details class="chfull"${openAll ? ' open' : ''}>
+        <summary class="chfull__sum">${top}${card}</summary>
+      </details></li>` : `
+      <li class="chskill">${top}${card}</li>`;
   }).join('');
 
   return `
-    <article class="chline" data-patch="${entry.direction}" data-type="${head?.type ?? ''}">
+    <article class="chline sk-panel" data-patch="${entry.direction}" data-type="${head?.type ?? ''}">
       <header class="chline__head">
         <div class="chline__arts">${art}</div>
         <h3 class="chline__name">${esc(members.map((t) => t.name).join(' → ') || entry.line)}</h3>
@@ -165,14 +211,16 @@ const chipIcon = (name) =>
   `data/images/chips/${name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}.png`;
 
 function chipCard(entry) {
-  const dir = entry.direction === 'nerf' ? 'nerf' : 'buff';
+  // A chip new this season has nothing to compare against: it says what it does.
+  const dir = entry.direction === 'nerf' ? 'nerf' : entry.direction === 'new' ? 'new' : 'buff';
   return `
     <article class="chchip" data-patch="${dir}">
-      <img class="chchip__art" src="${esc(chipIcon(entry.chip))}" alt="" width="52" height="52" loading="lazy">
+      <img class="chchip__art" src="${esc(chipIcon(entry.chip))}" alt="" width="52" height="45" loading="lazy"
+        onerror="this.remove()">
       <div class="chchip__body">
-        <h4 class="chchip__name">${esc(entry.chip)}</h4>
-        <p class="chchip__change">
-          <span class="chstat__mark" data-move="${dir === 'buff' ? 'up' : 'down'}" aria-hidden="true"></span>
+        <h4 class="chchip__name">${esc(entry.chip)}${dir === 'new' ? ' <span class="chchip__new">New</span>' : ''}</h4>
+        <p class="chchip__change">${dir === 'new' ? '' : `
+          <span class="chstat__mark" data-move="${dir === 'buff' ? 'up' : 'down'}" aria-hidden="true"></span>`}
           ${esc(entry.change)}
         </p>
       </div>
@@ -196,7 +244,8 @@ function renderArrivals(book) {
     ${batches.map((a) => `
       <h3 class="chnew__when">Added ${day(a.on)}</h3>
       <ul class="chnew__list">${a.list.map((t) => `<li><a class="chnew__item" href="skills.html#${esc(t.slug)}">
-        <img src="${esc(artOf(t) ?? '')}" alt="" width="64" height="64" loading="lazy" decoding="async"><span class="chnew__name">${esc(t.name)}</span>
+        ${artOf(t) ? `<img src="${esc(artOf(t))}" alt="" width="64" height="64" loading="lazy" decoding="async">`
+    : '<span class="chnew__noart" aria-hidden="true">?</span>'}<span class="chnew__name">${esc(t.name)}</span>
         <span class="chnew__meta">${esc(t.type)}${t.role ? ` · ${esc(t.role)}` : ''} · T${t.tier}</span></a></li>`).join('')}</ul>`).join('')}`;
 }
 
@@ -275,6 +324,7 @@ function render(book) {
         <div class="chgroup__grid">${group.map(line).join('')}</div>
       </section>`;
   }).join('');
+  $('#changes-expand-row').hidden = !document.querySelector('#changes-body .chfull');
 }
 
 /*
@@ -384,5 +434,16 @@ if ($('#changes-body')) {
     // A copy without the file still renders the page and says so, the same way
     // the drafter simply marks nothing.
     .catch(() => ({ lines: [] }));
+  // Without it the notes still read; the skills just do not open.
+  hordeNumbers = await fetch('data/horde-numbers.json').then((r) => r.json()).catch(() => ({}));
+  /* One switch for the deep read: every card open, or back to the quick list.
+     It stays as set across tabs, which re-render with it. */
+  const expand = $('#changes-expand');
+  expand.addEventListener('click', () => {
+    openAll = !openAll;
+    expand.setAttribute('aria-pressed', String(openAll));
+    expand.textContent = openAll ? 'Hide full cards' : 'Show full cards';
+    document.querySelectorAll('#changes-body .chfull').forEach((d) => { d.open = openAll; });
+  });
   mount(book);
 }

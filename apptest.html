@@ -537,9 +537,9 @@ await runGroup('the what-changed page', async () => {
   ok('every card names its element',
      [...C.querySelectorAll('.chline')].every((c) => c.dataset.type));
   ok('every skill says which level teaches it',
-     [...C.querySelectorAll('.chline__skill')].every((s) => s.querySelector('.chline__lv')));
-  const stats = [...C.querySelectorAll('.chstat')];
-  ok('each stat is on its own row', stats.length > C.querySelectorAll('.chline__change').length);
+     [...C.querySelectorAll('.chskill')].every((s) => s.querySelector('.chline__lv')));
+  const stats = [...C.querySelectorAll('.chfull__moved')];
+  ok('each stat is on its own row', stats.length > C.querySelectorAll('.chskill').length);
   ok('every stat row reaches a verdict',
      stats.every((s) => ['up', 'down'].includes(s.dataset.move)),
      stats.filter((s) => !s.dataset.move).map((s) => s.textContent.trim()).join(' | '));
@@ -548,14 +548,14 @@ await runGroup('the what-changed page', async () => {
    * whose rows read red, or a nerfed line whose rows read green, means the
    * favourability rule has broken and the page is confidently lying.
    */
-  const wrong = [...C.querySelectorAll('.chgroup[data-patch="buff"] .chstat[data-move="down"]')]
-    .concat([...C.querySelectorAll('.chgroup[data-patch="nerf"] .chstat[data-move="up"]')]);
+  const wrong = [...C.querySelectorAll('.chgroup[data-patch="buff"] .chfull__moved[data-move="down"]')]
+    .concat([...C.querySelectorAll('.chgroup[data-patch="nerf"] .chfull__moved[data-move="up"]')]);
   ok('no arrow disagrees with the group it sits in', wrong.length === 0,
      wrong.map((s) => s.textContent.trim()).join(' | '));
   ok('the adjusted group really does move both ways',
      !C.querySelector('.chgroup[data-patch="adjusted"]')
-     || (C.querySelector('.chgroup[data-patch="adjusted"] .chstat[data-move="up"]')
-       && C.querySelector('.chgroup[data-patch="adjusted"] .chstat[data-move="down"]')));
+     || (C.querySelector('.chgroup[data-patch="adjusted"] .chfull__moved[data-move="up"]')
+       && C.querySelector('.chgroup[data-patch="adjusted"] .chfull__moved[data-move="down"]')));
   frame.remove();
 });
 
@@ -1990,6 +1990,8 @@ await runGroup('the roster paints its sprites without a scroll', async () => {
   const start = inView();
   if (!start.length) { skip('sprites load without a scroll', 'the roster is not on screen in this window'); return; }
   const realLoaded = () => inView().every((c) => {
+    // A Tatari the wiki has no art for yet is drawn as its name, with no image to wait on.
+    if (c.querySelector('.card__art .token__fallback')) return true;
     const img = c.querySelector('.card__art img');
     return img && img.currentSrc && !img.currentSrc.startsWith('data:');
   });

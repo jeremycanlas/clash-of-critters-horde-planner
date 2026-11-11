@@ -31,6 +31,8 @@
     href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='19' font-size='20'>🐾</text></svg>">
   <link rel="stylesheet" href="assets/css/app.css">
   <link rel="stylesheet" href="assets/css/site-nav.css">
+  <!-- The Skill data page's panels, for the full card behind each skill. -->
+  <link rel="stylesheet" href="assets/css/skills.css">
 </head>
 
 <body class="changes">
@@ -53,6 +55,10 @@
        of notes somebody read off the game and passed on says so on the tab it
        is on, not in a list somewhere else. Hidden on notes with no `by`. -->
     <p id="changes-credit" class="chcredit" hidden></p>
+
+    <!-- Every skill below opens to its full card; this opens them all at once. -->
+    <p id="changes-expand-row" class="chexpand"><button id="changes-expand" class="btn btn--quiet" type="button" aria-pressed="false">Show full cards</button>
+      <span class="chexpand__note">Tap a skill to see what it does and its other stats. The rest are the numbers as recorded today.</span></p>
 
     <!-- Only speaks when there is nothing to show. With an update loaded the
        header carries the date and the group headings carry the counts, so a

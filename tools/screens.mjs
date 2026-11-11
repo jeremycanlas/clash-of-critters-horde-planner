@@ -68,6 +68,15 @@ const SHOT_DIR = process.env.SCREENS_SHOT_DIR ?? 'E:/caches/screen-shots';
 const LIVE = 'https://jeremycanlas.github.io/clash-of-critters-horde-planner';
 const PORT = 8139;
 
+/*
+ * Failures that are not this site's bug: a blocked counter, the local-only
+ * tracker file a fresh checkout does not have, and a poster's Discord picture.
+ * The community page draws every face over the poster's initial and reveals the
+ * picture only once it loads, so a link Discord has retired (the poster changed
+ * their picture) still shows the initial. That is the design working, not an error.
+ */
+const NOT_OURS = /goatcounter|zgo\.at|tracker\.local\.json|cdn\.discordapp\.com\/(avatars|embed\/avatars)\//;
+
 const args = process.argv.slice(2);
 const live = args.includes('--live');
 const shots = args.includes('--shots');
@@ -115,7 +124,7 @@ const SCREENS = {
 const BUDGET = {
   paint: 1800,      // ms to first contentful paint
   ready: 3000,      // ms to the page's own "there is something to read here"
-  code: 1600,       // KB of markup, CSS, script and data: the critical path
+  code: 1650,       // KB of markup, CSS, script and data: the critical path (1600 until the Bonobean and Roost lines, Nov 2026)
   scripts: 700,     // KB of that which is JavaScript
   art: 12000,       // KB of images: 242 Tatari is a lot of sprites, but not endless
 };
@@ -889,10 +898,20 @@ await Promise.all(screens.map(async (screen) => {
         if (/due to access control checks/.test(e.message) && e.message.includes(host)) return;
         noise.push(`script error: ${e.message}`);
       });
-      page.on('console', (m) => { if (m.type() === 'error') noise.push(`console: ${m.text().slice(0, 160)}`); });
+      page.on('console', (m) => {
+        if (m.type() !== 'error') return;
+        // "Failed to load resource" names no file; where it came from does.
+        const from = m.location()?.url?.replace(base, '') ?? '';
+        if (NOT_OURS.test(from) || NOT_OURS.test(m.text())) return;
+        /* WebKit's word for another site's picture answering 404, with no URL to
+           go on. The community page's Discord faces are the only pictures this
+           site loads from anywhere else, so there and only there it is one of them. */
+        if (p.name === 'community' && !from && /not allowed by Access-Control-Allow-Origin\. Status code: 404/.test(m.text())) return;
+        noise.push(`console: ${m.text().slice(0, 160)}${from && !m.text().includes(from) ? ` (${from.slice(0, 120)})` : ''}`);
+      });
       page.on('requestfailed', (r) => {
         // A blocked counter or an absent local-only data file is not this site's bug.
-        if (/goatcounter|zgo\.at|tracker\.local\.json/.test(r.url())) return;
+        if (NOT_OURS.test(r.url())) return;
         // A picture made in the page and let go of once it is drawn.
         if (r.url().startsWith('blob:')) return;
         /* Called off because the page went away mid-load, which a press that

@@ -173,8 +173,9 @@ if (preview?.lines?.length) {
   /* Somebody read every one of these off the game by hand and passed them on.
      A credit that quietly disappears in an edit is worse than one that was
      never there, so it is checked rather than trusted. */
-  p('still credits whoever read it off the game',
-    typeof preview.by === 'string' && preview.by.trim().length > 0);
+  // A credit is optional (the maintainer's own reading carries none), but one given is a real name.
+  p('a credit, when given, names somebody',
+    preview.by === undefined || (typeof preview.by === 'string' && preview.by.trim().length > 0));
   p('every entry names a direction we render', plines.every((l) => DIRECTIONS.includes(l.direction)),
     plines.filter((l) => !DIRECTIONS.includes(l.direction)).map((l) => l.line).join(', '));
   p('every entry carries at least one change', plines.every((l) => (l.changes ?? []).length > 0),

@@ -2,11 +2,11 @@
   "source": "https://clashofcritters.wiki.gg/wiki/Tatari",
   "scrapedAt": "2026-10-09",
   "counts": {
-    "tatari": 248,
-    "families": 67,
+    "tatari": 256,
+    "families": 69,
     "byType": {
-      "Fire": 48,
-      "Grass": 48,
+      "Fire": 52,
+      "Grass": 52,
       "Lightning": 48,
       "Rock": 52,
       "Water": 52
@@ -16,12 +16,12 @@
       "Guardian": 46,
       "Healer": 20,
       "Specialist": 20,
-      "Support": 36,
-      "Tank": 30
+      "Support": 40,
+      "Tank": 34
     },
     "byRarity": {
       "Common": 20,
-      "Rare": 228
+      "Rare": 236
     }
   },
   "types": [

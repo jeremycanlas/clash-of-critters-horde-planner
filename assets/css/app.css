@@ -4994,17 +4994,40 @@ body.is-clean .clean-hint {
 }
 
 .chline__changes { margin: 0; padding: 0; list-style: none; }
-.chline__change { padding: 3px 0; font-size: 12.5px; line-height: 1.45; }
-.chline__change + .chline__change { border-top: 1px dashed var(--line-soft); }
-.chline__skill {
-  display: flex; align-items: center; gap: 5px;
-  color: var(--text); font-weight: 600;
-}
-/*
- * Which horde level teaches it. The notes never say, and it changes what the
- * number means: a buff to a level 7 skill is a different proposition from one
- * to a level 3, because you have to take the Tatari that far to collect it.
+/* ---- a line as a Skill data panel ------------------------------------------
+ * The card is skills.css's .sk-panel, its edge still in the line's element so a
+ * grid of them reads Fire, Water, Grass at a glance. Each skill is the Skill
+ * data card for it: closed, only the rows this update moved; open, what the
+ * skill does and every other row around them, in the same style.
  */
+.chexpand { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2) var(--s3); margin: 0 0 var(--s3); }
+.chexpand[hidden] { display: none; }
+.chexpand__note { color: var(--text-mute); font-size: 12px; }
+/* Floats bottom right, so the deep read is one tap away from anywhere in the
+   notes, not only from the top. Clear of the phone's home bar. */
+#changes-expand {
+  position: fixed; z-index: 30;
+  right: max(16px, env(safe-area-inset-right)); bottom: max(16px, env(safe-area-inset-bottom));
+  min-height: 44px; padding: 0 var(--s4); border-radius: 999px;
+  background: var(--surface-2); border: 1px solid var(--line);
+  box-shadow: 0 4px 16px rgb(0 0 0 / .35);
+}
+#changes-expand[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+.chline.sk-panel {
+  /* The patch notes' own card (element edge, header wash) around the Skill
+     data rows, so the page reads as it always has and the detail is one tap in. */
+  gap: var(--s2); padding: var(--s3);
+  border: 1px solid color-mix(in srgb, var(--type-color, var(--line)) 38%, var(--line-soft));
+  border-radius: var(--r-md); background: var(--surface);
+}
+.chline.sk-panel .chline__head { margin-bottom: 0; }
+.chline.sk-panel .chline__name { color: var(--text); font-size: 12.5px; }
+.chline.sk-panel .chline__changes { display: flex; flex-direction: column; }
+.chskill { list-style: none; padding: 4px 0; }
+.chskill + .chskill { border-top: 1px dashed var(--line-soft); }
+.chskill__head { display: flex; align-items: center; gap: 5px; }
+.chskill__name { margin: 0; min-width: 0; font-size: 12.5px; font-weight: 600; line-height: 1.45; color: var(--text); }
+/* Which horde level teaches it: a level 7 buff means taking the Tatari that far. */
 .chline__lv {
   flex: none;
   min-width: 20px; padding: 0 3px;
@@ -5013,6 +5036,49 @@ body.is-clean .clean-hint {
   color: var(--text-dim); font-size: 9.5px; font-weight: 800;
   text-align: center; letter-spacing: .02em;
 }
+.chskill .sk-list { padding: 0; gap: 0; border: 0; background: none; }
+.chskill .sk-rows { display: grid; gap: 0; margin: 0; }
+.chskill .sk-row, .chskill .sk-box .sk-row { display: flex; justify-content: space-between; gap: var(--s2); padding: 0; border: 0; border-radius: 0; background: none; }
+.chskill .sk-rows dt, .chskill .sk-rows dd { margin: 0; font-size: 12.5px; font-weight: 400; line-height: 1.55; color: var(--text-dim); }
+.chskill .sk-rows dt { min-width: 0; }
+.chskill .sk-rows dd { white-space: nowrap; text-align: right; color: var(--text); font-variant-numeric: tabular-nums; }
+/* An arrow column, so moved rows and the rest share one left edge. */
+.chskill .sk-row dt::before { content: ""; display: inline-block; width: 12px; font-size: 10px; font-weight: 800; }
+.chskill .chfull__moved dt { color: var(--text); }
+.chskill .chfull__moved[data-move="up"] dt::before { content: "\2191"; color: var(--ok); }
+.chskill .chfull__moved[data-move="down"] dt::before { content: "\2193"; color: var(--danger); }
+/* Pulled toward the text colour, as skills.css does, so they hold 4.5:1 in the light theme too. */
+.chskill .chfull__moved dd b { font-weight: 650; color: color-mix(in srgb, var(--ok) 72%, var(--text)); }
+.chskill .chfull__moved[data-move="down"] dd b { color: color-mix(in srgb, var(--danger) 72%, var(--text)); }
+.chskill .sk-was { display: inline; margin: 0; font-size: inherit; font-weight: 400; color: var(--text-mute); }
+.chskill .sk-box { padding: 2px 0 0 12px; border: 0; border-radius: 0; background: none; }
+.chskill .sk-box__title { margin: 0; font-size: 11px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; color: var(--text-mute); }
+/* What the skill does: prose, so it reads as a note set apart from the numbers
+   -- its own tinted block, italic, before the stats begin. */
+.chskill .sk-desc {
+  margin: 4px 0 6px; padding: 6px 8px;
+  border-left: 2px solid var(--accent); border-radius: 0 var(--r-sm, 4px) var(--r-sm, 4px) 0;
+  background: var(--surface-2);
+  font-size: 12px; font-style: italic; line-height: 1.45; color: var(--text-dim);
+}
+
+.chfull__sum { display: block; cursor: pointer; list-style: none; border-radius: var(--r-sm, 4px); }
+.chfull__sum::-webkit-details-marker { display: none; }
+/* Closed: only what moved. Open: the whole card, around those same rows. */
+.chfull:not([open]) .chfull__rest { display: none; }
+.chfull__sum .chskill__name::after {
+  content: "\203A"; display: inline-block; margin-left: 5px;
+  color: var(--text-mute); transition: transform .15s ease;
+}
+.chfull[open] .chskill__name::after { transform: rotate(90deg); }
+.chfull__sum:hover .chskill__name::after, .chfull__sum:focus-visible .chskill__name::after { color: var(--accent); }
+.chfull__sum:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .chfull__sum .chskill__name::after { transition: none; } }
+/*
+ * Which horde level teaches it. The notes never say, and it changes what the
+ * number means: a buff to a level 7 skill is a different proposition from one
+ * to a level 3, because you have to take the Tatari that far to collect it.
+ */
 /*
  * One stat per row, each with its own verdict.
  *
@@ -5020,20 +5086,11 @@ body.is-clean .clean-hint {
  * number went -- those differ for an interval, where a bigger number is worse.
  * See movement() in changes.js for the rule and the check behind it.
  */
-.chline__stats { margin: 2px 0 0; padding: 0; list-style: none; }
-.chstat {
-  display: flex; align-items: baseline; gap: 5px;
-  color: var(--text-dim); line-height: 1.45;
-}
 .chstat__mark {
   flex: none;
   width: 9px;
   color: var(--text-mute); font-size: 10px; font-weight: 800; text-align: center;
 }
-.chstat[data-move="up"]   .chstat__mark { color: var(--ok); }
-.chstat[data-move="down"] .chstat__mark { color: var(--danger); }
-.chstat[data-move="up"]   .chstat__mark::after { content: "↑"; }
-.chstat[data-move="down"] .chstat__mark::after { content: "↓"; }
 /* The chip cards carry the verdict on the mark itself: one change each, so
    there is no row for it to hang off. */
 .chstat__mark[data-move="up"]   { color: var(--ok); }
@@ -5053,21 +5110,26 @@ body.is-clean .clean-hint {
   gap: var(--s2);
 }
 .chchip {
-  display: flex; align-items: center; gap: var(--s2);
+  display: flex; align-items: flex-start; gap: var(--s3);
   padding: var(--s2);
   border: 1px solid var(--line-soft); border-radius: var(--r-md);
   background: var(--surface-2);
 }
 .chchip[data-patch="buff"] { border-color: color-mix(in srgb, var(--ok) 42%, var(--line-soft)); }
 .chchip[data-patch="nerf"] { border-color: color-mix(in srgb, var(--danger) 42%, var(--line-soft)); }
-.chchip__art { flex: none; width: 52px; height: 52px; object-fit: contain; }
+.chchip[data-patch="new"] { border-color: color-mix(in srgb, var(--accent) 42%, var(--line-soft)); }
+.chchip__new {
+  display: inline-block; margin-left: 4px; padding: 1px 6px; border-radius: 999px; vertical-align: 1px;
+  background: color-mix(in srgb, var(--accent) 18%, transparent); color: var(--accent);
+  font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em;
+}
+.chchip__art { flex: none; width: 52px; height: 45px; object-fit: contain; border-radius: 6px; }
 .chchip__body { min-width: 0; }
 .chchip__name { margin: 0 0 2px; font-size: 13.5px; font-weight: 650; }
 .chchip__change {
   display: flex; align-items: baseline; gap: 6px;
   margin: 0; color: var(--text-dim); font-size: 12.5px; font-variant-numeric: tabular-nums;
 }
-.chstat__text { min-width: 0; }
 
 @media (max-width: 760px) {
   .changes__main { padding: var(--s4) var(--s3) var(--s6); }
@@ -7092,6 +7154,12 @@ details.hint[open] > summary { margin-bottom: var(--s1); }
 .chnew[hidden] { display: none; }
 .chnew__when { margin: var(--s3) 0 var(--s2); font-size: 14px; color: var(--text-dim); font-weight: 600; }
 .chnew__list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: var(--s2); }
+/* No sprite on the wiki yet: a quiet placeholder the size of one, not a broken image. */
+.chnew__noart {
+  display: grid; place-items: center; width: 64px; height: 64px; margin: 0 auto;
+  border: 1px dashed var(--line); border-radius: var(--r-sm, 4px);
+  color: var(--text-mute); font-size: 22px; font-weight: 700;
+}
 .chnew__item { display: grid; justify-items: center; gap: 2px; padding: var(--s2); min-height: 44px; text-align: center;
   border: 1px solid var(--line); border-radius: var(--r-md, 10px); background: var(--surface); color: var(--text); text-decoration: none; }
 .chnew__item:hover { border-color: var(--accent); }

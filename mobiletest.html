@@ -1614,7 +1614,7 @@ await runGroup('the update page on a phone', async () => {
   eq('the cards stack into one column',
      kids.filter((k) => Math.round(k.getBoundingClientRect().top) === firstTop).length, 1);
   ok('every stat still reaches a verdict',
-     [...C.querySelectorAll('.chstat')].every((s) => ['up', 'down'].includes(s.dataset.move)));
+     [...C.querySelectorAll('.chfull__moved')].every((s) => ['up', 'down'].includes(s.dataset.move)));
   frame.remove();
 });
 
