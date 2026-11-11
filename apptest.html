@@ -536,8 +536,9 @@ await runGroup('the what-changed page', async () => {
   ok('there is a card per evolution line', C.querySelectorAll('.chline').length > 10);
   ok('every card names its element',
      [...C.querySelectorAll('.chline')].every((c) => c.dataset.type));
-  ok('every skill says which level teaches it',
-     [...C.querySelectorAll('.chskill')].every((s) => s.querySelector('.chline__lv')));
+  // Every Horde skill (the ones with a card to open); a regular skill named in the notes has no level.
+  ok('every Horde skill says which level teaches it',
+     [...C.querySelectorAll('.chskill')].filter((s) => s.querySelector('details')).every((s) => s.querySelector('.chline__lv')));
   const stats = [...C.querySelectorAll('.chfull__moved')];
   ok('each stat is on its own row', stats.length > C.querySelectorAll('.chskill').length);
   ok('every stat row reaches a verdict',
