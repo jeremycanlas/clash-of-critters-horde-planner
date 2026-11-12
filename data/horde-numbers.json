@@ -4852,5 +4852,225 @@
     ]
    ]
   }
+ },
+ "Wattail": {
+  "level3": {
+   "name": "Rapid Charge",
+   "rows": [
+    [
+     "Min Trigger Interval",
+     "12s"
+    ],
+    [
+     "Max Trigger Interval",
+     "18s"
+    ],
+    [
+     "Healing Factor",
+     "15%"
+    ],
+    [
+     "Healing Interval",
+     "1s"
+    ],
+    [
+     "Heal Count",
+     "6"
+    ],
+    [
+     "Boost Factor",
+     "5% Per Stack",
+     "Rapid Charge: DMG Boost"
+    ],
+    [
+     "Max Stacks",
+     "6 Stacks",
+     "Rapid Charge: DMG Boost"
+    ],
+    [
+     "Duration",
+     "5s",
+     "Rapid Charge: DMG Boost"
+    ],
+    [
+     "Boost Factor",
+     "20%",
+     "Rapid Charge: Fragile"
+    ],
+    [
+     "Duration",
+     "5s",
+     "Rapid Charge: Fragile"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "Safety First",
+   "rows": [
+    [
+     "Min Trigger Interval",
+     "15s"
+    ],
+    [
+     "Max Trigger Interval",
+     "21s"
+    ],
+    [
+     "Duration",
+     "12s"
+    ],
+    [
+     "Max Single Hit DMG to Tatari",
+     "6% of Target HP"
+    ],
+    [
+     "Max Absorbed DMG by Fence",
+     "120% Builder HP"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Incandescent",
+   "rows": [
+    [
+     "Min Trigger Interval",
+     "16s"
+    ],
+    [
+     "Max Trigger Interval",
+     "24s"
+    ],
+    [
+     "Damage Factor",
+     "550%"
+    ],
+    [
+     "ATK Boost",
+     "18%",
+     "Gridwork: ATK & DEF Boost"
+    ],
+    [
+     "DEF Boost",
+     "18%",
+     "Gridwork: ATK & DEF Boost"
+    ]
+   ]
+  }
+ },
+ "Bonobean": {
+  "level3": {
+   "name": "Poison Play",
+   "rows": [
+    [
+     "Trigger Chance",
+     "50%"
+    ],
+    [
+     "Damage Factor",
+     "150%"
+    ],
+    [
+     "Damage Factor",
+     "12%",
+     "Poison"
+    ],
+    [
+     "Damage Interval",
+     "1s",
+     "Poison"
+    ],
+    [
+     "Duration",
+     "5s",
+     "Poison"
+    ],
+    [
+     "Boost Factor",
+     "5%",
+     "Poison"
+    ]
+   ]
+  },
+  "level5": {
+   "name": "Showstopper",
+   "rows": [
+    [
+     "Min Trigger Interval",
+     "4s"
+    ],
+    [
+     "Max Trigger Interval",
+     "6s"
+    ],
+    [
+     "Banana Damage Factor",
+     "140%"
+    ],
+    [
+     "Orange Damage Factor",
+     "170%"
+    ],
+    [
+     "Watermelon Damage Factor",
+     "200%"
+    ],
+    [
+     "Damage Interval",
+     "2s"
+    ],
+    [
+     "Watermelon Duration",
+     "15s"
+    ],
+    [
+     "Amount Reduced",
+     "22%",
+     "Slicer: DEF Down"
+    ],
+    [
+     "Duration",
+     "5s",
+     "Slicer: DEF Down"
+    ]
+   ]
+  },
+  "level7": {
+   "name": "Banana Bash",
+   "rows": [
+    [
+     "Minimum Cooldown",
+     "22s"
+    ],
+    [
+     "Maximum Cooldown",
+     "26s"
+    ],
+    [
+     "Inherited DEF",
+     "60%",
+     "Big Banana"
+    ],
+    [
+     "Inherited HP",
+     "75%",
+     "Big Banana"
+    ],
+    [
+     "Duration",
+     "14s",
+     "Big Banana"
+    ],
+    [
+     "Amount Reduced",
+     "20%",
+     "Weak"
+    ],
+    [
+     "Duration",
+     "3s",
+     "Weak"
+    ]
+   ]
+  }
  }
 }

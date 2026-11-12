@@ -6270,7 +6270,7 @@
   "battleRow": null,
   "previousRole": "None",
   "etymology": null,
-  "skill": "???: Launches spines to apply stacks of Sting. Sting stacks implode when affected enemies are killed, dealing AoE damage and transferring some stacks to other nearby enemies. Cactobodhi carries Aura: Grass whenever on the field.",
+  "skill": "Prick Blitz: Launches spines to apply stacks of Sting. Sting stacks implode when affected enemies are killed, dealing AoE damage and transferring some stacks to other nearby enemies. Cactobodhi carries Aura: Grass whenever on the field.",
   "description": "",
   "hordeSkills": {
    "level3": {
@@ -8565,7 +8565,7 @@
   "battleRow": null,
   "previousRole": "None",
   "etymology": null,
-  "skill": "???: Swipes claw to deal large AoE damage. Sometimes launches a heavy attack that inflicts Stun and Knockback on enemies to force them into adjacent rows, or inflicts Shredded on enemies that cannot be knocked back. Armavolve carries Aura: Rock whenever on the field.",
+  "skill": "Stellar Slash: Swipes claws to deal large AoE damage. Sometimes launches a heavy attack that inflicts Stun and Knockback on enemies to force them into adjacent rows, or inflicts Shredded on enemies that cannot be knocked back. Armavolve carries Aura: Rock whenever on the field.",
   "description": "",
   "hordeSkills": {
    "level3": {
@@ -10905,7 +10905,20 @@
   "etymology": "portmanteau of \"bonobo\" + \"bean\"",
   "skill": "Green Bean: Launches bananas that deal damage and split into smaller piercing bananas. Upon losing a certain amount of HP, hides and throws Banana Peels.",
   "description": "At the sound of unfamiliar footsteps, Bonobean will curl up and earnestly pretend to be an inconspicuous bush. As for the uncontrollable trembling- well, bushes naturally sway in the wind, right?",
-  "hordeSkills": null,
+  "hordeSkills": {
+   "level3": {
+    "name": "Poison Play",
+    "text": "Attacks have a chance to launch an extra moldy banana to deal single-target damage and inflict Poison."
+   },
+   "level5": {
+    "name": "Showstopper",
+    "text": "Periodically summons bananas nearby, which can merge into oranges; oranges can then merge into watermelons. Fruits continuously deal AoE damage and inflict Slicer: DEF Down. Each merge increases the amount and range of damage dealt."
+   },
+   "level7": {
+    "name": "Banana Bash",
+    "text": "Periodically summons Big Bananas ahead. Enemies that attack Big Bananas are inflicted with Weak and Knockback, which forces them into other columns."
+   }
+  },
   "rangeImage": null,
   "skillTypes": [
    "Pierce",
@@ -10937,7 +10950,20 @@
   "etymology": "portmanteau of \"titan\" + \"ape\"",
   "skill": "Fresh Peel: Launches bananas that deal damage and split into smaller piercing bananas. Upon losing a certain amount of HP, gains Steady: DEF Boost and throws Banana Peels.",
   "description": "Despite standing at the back of the line, Titanape's arms can easily reach past Tatari in front to snag the biggest piece of fruit from the basket. Huh? Why's everyone staring? What's wrong with having long arms, anyway?",
-  "hordeSkills": null,
+  "hordeSkills": {
+   "level3": {
+    "name": "Poison Play",
+    "text": "Attacks have a chance to launch an extra moldy banana to deal single-target damage and inflict Poison."
+   },
+   "level5": {
+    "name": "Showstopper",
+    "text": "Periodically summons bananas nearby, which can merge into oranges; oranges can then merge into watermelons. Fruits continuously deal AoE damage and inflict Slicer: DEF Down. Each merge increases the amount and range of damage dealt."
+   },
+   "level7": {
+    "name": "Banana Bash",
+    "text": "Periodically summons Big Bananas ahead. Enemies that attack Big Bananas are inflicted with Weak and Knockback, which forces them into other columns."
+   }
+  },
   "rangeImage": null,
   "skillTypes": [
    "DEF Boost",
@@ -10970,7 +10996,20 @@
   "etymology": "portmanteau of \"giant\" + \"orangutan\"",
   "skill": "Grand Entrance: Launches bananas that deal damage and split into smaller piercing bananas. Upon losing a certain amount of HP, recovers HP, gains Steady: DEF Boost and throws Banana Peels.",
   "description": "Grangutan and Ptooielama often groom each other. After hours of grooming, the pair always manage to pick out leaves, fruit rinds, and half a cookie that belongs to who knows who.",
-  "hordeSkills": null,
+  "hordeSkills": {
+   "level3": {
+    "name": "Poison Play",
+    "text": "Attacks have a chance to launch an extra moldy banana to deal single-target damage and inflict Poison."
+   },
+   "level5": {
+    "name": "Showstopper",
+    "text": "Periodically summons bananas nearby, which can merge into oranges; oranges can then merge into watermelons. Fruits continuously deal AoE damage and inflict Slicer: DEF Down. Each merge increases the amount and range of damage dealt."
+   },
+   "level7": {
+    "name": "Banana Bash",
+    "text": "Periodically summons Big Bananas ahead. Enemies that attack Big Bananas are inflicted with Weak and Knockback, which forces them into other columns."
+   }
+  },
   "rangeImage": null,
   "skillTypes": [
    "DEF Boost",
@@ -11004,7 +11043,20 @@
   "etymology": "portmanteau of \"prima\" + \"kong\"",
   "skill": "Jungle Star: Launches bananas that deal damage and split into smaller piercing bananas. Upon losing a certain amount of HP, recovers HP, gains Steady: DEF Boost and throws Banana Peels. Primakong carries Aura: Grass whenever on the field.",
   "description": "Every drumming beat of the chest is enough to shake mountains. Once wanting nothing more than to hide away, Primakong now stands firm below fellow Tatari, with a powerful roar that can stop enemies dead in their tracks.",
-  "hordeSkills": null,
+  "hordeSkills": {
+   "level3": {
+    "name": "Poison Play",
+    "text": "Attacks have a chance to launch an extra moldy banana to deal single-target damage and inflict Poison."
+   },
+   "level5": {
+    "name": "Showstopper",
+    "text": "Periodically summons bananas nearby, which can merge into oranges; oranges can then merge into watermelons. Fruits continuously deal AoE damage and inflict Slicer: DEF Down. Each merge increases the amount and range of damage dealt."
+   },
+   "level7": {
+    "name": "Banana Bash",
+    "text": "Periodically summons Big Bananas ahead. Enemies that attack Big Bananas are inflicted with Weak and Knockback, which forces them into other columns."
+   }
+  },
   "rangeImage": null,
   "skillTypes": [
    "DEF Boost",
@@ -11017,6 +11069,185 @@
   "image": "data/images/tatari/primakong.png",
   "glitterImage": "data/images/glitter/primakong.png",
   "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Primakong"
+ },
+ {
+  "name": "Wattail",
+  "slug": "wattail",
+  "type": "Lightning",
+  "role": "Guardian",
+  "tier": 1,
+  "family": "Wattail",
+  "familyId": 68,
+  "stages": 4,
+  "rarity": "Rare",
+  "evolutionLine": [
+   "Wattail",
+   "Dampere",
+   "Beavervolt",
+   "Paddlezap"
+  ],
+  "battleRow": null,
+  "previousRole": "None",
+  "etymology": "portmanteau of \"watt\" + \"tail\"",
+  "skill": "No Juice: Drains battery continuously to deal AoE damage in a straight line. The lower battery remaining, the smaller the damage range. When no targets are attackable, charges battery until full.",
+  "description": "Whenever Wattail's not watching, that tail gets inserted into a socket somewhere. The other Tatari get confused, too- what's up with this weird plug that won't cooperate?",
+  "hordeSkills": {
+   "level3": {
+    "name": "Rapid Charge",
+    "text": "Periodically heals diagonal surrounding allies multiple times while stacking Rapid Charge: DMG Boost. After, additionally inflicts Rapid Charge: Fragile on them."
+   },
+   "level5": {
+    "name": "Safety First",
+    "text": "Periodically builds a fence that can help absorb a portion of high single-hit damage for allies behind it."
+   },
+   "level7": {
+    "name": "Incandescent",
+    "text": "Periodically builds transmission towers from back to front that shock approaching enemies in turn. Provides allies near towers Gridwork: ATK & DEF Boost."
+   }
+  },
+  "rangeImage": null,
+  "skillTypes": [
+   "AoE"
+  ],
+  "image": "data/images/tatari/wattail.png",
+  "glitterImage": "data/images/glitter/wattail.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Wattail"
+ },
+ {
+  "name": "Dampere",
+  "slug": "dampere",
+  "type": "Lightning",
+  "role": "Guardian",
+  "tier": 2,
+  "family": "Wattail",
+  "familyId": 68,
+  "stages": 4,
+  "rarity": "Rare",
+  "evolutionLine": [
+   "Wattail",
+   "Dampere",
+   "Beavervolt",
+   "Paddlezap"
+  ],
+  "battleRow": null,
+  "previousRole": "None",
+  "etymology": "portmanteau of \"dam\" + \"damp\" + \"ampere\"",
+  "skill": "Juiced Up: Drains battery continuously to deal AoE damage in a straight line. The lower battery remaining, the smaller the damage range. When no targets are attackable, charges battery until full. While charging, continuously recovers HP and gains Juiced: DEF Boost.",
+  "description": "Dampere likes to amp up the voltage every now and then, and if the pointer ever crosses all the way over to the other side- nope, you never saw that. Everything's fine, and you've got the brightest light ever right here.",
+  "hordeSkills": {
+   "level3": {
+    "name": "Rapid Charge",
+    "text": "Periodically heals diagonal surrounding allies multiple times while stacking Rapid Charge: DMG Boost. After, additionally inflicts Rapid Charge: Fragile on them."
+   },
+   "level5": {
+    "name": "Safety First",
+    "text": "Periodically builds a fence that can help absorb a portion of high single-hit damage for allies behind it."
+   },
+   "level7": {
+    "name": "Incandescent",
+    "text": "Periodically builds transmission towers from back to front that shock approaching enemies in turn. Provides allies near towers Gridwork: ATK & DEF Boost."
+   }
+  },
+  "rangeImage": null,
+  "skillTypes": [
+   "AoE",
+   "DEF Boost",
+   "Heal"
+  ],
+  "image": "data/images/tatari/dampere.png",
+  "glitterImage": "data/images/glitter/dampere.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Dampere"
+ },
+ {
+  "name": "Beavervolt",
+  "slug": "beavervolt",
+  "type": "Lightning",
+  "role": "Guardian",
+  "tier": 3,
+  "family": "Wattail",
+  "familyId": 68,
+  "stages": 4,
+  "rarity": "Rare",
+  "evolutionLine": [
+   "Wattail",
+   "Dampere",
+   "Beavervolt",
+   "Paddlezap"
+  ],
+  "battleRow": null,
+  "previousRole": "None",
+  "etymology": "portmanteau of \"beaver\" + \"volt\"",
+  "skill": "Extra Juiced Up: Drains battery continuously to deal AoE damage in a straight line. The lower battery remaining, the smaller the damage range. When no targets are attackable, charges battery until full. While charging, continuously recovers HP, heals adjacent allies, and provides Juiced: DEF Boost.",
+  "description": "Whenever there's an electrical glitch at camp, Beavervolt is always the first to be there, toolbox at the ready. Faced with the grateful looks of Tatari, that smile seems to only get brighter, incisors and all.",
+  "hordeSkills": {
+   "level3": {
+    "name": "Rapid Charge",
+    "text": "Periodically heals diagonal surrounding allies multiple times while stacking Rapid Charge: DMG Boost. After, additionally inflicts Rapid Charge: Fragile on them."
+   },
+   "level5": {
+    "name": "Safety First",
+    "text": "Periodically builds a fence that can help absorb a portion of high single-hit damage for allies behind it."
+   },
+   "level7": {
+    "name": "Incandescent",
+    "text": "Periodically builds transmission towers from back to front that shock approaching enemies in turn. Provides allies near towers Gridwork: ATK & DEF Boost."
+   }
+  },
+  "rangeImage": null,
+  "skillTypes": [
+   "AoE",
+   "DEF Boost",
+   "Heal"
+  ],
+  "image": "data/images/tatari/beavervolt.png",
+  "glitterImage": "data/images/glitter/beavervolt.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Beavervolt"
+ },
+ {
+  "name": "Paddlezap",
+  "slug": "paddlezap",
+  "type": "Lightning",
+  "role": "Guardian",
+  "tier": 4,
+  "family": "Wattail",
+  "familyId": 68,
+  "stages": 4,
+  "rarity": "Rare",
+  "evolutionLine": [
+   "Wattail",
+   "Dampere",
+   "Beavervolt",
+   "Paddlezap"
+  ],
+  "battleRow": null,
+  "previousRole": "None",
+  "etymology": "portmanteau of \"paddle\" + \"zap\"",
+  "skill": "Super Juiced Up: Drains battery continuously to deal AoE damage in a straight line. The lower battery remaining, the smaller the damage range. When no targets are attackable, charges battery until full. While charging, continuously recovers HP, heals adjacent allies, and provides Juiced: DEF Boost. Paddlezap carries Aura: Lightning whenever on the field.",
+  "description": "Night falls, but the warmth of light remains. While the Tatari have their fun, Paddlezap blends into the crowd. Everyone's gotten used to having light, though they never forgot who keeps the party going after dark. If only Drilleroo didn't chew through the cords again!",
+  "hordeSkills": {
+   "level3": {
+    "name": "Rapid Charge",
+    "text": "Periodically heals diagonal surrounding allies multiple times while stacking Rapid Charge: DMG Boost. After, additionally inflicts Rapid Charge: Fragile on them."
+   },
+   "level5": {
+    "name": "Safety First",
+    "text": "Periodically builds a fence that can help absorb a portion of high single-hit damage for allies behind it."
+   },
+   "level7": {
+    "name": "Incandescent",
+    "text": "Periodically builds transmission towers from back to front that shock approaching enemies in turn. Provides allies near towers Gridwork: ATK & DEF Boost."
+   }
+  },
+  "rangeImage": null,
+  "skillTypes": [
+   "ATK Speed Boost",
+   "AoE",
+   "DEF Boost",
+   "Heal"
+  ],
+  "image": "data/images/tatari/paddlezap.png",
+  "glitterImage": "data/images/glitter/paddlezap.png",
+  "wikiUrl": "https://clashofcritters.wiki.gg/wiki/Paddlezap"
  },
  {
   "name": "Roost",
